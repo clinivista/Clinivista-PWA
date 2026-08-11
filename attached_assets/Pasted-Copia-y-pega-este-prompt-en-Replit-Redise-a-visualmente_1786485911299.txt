@@ -1,0 +1,40 @@
+Copia y pega este prompt en Replit:
+
+Rediseña visualmente la PWA actual de Estecapelli sin modificar su lógica funcional, rutas API, autenticación, persistencia JSON, flujo de pacientes ni panel operativo. Mantén el proyecto en un único archivo `index.js` y sin dependencias externas nuevas.
+
+Objetivo visual: crear una experiencia premium de salud capilar, moderna, confiable, minimalista y fácil de usar desde teléfonos. Debe verse como una clínica internacional de alto nivel, no como una página genérica de estética ni una app médica fría.
+
+Dirección de diseño:
+
+* Usa una paleta potente y elegante: azul marino profundo `#0B1F33`, turquesa vibrante `#00A9A5`, verde WhatsApp `#25D366`, azul eléctrico `#3D8DFF`, blanco y grises muy claros.
+* Incorpora fotografías realistas y profesionales de adultos con cabello saludable, consulta capilar moderna, detalles de cuero cabelludo y uso de teléfono. Usa imágenes de fondo de alta calidad con overlays oscuros o degradados para preservar legibilidad.
+* No uses fotografías clínicas reales de pacientes ni imágenes de “antes y después” como decoración.
+* Crea una portada más impactante: fotografía de fondo a pantalla completa, overlay azul marino, texto grande y claro, y un botón principal visible para iniciar la preevaluación.
+* Mantén WhatsApp como puerta de entrada visual: incorpora su color y un mensaje estilo WhatsApp elegante, pero sin alterar la funcionalidad de los enlaces existentes.
+* Usa tipografía sans-serif moderna, jerarquía visual fuerte, espacios amplios, bordes redondeados, sombras suaves y microanimaciones discretas.
+* El diseño debe ser completamente responsive y priorizar móvil. La experiencia del paciente debe sentirse natural, rápida y clara en una pantalla pequeña.
+
+Pantalla de paciente:
+
+* Haz que el formulario de preevaluación se vea como un proceso guiado de alta calidad.
+* Muestra claramente progreso, duración estimada de 4–6 minutos y mensajes de confianza.
+* Mejora visualmente las tarjetas de carga de fotografías: cada una debe tener icono, estado, vista previa, guía breve y una apariencia tipo cámara profesional.
+* Mantén visible que el estudio fotográfico incluye: frontal, vértex, temporal derecha, temporal izquierda y zona donante.
+* Destaca el consentimiento y el mensaje: “Esta preevaluación no reemplaza una consulta médica ni entrega un diagnóstico”.
+* No agregues diagnóstico automático, cálculo de injertos ni recomendaciones terapéuticas.
+
+Panel interno:
+
+* Convierte el panel en un dashboard limpio, profesional y visualmente atractivo.
+* Mejora las métricas, filtros, estados y lista de pacientes con colores consistentes y estados fáciles de identificar.
+* Usa tarjetas de métricas, tabla/listado moderno, iconos simples y mejor jerarquía para el botón de crear invitación por WhatsApp.
+* Conserva todos los estados existentes: nuevo, incompleto, listo, contactar, agendado y cerrado.
+* Mantén la clasificación Norwood como etiqueta interna del equipo; nunca debe mostrarse al paciente.
+
+Reglas críticas:
+
+* No cambies endpoints, nombres de campos, flujo de carga de fotos, login, panel administrativo ni estructura de datos.
+* No elimines textos de privacidad, consentimiento ni la aclaración de que no existe diagnóstico automático.
+* No agregues servicios pagados, APIs externas, bases de datos externas ni librerías.
+* Prioriza contraste, accesibilidad, legibilidad y velocidad de carga.
+* Haz una actualización visual completa: no te limites a cambiar colores; mejora layout, hero, fondos, tarjetas, formularios, navegación, estados, iconografía y experiencia móvil.
