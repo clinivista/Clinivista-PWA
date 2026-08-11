@@ -3,20 +3,28 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Estecapelli API — Preevaluación capilar
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Admin authentication
+  - name: leads
+    description: Lead management (admin)
+  - name: patients
+    description: Patient pre-evaluation flow (public with token)
+  - name: invitations
+    description: Invitation links
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +32,513 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/me:
+    get:
+      operationId: getAuthMe
+      tags: [auth]
+      summary: Check admin authentication status
+      responses:
+        "200":
+          description: Auth status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthStatus"
+
+  /auth/login:
+    post:
+      operationId: adminLogin
+      tags: [auth]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCredentials"
+      responses:
+        "200":
+          description: Login result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResult"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: adminLogout
+      tags: [auth]
+      summary: Admin logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimpleOk"
+
+  /leads:
+    get:
+      operationId: getLeads
+      tags: [leads]
+      summary: List leads (admin)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of lead summaries
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [leads]
+                properties:
+                  leads:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/LeadSummary"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /leads/stats:
+    get:
+      operationId: getLeadStats
+      tags: [leads]
+      summary: Lead statistics (admin)
+      responses:
+        "200":
+          description: Lead counts by status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeadStats"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /leads/{id}:
+    get:
+      operationId: getLeadById
+      tags: [leads]
+      summary: Get lead detail (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lead detail with photos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: patchLead
+      tags: [leads]
+      summary: Update lead status, notes, norwood, appointment (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeadPatch"
+      responses:
+        "200":
+          description: Updated lead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /invitations:
+    post:
+      operationId: createInvitation
+      tags: [invitations]
+      summary: Create invitation link for patient (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvitationInput"
+      responses:
+        "201":
+          description: Invitation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitationResult"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /patients:
+    post:
+      operationId: createPatient
+      tags: [patients]
+      summary: Create a new patient pre-evaluation (public)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientResult"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /patients/{token}:
+    get:
+      operationId: getPatient
+      tags: [patients]
+      summary: Get patient pre-evaluation by token (public)
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Patient summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientResult"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updatePatient
+      tags: [patients]
+      summary: Update patient pre-evaluation by token (public)
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientResult"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    SimpleOk:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+
+    AuthStatus:
+      type: object
+      required: [authenticated, demoPassword]
+      properties:
+        authenticated:
+          type: boolean
+        demoPassword:
+          type: boolean
+
+    AdminCredentials:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+
+    LoginResult:
+      type: object
+      required: [ok, demoPassword]
+      properties:
+        ok:
+          type: boolean
+        demoPassword:
+          type: boolean
+
+    PhotoEntry:
+      type: object
+      required: [key, label, dataUrl, quality, createdAt]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        dataUrl:
+          type: string
+        quality:
+          type: string
+        createdAt:
+          type: string
+
+    LeadStatus:
+      type: string
+      enum: [nuevo, incompleto, listo, contactar, agendado, cerrado]
+
+    LeadSummary:
+      type: object
+      required: [id, token, createdAt, updatedAt, name, phone, status, photoCount]
+      properties:
+        id:
+          type: string
+        token:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        age:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        status:
+          $ref: "#/components/schemas/LeadStatus"
+        consent:
+          type: boolean
+        photoCount:
+          type: number
+        hairLossTime:
+          type: ["string", "null"]
+        pattern:
+          type: ["string", "null"]
+        previousTreatment:
+          type: ["string", "null"]
+        norwood:
+          type: ["string", "null"]
+        appointmentAt:
+          type: ["string", "null"]
+        isDemo:
+          type: ["boolean", "null"]
+
+    Lead:
+      type: object
+      required: [id, token, createdAt, updatedAt, name, phone, status, photoCount, photos]
+      properties:
+        id:
+          type: string
+        token:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        age:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        status:
+          $ref: "#/components/schemas/LeadStatus"
+        consent:
+          type: boolean
+        photoCount:
+          type: number
+        photos:
+          type: array
+          items:
+            $ref: "#/components/schemas/PhotoEntry"
+        hairLossTime:
+          type: ["string", "null"]
+        pattern:
+          type: ["string", "null"]
+        previousTreatment:
+          type: ["string", "null"]
+        symptoms:
+          type: ["string", "null"]
+        surgeryHistory:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        norwood:
+          type: ["string", "null"]
+        appointmentAt:
+          type: ["string", "null"]
+        isDemo:
+          type: ["boolean", "null"]
+
+    LeadStats:
+      type: object
+      required: [total, counts]
+      properties:
+        total:
+          type: number
+        counts:
+          type: object
+          additionalProperties:
+            type: number
+
+    LeadPatch:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/LeadStatus"
+        notes:
+          type: string
+        norwood:
+          type: string
+        appointmentAt:
+          type: string
+
+    InvitationInput:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+
+    InvitationResult:
+      type: object
+      required: [ok, lead, link]
+      properties:
+        ok:
+          type: boolean
+        lead:
+          $ref: "#/components/schemas/LeadSummary"
+        link:
+          type: string
+
+    PatientPhoto:
+      type: object
+      required: [key, label, dataUrl]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        dataUrl:
+          type: string
+        quality:
+          type: string
+
+    PatientInput:
+      type: object
+      required: [name, phone, consent]
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        age:
+          type: string
+        city:
+          type: string
+        hairLossTime:
+          type: string
+        pattern:
+          type: string
+        previousTreatment:
+          type: string
+        symptoms:
+          type: string
+        surgeryHistory:
+          type: string
+        consent:
+          type: boolean
+        photos:
+          type: array
+          items:
+            $ref: "#/components/schemas/PatientPhoto"
+
+    PatientResult:
+      type: object
+      required: [ok, lead]
+      properties:
+        ok:
+          type: boolean
+        lead:
+          $ref: "#/components/schemas/LeadSummary"
