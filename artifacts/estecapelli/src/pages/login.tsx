@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Activity, ArrowRight, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,10 +20,11 @@ export default function Login() {
     }
   });
 
-  if (authStatus?.authenticated) {
-    setLocation("/admin");
-    return null;
-  }
+  useEffect(() => {
+    if (!isLoading && authStatus?.authenticated) {
+      setLocation("/admin");
+    }
+  }, [isLoading, authStatus, setLocation]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
