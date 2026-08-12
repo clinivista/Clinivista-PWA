@@ -11,12 +11,17 @@ import {
   Activity,
   ImagePlus,
   RefreshCw,
-  Timer
+  Timer,
+  ChevronDown,
+  ChevronUp,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CameraModal } from "@/components/camera-modal";
 import {
   Select,
   SelectContent,
@@ -44,24 +49,32 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 // ---------- Image compression ----------
+function compressImage(src: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onerror = reject;
+    img.onload = () => {
+      const max = 1400;
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      const ctx = c.getContext("2d");
+      if (ctx) ctx.drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL("image/jpeg", 0.72));
+    };
+    img.src = src;
+  });
+}
+
 function compress(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onerror = reject;
     r.onload = () => {
-      const img = new Image();
-      img.onerror = reject;
-      img.onload = () => {
-        const max = 1400;
-        const scale = Math.min(1, max / Math.max(img.width, img.height));
-        const c = document.createElement("canvas");
-        c.width = Math.round(img.width * scale);
-        c.height = Math.round(img.height * scale);
-        const ctx = c.getContext("2d");
-        if (ctx) ctx.drawImage(img, 0, 0, c.width, c.height);
-        resolve(c.toDataURL("image/jpeg", 0.72));
-      };
-      if (typeof r.result === "string") img.src = r.result;
+      if (typeof r.result === "string") {
+        compressImage(r.result).then(resolve).catch(reject);
+      }
     };
     r.readAsDataURL(file);
   });
@@ -100,26 +113,139 @@ const PHOTO_REQUIREMENTS = [
     key: "frontal",
     title: "Vista frontal",
     description: "De frente, centrado, buena iluminación. Muestra la línea de nacimiento del cabello.",
+    tip: "Mira directamente a la cámara con buena luz natural. Mantén el cabello despejado de la frente.",
+    icon: (
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        {/* Face outline */}
+        <ellipse cx="32" cy="26" rx="14" ry="16" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
+        {/* Hair top */}
+        <path d="M18 22 Q18 8 32 8 Q46 8 46 22" fill="#4a3728" stroke="#3a2718" strokeWidth="1"/>
+        {/* Eyes */}
+        <circle cx="26" cy="24" r="2" fill="#3a2718"/>
+        <circle cx="38" cy="24" r="2" fill="#3a2718"/>
+        {/* Nose */}
+        <path d="M32 28 Q30 32 32 33 Q34 32 32 28" stroke="#a87c5a" strokeWidth="1" fill="none"/>
+        {/* Mouth */}
+        <path d="M27 37 Q32 41 37 37" stroke="#a87c5a" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+        {/* Camera arrow pointing at face */}
+        <rect x="2" y="28" width="10" height="7" rx="1.5" fill="#4a90d9" opacity="0.9"/>
+        <polygon points="12,23 12,38 20,31.5" fill="#4a90d9" opacity="0.9"/>
+        <circle cx="7" cy="31.5" r="2" fill="white" opacity="0.7"/>
+        {/* Shoulders */}
+        <path d="M18 44 Q20 50 32 52 Q44 50 46 44" fill="#c9b5a5" stroke="#a87c5a" strokeWidth="1"/>
+        {/* Guide arrows */}
+        <text x="32" y="62" textAnchor="middle" fontSize="7" fill="#6b7280" fontFamily="sans-serif">Frontal</text>
+      </svg>
+    ),
   },
   {
     key: "vertex",
     title: "Vértex / Coronilla",
     description: "Inclina levemente la cabeza hacia adelante. La cámara apunta hacia abajo.",
+    tip: "Inclina la cabeza hacia abajo 45°. Pide a alguien que tome la foto desde arriba, apuntando a la coronilla.",
+    icon: (
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        {/* Top-down view of head */}
+        <ellipse cx="32" cy="36" rx="18" ry="20" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
+        {/* Hair from top */}
+        <ellipse cx="32" cy="34" rx="17" ry="18" fill="#4a3728"/>
+        {/* Crown/vertex center highlight */}
+        <circle cx="32" cy="32" r="6" fill="#6b4f3a" opacity="0.5"/>
+        {/* Ears */}
+        <ellipse cx="14" cy="38" rx="3" ry="4" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
+        <ellipse cx="50" cy="38" rx="3" ry="4" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
+        {/* Camera from top */}
+        <rect x="25" y="2" width="14" height="9" rx="2" fill="#4a90d9" opacity="0.9"/>
+        <circle cx="32" cy="6.5" r="2.5" fill="white" opacity="0.7"/>
+        {/* Down arrow */}
+        <line x1="32" y1="11" x2="32" y2="19" stroke="#4a90d9" strokeWidth="2" strokeLinecap="round"/>
+        <polygon points="28,18 32,24 36,18" fill="#4a90d9"/>
+        <text x="32" y="62" textAnchor="middle" fontSize="7" fill="#6b7280" fontFamily="sans-serif">Vista desde arriba</text>
+      </svg>
+    ),
   },
   {
     key: "temporalRight",
     title: "Temporal derecha",
     description: "Gira levemente hacia la izquierda para mostrar la entrada derecha.",
+    tip: "Gira la cabeza ~30° hacia tu izquierda. La cámara debe mostrar claramente la entrada del lado derecho.",
+    icon: (
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        {/* Face profile left-ish angle */}
+        <ellipse cx="34" cy="28" rx="13" ry="15" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
+        {/* Hair */}
+        <path d="M21 22 Q22 8 34 8 Q46 9 47 22 L46 28" fill="#4a3728" stroke="#3a2718" strokeWidth="1"/>
+        {/* Hairline right temple highlight */}
+        <path d="M43 14 Q48 12 47 22" stroke="#6b4f3a" strokeWidth="2" fill="none"/>
+        {/* Eye */}
+        <circle cx="30" cy="26" r="2" fill="#3a2718"/>
+        <circle cx="40" cy="25" r="1.5" fill="#3a2718"/>
+        {/* Right temple zone highlight */}
+        <path d="M43 14 Q50 18 48 28" stroke="#ef4444" strokeWidth="2" fill="none" strokeDasharray="2,2"/>
+        {/* Camera arrow from left */}
+        <rect x="2" y="26" width="10" height="7" rx="1.5" fill="#4a90d9" opacity="0.9"/>
+        <polygon points="12,22 12,37 18,29.5" fill="#4a90d9" opacity="0.9"/>
+        <circle cx="7" cy="29.5" r="2" fill="white" opacity="0.7"/>
+        {/* Shoulders */}
+        <path d="M21 44 Q26 50 34 51 Q42 50 47 44" fill="#c9b5a5" stroke="#a87c5a" strokeWidth="1"/>
+        <text x="32" y="62" textAnchor="middle" fontSize="7" fill="#6b7280" fontFamily="sans-serif">Entrada derecha</text>
+      </svg>
+    ),
   },
   {
     key: "temporalLeft",
     title: "Temporal izquierda",
     description: "Gira levemente hacia la derecha para mostrar la entrada izquierda.",
+    tip: "Gira la cabeza ~30° hacia tu derecha. La cámara debe mostrar claramente la entrada del lado izquierdo.",
+    icon: (
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        {/* Mirror of temporal right */}
+        <ellipse cx="30" cy="28" rx="13" ry="15" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
+        {/* Hair */}
+        <path d="M43 22 Q42 8 30 8 Q18 9 17 22 L18 28" fill="#4a3728" stroke="#3a2718" strokeWidth="1"/>
+        {/* Hairline left temple highlight */}
+        <path d="M21 14 Q16 12 17 22" stroke="#6b4f3a" strokeWidth="2" fill="none"/>
+        {/* Eyes */}
+        <circle cx="34" cy="26" r="2" fill="#3a2718"/>
+        <circle cx="24" cy="25" r="1.5" fill="#3a2718"/>
+        {/* Left temple zone highlight */}
+        <path d="M21 14 Q14 18 16 28" stroke="#ef4444" strokeWidth="2" fill="none" strokeDasharray="2,2"/>
+        {/* Camera arrow from right */}
+        <rect x="52" y="26" width="10" height="7" rx="1.5" fill="#4a90d9" opacity="0.9"/>
+        <polygon points="52,22 52,37 46,29.5" fill="#4a90d9" opacity="0.9"/>
+        <circle cx="57" cy="29.5" r="2" fill="white" opacity="0.7"/>
+        {/* Shoulders */}
+        <path d="M43 44 Q38 50 30 51 Q22 50 17 44" fill="#c9b5a5" stroke="#a87c5a" strokeWidth="1"/>
+        <text x="32" y="62" textAnchor="middle" fontSize="7" fill="#6b7280" fontFamily="sans-serif">Entrada izquierda</text>
+      </svg>
+    ),
   },
   {
     key: "donor",
     title: "Zona donante",
     description: "Fotografía de la nuca / parte posterior de la cabeza.",
+    tip: "Inclina la cabeza ligeramente hacia adelante. La cámara apunta a la nuca, mostrando la zona posterior completa.",
+    icon: (
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        {/* Back of head view */}
+        <ellipse cx="32" cy="30" rx="18" ry="20" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
+        {/* Hair covering most of head back */}
+        <ellipse cx="32" cy="26" rx="17" ry="17" fill="#4a3728"/>
+        {/* Nape - skin showing at bottom */}
+        <path d="M16 40 Q18 48 32 50 Q46 48 48 40" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
+        {/* Donor zone highlight */}
+        <path d="M14 36 Q18 46 32 48 Q46 46 50 36" stroke="#ef4444" strokeWidth="2" fill="none" strokeDasharray="3,2"/>
+        {/* Ears */}
+        <ellipse cx="14" cy="32" rx="3" ry="4" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
+        <ellipse cx="50" cy="32" rx="3" ry="4" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
+        {/* Camera arrow from behind/above */}
+        <rect x="25" y="2" width="14" height="9" rx="2" fill="#4a90d9" opacity="0.9"/>
+        <circle cx="32" cy="6.5" r="2.5" fill="white" opacity="0.7"/>
+        <line x1="32" y1="11" x2="32" y2="17" stroke="#4a90d9" strokeWidth="2" strokeLinecap="round"/>
+        <polygon points="28,16 32,22 36,16" fill="#4a90d9"/>
+        <text x="32" y="62" textAnchor="middle" fontSize="7" fill="#6b7280" fontFamily="sans-serif">Vista posterior/nuca</text>
+      </svg>
+    ),
   },
 ];
 
@@ -128,9 +254,12 @@ interface PhotoCaptureProps {
   photoKey: string;
   title: string;
   description: string;
+  tip: string;
+  icon: React.ReactNode;
   index: number;
   dataUrl: string | undefined;
   onCapture: (key: string, file: File) => Promise<void>;
+  onCameraCapture: (key: string, dataUrl: string) => Promise<void>;
   isProcessing: boolean;
 }
 
@@ -138,13 +267,18 @@ function PhotoCapture({
   photoKey,
   title,
   description,
+  tip,
+  icon,
   index,
   dataUrl,
   onCapture,
+  onCameraCapture,
   isProcessing,
 }: PhotoCaptureProps) {
-  const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [guideOpen, setGuideOpen] = useState(true);
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -153,102 +287,158 @@ function PhotoCapture({
     e.target.value = "";
   };
 
+  const handleOpenCamera = () => {
+    setCameraError(null);
+    setCameraOpen(true);
+  };
+
+  const handleCameraCapture = async (capturedDataUrl: string) => {
+    setCameraOpen(false);
+    await onCameraCapture(photoKey, capturedDataUrl);
+  };
+
+  const handleCameraClose = () => {
+    setCameraOpen(false);
+  };
+
   const hasPhoto = !!dataUrl;
 
   return (
-    <div
-      className={`relative group overflow-hidden border-2 rounded-2xl transition-all duration-300 ${
-        hasPhoto
-          ? "border-primary bg-primary/5 shadow-sm"
-          : "border-gray-200 bg-white hover:border-gray-300"
-      }`}
-    >
-      <div className="p-5">
-        <div className="flex flex-col sm:flex-row gap-5 items-start">
-          <div className="shrink-0 w-full sm:w-auto flex justify-center">
-            {hasPhoto ? (
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden shadow-md ring-1 ring-black/5">
-                <img
-                  src={dataUrl}
-                  alt={title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ) : (
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl border border-dashed border-gray-300 bg-gray-50/50 flex flex-col items-center justify-center text-gray-400 group-hover:bg-gray-50 transition-colors">
-                <Camera className="w-8 h-8 mb-2" />
-                <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Toma {index + 1}</span>
-              </div>
-            )}
-          </div>
+    <>
+      {cameraOpen && (
+        <CameraModal
+          title={title}
+          onCapture={handleCameraCapture}
+          onClose={handleCameraClose}
+          onError={(msg) => setCameraError(msg)}
+        />
+      )}
 
-          <div className="flex-1 min-w-0 py-1 w-full text-center sm:text-left">
-            <div className="flex flex-col sm:flex-row items-center sm:justify-between mb-2 sm:mb-1.5 gap-2">
-              <h3 className="font-bold text-foreground text-lg">{title}</h3>
-              {hasPhoto && (
-                <div className="flex items-center gap-1.5 text-primary text-xs font-semibold bg-primary/10 px-2.5 py-1 rounded-full">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Completada</span>
+      <div
+        className={`relative group overflow-hidden border-2 rounded-2xl transition-all duration-300 ${
+          hasPhoto
+            ? "border-primary bg-primary/5 shadow-sm"
+            : "border-gray-200 bg-white hover:border-gray-300"
+        }`}
+      >
+        {/* Photo guide panel */}
+        <div className="border-b border-gray-100 bg-gray-50/70">
+          <button
+            type="button"
+            onClick={() => setGuideOpen((v) => !v)}
+            className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-gray-100/60 transition-colors"
+          >
+            <span className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+              <Info className="w-3.5 h-3.5" />
+              Guía de posición
+            </span>
+            {guideOpen ? (
+              <ChevronUp className="w-4 h-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            )}
+          </button>
+          {guideOpen && (
+            <div className="flex items-center gap-4 px-5 pb-4">
+              <div className="w-16 h-16 shrink-0">{icon}</div>
+              <p className="text-xs text-muted-foreground leading-relaxed font-medium">{tip}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="p-5">
+          <div className="flex flex-col sm:flex-row gap-5 items-start">
+            <div className="shrink-0 w-full sm:w-auto flex justify-center">
+              {hasPhoto ? (
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden shadow-md ring-1 ring-black/5">
+                  <img
+                    src={dataUrl}
+                    alt={title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl border border-dashed border-gray-300 bg-gray-50/50 flex flex-col items-center justify-center text-gray-400 group-hover:bg-gray-50 transition-colors">
+                  <Camera className="w-8 h-8 mb-2" />
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Toma {index + 1}</span>
                 </div>
               )}
             </div>
-            <p className="text-sm text-muted-foreground mb-5 leading-relaxed sm:pr-2">
-              {description}
-            </p>
 
-            <div className="flex gap-3 flex-wrap justify-center sm:justify-start">
-              <label
-                className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl cursor-pointer transition-all select-none
-                  ${isProcessing ? "opacity-50 pointer-events-none" : ""}
-                  ${hasPhoto
-                    ? "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-foreground"
-                    : "bg-primary text-white hover:bg-primary/90 shadow-sm shadow-primary/20"
-                  }`}
-              >
-                <Camera className="w-4 h-4" />
-                {hasPhoto ? "Retomar foto" : "Usar cámara"}
-                <input
-                  ref={cameraRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                  onChange={handleFile}
-                  disabled={isProcessing}
-                />
-              </label>
+            <div className="flex-1 min-w-0 py-1 w-full text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row items-center sm:justify-between mb-2 sm:mb-1.5 gap-2">
+                <h3 className="font-bold text-foreground text-lg">{title}</h3>
+                {hasPhoto && (
+                  <div className="flex items-center gap-1.5 text-primary text-xs font-semibold bg-primary/10 px-2.5 py-1 rounded-full">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Completada</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mb-4 leading-relaxed sm:pr-2">
+                {description}
+              </p>
 
-              <label
-                className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl cursor-pointer transition-all select-none
-                  ${isProcessing ? "opacity-50 pointer-events-none" : ""}
-                  ${hasPhoto
-                    ? "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-foreground"
-                    : "bg-secondary text-foreground hover:bg-secondary/80 border border-transparent"
-                  }`}
-              >
-                <ImagePlus className="w-4 h-4" />
-                {hasPhoto ? "Cambiar archivo" : "Subir foto"}
-                <input
-                  ref={galleryRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/heic"
-                  className="hidden"
-                  onChange={handleFile}
-                  disabled={isProcessing}
-                />
-              </label>
-
-              {isProcessing && (
-                <span className="inline-flex items-center gap-2 text-sm font-medium text-primary mt-1">
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  Procesando...
-                </span>
+              {/* Camera error alert */}
+              {cameraError && (
+                <Alert variant="destructive" className="mb-4 text-left">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-xs leading-relaxed">
+                    {cameraError}
+                  </AlertDescription>
+                </Alert>
               )}
+
+              <div className="flex gap-3 flex-wrap justify-center sm:justify-start">
+                {/* Usar Cámara */}
+                <button
+                  type="button"
+                  onClick={handleOpenCamera}
+                  disabled={isProcessing}
+                  className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl cursor-pointer transition-all select-none
+                    ${isProcessing ? "opacity-50 pointer-events-none" : ""}
+                    ${hasPhoto
+                      ? "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-foreground"
+                      : "bg-primary text-white hover:bg-primary/90 shadow-sm shadow-primary/20"
+                    }`}
+                >
+                  <Camera className="w-4 h-4" />
+                  {hasPhoto ? "Retomar foto" : "Usar Cámara"}
+                </button>
+
+                {/* Subir Foto */}
+                <label
+                  className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl cursor-pointer transition-all select-none
+                    ${isProcessing ? "opacity-50 pointer-events-none" : ""}
+                    ${hasPhoto
+                      ? "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-foreground"
+                      : "bg-secondary text-foreground hover:bg-secondary/80 border border-transparent"
+                    }`}
+                >
+                  <ImagePlus className="w-4 h-4" />
+                  {hasPhoto ? "Cambiar archivo" : "Subir Foto"}
+                  <input
+                    ref={galleryRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFile}
+                    disabled={isProcessing}
+                  />
+                </label>
+
+                {isProcessing && (
+                  <span className="inline-flex items-center gap-2 text-sm font-medium text-primary mt-1">
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Procesando...
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -315,6 +505,22 @@ export default function PatientFlow() {
     setProcessingPhoto(key);
     try {
       const compressed = await compress(file);
+      setPhotos((prev) => ({ ...prev, [key]: compressed }));
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Error al procesar imagen",
+        description: "Intenta nuevamente con otra fotografía.",
+      });
+    } finally {
+      setProcessingPhoto(null);
+    }
+  };
+
+  const handleCameraCapture = async (key: string, dataUrl: string) => {
+    setProcessingPhoto(key);
+    try {
+      const compressed = await compressImage(dataUrl);
       setPhotos((prev) => ({ ...prev, [key]: compressed }));
     } catch {
       toast({
@@ -831,9 +1037,12 @@ export default function PatientFlow() {
                     photoKey={req.key}
                     title={req.title}
                     description={req.description}
+                    tip={req.tip}
+                    icon={req.icon}
                     index={i}
                     dataUrl={photos[req.key]}
                     onCapture={handlePhotoCapture}
+                    onCameraCapture={handleCameraCapture}
                     isProcessing={processingPhoto === req.key}
                   />
                 ))}
