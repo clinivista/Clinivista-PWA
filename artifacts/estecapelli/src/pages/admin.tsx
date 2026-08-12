@@ -36,11 +36,11 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  nuevo: "bg-[#3D8DFF]/10 text-[#3D8DFF] border-[#3D8DFF]/20",
-  incompleto: "bg-orange-100 text-orange-700 border-orange-200",
-  listo: "bg-teal-100 text-teal-700 border-teal-200",
-  contactar: "bg-purple-100 text-purple-700 border-purple-200",
-  agendado: "bg-[#0B1F33]/10 text-[#0B1F33] border-[#0B1F33]/20",
+  nuevo: "bg-blue-100 text-blue-700 border-blue-200",
+  incompleto: "bg-amber-100 text-amber-700 border-amber-200",
+  listo: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  contactar: "bg-violet-100 text-violet-700 border-violet-200",
+  agendado: "bg-indigo-100 text-indigo-700 border-indigo-200",
   cerrado: "bg-gray-100 text-gray-500 border-gray-200"
 };
 
@@ -100,7 +100,7 @@ export default function Admin() {
     }
   }, [isAuthLoading, authStatus, setLocation]);
 
-  if (isAuthLoading || !authStatus?.authenticated) return <div className="min-h-[100dvh] bg-[#0B1F33]" />;
+  if (isAuthLoading || !authStatus?.authenticated) return <div className="min-h-[100dvh] bg-[#1A1A2E]" />;
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
@@ -136,12 +136,12 @@ export default function Admin() {
   return (
     <div className="min-h-[100dvh] bg-gray-50 flex flex-col md:flex-row font-sans selection:bg-primary/20">
       {/* Sidebar shell */}
-      <aside className="w-full md:w-72 bg-[#0B1F33] text-white flex-shrink-0 flex flex-col md:min-h-[100dvh] shadow-2xl relative z-30">
+      <aside className="w-full md:w-72 bg-[#1A1A2E] text-white flex-shrink-0 flex flex-col md:min-h-[100dvh] shadow-2xl relative z-30">
         <div className="p-8 flex items-center gap-3 border-b border-white/10">
-          <div className="w-10 h-10 rounded-[10px] bg-primary flex items-center justify-center shadow-md">
+          <div className="w-10 h-10 rounded-[10px] bg-primary flex items-center justify-center shadow-md shadow-primary/30">
             <Activity className="w-5 h-5 text-white" />
           </div>
-          <span className="font-extrabold text-2xl tracking-tight">Estecapelli</span>
+          <span className="font-extrabold text-2xl tracking-tight">Clinivista</span>
         </div>
         <div className="p-6 flex-1">
           <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">Gestión Clínica</p>
@@ -188,21 +188,21 @@ export default function Admin() {
         <div className="bg-white border-b border-gray-100 p-6 md:px-10 shrink-0 grid grid-cols-2 md:grid-cols-4 gap-5 z-10 relative">
           <div className="bg-gray-50/80 border border-gray-100 p-5 rounded-2xl transition-transform hover:-translate-y-1">
             <p className="text-xs text-muted-foreground font-bold mb-2 uppercase tracking-wider">Total Pacientes</p>
-            <p className="text-3xl font-extrabold text-[#0B1F33]">{stats?.total || 0}</p>
+            <p className="text-3xl font-extrabold text-foreground">{stats?.total || 0}</p>
           </div>
-          <div className="bg-blue-50/50 border border-blue-100/50 p-5 rounded-2xl transition-transform hover:-translate-y-1">
-            <p className="text-xs text-[#3D8DFF] font-bold mb-2 uppercase tracking-wider">Nuevos</p>
-            <p className="text-3xl font-extrabold text-blue-900">{stats?.counts?.nuevo || 0}</p>
+          <div className="bg-blue-50/60 border border-blue-100 p-5 rounded-2xl transition-transform hover:-translate-y-1">
+            <p className="text-xs text-blue-600 font-bold mb-2 uppercase tracking-wider">Nuevos</p>
+            <p className="text-3xl font-extrabold text-blue-800">{stats?.counts?.nuevo || 0}</p>
           </div>
-          <div className="bg-primary/5 border border-primary/10 p-5 rounded-2xl transition-transform hover:-translate-y-1">
-            <p className="text-xs text-primary font-bold mb-2 uppercase tracking-wider">Listos / Agenda</p>
-            <p className="text-3xl font-extrabold text-teal-900">
+          <div className="bg-emerald-50/60 border border-emerald-100 p-5 rounded-2xl transition-transform hover:-translate-y-1">
+            <p className="text-xs text-emerald-600 font-bold mb-2 uppercase tracking-wider">Listos / Agenda</p>
+            <p className="text-3xl font-extrabold text-emerald-800">
               {(stats?.counts?.listo || 0) + (stats?.counts?.agendado || 0)}
             </p>
           </div>
-          <div className="bg-orange-50/50 border border-orange-100/50 p-5 rounded-2xl transition-transform hover:-translate-y-1">
-            <p className="text-xs text-orange-600 font-bold mb-2 uppercase tracking-wider">Por completar</p>
-            <p className="text-3xl font-extrabold text-orange-900">{stats?.counts?.incompleto || 0}</p>
+          <div className="bg-amber-50/60 border border-amber-100 p-5 rounded-2xl transition-transform hover:-translate-y-1">
+            <p className="text-xs text-amber-600 font-bold mb-2 uppercase tracking-wider">Por completar</p>
+            <p className="text-3xl font-extrabold text-amber-800">{stats?.counts?.incompleto || 0}</p>
           </div>
         </div>
 
@@ -353,7 +353,7 @@ export default function Admin() {
                           className="w-full h-14 gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white shadow-lg shadow-[#25D366]/20 font-bold text-base rounded-xl transition-all hover:scale-[1.02]" 
                           onClick={() => {
                             const phone = fullLead.phone.replace(/\D/g,'');
-                            const msg = encodeURIComponent(`Hola ${fullLead.name || ''}, revisamos tu preevaluación clínica. Te contactamos de Estecapelli para coordinar el siguiente paso.`);
+                            const msg = encodeURIComponent(`Hola ${fullLead.name || ''}, revisamos tu preevaluación clínica. Te contactamos de Clinivista para coordinar el siguiente paso.`);
                             window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
                           }}
                         >
@@ -418,13 +418,13 @@ export default function Admin() {
 
                     {/* Clinical Notes Internal */}
                     <div className="bg-blue-50/50 p-6 md:p-8 rounded-2xl border border-blue-100">
-                      <h3 className="text-xl font-extrabold text-[#0B1F33] mb-6 flex items-center gap-2">
+                      <h3 className="text-xl font-extrabold text-foreground mb-6 flex items-center gap-2">
                         <Activity className="w-5 h-5 text-primary" />
                         Uso Interno Clínico
                       </h3>
                       
                       <div className="mb-6">
-                        <label className="text-xs font-bold text-[#0B1F33] uppercase tracking-wider mb-2 block">Escala Norwood (Evaluación)</label>
+                        <label className="text-xs font-bold text-foreground uppercase tracking-wider mb-2 block">Escala Norwood (Evaluación)</label>
                         <Select 
                           value={fullLead.norwood || "No concluyente"} 
                           onValueChange={v => handlePatch(fullLead.id, { norwood: v })}
@@ -441,7 +441,7 @@ export default function Admin() {
                       </div>
 
                       <div>
-                        <label className="text-xs font-bold text-[#0B1F33] uppercase tracking-wider mb-2 block">Notas Clínicas</label>
+                        <label className="text-xs font-bold text-foreground uppercase tracking-wider mb-2 block">Notas Clínicas</label>
                         <Textarea 
                           defaultValue={fullLead.notes || ""}
                           onBlur={e => {
@@ -482,7 +482,7 @@ export default function Admin() {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
           <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="p-6 md:p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h3 className="text-xl font-extrabold text-[#0B1F33]">Nuevo Enlace</h3>
+              <h3 className="text-xl font-extrabold text-foreground">Nuevo Enlace</h3>
               <button onClick={() => setIsInviteOpen(false)} className="w-10 h-10 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
                 <X className="w-5 h-5 text-gray-500" />
               </button>
@@ -516,7 +516,7 @@ export default function Admin() {
                     <CheckCircle2 className="w-10 h-10 text-green-500 relative z-10" />
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-2xl mb-2 text-[#0B1F33]">¡Enlace creado!</h4>
+                    <h4 className="font-extrabold text-2xl mb-2 text-foreground">¡Enlace creado!</h4>
                     <p className="text-base text-muted-foreground font-medium">Cópialo o envíalo directamente</p>
                   </div>
                   

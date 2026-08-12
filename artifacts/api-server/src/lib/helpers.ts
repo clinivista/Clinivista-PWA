@@ -14,6 +14,6 @@ export function cleanPhone(value: unknown): string {
 
 export function getSessionToken(cookieHeader: string | undefined): string | undefined {
   if (!cookieHeader) return undefined;
-  const match = cookieHeader.match(/(?:^|;)\s*estecapelli_session=([^;]+)/);
+  const match = cookieHeader.match(/(?:^|;)\s*clinivista_session=([^;]+)/);
   return match ? decodeURIComponent(match[1]) : undefined;
 }

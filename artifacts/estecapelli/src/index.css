@@ -51,33 +51,33 @@
 }
 
 :root {
-  /* Estecapelli Palette: Teal (#00A9A5) and Navy (#0B1F33) */
-  --background: 0 0% 100%; 
-  --foreground: 210 65% 12%; /* Navy */
+  /* Clinivista Palette: Vivid Violet-Indigo (#5B4CF5) and Charcoal (#1A1A2E) */
+  --background: 250 50% 99%;       /* off-white with soft lavender tint */
+  --foreground: 240 65% 14%;       /* rich charcoal #1A1A2E */
 
-  --border: 210 20% 90%;
-  --input: 210 20% 90%;
-  --ring: 178 100% 33%; /* Teal */
+  --border: 240 20% 90%;
+  --input: 240 20% 90%;
+  --ring: 249 89% 63%;             /* violet-indigo #5B4CF5 */
 
   --card: 0 0% 100%;
-  --card-foreground: 210 65% 12%;
-  --card-border: 210 20% 94%;
+  --card-foreground: 240 65% 14%;
+  --card-border: 240 20% 94%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 210 65% 12%;
-  --popover-border: 210 20% 90%;
+  --popover-foreground: 240 65% 14%;
+  --popover-border: 240 20% 90%;
 
-  --primary: 178 100% 33%; /* Teal */
+  --primary: 249 89% 63%;          /* vivid violet-indigo #5B4CF5 */
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 210 25% 96%;
-  --secondary-foreground: 210 65% 12%;
+  --secondary: 249 50% 96%;        /* soft lavender surface */
+  --secondary-foreground: 240 65% 14%;
 
-  --muted: 210 20% 96%;
-  --muted-foreground: 210 20% 45%;
+  --muted: 249 30% 96%;
+  --muted-foreground: 240 20% 48%;
 
-  --accent: 178 20% 95%;
-  --accent-foreground: 178 100% 33%;
+  --accent: 249 80% 96%;           /* light indigo tint */
+  --accent-foreground: 249 89% 50%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
@@ -87,33 +87,32 @@
 }
 
 .dark {
-  /* Dark mode is disabled by default for this app, but provided as a fallback */
-  --background: 210 65% 10%;
-  --foreground: 0 0% 100%;
+  --background: 240 65% 8%;
+  --foreground: 0 0% 98%;
 
-  --border: 210 40% 18%;
-  --input: 210 40% 18%;
-  --ring: 178 100% 33%;
+  --border: 240 30% 16%;
+  --input: 240 30% 16%;
+  --ring: 249 89% 63%;
 
-  --card: 210 65% 12%;
-  --card-foreground: 0 0% 100%;
-  --card-border: 210 40% 16%;
+  --card: 240 65% 10%;
+  --card-foreground: 0 0% 98%;
+  --card-border: 240 30% 14%;
 
-  --popover: 210 65% 12%;
-  --popover-foreground: 0 0% 100%;
-  --popover-border: 210 40% 16%;
+  --popover: 240 65% 10%;
+  --popover-foreground: 0 0% 98%;
+  --popover-border: 240 30% 14%;
 
-  --primary: 178 100% 33%;
+  --primary: 249 89% 63%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 210 40% 16%;
-  --secondary-foreground: 0 0% 100%;
+  --secondary: 240 30% 14%;
+  --secondary-foreground: 0 0% 98%;
 
-  --muted: 210 40% 16%;
-  --muted-foreground: 210 20% 70%;
+  --muted: 240 30% 14%;
+  --muted-foreground: 240 20% 68%;
 
-  --accent: 178 100% 20%;
-  --accent-foreground: 178 100% 80%;
+  --accent: 249 60% 22%;
+  --accent-foreground: 249 89% 80%;
 
   --destructive: 0 62% 40%;
   --destructive-foreground: 0 0% 100%;

@@ -6,7 +6,7 @@ import { getSessionToken } from "../lib/helpers";
 
 const router: IRouter = Router();
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "demo-estecapelli";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "demo-clinivista";
 const IS_DEMO_PASSWORD = !process.env.ADMIN_PASSWORD;
 
 function getToken(req: Request): string | undefined {
@@ -46,7 +46,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   const token = createSession();
   res.setHeader(
     "Set-Cookie",
-    `estecapelli_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=43200`,
+    `clinivista_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=43200`,
   );
   res.json({ ok: true, demoPassword: IS_DEMO_PASSWORD });
 });
@@ -56,7 +56,7 @@ router.post("/auth/logout", (req, res): void => {
   destroySession(token);
   res.setHeader(
     "Set-Cookie",
-    "estecapelli_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0",
+    "clinivista_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0",
   );
   res.json({ ok: true });
 });

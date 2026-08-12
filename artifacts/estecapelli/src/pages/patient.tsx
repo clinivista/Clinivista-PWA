@@ -408,10 +408,10 @@ export default function PatientFlow() {
       {/* Premium Header */}
       <header className="bg-white px-6 py-4 shadow-sm border-b border-gray-100 flex items-center justify-center sticky top-0 z-40">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-[8px] bg-[#0B1F33] flex items-center justify-center">
+          <div className="w-8 h-8 rounded-[8px] bg-primary flex items-center justify-center">
             <Activity className="w-5 h-5 text-white" />
           </div>
-          <span className="text-xl font-bold text-[#0B1F33] tracking-tight">Estecapelli</span>
+          <span className="text-xl font-bold text-foreground tracking-tight">Clinivista</span>
         </div>
       </header>
 
@@ -448,7 +448,7 @@ export default function PatientFlow() {
         {/* ── STEP: INTRO ── */}
         {step === "intro" && (
           <div className="bg-white rounded-[2rem] p-8 md:p-12 shadow-sm border border-gray-100 text-center animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <div className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-[#3D8DFF] rounded-full text-sm font-bold mb-8 border border-blue-100/50">
+            <div className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-bold mb-8 border border-primary/20">
               <Timer className="w-4 h-4" />
               Tiempo estimado: 4–6 minutos
             </div>
@@ -479,8 +479,8 @@ export default function PatientFlow() {
               ))}
             </div>
 
-            <div className="bg-blue-50/50 text-[#0B1F33] p-5 rounded-2xl text-left text-sm mb-10 flex gap-4 border border-blue-100/50">
-              <Info className="w-6 h-6 flex-shrink-0 text-[#3D8DFF] mt-0.5" />
+            <div className="bg-secondary/60 text-foreground p-5 rounded-2xl text-left text-sm mb-10 flex gap-4 border border-primary/10">
+              <Info className="w-6 h-6 flex-shrink-0 text-primary mt-0.5" />
               <p className="leading-relaxed font-medium text-blue-900/80">
                 Esta preevaluación es estrictamente <strong className="text-blue-900 font-bold">confidencial</strong> y no reemplaza una consulta médica presencial. No entrega diagnósticos automáticos.
               </p>
@@ -783,11 +783,11 @@ export default function PatientFlow() {
                         />
                       </FormControl>
                       <div className="space-y-2 leading-none">
-                        <FormLabel className="text-base font-bold text-[#0B1F33] cursor-pointer block">
+                        <FormLabel className="text-base font-bold text-foreground cursor-pointer block">
                           Consentimiento Médico y Privacidad
                         </FormLabel>
                         <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-                          Acepto que mis datos y fotografías sean enviados de forma segura al equipo médico de Estecapelli para su evaluación clínica confidencial. Entiendo que este proceso preliminar no reemplaza una consulta presencial ni genera un diagnóstico automático.
+                          Acepto que mis datos y fotografías sean enviados de forma segura al equipo médico de Clinivista para su evaluación clínica confidencial. Entiendo que este proceso preliminar no reemplaza una consulta presencial ni genera un diagnóstico automático.
                         </p>
                       </div>
                     </FormItem>
@@ -876,7 +876,7 @@ export default function PatientFlow() {
               <div className="absolute inset-0 bg-green-100 animate-ping rounded-[1.5rem] opacity-20"></div>
               <CheckCircle2 className="w-12 h-12 text-green-500 relative z-10" />
             </div>
-            <h2 className="text-3xl font-extrabold text-[#0B1F33] mb-4 tracking-tight">
+            <h2 className="text-3xl font-extrabold text-foreground mb-4 tracking-tight">
               ¡Evaluación enviada con éxito!
             </h2>
             <p className="text-lg text-muted-foreground mb-8 leading-relaxed max-w-md mx-auto">
