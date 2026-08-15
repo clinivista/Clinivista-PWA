@@ -104,7 +104,7 @@ const patientSchema = z.object({
 
 type PatientFormValues = z.infer<typeof patientSchema>;
 
-// ---------- Photo definitions (SVGs are visual, labels come from t) ----------
+// ---------- Photo definitions ----------
 function getPhotoRequirements(t: AppTranslations) {
   return [
     {
@@ -112,6 +112,7 @@ function getPhotoRequirements(t: AppTranslations) {
       title: t.photoFrontalTitle,
       description: t.photoFrontalDesc,
       tip: t.photoFrontalTip,
+      color: "#00A9A5",
       icon: (
         <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
           <ellipse cx="32" cy="26" rx="14" ry="16" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
@@ -132,6 +133,7 @@ function getPhotoRequirements(t: AppTranslations) {
       title: t.photoVertexTitle,
       description: t.photoVertexDesc,
       tip: t.photoVertexTip,
+      color: "#4F9CF9",
       icon: (
         <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
           <ellipse cx="32" cy="36" rx="18" ry="20" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
@@ -151,6 +153,7 @@ function getPhotoRequirements(t: AppTranslations) {
       title: t.photoTRTitle,
       description: t.photoTRDesc,
       tip: t.photoTRTip,
+      color: "#A78BFA",
       icon: (
         <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
           <ellipse cx="34" cy="28" rx="13" ry="15" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
@@ -171,6 +174,7 @@ function getPhotoRequirements(t: AppTranslations) {
       title: t.photoTLTitle,
       description: t.photoTLDesc,
       tip: t.photoTLTip,
+      color: "#F59E0B",
       icon: (
         <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
           <ellipse cx="30" cy="28" rx="13" ry="15" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
@@ -191,6 +195,7 @@ function getPhotoRequirements(t: AppTranslations) {
       title: t.photoDonorTitle,
       description: t.photoDonorDesc,
       tip: t.photoDonorTip,
+      color: "#10B981",
       icon: (
         <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
           <ellipse cx="32" cy="30" rx="18" ry="20" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
@@ -216,6 +221,7 @@ interface PhotoCaptureProps {
   description: string;
   tip: string;
   icon: React.ReactNode;
+  color: string;
   index: number;
   dataUrl: string | undefined;
   onCapture: (key: string, file: File) => Promise<void>;
@@ -223,7 +229,7 @@ interface PhotoCaptureProps {
   isProcessing: boolean;
 }
 
-function PhotoCapture({ photoKey, title, description, tip, icon, index, dataUrl, onCapture, onCameraCapture, isProcessing }: PhotoCaptureProps) {
+function PhotoCapture({ photoKey, title, description, tip, icon, color, index, dataUrl, onCapture, onCameraCapture, isProcessing }: PhotoCaptureProps) {
   const galleryRef = useRef<HTMLInputElement>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -250,44 +256,48 @@ function PhotoCapture({ photoKey, title, description, tip, icon, index, dataUrl,
         />
       )}
 
-      <div className={`relative group overflow-hidden border-2 rounded-2xl transition-all duration-300 ${hasPhoto ? "border-primary bg-primary/5 shadow-sm" : "border-gray-200 bg-white hover:border-gray-300"}`}>
-        {/* Guide */}
-        <div className="border-b border-gray-100 bg-gray-50/70">
-          <button type="button" onClick={() => setGuideOpen(v => !v)} className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-gray-100/60 transition-colors">
-            <span className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
+      <div className={`bg-white rounded-[2rem] overflow-hidden shadow-sm transition-all duration-300 ${hasPhoto ? "ring-2 ring-primary/30 shadow-md" : "hover:shadow-md"}`}>
+        {/* Colored accent bar */}
+        <div className="h-1" style={{ background: `linear-gradient(to right, ${color}, ${color}40)` }} />
+
+        {/* Guide section */}
+        <div className="bg-[#F5F2EE]/60">
+          <button type="button" onClick={() => setGuideOpen(v => !v)} className="w-full flex items-center justify-between px-6 py-3.5 text-left hover:bg-[#F5F2EE]/80 transition-colors">
+            <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-2" style={{ color }}>
               <Info className="w-3.5 h-3.5" />
               {t.pPhotoGuide}
             </span>
-            {guideOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+            {guideOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
           </button>
           {guideOpen && (
-            <div className="flex items-center gap-4 px-5 pb-4">
+            <div className="flex items-center gap-4 px-6 pb-4">
               <div className="w-16 h-16 shrink-0">{icon}</div>
               <p className="text-xs text-muted-foreground leading-relaxed font-medium">{tip}</p>
             </div>
           )}
         </div>
 
-        <div className="p-5">
+        <div className="p-6">
           <div className="flex flex-col sm:flex-row gap-5 items-start">
+            {/* Photo preview / placeholder */}
             <div className="shrink-0 w-full sm:w-auto flex justify-center">
               {hasPhoto ? (
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden shadow-md ring-1 ring-black/5">
+                <div className="w-28 h-28 rounded-2xl overflow-hidden shadow-lg ring-2 ring-primary/20">
                   <img src={dataUrl} alt={title} className="w-full h-full object-cover" />
                 </div>
               ) : (
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl border border-dashed border-gray-300 bg-gray-50/50 flex flex-col items-center justify-center text-gray-400">
-                  <Camera className="w-8 h-8 mb-2" />
-                  <span className="text-[10px] uppercase font-bold tracking-wider">{index + 1}</span>
+                <div className="w-28 h-28 rounded-2xl border-2 border-dashed border-gray-200 bg-[#F5F2EE]/60 flex flex-col items-center justify-center text-gray-300">
+                  <Camera className="w-8 h-8 mb-1.5" />
+                  <span className="text-[10px] uppercase font-black tracking-widest">{index + 1}</span>
                 </div>
               )}
             </div>
 
             <div className="flex-1 min-w-0 py-1 w-full text-center sm:text-left">
-              <div className="flex flex-col sm:flex-row items-center sm:justify-between mb-2 sm:mb-1.5 gap-2">
+              <div className="flex flex-col sm:flex-row items-center sm:justify-between mb-2 gap-2">
                 <h3 className="font-bold text-foreground text-lg">{title}</h3>
                 {hasPhoto && (
-                  <div className="flex items-center gap-1.5 text-primary text-xs font-semibold bg-primary/10 px-2.5 py-1 rounded-full">
+                  <div className="flex items-center gap-1.5 text-primary text-xs font-bold bg-primary/10 px-3 py-1.5 rounded-full">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>{t.pCompleted}</span>
                   </div>
@@ -296,24 +306,24 @@ function PhotoCapture({ photoKey, title, description, tip, icon, index, dataUrl,
               <p className="text-sm text-muted-foreground mb-4 leading-relaxed sm:pr-2">{description}</p>
 
               {cameraError && (
-                <Alert variant="destructive" className="mb-4 text-left">
+                <Alert variant="destructive" className="mb-4 text-left rounded-2xl">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription className="text-xs leading-relaxed">{cameraError}</AlertDescription>
                 </Alert>
               )}
 
-              <div className="flex gap-3 flex-wrap justify-center sm:justify-start">
+              <div className="flex gap-2.5 flex-wrap justify-center sm:justify-start">
                 <button
                   type="button"
                   onClick={() => { setCameraError(null); setCameraOpen(true); }}
                   disabled={isProcessing}
-                  className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl cursor-pointer transition-all select-none ${isProcessing ? "opacity-50 pointer-events-none" : ""} ${hasPhoto ? "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50" : "bg-primary text-white hover:bg-primary/90 shadow-sm shadow-primary/20"}`}
+                  className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-full cursor-pointer transition-all select-none ${isProcessing ? "opacity-50 pointer-events-none" : ""} ${hasPhoto ? "bg-[#F5F2EE] border border-[#E8E4DE] text-gray-700 hover:bg-[#EDE9E4]" : "bg-primary text-white hover:bg-primary/90 shadow-sm shadow-primary/20"}`}
                 >
                   <Camera className="w-4 h-4" />
                   {hasPhoto ? t.pRetakePhoto : t.pUseCamera}
                 </button>
 
-                <label className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl cursor-pointer transition-all select-none ${isProcessing ? "opacity-50 pointer-events-none" : ""} ${hasPhoto ? "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50" : "bg-secondary text-foreground hover:bg-secondary/80 border border-transparent"}`}>
+                <label className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-full cursor-pointer transition-all select-none ${isProcessing ? "opacity-50 pointer-events-none" : ""} ${hasPhoto ? "bg-[#F5F2EE] border border-[#E8E4DE] text-gray-700 hover:bg-[#EDE9E4]" : "bg-[#F5F2EE] border border-[#E8E4DE] text-foreground hover:bg-[#EDE9E4]"}`}>
                   <ImagePlus className="w-4 h-4" />
                   {hasPhoto ? t.pChangeFile : t.pUploadPhoto}
                   <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={isProcessing} />
@@ -445,7 +455,7 @@ export default function PatientFlow() {
 
   if (isLoadingExisting) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#F5F2EE] flex items-center justify-center">
         <div className="text-muted-foreground font-medium flex items-center gap-3 bg-white px-6 py-4 rounded-full shadow-sm">
           <RefreshCw className="w-5 h-5 animate-spin text-primary" />
           {t.loading}
@@ -455,12 +465,12 @@ export default function PatientFlow() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-gray-50/50 flex flex-col font-sans" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <div className="min-h-[100dvh] bg-[#F5F2EE] flex flex-col font-sans" dir={lang === "ar" ? "rtl" : "ltr"}>
       {/* Header */}
-      <header className="bg-white px-5 py-4 shadow-sm border-b border-gray-100 flex items-center justify-between sticky top-0 z-40">
+      <header className="bg-white px-5 py-4 shadow-sm border-b border-[#E8E4DE] flex items-center justify-between sticky top-0 z-40">
         <Link href="/">
-          <div className="flex items-center gap-2 cursor-pointer group">
-            <div className="w-8 h-8 rounded-[8px] bg-primary flex items-center justify-center group-hover:scale-105 transition-transform">
+          <div className="flex items-center gap-2.5 cursor-pointer group">
+            <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm shadow-primary/20">
               <Activity className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold text-foreground tracking-tight">Clinivista</span>
@@ -471,16 +481,16 @@ export default function PatientFlow() {
         <div className="relative">
           <button
             onClick={() => setLangOpen(v => !v)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#E8E4DE] text-sm font-medium text-gray-600 hover:bg-[#F5F2EE] transition-colors"
           >
             <span>{currentLang.flag}</span>
             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${langOpen ? "rotate-180" : ""}`} />
           </button>
           {langOpen && (
-            <div className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="absolute right-0 mt-2 w-44 bg-white rounded-3xl shadow-xl border border-[#E8E4DE] overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
               {LANGS.map(l => (
                 <button key={l.code} onClick={() => { setLang(l.code as LangCode); setLangOpen(false); }}
-                  className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-gray-50 text-left transition-colors ${lang === l.code ? "text-primary font-semibold bg-primary/5" : "text-gray-700"}`}>
+                  className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-[#F5F2EE] text-left transition-colors ${lang === l.code ? "text-primary font-semibold bg-primary/5" : "text-gray-700"}`}>
                   <span className="text-base">{l.flag}</span>
                   <span>{l.name}</span>
                   {lang === l.code && <Check className="w-3.5 h-3.5 ml-auto text-primary" />}
@@ -503,8 +513,8 @@ export default function PatientFlow() {
               return (
                 <span key={s} className="flex items-center gap-2">
                   {i > 0 && <ChevronRight className="w-4 h-4 text-gray-300" />}
-                  <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${isActive ? "bg-primary/10 text-primary" : isDone ? "text-primary/60" : "text-muted-foreground"}`}>
-                    {isDone && <Check className="w-4 h-4" />}
+                  <span className={`flex items-center gap-1.5 px-4 py-2 rounded-full transition-all ${isActive ? "bg-primary text-white shadow-sm shadow-primary/20" : isDone ? "bg-primary/10 text-primary" : "bg-white text-muted-foreground border border-[#E8E4DE]"}`}>
+                    {isDone && <Check className="w-3.5 h-3.5" />}
                     {labels[i]}
                   </span>
                 </span>
@@ -515,44 +525,47 @@ export default function PatientFlow() {
 
         {/* ── STEP: INTRO ── */}
         {step === "intro" && (
-          <div className="bg-white rounded-[2rem] p-8 md:p-12 shadow-sm border border-gray-100 text-center animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <div className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-bold mb-8 border border-primary/20">
-              <Timer className="w-4 h-4" />
-              {t.pEstimate}
-            </div>
+          <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-500">
+            <div className="h-1.5 bg-gradient-to-r from-primary via-[#4F9CF9] to-[#A78BFA]" />
+            <div className="p-8 md:p-12 text-center">
+              <div className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-primary/8 text-primary rounded-full text-sm font-bold mb-8 border border-primary/15">
+                <Timer className="w-4 h-4" />
+                {t.pEstimate}
+              </div>
 
-            <div className="w-20 h-20 bg-primary/10 rounded-[1.25rem] flex items-center justify-center mx-auto mb-6">
-              <ShieldCheck className="w-10 h-10 text-primary" />
-            </div>
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShieldCheck className="w-10 h-10 text-primary" />
+              </div>
 
-            <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4 tracking-tight">{t.pIntroTitle}</h1>
-            <p className="text-muted-foreground mb-10 leading-relaxed max-w-md mx-auto text-base">{t.pIntroDesc}</p>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4 tracking-tight">{t.pIntroTitle}</h1>
+              <p className="text-muted-foreground mb-10 leading-relaxed max-w-md mx-auto text-base">{t.pIntroDesc}</p>
 
-            <div className="space-y-3 mb-10 text-left">
-              {[
-                { icon: "01", label: t.pStep1Label, detail: t.pStep1Detail, color: "bg-[#00A9A5]/10 text-[#00A9A5]" },
-                { icon: "02", label: t.pStep2Label, detail: t.pStep2Detail, color: "bg-[#4F9CF9]/10 text-[#4F9CF9]" },
-                { icon: "03", label: t.pStep3Label, detail: t.pStep3Detail, color: "bg-[#A78BFA]/10 text-[#A78BFA]" },
-              ].map(item => (
-                <div key={item.icon} className="flex items-center gap-4 p-4 bg-gray-50/80 rounded-2xl border border-gray-100">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0 ${item.color}`}>{item.icon}</div>
-                  <div>
-                    <div className="font-bold text-foreground">{item.label}</div>
-                    <div className="text-sm text-muted-foreground">{item.detail}</div>
+              <div className="space-y-3 mb-10 text-left">
+                {[
+                  { icon: "01", label: t.pStep1Label, detail: t.pStep1Detail, color: "#00A9A5", bg: "bg-[#00A9A5]/8" },
+                  { icon: "02", label: t.pStep2Label, detail: t.pStep2Detail, color: "#4F9CF9", bg: "bg-[#4F9CF9]/8" },
+                  { icon: "03", label: t.pStep3Label, detail: t.pStep3Detail, color: "#A78BFA", bg: "bg-[#A78BFA]/8" },
+                ].map(item => (
+                  <div key={item.icon} className="flex items-center gap-4 p-4 bg-[#F5F2EE] rounded-2xl">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm shrink-0 ${item.bg}`} style={{ color: item.color }}>{item.icon}</div>
+                    <div>
+                      <div className="font-bold text-foreground">{item.label}</div>
+                      <div className="text-sm text-muted-foreground">{item.detail}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              <p className="text-xs text-muted-foreground mb-8 leading-relaxed max-w-md mx-auto bg-amber-50/80 border border-amber-100 p-4 rounded-2xl text-left">
+                {t.pDisclaimer}
+              </p>
+
+              <Button onClick={() => { setStep("data"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                className="w-full h-14 text-base font-bold rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 group">
+                {t.pBeginCTA}
+                <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
             </div>
-
-            <p className="text-xs text-muted-foreground mb-8 leading-relaxed max-w-md mx-auto bg-amber-50/60 border border-amber-100 p-4 rounded-xl text-left">
-              {t.pDisclaimer}
-            </p>
-
-            <Button onClick={() => { setStep("data"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-              className="w-full h-14 text-base font-bold rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 group">
-              {t.pBeginCTA}
-              <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-            </Button>
           </div>
         )}
 
@@ -560,7 +573,7 @@ export default function PatientFlow() {
         {step === "data" && (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
             <div className="mb-6 flex items-center gap-3">
-              <button onClick={() => setStep("intro")} className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors text-muted-foreground hover:text-foreground">
+              <button onClick={() => setStep("intro")} className="w-10 h-10 rounded-full bg-white border border-[#E8E4DE] flex items-center justify-center hover:bg-[#F5F2EE] transition-colors text-muted-foreground hover:text-foreground shadow-sm">
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
@@ -570,197 +583,212 @@ export default function PatientFlow() {
             </div>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleDataSubmit)} className="space-y-8">
+              <form onSubmit={form.handleSubmit(handleDataSubmit)} className="space-y-5">
                 {/* Personal data */}
-                <div className="bg-white rounded-2xl p-6 md:p-8 border border-gray-100 shadow-sm space-y-5">
-                  <FormField control={form.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-bold">{t.pFullName}</FormLabel>
-                      <FormControl><Input placeholder="María García" className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
+                <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm">
+                  <div className="h-1 bg-gradient-to-r from-[#00A9A5] to-[#00A9A5]/30" />
+                  <div className="p-6 md:p-8 space-y-5">
+                    <h3 className="font-bold text-foreground text-sm uppercase tracking-wider text-[#00A9A5]">{t.pDataTitle}</h3>
 
-                  <FormField control={form.control} name="documentId" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-bold">{t.pDocId}</FormLabel>
-                      <FormControl><Input placeholder="12.345.678-9" className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-
-                  {/* Phone with prefix */}
-                  <FormField control={form.control} name="phone" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-bold">{t.pPhone}</FormLabel>
-                      <div className="flex gap-2">
-                        <div className="relative">
-                          <button type="button" onClick={() => setPhonePrefixOpen(v => !v)}
-                            className="h-12 px-3 rounded-xl border border-gray-200 bg-gray-50/50 flex items-center gap-1.5 text-sm font-semibold hover:bg-gray-100 transition-colors min-w-[90px]">
-                            <span>{COUNTRY_PREFIXES.find(c => c.prefix === phonePrefix)?.flag}</span>
-                            <span>{phonePrefix}</span>
-                            <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${phonePrefixOpen ? "rotate-180" : ""}`} />
-                          </button>
-                          {phonePrefixOpen && (
-                            <div className="absolute top-full left-0 mt-1 w-60 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-64 overflow-y-auto animate-in fade-in">
-                              {COUNTRY_PREFIXES.map(c => (
-                                <button key={c.code} type="button"
-                                  onClick={() => { setPhonePrefix(c.prefix); setPhonePrefixOpen(false); }}
-                                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 text-left ${phonePrefix === c.prefix ? "font-bold text-primary" : "text-foreground"}`}>
-                                  <span>{c.flag}</span>
-                                  <span className="text-muted-foreground">{c.prefix}</span>
-                                  <span>{c.name}</span>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        <FormControl>
-                          <Input
-                            placeholder="9 1234 5678"
-                            className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base flex-1"
-                            {...field}
-                            onChange={e => field.onChange(phonePrefix + " " + e.target.value.replace(/^\+\d+\s?/, ""))}
-                            value={field.value.replace(phonePrefix + " ", "").replace(phonePrefix, "")}
-                          />
-                        </FormControl>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-
-                  <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-bold">{t.pEmail}</FormLabel>
-                      <FormControl><Input type="email" placeholder="correo@ejemplo.com" className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField control={form.control} name="age" render={({ field }) => (
+                    <FormField control={form.control} name="name" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-bold">{t.pAge} <span className="font-normal text-muted-foreground">{t.optional}</span></FormLabel>
-                        <FormControl><Input type="number" min="18" max="99" placeholder={t.pAgePlaceholder} className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base" {...field} /></FormControl>
+                        <FormLabel className="text-sm font-bold">{t.pFullName}</FormLabel>
+                        <FormControl><Input placeholder="María García" className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
 
-                    <FormField control={form.control} name="city" render={({ field }) => (
+                    <FormField control={form.control} name="documentId" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-bold">{t.pCity} <span className="font-normal text-muted-foreground">{t.optional}</span></FormLabel>
-                        <FormControl><Input placeholder={t.pCityPlaceholder} className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base" {...field} /></FormControl>
+                        <FormLabel className="text-sm font-bold">{t.pDocId}</FormLabel>
+                        <FormControl><Input placeholder="12.345.678-9" className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+
+                    {/* Phone with prefix */}
+                    <FormField control={form.control} name="phone" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-bold">{t.pPhone}</FormLabel>
+                        <div className="flex gap-2">
+                          <div className="relative">
+                            <button type="button" onClick={() => setPhonePrefixOpen(v => !v)}
+                              className="h-12 px-3 rounded-2xl border border-[#E8E4DE] bg-[#F5F2EE] flex items-center gap-1.5 text-sm font-semibold hover:bg-[#EDE9E4] transition-colors min-w-[90px]">
+                              <span>{COUNTRY_PREFIXES.find(c => c.prefix === phonePrefix)?.flag}</span>
+                              <span>{phonePrefix}</span>
+                              <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${phonePrefixOpen ? "rotate-180" : ""}`} />
+                            </button>
+                            {phonePrefixOpen && (
+                              <div className="absolute top-full left-0 mt-1 w-60 bg-white border border-[#E8E4DE] rounded-2xl shadow-xl z-50 max-h-64 overflow-y-auto animate-in fade-in">
+                                {COUNTRY_PREFIXES.map(c => (
+                                  <button key={c.code} type="button"
+                                    onClick={() => { setPhonePrefix(c.prefix); setPhonePrefixOpen(false); }}
+                                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-[#F5F2EE] text-left ${phonePrefix === c.prefix ? "font-bold text-primary" : "text-foreground"}`}>
+                                    <span>{c.flag}</span>
+                                    <span className="text-muted-foreground">{c.prefix}</span>
+                                    <span>{c.name}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <FormControl>
+                            <Input
+                              placeholder="9 1234 5678"
+                              className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base flex-1"
+                              {...field}
+                              onChange={e => field.onChange(phonePrefix + " " + e.target.value.replace(/^\+\d+\s?/, ""))}
+                              value={field.value.replace(phonePrefix + " ", "").replace(phonePrefix, "")}
+                            />
+                          </FormControl>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+
+                    <FormField control={form.control} name="email" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-bold">{t.pEmail}</FormLabel>
+                        <FormControl><Input type="email" placeholder="correo@ejemplo.com" className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField control={form.control} name="age" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-bold">{t.pAge} <span className="font-normal text-muted-foreground">{t.optional}</span></FormLabel>
+                          <FormControl><Input type="number" min="18" max="99" placeholder={t.pAgePlaceholder} className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+
+                      <FormField control={form.control} name="city" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-bold">{t.pCity} <span className="font-normal text-muted-foreground">{t.optional}</span></FormLabel>
+                          <FormControl><Input placeholder={t.pCityPlaceholder} className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base" {...field} /></FormControl>
+                        </FormItem>
+                      )} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hair history */}
+                <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm">
+                  <div className="h-1 bg-gradient-to-r from-[#4F9CF9] to-[#4F9CF9]/30" />
+                  <div className="p-6 md:p-8 space-y-5">
+                    <h3 className="font-bold text-sm uppercase tracking-wider text-[#4F9CF9]">{t.pHairHistory}</h3>
+
+                    <FormField control={form.control} name="hairLossTime" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-bold">{t.pHairLossTime}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base">
+                              <SelectValue placeholder={t.pSelectOpt} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="rounded-2xl">
+                            {t.pHairLossOpts.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )} />
+
+                    <FormField control={form.control} name="pattern" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-bold">{t.pPattern}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base">
+                              <SelectValue placeholder={t.pSelectZone} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="rounded-2xl">
+                            {t.pPatternOpts.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )} />
+
+                    <FormField control={form.control} name="previousTreatment" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-bold">{t.pPrevTreatment}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base">
+                              <SelectValue placeholder={t.pSelectOpt} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="rounded-2xl">
+                            {t.pPrevTreatOpts.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )} />
+
+                    <FormField control={form.control} name="symptoms" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-bold">{t.pSymptoms}</FormLabel>
+                        <FormControl><Textarea placeholder={t.pSymptomsPlaceholder} className="rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base min-h-[80px] resize-none" {...field} /></FormControl>
+                      </FormItem>
+                    )} />
+
+                    <FormField control={form.control} name="surgeryHistory" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-bold">{t.pSurgery}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base">
+                              <SelectValue placeholder={t.pSelectOpt} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="rounded-2xl">
+                            {t.pSurgeryOpts.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </FormItem>
                     )} />
                   </div>
                 </div>
 
-                {/* Hair history */}
-                <div className="bg-white rounded-2xl p-6 md:p-8 border border-gray-100 shadow-sm space-y-5">
-                  <h3 className="font-bold text-foreground text-base border-b border-gray-100 pb-3">{t.pHairHistory}</h3>
-
-                  <FormField control={form.control} name="hairLossTime" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-bold">{t.pHairLossTime}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base">
-                            <SelectValue placeholder={t.pSelectOpt} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="rounded-xl">
-                          {t.pHairLossOpts.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )} />
-
-                  <FormField control={form.control} name="pattern" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-bold">{t.pPattern}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base">
-                            <SelectValue placeholder={t.pSelectZone} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="rounded-xl">
-                          {t.pPatternOpts.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )} />
-
-                  <FormField control={form.control} name="previousTreatment" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-bold">{t.pPrevTreatment}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base">
-                            <SelectValue placeholder={t.pSelectOpt} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="rounded-xl">
-                          {t.pPrevTreatOpts.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )} />
-
-                  <FormField control={form.control} name="symptoms" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-bold">{t.pSymptoms}</FormLabel>
-                      <FormControl><Textarea placeholder={t.pSymptomsPlaceholder} className="rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base min-h-[80px] resize-none" {...field} /></FormControl>
-                    </FormItem>
-                  )} />
-
-                  <FormField control={form.control} name="surgeryHistory" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-bold">{t.pSurgery}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base">
-                            <SelectValue placeholder={t.pSelectOpt} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="rounded-xl">
-                          {t.pSurgeryOpts.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )} />
-                </div>
-
                 {/* Consent */}
-                <div className="bg-blue-50/40 rounded-2xl p-6 border border-blue-100 space-y-4">
-                  <h3 className="font-bold text-foreground text-base">{t.pConsentTitle}</h3>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />{t.pConsentLine1}</li>
-                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />{t.pConsentLine2}</li>
-                  </ul>
-                  <FormField control={form.control} name="consent" render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-start gap-3">
-                        <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-0.5 border-primary data-[state=checked]:bg-primary" /></FormControl>
-                        <div className="space-y-1">
-                          <FormLabel className="text-sm font-medium text-foreground leading-snug cursor-pointer">
-                            {t.pConsentLine1}
-                          </FormLabel>
-                          <FormMessage />
+                <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm">
+                  <div className="h-1 bg-gradient-to-r from-[#A78BFA] to-[#A78BFA]/30" />
+                  <div className="p-6 md:p-8 space-y-4">
+                    <h3 className="font-bold text-sm uppercase tracking-wider text-[#A78BFA]">{t.pConsentTitle}</h3>
+                    <ul className="space-y-2.5 text-sm text-muted-foreground">
+                      <li className="flex items-start gap-2.5 bg-[#F5F2EE] rounded-2xl p-3.5">
+                        <Check className="w-4 h-4 text-[#A78BFA] mt-0.5 shrink-0" />{t.pConsentLine1}
+                      </li>
+                      <li className="flex items-start gap-2.5 bg-[#F5F2EE] rounded-2xl p-3.5">
+                        <Check className="w-4 h-4 text-[#A78BFA] mt-0.5 shrink-0" />{t.pConsentLine2}
+                      </li>
+                    </ul>
+                    <FormField control={form.control} name="consent" render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-start gap-3 bg-primary/5 border border-primary/15 p-4 rounded-2xl">
+                          <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-0.5 border-primary data-[state=checked]:bg-primary" /></FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="text-sm font-medium text-foreground leading-snug cursor-pointer">
+                              {t.pConsentLine1}
+                            </FormLabel>
+                            <FormMessage />
+                          </div>
                         </div>
-                      </div>
-                    </FormItem>
-                  )} />
+                      </FormItem>
+                    )} />
+                  </div>
                 </div>
 
                 {duplicateError && (
-                  <Alert variant="destructive">
+                  <Alert variant="destructive" className="rounded-2xl">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>{t.pDuplicate}</AlertDescription>
                   </Alert>
                 )}
 
-                <Button type="submit" className="w-full h-14 text-base font-bold rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 group">
+                <Button type="submit" className="w-full h-14 text-base font-bold rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 group">
                   {t.pContinueCTA}
                   <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -772,8 +800,8 @@ export default function PatientFlow() {
         {/* ── STEP: PHOTOS ── */}
         {step === "photos" && (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <div className="mb-8 flex items-start gap-3">
-              <button onClick={() => setStep("data")} className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors text-muted-foreground shrink-0 mt-1">
+            <div className="mb-6 flex items-start gap-3">
+              <button onClick={() => setStep("data")} className="w-10 h-10 rounded-full bg-white border border-[#E8E4DE] flex items-center justify-center hover:bg-[#F5F2EE] transition-colors text-muted-foreground shrink-0 mt-1 shadow-sm">
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
@@ -782,17 +810,23 @@ export default function PatientFlow() {
               </div>
             </div>
 
-            {/* Progress */}
-            <div className="mb-8 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-              <div className="flex items-center justify-between mb-3">
+            {/* Progress card */}
+            <div className="mb-6 bg-white rounded-[1.75rem] p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-bold text-foreground">{t.pProgress}</span>
-                <span className={`text-sm font-bold ${completedPhotos === 5 ? "text-primary" : "text-muted-foreground"}`}>{completedPhotos}/5</span>
+                <span className={`text-sm font-bold px-3 py-1 rounded-full ${completedPhotos === 5 ? "bg-primary/10 text-primary" : "bg-[#F5F2EE] text-muted-foreground"}`}>{completedPhotos}/5</span>
               </div>
               <div className="flex gap-2">
-                {PHOTO_REQUIREMENTS.map((req, i) => (
-                  <div key={req.key} className={`flex-1 h-2.5 rounded-full transition-all duration-300 ${photos[req.key] ? "bg-primary" : "bg-gray-100"}`} />
+                {PHOTO_REQUIREMENTS.map((req) => (
+                  <div key={req.key} className={`flex-1 h-3 rounded-full transition-all duration-500 ${photos[req.key] ? "bg-primary shadow-sm shadow-primary/30" : "bg-[#E8E4DE]"}`} />
                 ))}
               </div>
+              {completedPhotos === 5 && (
+                <div className="mt-3 flex items-center gap-2 text-primary text-xs font-bold">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>¡Todas las fotografías completadas!</span>
+                </div>
+              )}
             </div>
 
             <div className="space-y-5">
@@ -804,6 +838,7 @@ export default function PatientFlow() {
                   description={req.description}
                   tip={req.tip}
                   icon={req.icon}
+                  color={req.color}
                   index={index}
                   dataUrl={photos[req.key]}
                   onCapture={handlePhotoCapture}
@@ -814,17 +849,17 @@ export default function PatientFlow() {
             </div>
 
             {duplicateError && (
-              <Alert variant="destructive" className="mt-6">
+              <Alert variant="destructive" className="mt-6 rounded-2xl">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{t.pDuplicate}</AlertDescription>
               </Alert>
             )}
 
-            <div className="mt-10">
+            <div className="mt-8">
               <Button
                 onClick={submitFullForm}
                 disabled={isPending || completedPhotos < 1}
-                className={`w-full h-16 text-lg font-bold rounded-2xl shadow-xl group transition-all ${completedPhotos === 5 ? "bg-primary hover:bg-primary/90 text-white shadow-primary/25" : "bg-primary/80 hover:bg-primary/70 text-white"}`}
+                className={`w-full h-16 text-lg font-bold rounded-full shadow-xl group transition-all ${completedPhotos === 5 ? "bg-primary hover:bg-primary/90 text-white shadow-primary/25" : "bg-primary/80 hover:bg-primary/70 text-white"}`}
               >
                 {isPending ? (
                   <><RefreshCw className="w-5 h-5 mr-3 animate-spin" />{t.pSending}</>
@@ -843,35 +878,38 @@ export default function PatientFlow() {
 
         {/* ── STEP: SUCCESS ── */}
         {step === "success" && (
-          <div className="bg-white rounded-[2rem] p-8 md:p-12 shadow-sm border border-gray-100 text-center animate-in fade-in zoom-in-95 duration-500">
-            <div className="w-24 h-24 bg-primary/10 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 relative">
-              <div className="absolute inset-0 bg-primary/20 rounded-[1.5rem] animate-ping opacity-30" />
-              <CheckCircle2 className="w-12 h-12 text-primary relative z-10" />
-            </div>
-
-            <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4 tracking-tight">{t.pSuccessTitle}</h1>
-            <p className="text-muted-foreground mb-10 leading-relaxed max-w-md mx-auto">{t.pSuccessDesc}</p>
-
-            <div className="bg-gray-50/80 rounded-2xl p-6 border border-gray-100 text-left mb-8">
-              <h3 className="font-bold text-foreground mb-4 text-base">{t.pSuccessNext}</h3>
-              <div className="space-y-3">
-                {[t.pSuccessStep1, t.pSuccessStep2, t.pSuccessStep3].map((step, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                      <span className="text-primary font-bold text-sm">{i + 1}</span>
-                    </div>
-                    <span className="text-sm font-medium text-foreground">{step}</span>
-                  </div>
-                ))}
+          <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm animate-in fade-in zoom-in-95 duration-500">
+            <div className="h-1.5 bg-gradient-to-r from-primary via-[#4F9CF9] to-[#A78BFA]" />
+            <div className="p-8 md:p-12 text-center">
+              <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+                <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping opacity-30" />
+                <CheckCircle2 className="w-12 h-12 text-primary relative z-10" />
               </div>
-            </div>
 
-            <Link href="/">
-              <Button variant="outline" className="w-full h-12 rounded-2xl font-semibold border-gray-200 hover:bg-gray-50">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                {t.pGoHome}
-              </Button>
-            </Link>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4 tracking-tight">{t.pSuccessTitle}</h1>
+              <p className="text-muted-foreground mb-10 leading-relaxed max-w-md mx-auto">{t.pSuccessDesc}</p>
+
+              <div className="bg-[#F5F2EE] rounded-2xl p-6 text-left mb-8">
+                <h3 className="font-bold text-foreground mb-4 text-base">{t.pSuccessNext}</h3>
+                <div className="space-y-3">
+                  {[t.pSuccessStep1, t.pSuccessStep2, t.pSuccessStep3].map((stepItem, i) => (
+                    <div key={i} className="flex items-center gap-3 bg-white p-3.5 rounded-2xl">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <span className="text-primary font-bold text-sm">{i + 1}</span>
+                      </div>
+                      <span className="text-sm font-medium text-foreground">{stepItem}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Link href="/">
+                <Button variant="outline" className="w-full h-12 rounded-full font-semibold border-[#E8E4DE] hover:bg-[#F5F2EE] bg-white">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  {t.pGoHome}
+                </Button>
+              </Link>
+            </div>
           </div>
         )}
       </main>
