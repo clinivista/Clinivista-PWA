@@ -4,7 +4,7 @@ import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { 
   Users, LogOut, CheckCircle2, Link as LinkIcon, 
-  Search, ChevronRight, X, Phone, Activity, AlertTriangle, Camera
+  Search, ChevronRight, X, Phone, Activity, AlertTriangle, Camera, Mail, CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,6 +79,8 @@ export default function Admin() {
       queryKey: getGetLeadsQueryKey(leadsParams)
     }
   });
+
+  const selectedLeadSummary = leadsData?.leads.find(l => l.id === selectedLeadId);
 
   const { data: fullLead } = useGetLeadById(selectedLeadId || "", {
     query: {
@@ -393,6 +395,30 @@ export default function Admin() {
                     <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
                       <h3 className="text-xl font-extrabold text-foreground mb-6">Antecedentes del Paciente</h3>
                       <div className="grid grid-cols-2 gap-x-6 gap-y-6 text-base">
+                        {selectedLeadSummary?.documentId && (
+                          <div className="col-span-2 flex items-start gap-3 bg-gray-50 rounded-xl p-4 border border-gray-100">
+                            <CreditCard className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+                            <div className="min-w-0">
+                              <span className="block text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Documento de Identidad</span>
+                              <span className="font-semibold break-all">{selectedLeadSummary.documentId}</span>
+                            </div>
+                          </div>
+                        )}
+                        {selectedLeadSummary?.email && (
+                          <div className="col-span-2 flex items-start gap-3 bg-gray-50 rounded-xl p-4 border border-gray-100">
+                            <Mail className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+                            <div className="min-w-0">
+                              <span className="block text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">Correo Electrónico</span>
+                              <a
+                                href={`mailto:${selectedLeadSummary.email}`}
+                                className="font-semibold text-primary hover:underline break-all"
+                                onClick={e => e.stopPropagation()}
+                              >
+                                {selectedLeadSummary.email}
+                              </a>
+                            </div>
+                          </div>
+                        )}
                         <div>
                           <span className="block text-sm text-muted-foreground font-bold uppercase tracking-wider mb-1">Edad</span>
                           <span className="font-semibold">{fullLead.age || "-"}</span>
