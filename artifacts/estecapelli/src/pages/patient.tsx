@@ -80,17 +80,47 @@ function compress(file: File): Promise<string> {
   });
 }
 
+// ---------- Country phone prefixes ----------
+const COUNTRY_PREFIXES = [
+  { code: "CL", flag: "🇨🇱", name: "Chile", prefix: "+56" },
+  { code: "AR", flag: "🇦🇷", name: "Argentina", prefix: "+54" },
+  { code: "CO", flag: "🇨🇴", name: "Colombia", prefix: "+57" },
+  { code: "MX", flag: "🇲🇽", name: "México", prefix: "+52" },
+  { code: "PE", flag: "🇵🇪", name: "Perú", prefix: "+51" },
+  { code: "EC", flag: "🇪🇨", name: "Ecuador", prefix: "+593" },
+  { code: "BO", flag: "🇧🇴", name: "Bolivia", prefix: "+591" },
+  { code: "PY", flag: "🇵🇾", name: "Paraguay", prefix: "+595" },
+  { code: "UY", flag: "🇺🇾", name: "Uruguay", prefix: "+598" },
+  { code: "VE", flag: "🇻🇪", name: "Venezuela", prefix: "+58" },
+  { code: "ES", flag: "🇪🇸", name: "España", prefix: "+34" },
+  { code: "PT", flag: "🇵🇹", name: "Portugal", prefix: "+351" },
+  { code: "US", flag: "🇺🇸", name: "EE.UU. / Canadá", prefix: "+1" },
+  { code: "BR", flag: "🇧🇷", name: "Brasil", prefix: "+55" },
+  { code: "TR", flag: "🇹🇷", name: "Turquía", prefix: "+90" },
+  { code: "DE", flag: "🇩🇪", name: "Alemania", prefix: "+49" },
+  { code: "FR", flag: "🇫🇷", name: "Francia", prefix: "+33" },
+  { code: "IT", flag: "🇮🇹", name: "Italia", prefix: "+39" },
+  { code: "GB", flag: "🇬🇧", name: "Reino Unido", prefix: "+44" },
+  { code: "PL", flag: "🇵🇱", name: "Polonia", prefix: "+48" },
+  { code: "RU", flag: "🇷🇺", name: "Rusia", prefix: "+7" },
+  { code: "UA", flag: "🇺🇦", name: "Ucrania", prefix: "+380" },
+  { code: "SA", flag: "🇸🇦", name: "Arabia Saudita", prefix: "+966" },
+  { code: "AE", flag: "🇦🇪", name: "Emiratos Árabes", prefix: "+971" },
+  { code: "CN", flag: "🇨🇳", name: "China", prefix: "+86" },
+  { code: "AU", flag: "🇦🇺", name: "Australia", prefix: "+61" },
+];
+
 // ---------- Zod schema ----------
 const patientSchema = z.object({
   name: z.string().min(2, "Ingresa tu nombre completo"),
-  documentId: z.string().optional(),
+  documentId: z.string().min(1, "El documento de identidad es obligatorio"),
   email: z
     .string()
     .email("Ingresa un correo válido (ej. nombre@correo.com)")
     .min(1, "Ingresa tu correo electrónico"),
   phone: z
     .string()
-    .regex(/^\+56\d{8,9}$/, "Ingresa un teléfono válido (8 o 9 dígitos)"),
+    .min(6, "Ingresa un teléfono válido"),
   age: z
     .string()
     .optional()
@@ -456,6 +486,8 @@ export default function PatientFlow() {
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [processingPhoto, setProcessingPhoto] = useState<string | null>(null);
   const [duplicateError, setDuplicateError] = useState(false);
+  const [phonePrefix, setPhonePrefix] = useState("+56");
+  const [phonePrefixOpen, setPhonePrefixOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: existingData, isLoading: isLoadingExisting } = useGetPatient(
@@ -768,8 +800,7 @@ export default function PatientFlow() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm font-bold text-foreground">
-                          Documento de identidad{" "}
-                          <span className="text-muted-foreground font-normal">(opcional)</span>
+                          Documento de identidad *
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -786,34 +817,75 @@ export default function PatientFlow() {
                   <FormField
                     control={form.control}
                     name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-bold text-foreground">Teléfono móvil (WhatsApp) *</FormLabel>
-                        <FormControl>
-                          <div className="flex">
-                            <span className="inline-flex items-center px-4 h-12 rounded-l-xl border border-r-0 border-gray-200 bg-gray-100 text-base font-semibold text-foreground select-none">
-                              +56
-                            </span>
-                            <Input
-                              type="tel"
-                              placeholder="9 1234 5678"
-                              autoComplete="tel-national"
-                              inputMode="tel"
-                              className="h-12 rounded-xl rounded-l-none bg-gray-50 border-gray-200 focus:bg-white text-base"
-                              value={field.value.replace(/^\+56/, "")}
-                              onChange={(e) => {
-                                const digits = e.target.value.replace(/\D/g, "").replace(/^56/, "");
-                                field.onChange(digits ? `+56${digits}` : "");
-                              }}
-                              onBlur={field.onBlur}
-                              name={field.name}
-                              ref={field.ref}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const currentCountry = COUNTRY_PREFIXES.find(c => c.prefix === phonePrefix) || COUNTRY_PREFIXES[0];
+                      const rawNumber = field.value.startsWith(phonePrefix)
+                        ? field.value.slice(phonePrefix.length)
+                        : field.value.replace(/^\+\d{1,4}/, "");
+                      return (
+                        <FormItem>
+                          <FormLabel className="text-sm font-bold text-foreground">Teléfono móvil (WhatsApp) *</FormLabel>
+                          <FormControl>
+                            <div className="flex relative">
+                              {/* Country prefix selector */}
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={() => setPhonePrefixOpen(v => !v)}
+                                  className="inline-flex items-center gap-2 h-12 px-3 rounded-l-xl border border-r-0 border-gray-200 bg-gray-100 hover:bg-gray-200 transition-colors text-sm font-semibold text-foreground select-none min-w-[90px]"
+                                >
+                                  <span>{currentCountry.flag}</span>
+                                  <span>{phonePrefix}</span>
+                                  <ChevronDown className="w-3.5 h-3.5 text-gray-500 ml-auto" />
+                                </button>
+                                {phonePrefixOpen && (
+                                  <>
+                                    <div className="fixed inset-0 z-40" onClick={() => setPhonePrefixOpen(false)} />
+                                    <div className="absolute left-0 top-full mt-1 w-64 bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150">
+                                      <div className="max-h-64 overflow-y-auto p-1.5 space-y-0.5">
+                                        {COUNTRY_PREFIXES.map(c => (
+                                          <button
+                                            key={c.code}
+                                            type="button"
+                                            onClick={() => {
+                                              setPhonePrefix(c.prefix);
+                                              field.onChange(rawNumber ? `${c.prefix}${rawNumber}` : "");
+                                              setPhonePrefixOpen(false);
+                                            }}
+                                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors text-left
+                                              ${phonePrefix === c.prefix ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-gray-50"}`}
+                                          >
+                                            <span className="text-base">{c.flag}</span>
+                                            <span className="flex-1 font-medium">{c.name}</span>
+                                            <span className="text-muted-foreground font-semibold text-xs">{c.prefix}</span>
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                              <Input
+                                type="tel"
+                                placeholder="9 1234 5678"
+                                autoComplete="tel-national"
+                                inputMode="tel"
+                                className="h-12 rounded-xl rounded-l-none bg-gray-50 border-gray-200 focus:bg-white text-base"
+                                value={rawNumber}
+                                onChange={(e) => {
+                                  const digits = e.target.value.replace(/\D/g, "");
+                                  field.onChange(digits ? `${phonePrefix}${digits}` : "");
+                                }}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
 
                   <FormField
