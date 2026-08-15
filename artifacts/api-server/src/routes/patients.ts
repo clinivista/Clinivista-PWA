@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { db, leadsTable } from "@workspace/db";
 import {
   CreatePatientBody,
@@ -10,6 +10,8 @@ import {
 import { uid, clean, cleanPhone } from "../lib/helpers";
 
 const router: IRouter = Router();
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface PhotoInput {
   key: string;
@@ -58,6 +60,8 @@ function buildLead(payload: Record<string, unknown>, existing: Partial<typeof le
     updatedAt: new Date(),
     name: clean(payload.name, 100),
     phone: cleanPhone(payload.phone),
+    documentId: clean(payload.documentId, 30),
+    email: clean(payload.email, 120).toLowerCase(),
     age: clean(payload.age, 3),
     city: clean(payload.city, 80),
     hairLossTime: clean(payload.hairLossTime, 120),
@@ -87,6 +91,29 @@ router.post("/patients", async (req, res): Promise<void> => {
 
   if (!data.consent || !data.name || !data.phone) {
     res.status(422).json({ error: "Completa tu nombre, teléfono y consentimiento." });
+    return;
+  }
+
+  if (data.email && !EMAIL_REGEX.test(data.email)) {
+    res.status(422).json({ error: "Ingresa un correo electrónico válido." });
+    return;
+  }
+
+  const conditions = [eq(leadsTable.phone, data.phone)];
+  if (data.email) {
+    conditions.push(eq(leadsTable.email, data.email));
+  }
+  const [duplicate] = await db
+    .select({ id: leadsTable.id })
+    .from(leadsTable)
+    .where(or(...conditions))
+    .limit(1);
+
+  if (duplicate) {
+    res.status(409).json({
+      error: "Ya existe una evaluación con este teléfono o correo.",
+      duplicate: true,
+    });
     return;
   }
 

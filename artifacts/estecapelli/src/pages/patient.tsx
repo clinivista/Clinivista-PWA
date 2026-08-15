@@ -83,10 +83,14 @@ function compress(file: File): Promise<string> {
 // ---------- Zod schema ----------
 const patientSchema = z.object({
   name: z.string().min(2, "Ingresa tu nombre completo"),
+  documentId: z.string().optional(),
+  email: z
+    .string()
+    .email("Ingresa un correo válido (ej. nombre@correo.com)")
+    .min(1, "Ingresa tu correo electrónico"),
   phone: z
     .string()
-    .min(8, "Ingresa un teléfono válido (mínimo 8 dígitos)")
-    .regex(/^[+\d\s\-()]+$/, "Solo se permiten números y el signo +"),
+    .regex(/^\+56\d{8,9}$/, "Ingresa un teléfono válido (8 o 9 dígitos)"),
   age: z
     .string()
     .optional()
@@ -451,6 +455,7 @@ export default function PatientFlow() {
   const [step, setStep] = useState<"intro" | "data" | "photos" | "success">("intro");
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [processingPhoto, setProcessingPhoto] = useState<string | null>(null);
+  const [duplicateError, setDuplicateError] = useState(false);
   const { toast } = useToast();
 
   const { data: existingData, isLoading: isLoadingExisting } = useGetPatient(
@@ -467,6 +472,8 @@ export default function PatientFlow() {
     resolver: zodResolver(patientSchema),
     defaultValues: {
       name: "",
+      documentId: "",
+      email: "",
       phone: "",
       age: "",
       city: "",
@@ -484,6 +491,8 @@ export default function PatientFlow() {
       const l = existingData.lead;
       form.reset({
         name: l.name || "",
+        documentId: (l as any).documentId || "",
+        email: (l as any).email || "",
         phone: l.phone || "",
         age: l.age || "",
         city: l.city || "",
@@ -577,6 +586,7 @@ export default function PatientFlow() {
         }
       );
     } else {
+      setDuplicateError(false);
       createMutation.mutate(
         { data: payload },
         {
@@ -584,12 +594,18 @@ export default function PatientFlow() {
             setStep("success");
             window.scrollTo({ top: 0, behavior: "smooth" });
           },
-          onError: () =>
+          onError: (error: unknown) => {
+            const err = error as { status?: number; data?: { duplicate?: boolean } };
+            if (err?.status === 409 || err?.data?.duplicate) {
+              setDuplicateError(true);
+              return;
+            }
             toast({
               variant: "destructive",
               title: "Error al enviar",
               description: "No pudimos enviar tu evaluación. Intenta nuevamente.",
-            }),
+            });
+          },
         }
       );
     }
@@ -748,16 +764,70 @@ export default function PatientFlow() {
 
                   <FormField
                     control={form.control}
+                    name="documentId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-bold text-foreground">
+                          Documento de identidad{" "}
+                          <span className="text-muted-foreground font-normal">(opcional)</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="RUT, DNI o pasaporte"
+                            className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white text-base"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm font-bold text-foreground">Teléfono móvil (WhatsApp) *</FormLabel>
                         <FormControl>
+                          <div className="flex">
+                            <span className="inline-flex items-center px-4 h-12 rounded-l-xl border border-r-0 border-gray-200 bg-gray-100 text-base font-semibold text-foreground select-none">
+                              +56
+                            </span>
+                            <Input
+                              type="tel"
+                              placeholder="9 1234 5678"
+                              autoComplete="tel-national"
+                              inputMode="tel"
+                              className="h-12 rounded-xl rounded-l-none bg-gray-50 border-gray-200 focus:bg-white text-base"
+                              value={field.value.replace(/^\+56/, "")}
+                              onChange={(e) => {
+                                const digits = e.target.value.replace(/\D/g, "").replace(/^56/, "");
+                                field.onChange(digits ? `+56${digits}` : "");
+                              }}
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-bold text-foreground">Correo electrónico *</FormLabel>
+                        <FormControl>
                           <Input
-                            type="tel"
-                            placeholder="+56 9 1234 5678"
-                            autoComplete="tel"
-                            inputMode="tel"
+                            type="email"
+                            placeholder="ejemplo@correo.com"
+                            autoComplete="email"
+                            inputMode="email"
                             className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white text-base"
                             {...field}
                           />
@@ -862,19 +932,19 @@ export default function PatientFlow() {
                             </FormControl>
                             <SelectContent className="rounded-xl">
                               <SelectItem value="Entradas / línea frontal">
-                                Entradas / línea frontal
+                                Frente / entradas
                               </SelectItem>
                               <SelectItem value="Vértex o coronilla">
-                                Vértex o coronilla
+                                Coronilla (parte superior)
                               </SelectItem>
                               <SelectItem value="Zona frontal y vértex">
-                                Zona frontal y vértex (ambas)
+                                Frente y coronilla
                               </SelectItem>
                               <SelectItem value="Pérdida generalizada">
-                                Pérdida generalizada (todo el cuero cabelludo)
+                                Todo el cuero cabelludo
                               </SelectItem>
                               <SelectItem value="Pérdida localizada / irregular">
-                                Pérdida localizada o irregular
+                                Zonas irregulares o dispersas
                               </SelectItem>
                             </SelectContent>
                           </Select>
@@ -980,7 +1050,7 @@ export default function PatientFlow() {
                   control={form.control}
                   name="consent"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-4 bg-blue-50/40 p-6 rounded-[1.5rem] mt-8 border border-blue-100">
+                    <FormItem className="flex flex-row items-start space-x-4 bg-amber-50 p-6 rounded-[1.5rem] mt-8 border-2 border-amber-200">
                       <FormControl>
                         <Checkbox
                           checked={field.value}
@@ -988,13 +1058,19 @@ export default function PatientFlow() {
                           className="mt-1 h-5 w-5 rounded shadow-sm data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                       </FormControl>
-                      <div className="space-y-2 leading-none">
-                        <FormLabel className="text-base font-bold text-foreground cursor-pointer block">
-                          Consentimiento Médico y Privacidad
+                      <div className="space-y-3 leading-none">
+                        <FormLabel className="text-base font-bold text-foreground cursor-pointer flex items-center gap-2">
+                          <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0" />
+                          Consentimiento y Privacidad
                         </FormLabel>
-                        <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-                          Acepto que mis datos y fotografías sean enviados de forma segura al equipo médico de Clinivista para su evaluación clínica confidencial. Entiendo que este proceso preliminar no reemplaza una consulta presencial ni genera un diagnóstico automático.
-                        </p>
+                        <ul className="text-sm text-amber-900/80 leading-relaxed font-medium space-y-2 list-disc pl-4">
+                          <li>
+                            Tus fotos y datos se transmiten de forma cifrada y son tratados con total confidencialidad.
+                          </li>
+                          <li>
+                            Esta evaluación preliminar no constituye un diagnóstico ni reemplaza una consulta médica presencial.
+                          </li>
+                        </ul>
                       </div>
                     </FormItem>
                   )}
@@ -1049,6 +1125,16 @@ export default function PatientFlow() {
               </div>
             </div>
 
+            {/* Duplicate submission error */}
+            {duplicateError && (
+              <Alert variant="destructive" className="mb-24 bg-red-50 border-red-200">
+                <AlertCircle className="h-5 w-5" />
+                <AlertDescription className="text-sm leading-relaxed font-medium">
+                  Ya existe una evaluación registrada con este teléfono o correo. Si necesitas ayuda, contáctanos directamente.
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Sticky Action Bar */}
             <div className="fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-xl border-t border-gray-200 p-4 md:p-6 z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
               <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
@@ -1086,11 +1172,28 @@ export default function PatientFlow() {
               <CheckCircle2 className="w-12 h-12 text-green-500 relative z-10" />
             </div>
             <h2 className="text-3xl font-extrabold text-foreground mb-4 tracking-tight">
-              ¡Evaluación enviada con éxito!
+              ¡Tu evaluación fue recibida!
             </h2>
             <p className="text-lg text-muted-foreground mb-8 leading-relaxed max-w-md mx-auto">
-              Hemos recibido tu información clínica y fotografías. Nuestro equipo médico analizará tu caso y nos contactaremos contigo muy pronto.
+              Nuestro equipo revisará tu información y fotografías. Recibirás una respuesta en un plazo máximo de{" "}
+              <strong className="text-foreground">24 horas hábiles</strong>.
             </p>
+
+            <div className="bg-gray-50 rounded-2xl p-6 mb-8 max-w-md mx-auto text-left space-y-4 border border-gray-100">
+              <p className="text-sm font-bold text-foreground uppercase tracking-wider">¿Qué sigue ahora?</p>
+              {[
+                { icon: <Timer className="w-5 h-5 text-primary" />, text: "Revisión de tu caso (hasta 24 h hábiles)" },
+                { icon: <Info className="w-5 h-5 text-primary" />, text: "Te contactaremos por WhatsApp o correo" },
+                { icon: <CheckCircle2 className="w-5 h-5 text-primary" />, text: "Coordinamos tu consulta" },
+              ].map((s, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0">
+                    {s.icon}
+                  </span>
+                  <p className="text-sm font-medium text-foreground">{s.text}</p>
+                </div>
+              ))}
+            </div>
             <Button
               variant="outline"
               onClick={() => window.location.href = "/"}

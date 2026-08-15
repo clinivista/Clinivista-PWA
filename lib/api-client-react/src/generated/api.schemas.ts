@@ -59,6 +59,10 @@ export interface LeadSummary {
   name: string;
   phone: string;
   /** @nullable */
+  documentId?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
   age?: string | null;
   /** @nullable */
   city?: string | null;
@@ -149,6 +153,8 @@ export interface PatientPhoto {
 export interface PatientInput {
   name: string;
   phone: string;
+  documentId?: string;
+  email?: string;
   age?: string;
   city?: string;
   hairLossTime?: string;

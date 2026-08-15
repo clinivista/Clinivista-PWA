@@ -19,6 +19,8 @@ export const leadsTable = pgTable("leads", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   name: text("name").notNull().default(""),
   phone: text("phone").notNull().default(""),
+  documentId: text("document_id").default(""),
+  email: text("email").default(""),
   age: text("age").default(""),
   city: text("city").default(""),
   status: text("status").notNull().default("nuevo"),

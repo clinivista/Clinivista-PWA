@@ -15,6 +15,10 @@ export interface LeadSummary {
   name: string;
   phone: string;
   /** @nullable */
+  documentId?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
   age?: string | null;
   /** @nullable */
   city?: string | null;

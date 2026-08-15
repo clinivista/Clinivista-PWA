@@ -10,6 +10,8 @@ import type { PatientPhoto } from './patientPhoto';
 export interface PatientInput {
   name: string;
   phone: string;
+  documentId?: string;
+  email?: string;
   age?: string;
   city?: string;
   hairLossTime?: string;

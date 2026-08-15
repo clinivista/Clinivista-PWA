@@ -378,6 +378,10 @@ components:
           type: string
         phone:
           type: string
+        documentId:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
         age:
           type: ["string", "null"]
         city:
@@ -512,6 +516,10 @@ components:
         name:
           type: string
         phone:
+          type: string
+        documentId:
+          type: string
+        email:
           type: string
         age:
           type: string
