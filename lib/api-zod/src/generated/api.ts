@@ -127,6 +127,18 @@ export const GetLeadByIdResponse = zod.object({
 
 
 /**
+ * @summary Delete a lead permanently (admin only)
+ */
+export const DeleteLeadParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteLeadResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
  * @summary Update lead status, notes, norwood, appointment (admin)
  */
 export const PatchLeadParams = zod.object({

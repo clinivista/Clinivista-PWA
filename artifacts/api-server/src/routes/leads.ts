@@ -89,6 +89,30 @@ router.get("/leads/:id", async (req, res): Promise<void> => {
   res.json(leadFull(lead));
 });
 
+router.delete("/leads/:id", async (req, res): Promise<void> => {
+  if (!requireAuth(req, res)) return;
+
+  const params = GetLeadByIdParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "ID inválido." });
+    return;
+  }
+
+  const [lead] = await db
+    .select()
+    .from(leadsTable)
+    .where(eq(leadsTable.id, params.data.id));
+
+  if (!lead) {
+    res.status(404).json({ error: "Caso no encontrado." });
+    return;
+  }
+
+  await db.delete(leadsTable).where(eq(leadsTable.id, params.data.id));
+
+  res.json({ ok: true });
+});
+
 router.patch("/leads/:id", async (req, res): Promise<void> => {
   if (!requireAuth(req, res)) return;
 

@@ -4,7 +4,7 @@ import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { 
   Users, LogOut, CheckCircle2, Link as LinkIcon, 
-  Search, ChevronRight, X, Phone, Activity, AlertTriangle, Camera, Mail, CreditCard
+  Search, ChevronRight, X, Phone, Activity, AlertTriangle, Camera, Mail, CreditCard, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ import {
   useGetLeadStats, getGetLeadStatsQueryKey,
   useGetLeads, getGetLeadsQueryKey,
   useGetLeadById, getGetLeadByIdQueryKey,
-  usePatchLead, useCreateInvitation,
+  usePatchLead, useDeleteLead, useCreateInvitation,
   LeadSummary
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -62,9 +62,11 @@ export default function Admin() {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteResult, setInviteResult] = useState<{link: string, lead: LeadSummary} | null>(null);
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const { data: authStatus, isLoading: isAuthLoading } = useGetAuthMe();
   const logoutMutation = useAdminLogout();
+  const deleteMutation = useDeleteLead();
   const inviteMutation = useCreateInvitation();
 
   const { data: stats } = useGetLeadStats({ query: { enabled: authStatus?.authenticated, queryKey: getGetLeadStatsQueryKey() }});
@@ -108,7 +110,22 @@ export default function Admin() {
     logoutMutation.mutate(undefined, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() });
-        setLocation("/admin/login");
+        setLocation("/");
+      }
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate({ id }, {
+      onSuccess: () => {
+        setSelectedLeadId(null);
+        setDeleteConfirmId(null);
+        queryClient.invalidateQueries({ queryKey: getGetLeadsQueryKey(leadsParams) });
+        queryClient.invalidateQueries({ queryKey: getGetLeadStatsQueryKey() });
+        toast({ title: "Registro eliminado", description: "El caso fue eliminado permanentemente." });
+      },
+      onError: () => {
+        toast({ variant: "destructive", title: "Error al eliminar", description: "No se pudo eliminar el registro." });
       }
     });
   };
@@ -314,6 +331,18 @@ export default function Admin() {
                     </button>
                   </div>
 
+                  {/* Drawer footer with delete */}
+                  <div className="shrink-0 border-t border-gray-100 px-6 md:px-8 py-4 bg-white flex justify-end">
+                    <Button
+                      variant="ghost"
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50 gap-2 font-semibold rounded-xl h-10"
+                      onClick={() => setDeleteConfirmId(fullLead.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Eliminar registro
+                    </Button>
+                  </div>
+
                   <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-10 bg-gray-50/50">
                     {/* Status & Actions */}
                     <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
@@ -492,6 +521,38 @@ export default function Admin() {
           </>
         )}
       </main>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] w-full max-w-sm shadow-2xl p-8 animate-in zoom-in-95 duration-300">
+            <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Trash2 className="w-7 h-7 text-red-500" />
+            </div>
+            <h3 className="text-xl font-extrabold text-foreground text-center mb-3">Eliminar registro</h3>
+            <p className="text-muted-foreground text-center text-sm mb-8 leading-relaxed">
+              Esta acción es <strong>permanente</strong> y no se puede deshacer. El registro del paciente y todas sus fotografías serán eliminadas.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1 h-12 rounded-xl font-semibold border-gray-200"
+                onClick={() => setDeleteConfirmId(null)}
+                disabled={deleteMutation.isPending}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="flex-1 h-12 rounded-xl font-bold bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20"
+                onClick={() => handleDelete(deleteConfirmId)}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? "Eliminando..." : "Sí, eliminar"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Expanded Photo Modal */}
       {expandedPhoto && (
