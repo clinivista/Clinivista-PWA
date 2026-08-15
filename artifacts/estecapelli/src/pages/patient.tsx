@@ -1,20 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearch } from "wouter";
+import { useSearch, Link } from "wouter";
 import {
-  Camera,
-  Check,
-  CheckCircle2,
-  ChevronRight,
-  Info,
-  ArrowLeft,
-  ShieldCheck,
-  Activity,
-  ImagePlus,
-  RefreshCw,
-  Timer,
-  ChevronDown,
-  ChevronUp,
-  AlertCircle,
+  Camera, Check, CheckCircle2, ChevronRight, Info, ArrowLeft,
+  ShieldCheck, Activity, ImagePlus, RefreshCw, Timer,
+  ChevronDown, ChevronUp, AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,30 +12,19 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CameraModal } from "@/components/camera-modal";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
 import {
-  useGetPatient,
-  getGetPatientQueryKey,
-  useCreatePatient,
-  useUpdatePatient,
+  useGetPatient, getGetPatientQueryKey, useCreatePatient, useUpdatePatient,
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage, LANGS, type AppTranslations, type LangCode } from "@/lib/language";
 
 // ---------- Image compression ----------
 function compressImage(src: string): Promise<string> {
@@ -72,9 +50,7 @@ function compress(file: File): Promise<string> {
     const r = new FileReader();
     r.onerror = reject;
     r.onload = () => {
-      if (typeof r.result === "string") {
-        compressImage(r.result).then(resolve).catch(reject);
-      }
+      if (typeof r.result === "string") compressImage(r.result).then(resolve).catch(reject);
     };
     r.readAsDataURL(file);
   });
@@ -114,174 +90,124 @@ const COUNTRY_PREFIXES = [
 const patientSchema = z.object({
   name: z.string().min(2, "Ingresa tu nombre completo"),
   documentId: z.string().min(1, "El documento de identidad es obligatorio"),
-  email: z
-    .string()
-    .email("Ingresa un correo válido (ej. nombre@correo.com)")
-    .min(1, "Ingresa tu correo electrónico"),
-  phone: z
-    .string()
-    .min(6, "Ingresa un teléfono válido"),
-  age: z
-    .string()
-    .optional()
-    .refine(
-      (v) => !v || (Number(v) >= 18 && Number(v) <= 99),
-      "La edad debe estar entre 18 y 99 años"
-    ),
+  email: z.string().email("Ingresa un correo válido").min(1),
+  phone: z.string().min(6, "Ingresa un teléfono válido"),
+  age: z.string().optional().refine(v => !v || (Number(v) >= 18 && Number(v) <= 99), "La edad debe estar entre 18 y 99"),
   city: z.string().optional(),
   hairLossTime: z.string().optional(),
   pattern: z.string().optional(),
   previousTreatment: z.string().optional(),
   symptoms: z.string().optional(),
   surgeryHistory: z.string().optional(),
-  consent: z
-    .boolean()
-    .refine((val) => val === true, "Debes aceptar para continuar"),
+  consent: z.boolean().refine(val => val === true, "Debes aceptar para continuar"),
 });
 
 type PatientFormValues = z.infer<typeof patientSchema>;
 
-// ---------- Photo definitions ----------
-const PHOTO_REQUIREMENTS = [
-  {
-    key: "frontal",
-    title: "Vista frontal",
-    description: "De frente, centrado, buena iluminación. Muestra la línea de nacimiento del cabello.",
-    tip: "Mira directamente a la cámara con buena luz natural. Mantén el cabello despejado de la frente.",
-    icon: (
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-        {/* Face outline */}
-        <ellipse cx="32" cy="26" rx="14" ry="16" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
-        {/* Hair top */}
-        <path d="M18 22 Q18 8 32 8 Q46 8 46 22" fill="#4a3728" stroke="#3a2718" strokeWidth="1"/>
-        {/* Eyes */}
-        <circle cx="26" cy="24" r="2" fill="#3a2718"/>
-        <circle cx="38" cy="24" r="2" fill="#3a2718"/>
-        {/* Nose */}
-        <path d="M32 28 Q30 32 32 33 Q34 32 32 28" stroke="#a87c5a" strokeWidth="1" fill="none"/>
-        {/* Mouth */}
-        <path d="M27 37 Q32 41 37 37" stroke="#a87c5a" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-        {/* Camera arrow pointing at face */}
-        <rect x="2" y="28" width="10" height="7" rx="1.5" fill="#4a90d9" opacity="0.9"/>
-        <polygon points="12,23 12,38 20,31.5" fill="#4a90d9" opacity="0.9"/>
-        <circle cx="7" cy="31.5" r="2" fill="white" opacity="0.7"/>
-        {/* Shoulders */}
-        <path d="M18 44 Q20 50 32 52 Q44 50 46 44" fill="#c9b5a5" stroke="#a87c5a" strokeWidth="1"/>
-        {/* Guide arrows */}
-        <text x="32" y="62" textAnchor="middle" fontSize="7" fill="#6b7280" fontFamily="sans-serif">Frontal</text>
-      </svg>
-    ),
-  },
-  {
-    key: "vertex",
-    title: "Vértex / Coronilla",
-    description: "Inclina levemente la cabeza hacia adelante. La cámara apunta hacia abajo.",
-    tip: "Inclina la cabeza hacia abajo 45°. Pide a alguien que tome la foto desde arriba, apuntando a la coronilla.",
-    icon: (
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-        {/* Top-down view of head */}
-        <ellipse cx="32" cy="36" rx="18" ry="20" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
-        {/* Hair from top */}
-        <ellipse cx="32" cy="34" rx="17" ry="18" fill="#4a3728"/>
-        {/* Crown/vertex center highlight */}
-        <circle cx="32" cy="32" r="6" fill="#6b4f3a" opacity="0.5"/>
-        {/* Ears */}
-        <ellipse cx="14" cy="38" rx="3" ry="4" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
-        <ellipse cx="50" cy="38" rx="3" ry="4" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
-        {/* Camera from top */}
-        <rect x="25" y="2" width="14" height="9" rx="2" fill="#4a90d9" opacity="0.9"/>
-        <circle cx="32" cy="6.5" r="2.5" fill="white" opacity="0.7"/>
-        {/* Down arrow */}
-        <line x1="32" y1="11" x2="32" y2="19" stroke="#4a90d9" strokeWidth="2" strokeLinecap="round"/>
-        <polygon points="28,18 32,24 36,18" fill="#4a90d9"/>
-        <text x="32" y="62" textAnchor="middle" fontSize="7" fill="#6b7280" fontFamily="sans-serif">Vista desde arriba</text>
-      </svg>
-    ),
-  },
-  {
-    key: "temporalRight",
-    title: "Temporal derecha",
-    description: "Gira levemente hacia la izquierda para mostrar la entrada derecha.",
-    tip: "Gira la cabeza ~30° hacia tu izquierda. La cámara debe mostrar claramente la entrada del lado derecho.",
-    icon: (
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-        {/* Face profile left-ish angle */}
-        <ellipse cx="34" cy="28" rx="13" ry="15" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
-        {/* Hair */}
-        <path d="M21 22 Q22 8 34 8 Q46 9 47 22 L46 28" fill="#4a3728" stroke="#3a2718" strokeWidth="1"/>
-        {/* Hairline right temple highlight */}
-        <path d="M43 14 Q48 12 47 22" stroke="#6b4f3a" strokeWidth="2" fill="none"/>
-        {/* Eye */}
-        <circle cx="30" cy="26" r="2" fill="#3a2718"/>
-        <circle cx="40" cy="25" r="1.5" fill="#3a2718"/>
-        {/* Right temple zone highlight */}
-        <path d="M43 14 Q50 18 48 28" stroke="#ef4444" strokeWidth="2" fill="none" strokeDasharray="2,2"/>
-        {/* Camera arrow from left */}
-        <rect x="2" y="26" width="10" height="7" rx="1.5" fill="#4a90d9" opacity="0.9"/>
-        <polygon points="12,22 12,37 18,29.5" fill="#4a90d9" opacity="0.9"/>
-        <circle cx="7" cy="29.5" r="2" fill="white" opacity="0.7"/>
-        {/* Shoulders */}
-        <path d="M21 44 Q26 50 34 51 Q42 50 47 44" fill="#c9b5a5" stroke="#a87c5a" strokeWidth="1"/>
-        <text x="32" y="62" textAnchor="middle" fontSize="7" fill="#6b7280" fontFamily="sans-serif">Entrada derecha</text>
-      </svg>
-    ),
-  },
-  {
-    key: "temporalLeft",
-    title: "Temporal izquierda",
-    description: "Gira levemente hacia la derecha para mostrar la entrada izquierda.",
-    tip: "Gira la cabeza ~30° hacia tu derecha. La cámara debe mostrar claramente la entrada del lado izquierdo.",
-    icon: (
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-        {/* Mirror of temporal right */}
-        <ellipse cx="30" cy="28" rx="13" ry="15" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
-        {/* Hair */}
-        <path d="M43 22 Q42 8 30 8 Q18 9 17 22 L18 28" fill="#4a3728" stroke="#3a2718" strokeWidth="1"/>
-        {/* Hairline left temple highlight */}
-        <path d="M21 14 Q16 12 17 22" stroke="#6b4f3a" strokeWidth="2" fill="none"/>
-        {/* Eyes */}
-        <circle cx="34" cy="26" r="2" fill="#3a2718"/>
-        <circle cx="24" cy="25" r="1.5" fill="#3a2718"/>
-        {/* Left temple zone highlight */}
-        <path d="M21 14 Q14 18 16 28" stroke="#ef4444" strokeWidth="2" fill="none" strokeDasharray="2,2"/>
-        {/* Camera arrow from right */}
-        <rect x="52" y="26" width="10" height="7" rx="1.5" fill="#4a90d9" opacity="0.9"/>
-        <polygon points="52,22 52,37 46,29.5" fill="#4a90d9" opacity="0.9"/>
-        <circle cx="57" cy="29.5" r="2" fill="white" opacity="0.7"/>
-        {/* Shoulders */}
-        <path d="M43 44 Q38 50 30 51 Q22 50 17 44" fill="#c9b5a5" stroke="#a87c5a" strokeWidth="1"/>
-        <text x="32" y="62" textAnchor="middle" fontSize="7" fill="#6b7280" fontFamily="sans-serif">Entrada izquierda</text>
-      </svg>
-    ),
-  },
-  {
-    key: "donor",
-    title: "Zona donante",
-    description: "Fotografía de la nuca / parte posterior de la cabeza.",
-    tip: "Inclina la cabeza ligeramente hacia adelante. La cámara apunta a la nuca, mostrando la zona posterior completa.",
-    icon: (
-      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-        {/* Back of head view */}
-        <ellipse cx="32" cy="30" rx="18" ry="20" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
-        {/* Hair covering most of head back */}
-        <ellipse cx="32" cy="26" rx="17" ry="17" fill="#4a3728"/>
-        {/* Nape - skin showing at bottom */}
-        <path d="M16 40 Q18 48 32 50 Q46 48 48 40" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
-        {/* Donor zone highlight */}
-        <path d="M14 36 Q18 46 32 48 Q46 46 50 36" stroke="#ef4444" strokeWidth="2" fill="none" strokeDasharray="3,2"/>
-        {/* Ears */}
-        <ellipse cx="14" cy="32" rx="3" ry="4" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
-        <ellipse cx="50" cy="32" rx="3" ry="4" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
-        {/* Camera arrow from behind/above */}
-        <rect x="25" y="2" width="14" height="9" rx="2" fill="#4a90d9" opacity="0.9"/>
-        <circle cx="32" cy="6.5" r="2.5" fill="white" opacity="0.7"/>
-        <line x1="32" y1="11" x2="32" y2="17" stroke="#4a90d9" strokeWidth="2" strokeLinecap="round"/>
-        <polygon points="28,16 32,22 36,16" fill="#4a90d9"/>
-        <text x="32" y="62" textAnchor="middle" fontSize="7" fill="#6b7280" fontFamily="sans-serif">Vista posterior/nuca</text>
-      </svg>
-    ),
-  },
-];
+// ---------- Photo definitions (SVGs are visual, labels come from t) ----------
+function getPhotoRequirements(t: AppTranslations) {
+  return [
+    {
+      key: "frontal",
+      title: t.photoFrontalTitle,
+      description: t.photoFrontalDesc,
+      tip: t.photoFrontalTip,
+      icon: (
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+          <ellipse cx="32" cy="26" rx="14" ry="16" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
+          <path d="M18 22 Q18 8 32 8 Q46 8 46 22" fill="#4a3728" stroke="#3a2718" strokeWidth="1"/>
+          <circle cx="26" cy="24" r="2" fill="#3a2718"/>
+          <circle cx="38" cy="24" r="2" fill="#3a2718"/>
+          <path d="M32 28 Q30 32 32 33 Q34 32 32 28" stroke="#a87c5a" strokeWidth="1" fill="none"/>
+          <path d="M27 37 Q32 41 37 37" stroke="#a87c5a" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+          <rect x="2" y="28" width="10" height="7" rx="1.5" fill="#4a90d9" opacity="0.9"/>
+          <polygon points="12,23 12,38 20,31.5" fill="#4a90d9" opacity="0.9"/>
+          <circle cx="7" cy="31.5" r="2" fill="white" opacity="0.7"/>
+          <path d="M18 44 Q20 50 32 52 Q44 50 46 44" fill="#c9b5a5" stroke="#a87c5a" strokeWidth="1"/>
+        </svg>
+      ),
+    },
+    {
+      key: "vertex",
+      title: t.photoVertexTitle,
+      description: t.photoVertexDesc,
+      tip: t.photoVertexTip,
+      icon: (
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+          <ellipse cx="32" cy="36" rx="18" ry="20" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
+          <ellipse cx="32" cy="34" rx="17" ry="18" fill="#4a3728"/>
+          <circle cx="32" cy="32" r="6" fill="#6b4f3a" opacity="0.5"/>
+          <ellipse cx="14" cy="38" rx="3" ry="4" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
+          <ellipse cx="50" cy="38" rx="3" ry="4" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
+          <rect x="25" y="2" width="14" height="9" rx="2" fill="#4a90d9" opacity="0.9"/>
+          <circle cx="32" cy="6.5" r="2.5" fill="white" opacity="0.7"/>
+          <line x1="32" y1="11" x2="32" y2="19" stroke="#4a90d9" strokeWidth="2" strokeLinecap="round"/>
+          <polygon points="28,18 32,24 36,18" fill="#4a90d9"/>
+        </svg>
+      ),
+    },
+    {
+      key: "temporalRight",
+      title: t.photoTRTitle,
+      description: t.photoTRDesc,
+      tip: t.photoTRTip,
+      icon: (
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+          <ellipse cx="34" cy="28" rx="13" ry="15" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
+          <path d="M21 22 Q22 8 34 8 Q46 9 47 22 L46 28" fill="#4a3728" stroke="#3a2718" strokeWidth="1"/>
+          <path d="M43 14 Q48 12 47 22" stroke="#6b4f3a" strokeWidth="2" fill="none"/>
+          <circle cx="30" cy="26" r="2" fill="#3a2718"/>
+          <circle cx="40" cy="25" r="1.5" fill="#3a2718"/>
+          <path d="M43 14 Q50 18 48 28" stroke="#ef4444" strokeWidth="2" fill="none" strokeDasharray="2,2"/>
+          <rect x="2" y="26" width="10" height="7" rx="1.5" fill="#4a90d9" opacity="0.9"/>
+          <polygon points="12,22 12,37 18,29.5" fill="#4a90d9" opacity="0.9"/>
+          <circle cx="7" cy="29.5" r="2" fill="white" opacity="0.7"/>
+          <path d="M21 44 Q26 50 34 51 Q42 50 47 44" fill="#c9b5a5" stroke="#a87c5a" strokeWidth="1"/>
+        </svg>
+      ),
+    },
+    {
+      key: "temporalLeft",
+      title: t.photoTLTitle,
+      description: t.photoTLDesc,
+      tip: t.photoTLTip,
+      icon: (
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+          <ellipse cx="30" cy="28" rx="13" ry="15" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
+          <path d="M43 22 Q42 8 30 8 Q18 9 17 22 L18 28" fill="#4a3728" stroke="#3a2718" strokeWidth="1"/>
+          <path d="M21 14 Q16 12 17 22" stroke="#6b4f3a" strokeWidth="2" fill="none"/>
+          <circle cx="34" cy="26" r="2" fill="#3a2718"/>
+          <circle cx="24" cy="25" r="1.5" fill="#3a2718"/>
+          <path d="M21 14 Q14 18 16 28" stroke="#ef4444" strokeWidth="2" fill="none" strokeDasharray="2,2"/>
+          <rect x="52" y="26" width="10" height="7" rx="1.5" fill="#4a90d9" opacity="0.9"/>
+          <polygon points="52,22 52,37 46,29.5" fill="#4a90d9" opacity="0.9"/>
+          <circle cx="57" cy="29.5" r="2" fill="white" opacity="0.7"/>
+          <path d="M43 44 Q38 50 30 51 Q22 50 17 44" fill="#c9b5a5" stroke="#a87c5a" strokeWidth="1"/>
+        </svg>
+      ),
+    },
+    {
+      key: "donor",
+      title: t.photoDonorTitle,
+      description: t.photoDonorDesc,
+      tip: t.photoDonorTip,
+      icon: (
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+          <ellipse cx="32" cy="30" rx="18" ry="20" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
+          <ellipse cx="32" cy="26" rx="17" ry="17" fill="#4a3728"/>
+          <path d="M16 40 Q18 48 32 50 Q46 48 48 40" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
+          <path d="M14 36 Q18 46 32 48 Q46 46 50 36" stroke="#ef4444" strokeWidth="2" fill="none" strokeDasharray="3,2"/>
+          <ellipse cx="14" cy="32" rx="3" ry="4" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
+          <ellipse cx="50" cy="32" rx="3" ry="4" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
+          <rect x="25" y="2" width="14" height="9" rx="2" fill="#4a90d9" opacity="0.9"/>
+          <circle cx="32" cy="6.5" r="2.5" fill="white" opacity="0.7"/>
+          <line x1="32" y1="11" x2="32" y2="17" stroke="#4a90d9" strokeWidth="2" strokeLinecap="round"/>
+          <polygon points="28,16 32,22 36,16" fill="#4a90d9"/>
+        </svg>
+      ),
+    },
+  ];
+}
 
 // ---------- PhotoCapture component ----------
 interface PhotoCaptureProps {
@@ -297,42 +223,18 @@ interface PhotoCaptureProps {
   isProcessing: boolean;
 }
 
-function PhotoCapture({
-  photoKey,
-  title,
-  description,
-  tip,
-  icon,
-  index,
-  dataUrl,
-  onCapture,
-  onCameraCapture,
-  isProcessing,
-}: PhotoCaptureProps) {
+function PhotoCapture({ photoKey, title, description, tip, icon, index, dataUrl, onCapture, onCameraCapture, isProcessing }: PhotoCaptureProps) {
   const galleryRef = useRef<HTMLInputElement>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [guideOpen, setGuideOpen] = useState(true);
+  const { t } = useLanguage();
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     await onCapture(photoKey, file);
     e.target.value = "";
-  };
-
-  const handleOpenCamera = () => {
-    setCameraError(null);
-    setCameraOpen(true);
-  };
-
-  const handleCameraCapture = async (capturedDataUrl: string) => {
-    setCameraOpen(false);
-    await onCameraCapture(photoKey, capturedDataUrl);
-  };
-
-  const handleCameraClose = () => {
-    setCameraOpen(false);
   };
 
   const hasPhoto = !!dataUrl;
@@ -342,35 +244,21 @@ function PhotoCapture({
       {cameraOpen && (
         <CameraModal
           title={title}
-          onCapture={handleCameraCapture}
-          onClose={handleCameraClose}
+          onCapture={async (url) => { setCameraOpen(false); await onCameraCapture(photoKey, url); }}
+          onClose={() => setCameraOpen(false)}
           onError={(msg) => setCameraError(msg)}
         />
       )}
 
-      <div
-        className={`relative group overflow-hidden border-2 rounded-2xl transition-all duration-300 ${
-          hasPhoto
-            ? "border-primary bg-primary/5 shadow-sm"
-            : "border-gray-200 bg-white hover:border-gray-300"
-        }`}
-      >
-        {/* Photo guide panel */}
+      <div className={`relative group overflow-hidden border-2 rounded-2xl transition-all duration-300 ${hasPhoto ? "border-primary bg-primary/5 shadow-sm" : "border-gray-200 bg-white hover:border-gray-300"}`}>
+        {/* Guide */}
         <div className="border-b border-gray-100 bg-gray-50/70">
-          <button
-            type="button"
-            onClick={() => setGuideOpen((v) => !v)}
-            className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-gray-100/60 transition-colors"
-          >
+          <button type="button" onClick={() => setGuideOpen(v => !v)} className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-gray-100/60 transition-colors">
             <span className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
               <Info className="w-3.5 h-3.5" />
-              Guía de posición
+              {t.pPhotoGuide}
             </span>
-            {guideOpen ? (
-              <ChevronUp className="w-4 h-4 text-muted-foreground" />
-            ) : (
-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
-            )}
+            {guideOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
           </button>
           {guideOpen && (
             <div className="flex items-center gap-4 px-5 pb-4">
@@ -385,16 +273,12 @@ function PhotoCapture({
             <div className="shrink-0 w-full sm:w-auto flex justify-center">
               {hasPhoto ? (
                 <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden shadow-md ring-1 ring-black/5">
-                  <img
-                    src={dataUrl}
-                    alt={title}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={dataUrl} alt={title} className="w-full h-full object-cover" />
                 </div>
               ) : (
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl border border-dashed border-gray-300 bg-gray-50/50 flex flex-col items-center justify-center text-gray-400 group-hover:bg-gray-50 transition-colors">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl border border-dashed border-gray-300 bg-gray-50/50 flex flex-col items-center justify-center text-gray-400">
                   <Camera className="w-8 h-8 mb-2" />
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Toma {index + 1}</span>
+                  <span className="text-[10px] uppercase font-bold tracking-wider">{index + 1}</span>
                 </div>
               )}
             </div>
@@ -405,66 +289,40 @@ function PhotoCapture({
                 {hasPhoto && (
                   <div className="flex items-center gap-1.5 text-primary text-xs font-semibold bg-primary/10 px-2.5 py-1 rounded-full">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Completada</span>
+                    <span>{t.pCompleted}</span>
                   </div>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground mb-4 leading-relaxed sm:pr-2">
-                {description}
-              </p>
+              <p className="text-sm text-muted-foreground mb-4 leading-relaxed sm:pr-2">{description}</p>
 
-              {/* Camera error alert */}
               {cameraError && (
                 <Alert variant="destructive" className="mb-4 text-left">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="text-xs leading-relaxed">
-                    {cameraError}
-                  </AlertDescription>
+                  <AlertDescription className="text-xs leading-relaxed">{cameraError}</AlertDescription>
                 </Alert>
               )}
 
               <div className="flex gap-3 flex-wrap justify-center sm:justify-start">
-                {/* Usar Cámara */}
                 <button
                   type="button"
-                  onClick={handleOpenCamera}
+                  onClick={() => { setCameraError(null); setCameraOpen(true); }}
                   disabled={isProcessing}
-                  className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl cursor-pointer transition-all select-none
-                    ${isProcessing ? "opacity-50 pointer-events-none" : ""}
-                    ${hasPhoto
-                      ? "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-foreground"
-                      : "bg-primary text-white hover:bg-primary/90 shadow-sm shadow-primary/20"
-                    }`}
+                  className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl cursor-pointer transition-all select-none ${isProcessing ? "opacity-50 pointer-events-none" : ""} ${hasPhoto ? "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50" : "bg-primary text-white hover:bg-primary/90 shadow-sm shadow-primary/20"}`}
                 >
                   <Camera className="w-4 h-4" />
-                  {hasPhoto ? "Retomar foto" : "Usar Cámara"}
+                  {hasPhoto ? t.pRetakePhoto : t.pUseCamera}
                 </button>
 
-                {/* Subir Foto */}
-                <label
-                  className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl cursor-pointer transition-all select-none
-                    ${isProcessing ? "opacity-50 pointer-events-none" : ""}
-                    ${hasPhoto
-                      ? "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-foreground"
-                      : "bg-secondary text-foreground hover:bg-secondary/80 border border-transparent"
-                    }`}
-                >
+                <label className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl cursor-pointer transition-all select-none ${isProcessing ? "opacity-50 pointer-events-none" : ""} ${hasPhoto ? "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50" : "bg-secondary text-foreground hover:bg-secondary/80 border border-transparent"}`}>
                   <ImagePlus className="w-4 h-4" />
-                  {hasPhoto ? "Cambiar archivo" : "Subir Foto"}
-                  <input
-                    ref={galleryRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFile}
-                    disabled={isProcessing}
-                  />
+                  {hasPhoto ? t.pChangeFile : t.pUploadPhoto}
+                  <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={isProcessing} />
                 </label>
 
                 {isProcessing && (
                   <span className="inline-flex items-center gap-2 text-sm font-medium text-primary mt-1">
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    Procesando...
+                    {t.pProcessing}
                   </span>
                 )}
               </div>
@@ -481,6 +339,11 @@ export default function PatientFlow() {
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
   const token = params.get("token");
+  const { t, lang, setLang } = useLanguage();
+  const [langOpen, setLangOpen] = useState(false);
+  const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
+
+  const PHOTO_REQUIREMENTS = getPhotoRequirements(t);
 
   const [step, setStep] = useState<"intro" | "data" | "photos" | "success">("intro");
   const [photos, setPhotos] = useState<Record<string, string>>({});
@@ -490,50 +353,24 @@ export default function PatientFlow() {
   const [phonePrefixOpen, setPhonePrefixOpen] = useState(false);
   const { toast } = useToast();
 
-  const { data: existingData, isLoading: isLoadingExisting } = useGetPatient(
-    token || "",
-    {
-      query: {
-        enabled: !!token,
-        queryKey: getGetPatientQueryKey(token || ""),
-      },
-    }
-  );
+  const { data: existingData, isLoading: isLoadingExisting } = useGetPatient(token || "", {
+    query: { enabled: !!token, queryKey: getGetPatientQueryKey(token || "") },
+  });
 
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema),
-    defaultValues: {
-      name: "",
-      documentId: "",
-      email: "",
-      phone: "",
-      age: "",
-      city: "",
-      hairLossTime: "",
-      pattern: "",
-      previousTreatment: "",
-      symptoms: "",
-      surgeryHistory: "",
-      consent: false,
-    },
+    defaultValues: { name: "", documentId: "", email: "", phone: "", age: "", city: "", hairLossTime: "", pattern: "", previousTreatment: "", symptoms: "", surgeryHistory: "", consent: false },
   });
 
   useEffect(() => {
     if (existingData?.lead && step === "intro") {
       const l = existingData.lead;
       form.reset({
-        name: l.name || "",
-        documentId: (l as any).documentId || "",
-        email: (l as any).email || "",
-        phone: l.phone || "",
-        age: l.age || "",
-        city: l.city || "",
-        hairLossTime: (l as any).hairLossTime || "",
-        pattern: (l as any).pattern || "",
-        previousTreatment: (l as any).previousTreatment || "",
-        symptoms: (l as any).symptoms || "",
-        surgeryHistory: (l as any).surgeryHistory || "",
-        consent: l.consent || false,
+        name: l.name || "", documentId: (l as any).documentId || "", email: (l as any).email || "",
+        phone: l.phone || "", age: l.age || "", city: l.city || "",
+        hairLossTime: (l as any).hairLossTime || "", pattern: (l as any).pattern || "",
+        previousTreatment: (l as any).previousTreatment || "", symptoms: (l as any).symptoms || "",
+        surgeryHistory: (l as any).surgeryHistory || "", consent: l.consent || false,
       });
       setStep("data");
     }
@@ -546,13 +383,9 @@ export default function PatientFlow() {
     setProcessingPhoto(key);
     try {
       const compressed = await compress(file);
-      setPhotos((prev) => ({ ...prev, [key]: compressed }));
+      setPhotos(prev => ({ ...prev, [key]: compressed }));
     } catch {
-      toast({
-        variant: "destructive",
-        title: "Error al procesar imagen",
-        description: "Intenta nuevamente con otra fotografía.",
-      });
+      toast({ variant: "destructive", title: t.pPhotoError, description: "Intenta nuevamente con otra fotografía." });
     } finally {
       setProcessingPhoto(null);
     }
@@ -562,13 +395,9 @@ export default function PatientFlow() {
     setProcessingPhoto(key);
     try {
       const compressed = await compressImage(dataUrl);
-      setPhotos((prev) => ({ ...prev, [key]: compressed }));
+      setPhotos(prev => ({ ...prev, [key]: compressed }));
     } catch {
-      toast({
-        variant: "destructive",
-        title: "Error al procesar imagen",
-        description: "Intenta nuevamente con otra fotografía.",
-      });
+      toast({ variant: "destructive", title: t.pPhotoError, description: "Intenta nuevamente." });
     } finally {
       setProcessingPhoto(null);
     }
@@ -582,64 +411,32 @@ export default function PatientFlow() {
   const submitFullForm = async () => {
     const valid = await form.trigger();
     if (!valid) {
-      toast({
-        variant: "destructive",
-        title: "Datos incompletos",
-        description: "Revisa el formulario antes de enviar.",
-      });
+      toast({ variant: "destructive", title: t.pDataError, description: "Revisa el formulario antes de enviar." });
       setStep("data");
       return;
     }
-
     const formData = form.getValues();
-    const photoArray = PHOTO_REQUIREMENTS.map((req) => ({
-      key: req.key,
-      label: req.title,
-      dataUrl: photos[req.key] ?? "",
-      quality: "Control técnico pendiente",
-    })).filter((p) => !!p.dataUrl);
+    const photoArray = PHOTO_REQUIREMENTS.map(req => ({
+      key: req.key, label: req.title, dataUrl: photos[req.key] ?? "", quality: "Control técnico pendiente",
+    })).filter(p => !!p.dataUrl);
 
     const payload = { ...formData, photos: photoArray };
 
     if (token) {
-      updateMutation.mutate(
-        { token, data: payload },
-        {
-          onSuccess: () => {
-            setStep("success");
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          },
-          onError: () =>
-            toast({
-              variant: "destructive",
-              title: "Error al guardar",
-              description: "No pudimos guardar tu información. Intenta nuevamente.",
-            }),
-        }
-      );
+      updateMutation.mutate({ token, data: payload }, {
+        onSuccess: () => { setStep("success"); window.scrollTo({ top: 0, behavior: "smooth" }); },
+        onError: () => toast({ variant: "destructive", title: "Error", description: t.pSaveError }),
+      });
     } else {
       setDuplicateError(false);
-      createMutation.mutate(
-        { data: payload },
-        {
-          onSuccess: () => {
-            setStep("success");
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          },
-          onError: (error: unknown) => {
-            const err = error as { status?: number; data?: { duplicate?: boolean } };
-            if (err?.status === 409 || err?.data?.duplicate) {
-              setDuplicateError(true);
-              return;
-            }
-            toast({
-              variant: "destructive",
-              title: "Error al enviar",
-              description: "No pudimos enviar tu evaluación. Intenta nuevamente.",
-            });
-          },
-        }
-      );
+      createMutation.mutate({ data: payload }, {
+        onSuccess: () => { setStep("success"); window.scrollTo({ top: 0, behavior: "smooth" }); },
+        onError: (error: unknown) => {
+          const err = error as { status?: number; data?: { duplicate?: boolean } };
+          if (err?.status === 409 || err?.data?.duplicate) { setDuplicateError(true); return; }
+          toast({ variant: "destructive", title: "Error", description: t.pSaveError });
+        },
+      });
     }
   };
 
@@ -651,21 +448,46 @@ export default function PatientFlow() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-muted-foreground font-medium flex items-center gap-3 bg-white px-6 py-4 rounded-full shadow-sm">
           <RefreshCw className="w-5 h-5 animate-spin text-primary" />
-          Cargando tu evaluación segura…
+          {t.loading}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[100dvh] bg-gray-50/50 flex flex-col font-sans">
-      {/* Premium Header */}
-      <header className="bg-white px-6 py-4 shadow-sm border-b border-gray-100 flex items-center justify-center sticky top-0 z-40">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-[8px] bg-primary flex items-center justify-center">
-            <Activity className="w-5 h-5 text-white" />
+    <div className="min-h-[100dvh] bg-gray-50/50 flex flex-col font-sans" dir={lang === "ar" ? "rtl" : "ltr"}>
+      {/* Header */}
+      <header className="bg-white px-5 py-4 shadow-sm border-b border-gray-100 flex items-center justify-between sticky top-0 z-40">
+        <Link href="/">
+          <div className="flex items-center gap-2 cursor-pointer group">
+            <div className="w-8 h-8 rounded-[8px] bg-primary flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Activity className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-foreground tracking-tight">Clinivista</span>
           </div>
-          <span className="text-xl font-bold text-foreground tracking-tight">Clinivista</span>
+        </Link>
+
+        {/* Language selector */}
+        <div className="relative">
+          <button
+            onClick={() => setLangOpen(v => !v)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            <span>{currentLang.flag}</span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${langOpen ? "rotate-180" : ""}`} />
+          </button>
+          {langOpen && (
+            <div className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              {LANGS.map(l => (
+                <button key={l.code} onClick={() => { setLang(l.code as LangCode); setLangOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-gray-50 text-left transition-colors ${lang === l.code ? "text-primary font-semibold bg-primary/5" : "text-gray-700"}`}>
+                  <span className="text-base">{l.flag}</span>
+                  <span>{l.name}</span>
+                  {lang === l.code && <Check className="w-3.5 h-3.5 ml-auto text-primary" />}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </header>
 
@@ -674,22 +496,14 @@ export default function PatientFlow() {
         {step !== "success" && (
           <div className="mb-10 flex items-center gap-2 text-sm font-semibold justify-center">
             {(["intro", "data", "photos"] as const).map((s, i) => {
-              const labels = ["Inicio", "Datos", "Fotografías"];
+              const labels = [t.stepIntro, t.stepData, t.stepPhotos];
               const stepIndex = ["intro", "data", "photos"].indexOf(step);
               const isActive = s === step;
               const isDone = i < stepIndex;
               return (
                 <span key={s} className="flex items-center gap-2">
                   {i > 0 && <ChevronRight className="w-4 h-4 text-gray-300" />}
-                  <span
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${
-                      isActive
-                        ? "bg-primary/10 text-primary"
-                        : isDone
-                        ? "text-primary/60"
-                        : "text-muted-foreground"
-                    }`}
-                  >
+                  <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${isActive ? "bg-primary/10 text-primary" : isDone ? "text-primary/60" : "text-muted-foreground"}`}>
                     {isDone && <Check className="w-4 h-4" />}
                     {labels[i]}
                   </span>
@@ -704,456 +518,252 @@ export default function PatientFlow() {
           <div className="bg-white rounded-[2rem] p-8 md:p-12 shadow-sm border border-gray-100 text-center animate-in fade-in slide-in-from-bottom-8 duration-500">
             <div className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-bold mb-8 border border-primary/20">
               <Timer className="w-4 h-4" />
-              Tiempo estimado: 4–6 minutos
+              {t.pEstimate}
             </div>
-            
+
             <div className="w-20 h-20 bg-primary/10 rounded-[1.25rem] flex items-center justify-center mx-auto mb-6">
               <ShieldCheck className="w-10 h-10 text-primary" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4 tracking-tight">
-              Preevaluación Clínica
-            </h1>
-            <p className="text-lg text-muted-foreground mb-10 leading-relaxed max-w-lg mx-auto">
-              Este proceso nos permitirá conocer tu caso a detalle antes de la consulta presencial. Te pediremos tus datos y <strong className="text-foreground">5 fotografías precisas</strong> de tu cuero cabelludo.
-            </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10 text-left">
+            <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4 tracking-tight">{t.pIntroTitle}</h1>
+            <p className="text-muted-foreground mb-10 leading-relaxed max-w-md mx-auto text-base">{t.pIntroDesc}</p>
+
+            <div className="space-y-3 mb-10 text-left">
               {[
-                { n: "1", label: "Datos personales", detail: "Antecedentes capilares básicos" },
-                { n: "2", label: "Fotografías", detail: "5 tomas guiadas paso a paso" },
-                { n: "3", label: "Análisis médico", detail: "Revisión clínica confidencial" },
-              ].map((s) => (
-                <div key={s.n} className="bg-gray-50/80 rounded-2xl p-5 border border-gray-100">
-                  <span className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-sm font-bold text-primary mb-3">
-                    {s.n}
-                  </span>
-                  <p className="text-sm font-bold text-foreground mb-1">{s.label}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{s.detail}</p>
+                { icon: "01", label: t.pStep1Label, detail: t.pStep1Detail, color: "bg-[#00A9A5]/10 text-[#00A9A5]" },
+                { icon: "02", label: t.pStep2Label, detail: t.pStep2Detail, color: "bg-[#4F9CF9]/10 text-[#4F9CF9]" },
+                { icon: "03", label: t.pStep3Label, detail: t.pStep3Detail, color: "bg-[#A78BFA]/10 text-[#A78BFA]" },
+              ].map(item => (
+                <div key={item.icon} className="flex items-center gap-4 p-4 bg-gray-50/80 rounded-2xl border border-gray-100">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0 ${item.color}`}>{item.icon}</div>
+                  <div>
+                    <div className="font-bold text-foreground">{item.label}</div>
+                    <div className="text-sm text-muted-foreground">{item.detail}</div>
+                  </div>
                 </div>
               ))}
             </div>
 
-            <div className="bg-secondary/60 text-foreground p-5 rounded-2xl text-left text-sm mb-10 flex gap-4 border border-primary/10">
-              <Info className="w-6 h-6 flex-shrink-0 text-primary mt-0.5" />
-              <p className="leading-relaxed font-medium text-blue-900/80">
-                Esta preevaluación es estrictamente <strong className="text-blue-900 font-bold">confidencial</strong> y no reemplaza una consulta médica presencial. No entrega diagnósticos automáticos.
-              </p>
-            </div>
+            <p className="text-xs text-muted-foreground mb-8 leading-relaxed max-w-md mx-auto bg-amber-50/60 border border-amber-100 p-4 rounded-xl text-left">
+              {t.pDisclaimer}
+            </p>
 
-            <Button
-              onClick={() => setStep("data")}
-              className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
-            >
-              Comenzar Evaluación
-              <ChevronRight className="w-5 h-5 ml-2" />
+            <Button onClick={() => { setStep("data"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              className="w-full h-14 text-base font-bold rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 group">
+              {t.pBeginCTA}
+              <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
         )}
 
         {/* ── STEP: DATA ── */}
         {step === "data" && (
-          <div className="bg-white rounded-[2rem] p-6 md:p-10 shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <div className="flex items-center gap-4 mb-8 pb-6 border-b border-gray-100">
-              <button
-                type="button"
-                onClick={() => setStep("intro")}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors -ml-2"
-                aria-label="Volver"
-              >
-                <ArrowLeft className="w-6 h-6 text-foreground" />
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
+            <div className="mb-6 flex items-center gap-3">
+              <button onClick={() => setStep("intro")} className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
-                <h2 className="text-2xl font-extrabold text-foreground">Tus Antecedentes</h2>
-                <p className="text-sm text-muted-foreground mt-1 font-medium">Completa esta información básica para tu ficha clínica</p>
+                <h2 className="text-2xl font-extrabold text-foreground tracking-tight">{t.pDataTitle}</h2>
+                <p className="text-sm text-muted-foreground font-medium">{t.pDataSub}</p>
               </div>
             </div>
 
             <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(handleDataSubmit)}
-                className="space-y-6"
-                noValidate
-              >
-                <div className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-bold text-foreground">Nombre completo *</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Ej. Juan Pérez"
-                            autoComplete="name"
-                            className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white text-base"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              <form onSubmit={form.handleSubmit(handleDataSubmit)} className="space-y-8">
+                {/* Personal data */}
+                <div className="bg-white rounded-2xl p-6 md:p-8 border border-gray-100 shadow-sm space-y-5">
+                  <FormField control={form.control} name="name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-bold">{t.pFullName}</FormLabel>
+                      <FormControl><Input placeholder="María García" className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
 
-                  <FormField
-                    control={form.control}
-                    name="documentId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-bold text-foreground">
-                          Documento de identidad *
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="RUT, DNI o pasaporte"
-                            className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white text-base"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <FormField control={form.control} name="documentId" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-bold">{t.pDocId}</FormLabel>
+                      <FormControl><Input placeholder="12.345.678-9" className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
 
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => {
-                      const currentCountry = COUNTRY_PREFIXES.find(c => c.prefix === phonePrefix) || COUNTRY_PREFIXES[0];
-                      const rawNumber = field.value.startsWith(phonePrefix)
-                        ? field.value.slice(phonePrefix.length)
-                        : field.value.replace(/^\+\d{1,4}/, "");
-                      return (
-                        <FormItem>
-                          <FormLabel className="text-sm font-bold text-foreground">Teléfono móvil (WhatsApp) *</FormLabel>
-                          <FormControl>
-                            <div className="flex relative">
-                              {/* Country prefix selector */}
-                              <div className="relative">
-                                <button
-                                  type="button"
-                                  onClick={() => setPhonePrefixOpen(v => !v)}
-                                  className="inline-flex items-center gap-2 h-12 px-3 rounded-l-xl border border-r-0 border-gray-200 bg-gray-100 hover:bg-gray-200 transition-colors text-sm font-semibold text-foreground select-none min-w-[90px]"
-                                >
-                                  <span>{currentCountry.flag}</span>
-                                  <span>{phonePrefix}</span>
-                                  <ChevronDown className="w-3.5 h-3.5 text-gray-500 ml-auto" />
+                  {/* Phone with prefix */}
+                  <FormField control={form.control} name="phone" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-bold">{t.pPhone}</FormLabel>
+                      <div className="flex gap-2">
+                        <div className="relative">
+                          <button type="button" onClick={() => setPhonePrefixOpen(v => !v)}
+                            className="h-12 px-3 rounded-xl border border-gray-200 bg-gray-50/50 flex items-center gap-1.5 text-sm font-semibold hover:bg-gray-100 transition-colors min-w-[90px]">
+                            <span>{COUNTRY_PREFIXES.find(c => c.prefix === phonePrefix)?.flag}</span>
+                            <span>{phonePrefix}</span>
+                            <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${phonePrefixOpen ? "rotate-180" : ""}`} />
+                          </button>
+                          {phonePrefixOpen && (
+                            <div className="absolute top-full left-0 mt-1 w-60 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-64 overflow-y-auto animate-in fade-in">
+                              {COUNTRY_PREFIXES.map(c => (
+                                <button key={c.code} type="button"
+                                  onClick={() => { setPhonePrefix(c.prefix); setPhonePrefixOpen(false); }}
+                                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 text-left ${phonePrefix === c.prefix ? "font-bold text-primary" : "text-foreground"}`}>
+                                  <span>{c.flag}</span>
+                                  <span className="text-muted-foreground">{c.prefix}</span>
+                                  <span>{c.name}</span>
                                 </button>
-                                {phonePrefixOpen && (
-                                  <>
-                                    <div className="fixed inset-0 z-40" onClick={() => setPhonePrefixOpen(false)} />
-                                    <div className="absolute left-0 top-full mt-1 w-64 bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150">
-                                      <div className="max-h-64 overflow-y-auto p-1.5 space-y-0.5">
-                                        {COUNTRY_PREFIXES.map(c => (
-                                          <button
-                                            key={c.code}
-                                            type="button"
-                                            onClick={() => {
-                                              setPhonePrefix(c.prefix);
-                                              field.onChange(rawNumber ? `${c.prefix}${rawNumber}` : "");
-                                              setPhonePrefixOpen(false);
-                                            }}
-                                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors text-left
-                                              ${phonePrefix === c.prefix ? "bg-primary/10 text-primary font-bold" : "text-foreground hover:bg-gray-50"}`}
-                                          >
-                                            <span className="text-base">{c.flag}</span>
-                                            <span className="flex-1 font-medium">{c.name}</span>
-                                            <span className="text-muted-foreground font-semibold text-xs">{c.prefix}</span>
-                                          </button>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  </>
-                                )}
-                              </div>
-                              <Input
-                                type="tel"
-                                placeholder="9 1234 5678"
-                                autoComplete="tel-national"
-                                inputMode="tel"
-                                className="h-12 rounded-xl rounded-l-none bg-gray-50 border-gray-200 focus:bg-white text-base"
-                                value={rawNumber}
-                                onChange={(e) => {
-                                  const digits = e.target.value.replace(/\D/g, "");
-                                  field.onChange(digits ? `${phonePrefix}${digits}` : "");
-                                }}
-                                onBlur={field.onBlur}
-                                name={field.name}
-                                ref={field.ref}
-                              />
+                              ))}
                             </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      );
-                    }}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-bold text-foreground">Correo electrónico *</FormLabel>
+                          )}
+                        </div>
                         <FormControl>
                           <Input
-                            type="email"
-                            placeholder="ejemplo@correo.com"
-                            autoComplete="email"
-                            inputMode="email"
-                            className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white text-base"
+                            placeholder="9 1234 5678"
+                            className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base flex-1"
                             {...field}
+                            onChange={e => field.onChange(phonePrefix + " " + e.target.value.replace(/^\+\d+\s?/, ""))}
+                            value={field.value.replace(phonePrefix + " ", "").replace(phonePrefix, "")}
                           />
                         </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <FormField control={form.control} name="email" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-bold">{t.pEmail}</FormLabel>
+                      <FormControl><Input type="email" placeholder="correo@ejemplo.com" className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField control={form.control} name="age" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-bold">{t.pAge} <span className="font-normal text-muted-foreground">{t.optional}</span></FormLabel>
+                        <FormControl><Input type="number" min="18" max="99" placeholder={t.pAgePlaceholder} className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
+                    )} />
 
-                  <div className="grid grid-cols-2 gap-5">
-                    <FormField
-                      control={form.control}
-                      name="age"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-bold text-foreground">Edad</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="Años"
-                              min={18}
-                              max={99}
-                              inputMode="numeric"
-                              className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white text-base"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-bold text-foreground">Ciudad</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Ej. Santiago"
-                              autoComplete="address-level2"
-                              className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:bg-white text-base"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <FormField control={form.control} name="city" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-bold">{t.pCity} <span className="font-normal text-muted-foreground">{t.optional}</span></FormLabel>
+                        <FormControl><Input placeholder={t.pCityPlaceholder} className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base" {...field} /></FormControl>
+                      </FormItem>
+                    )} />
                   </div>
                 </div>
 
-                <div className="pt-8 mt-8 border-t border-gray-100">
-                  <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-primary" />
-                    Historial Capilar
-                  </h3>
+                {/* Hair history */}
+                <div className="bg-white rounded-2xl p-6 md:p-8 border border-gray-100 shadow-sm space-y-5">
+                  <h3 className="font-bold text-foreground text-base border-b border-gray-100 pb-3">{t.pHairHistory}</h3>
 
-                  <div className="space-y-6">
-                    <FormField
-                      control={form.control}
-                      name="hairLossTime"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-bold text-foreground">¿Hace cuánto notas la pérdida de cabello?</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="h-12 rounded-xl bg-gray-50 border-gray-200 text-base">
-                                <SelectValue placeholder="Selecciona una opción" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="rounded-xl">
-                              <SelectItem value="Menos de 6 meses">Menos de 6 meses</SelectItem>
-                              <SelectItem value="6 meses a 1 año">6 meses a 1 año</SelectItem>
-                              <SelectItem value="1 a 3 años">1 a 3 años</SelectItem>
-                              <SelectItem value="Más de 3 años">Más de 3 años</SelectItem>
-                              <SelectItem value="No estoy seguro">No estoy seguro</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <FormField control={form.control} name="hairLossTime" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-bold">{t.pHairLossTime}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base">
+                            <SelectValue placeholder={t.pSelectOpt} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-xl">
+                          {t.pHairLossOpts.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
 
-                    <FormField
-                      control={form.control}
-                      name="pattern"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-bold text-foreground">¿Dónde se concentra la pérdida?</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="h-12 rounded-xl bg-gray-50 border-gray-200 text-base">
-                                <SelectValue placeholder="Selecciona una zona" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="rounded-xl">
-                              <SelectItem value="Entradas / línea frontal">
-                                Frente / entradas
-                              </SelectItem>
-                              <SelectItem value="Vértex o coronilla">
-                                Coronilla (parte superior)
-                              </SelectItem>
-                              <SelectItem value="Zona frontal y vértex">
-                                Frente y coronilla
-                              </SelectItem>
-                              <SelectItem value="Pérdida generalizada">
-                                Todo el cuero cabelludo
-                              </SelectItem>
-                              <SelectItem value="Pérdida localizada / irregular">
-                                Zonas irregulares o dispersas
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <FormField control={form.control} name="pattern" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-bold">{t.pPattern}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base">
+                            <SelectValue placeholder={t.pSelectZone} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-xl">
+                          {t.pPatternOpts.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
 
-                    <FormField
-                      control={form.control}
-                      name="previousTreatment"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-bold text-foreground">¿Has usado algún tratamiento para la caída?</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="h-12 rounded-xl bg-gray-50 border-gray-200 text-base">
-                                <SelectValue placeholder="Selecciona una opción" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="rounded-xl">
-                              <SelectItem value="Ninguno">Ninguno</SelectItem>
-                              <SelectItem value="Minoxidil tópico">
-                                Minoxidil tópico
-                              </SelectItem>
-                              <SelectItem value="Finasteride oral">
-                                Finasteride oral
-                              </SelectItem>
-                              <SelectItem value="Minoxidil y Finasteride">
-                                Minoxidil y Finasteride
-                              </SelectItem>
-                              <SelectItem value="Plasma rico en plaquetas (PRP)">
-                                Plasma rico en plaquetas (PRP)
-                              </SelectItem>
-                              <SelectItem value="Otro tratamiento">Otro tratamiento</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <FormField control={form.control} name="previousTreatment" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-bold">{t.pPrevTreatment}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base">
+                            <SelectValue placeholder={t.pSelectOpt} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-xl">
+                          {t.pPrevTreatOpts.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
 
-                    <FormField
-                      control={form.control}
-                      name="symptoms"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-bold text-foreground">
-                            ¿Tienes algún síntoma asociado?{" "}
-                            <span className="text-muted-foreground font-normal">(opcional)</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Ej. picazón, caspa, irritación..."
-                              className="resize-none rounded-xl bg-gray-50 border-gray-200 focus:bg-white text-base p-4"
-                              rows={3}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <FormField control={form.control} name="symptoms" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-bold">{t.pSymptoms}</FormLabel>
+                      <FormControl><Textarea placeholder={t.pSymptomsPlaceholder} className="rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base min-h-[80px] resize-none" {...field} /></FormControl>
+                    </FormItem>
+                  )} />
 
-                    <FormField
-                      control={form.control}
-                      name="surgeryHistory"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-bold text-foreground">
-                            ¿Has tenido alguna cirugía de trasplante antes?{" "}
-                            <span className="text-muted-foreground font-normal">(opcional)</span>
-                          </FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="h-12 rounded-xl bg-gray-50 border-gray-200 text-base">
-                                <SelectValue placeholder="Selecciona una opción" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="rounded-xl">
-                              <SelectItem value="No">No</SelectItem>
-                              <SelectItem value="Sí, 1 cirugía previa">Sí, 1 cirugía previa</SelectItem>
-                              <SelectItem value="Sí, 2 o más cirugías previas">
-                                Sí, 2 o más cirugías previas
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  <FormField control={form.control} name="surgeryHistory" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-bold">{t.pSurgery}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger className="h-12 rounded-xl bg-gray-50/50 border-gray-200 focus:bg-white text-base">
+                            <SelectValue placeholder={t.pSelectOpt} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-xl">
+                          {t.pSurgeryOpts.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
                 </div>
 
                 {/* Consent */}
-                <FormField
-                  control={form.control}
-                  name="consent"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-4 bg-amber-50 p-6 rounded-[1.5rem] mt-8 border-2 border-amber-200">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          className="mt-1 h-5 w-5 rounded shadow-sm data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                        />
-                      </FormControl>
-                      <div className="space-y-3 leading-none">
-                        <FormLabel className="text-base font-bold text-foreground cursor-pointer flex items-center gap-2">
-                          <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0" />
-                          Consentimiento y Privacidad
-                        </FormLabel>
-                        <ul className="text-sm text-amber-900/80 leading-relaxed font-medium space-y-2 list-disc pl-4">
-                          <li>
-                            Tus fotos y datos se transmiten de forma cifrada y son tratados con total confidencialidad.
-                          </li>
-                          <li>
-                            Esta evaluación preliminar no constituye un diagnóstico ni reemplaza una consulta médica presencial.
-                          </li>
-                        </ul>
+                <div className="bg-blue-50/40 rounded-2xl p-6 border border-blue-100 space-y-4">
+                  <h3 className="font-bold text-foreground text-base">{t.pConsentTitle}</h3>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />{t.pConsentLine1}</li>
+                    <li className="flex items-start gap-2"><Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />{t.pConsentLine2}</li>
+                  </ul>
+                  <FormField control={form.control} name="consent" render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-start gap-3">
+                        <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-0.5 border-primary data-[state=checked]:bg-primary" /></FormControl>
+                        <div className="space-y-1">
+                          <FormLabel className="text-sm font-medium text-foreground leading-snug cursor-pointer">
+                            {t.pConsentLine1}
+                          </FormLabel>
+                          <FormMessage />
+                        </div>
                       </div>
                     </FormItem>
-                  )}
-                />
-
-                <div className="pt-6">
-                  <Button type="submit" className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]">
-                    Continuar a Fotografías
-                    <ChevronRight className="w-5 h-5 ml-2" />
-                  </Button>
+                  )} />
                 </div>
+
+                {duplicateError && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{t.pDuplicate}</AlertDescription>
+                  </Alert>
+                )}
+
+                <Button type="submit" className="w-full h-14 text-base font-bold rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 group">
+                  {t.pContinueCTA}
+                  <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
               </form>
             </Form>
           </div>
@@ -1162,117 +772,106 @@ export default function PatientFlow() {
         {/* ── STEP: PHOTOS ── */}
         {step === "photos" && (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <div className="bg-white rounded-[2rem] p-6 md:p-10 shadow-sm border border-gray-100 mb-8">
-              <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
-                <button
-                  type="button"
-                  onClick={() => setStep("data")}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors -ml-2"
-                  aria-label="Volver"
-                >
-                  <ArrowLeft className="w-6 h-6 text-foreground" />
-                </button>
-                <div>
-                  <h2 className="text-2xl font-extrabold text-foreground">Registro Fotográfico</h2>
-                  <p className="text-sm text-muted-foreground mt-1 font-medium">Necesitamos 5 tomas para tu evaluación clínica</p>
-                </div>
+            <div className="mb-8 flex items-start gap-3">
+              <button onClick={() => setStep("data")} className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors text-muted-foreground shrink-0 mt-1">
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div>
+                <h2 className="text-2xl font-extrabold text-foreground tracking-tight">{t.pPhotosTitle}</h2>
+                <p className="text-sm text-muted-foreground font-medium">{t.pPhotosSub}</p>
               </div>
+            </div>
 
-              <div className="space-y-5">
+            {/* Progress */}
+            <div className="mb-8 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-bold text-foreground">{t.pProgress}</span>
+                <span className={`text-sm font-bold ${completedPhotos === 5 ? "text-primary" : "text-muted-foreground"}`}>{completedPhotos}/5</span>
+              </div>
+              <div className="flex gap-2">
                 {PHOTO_REQUIREMENTS.map((req, i) => (
-                  <PhotoCapture
-                    key={req.key}
-                    photoKey={req.key}
-                    title={req.title}
-                    description={req.description}
-                    tip={req.tip}
-                    icon={req.icon}
-                    index={i}
-                    dataUrl={photos[req.key]}
-                    onCapture={handlePhotoCapture}
-                    onCameraCapture={handleCameraCapture}
-                    isProcessing={processingPhoto === req.key}
-                  />
+                  <div key={req.key} className={`flex-1 h-2.5 rounded-full transition-all duration-300 ${photos[req.key] ? "bg-primary" : "bg-gray-100"}`} />
                 ))}
               </div>
             </div>
 
-            {/* Duplicate submission error */}
+            <div className="space-y-5">
+              {PHOTO_REQUIREMENTS.map((req, index) => (
+                <PhotoCapture
+                  key={req.key}
+                  photoKey={req.key}
+                  title={req.title}
+                  description={req.description}
+                  tip={req.tip}
+                  icon={req.icon}
+                  index={index}
+                  dataUrl={photos[req.key]}
+                  onCapture={handlePhotoCapture}
+                  onCameraCapture={handleCameraCapture}
+                  isProcessing={processingPhoto === req.key}
+                />
+              ))}
+            </div>
+
             {duplicateError && (
-              <Alert variant="destructive" className="mb-24 bg-red-50 border-red-200">
-                <AlertCircle className="h-5 w-5" />
-                <AlertDescription className="text-sm leading-relaxed font-medium">
-                  Ya existe una evaluación registrada con este teléfono o correo. Si necesitas ayuda, contáctanos directamente.
-                </AlertDescription>
+              <Alert variant="destructive" className="mt-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{t.pDuplicate}</AlertDescription>
               </Alert>
             )}
 
-            {/* Sticky Action Bar */}
-            <div className="fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-xl border-t border-gray-200 p-4 md:p-6 z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-              <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <div className="text-sm font-bold text-foreground flex items-center gap-2 mb-1">
-                    Progreso
-                    <span className="text-primary">{completedPhotos}/5 completadas</span>
-                  </div>
-                  <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary transition-all duration-500 rounded-full"
-                      style={{ width: `${(completedPhotos / 5) * 100}%` }}
-                    />
-                  </div>
-                </div>
-
-                <Button
-                  onClick={submitFullForm}
-                  disabled={completedPhotos < 5 || isPending}
-                  className="h-14 px-8 rounded-2xl text-base font-bold shadow-lg shadow-primary/20 shrink-0"
-                >
-                  {isPending ? "Enviando..." : "Enviar Evaluación"}
-                  {!isPending && <CheckCircle2 className="w-5 h-5 ml-2" />}
-                </Button>
-              </div>
+            <div className="mt-10">
+              <Button
+                onClick={submitFullForm}
+                disabled={isPending || completedPhotos < 1}
+                className={`w-full h-16 text-lg font-bold rounded-2xl shadow-xl group transition-all ${completedPhotos === 5 ? "bg-primary hover:bg-primary/90 text-white shadow-primary/25" : "bg-primary/80 hover:bg-primary/70 text-white"}`}
+              >
+                {isPending ? (
+                  <><RefreshCw className="w-5 h-5 mr-3 animate-spin" />{t.pSending}</>
+                ) : (
+                  <><CheckCircle2 className="w-5 h-5 mr-3" />{t.pSubmitCTA} ({completedPhotos}/5)</>
+                )}
+              </Button>
+              {completedPhotos < 5 && !isPending && (
+                <p className="text-center text-xs text-muted-foreground mt-3 font-medium">
+                  {completedPhotos}/5 {t.pCompleted.toLowerCase()}
+                </p>
+              )}
             </div>
           </div>
         )}
 
         {/* ── STEP: SUCCESS ── */}
         {step === "success" && (
-          <div className="bg-white rounded-[2rem] p-10 md:p-14 shadow-sm border border-gray-100 text-center animate-in zoom-in-95 duration-500">
-            <div className="w-24 h-24 bg-green-50 rounded-[1.5rem] flex items-center justify-center mx-auto mb-8 relative">
-              <div className="absolute inset-0 bg-green-100 animate-ping rounded-[1.5rem] opacity-20"></div>
-              <CheckCircle2 className="w-12 h-12 text-green-500 relative z-10" />
+          <div className="bg-white rounded-[2rem] p-8 md:p-12 shadow-sm border border-gray-100 text-center animate-in fade-in zoom-in-95 duration-500">
+            <div className="w-24 h-24 bg-primary/10 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 relative">
+              <div className="absolute inset-0 bg-primary/20 rounded-[1.5rem] animate-ping opacity-30" />
+              <CheckCircle2 className="w-12 h-12 text-primary relative z-10" />
             </div>
-            <h2 className="text-3xl font-extrabold text-foreground mb-4 tracking-tight">
-              ¡Tu evaluación fue recibida!
-            </h2>
-            <p className="text-lg text-muted-foreground mb-8 leading-relaxed max-w-md mx-auto">
-              Nuestro equipo revisará tu información y fotografías. Recibirás una respuesta en un plazo máximo de{" "}
-              <strong className="text-foreground">24 horas hábiles</strong>.
-            </p>
 
-            <div className="bg-gray-50 rounded-2xl p-6 mb-8 max-w-md mx-auto text-left space-y-4 border border-gray-100">
-              <p className="text-sm font-bold text-foreground uppercase tracking-wider">¿Qué sigue ahora?</p>
-              {[
-                { icon: <Timer className="w-5 h-5 text-primary" />, text: "Revisión de tu caso (hasta 24 h hábiles)" },
-                { icon: <Info className="w-5 h-5 text-primary" />, text: "Te contactaremos por WhatsApp o correo" },
-                { icon: <CheckCircle2 className="w-5 h-5 text-primary" />, text: "Coordinamos tu consulta" },
-              ].map((s, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span className="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0">
-                    {s.icon}
-                  </span>
-                  <p className="text-sm font-medium text-foreground">{s.text}</p>
-                </div>
-              ))}
+            <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4 tracking-tight">{t.pSuccessTitle}</h1>
+            <p className="text-muted-foreground mb-10 leading-relaxed max-w-md mx-auto">{t.pSuccessDesc}</p>
+
+            <div className="bg-gray-50/80 rounded-2xl p-6 border border-gray-100 text-left mb-8">
+              <h3 className="font-bold text-foreground mb-4 text-base">{t.pSuccessNext}</h3>
+              <div className="space-y-3">
+                {[t.pSuccessStep1, t.pSuccessStep2, t.pSuccessStep3].map((step, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                      <span className="text-primary font-bold text-sm">{i + 1}</span>
+                    </div>
+                    <span className="text-sm font-medium text-foreground">{step}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => window.location.href = "/"}
-              className="h-14 px-8 rounded-2xl text-base font-bold border-gray-200 hover:bg-gray-50"
-            >
-              Volver al inicio
-            </Button>
+
+            <Link href="/">
+              <Button variant="outline" className="w-full h-12 rounded-2xl font-semibold border-gray-200 hover:bg-gray-50">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                {t.pGoHome}
+              </Button>
+            </Link>
           </div>
         )}
       </main>

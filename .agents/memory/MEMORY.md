@@ -1,0 +1,1 @@
+- [Language context architecture](language-context.md) — 9-language global context with localStorage persistence; all pages use useLanguage() from src/lib/language.tsx
