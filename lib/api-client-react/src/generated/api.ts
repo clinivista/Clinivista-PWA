@@ -1032,3 +1032,74 @@ export const useUpdatePatient = <TError = ErrorType<ErrorResponse>,
       return useMutation(getUpdatePatientMutationOptions(options));
     }
 
+export const getDiscardPatientPhotosUrl = (token: string,) => {
+
+
+
+
+  return `/api/patients/${token}/photos`
+}
+
+/**
+ * @summary Discard all draft photos for a patient pre-evaluation (public, token-authorized)
+ */
+export const discardPatientPhotos = async (token: string, options?: Parameters<typeof customFetch>[1]): Promise<PatientResult> => {
+
+  return customFetch<PatientResult>(getDiscardPatientPhotosUrl(token),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDiscardPatientPhotosMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof discardPatientPhotos>>, TError,{token: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof discardPatientPhotos>>, TError,{token: string}, TContext> => {
+
+const mutationKey = ['discardPatientPhotos'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof discardPatientPhotos>>, {token: string}> = (props) => {
+          const {token} = props ?? {};
+
+          return  discardPatientPhotos(token,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DiscardPatientPhotosMutationResult = NonNullable<Awaited<ReturnType<typeof discardPatientPhotos>>>
+
+    export type DiscardPatientPhotosMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Discard all draft photos for a patient pre-evaluation (public, token-authorized)
+ */
+export const useDiscardPatientPhotos = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof discardPatientPhotos>>, TError,{token: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof discardPatientPhotos>>,
+        TError,
+        {token: string},
+        TContext
+      > => {
+      return useMutation(getDiscardPatientPhotosMutationOptions(options));
+    }
+

@@ -25,6 +25,7 @@ export interface LeadSummary {
   status: LeadStatus;
   consent?: boolean;
   photoCount: number;
+  photoKeys?: string[];
   /** @nullable */
   hairLossTime?: string | null;
   /** @nullable */

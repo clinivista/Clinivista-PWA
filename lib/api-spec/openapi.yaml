@@ -324,6 +324,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /patients/{token}/photos:
+    delete:
+      operationId: discardPatientPhotos
+      tags: [patients]
+      summary: Discard all draft photos for a patient pre-evaluation (public, token-authorized)
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Draft photos discarded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientResult"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -421,6 +446,10 @@ components:
           type: boolean
         photoCount:
           type: number
+        photoKeys:
+          type: array
+          items:
+            type: string
         hairLossTime:
           type: ["string", "null"]
         pattern:

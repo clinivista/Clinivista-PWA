@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { useSearch, Link } from "wouter";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useSearch, Link, useLocation } from "wouter";
 import {
   Camera, Check, CheckCircle2, ChevronRight, Info, ArrowLeft,
   ShieldCheck, Activity, ImagePlus, RefreshCw, Timer,
@@ -21,7 +21,10 @@ import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
 import {
-  useGetPatient, getGetPatientQueryKey, useCreatePatient, useUpdatePatient,
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription,
+} from "@/components/ui/alert-dialog";
+import {
+  useGetPatient, getGetPatientQueryKey, useCreatePatient, useUpdatePatient, useDiscardPatientPhotos,
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage, LANGS, type AppTranslations, type LangCode } from "@/lib/language";
@@ -229,8 +232,8 @@ function getPhotoRequirements(t: AppTranslations) {
   ];
 }
 
-// ---------- PhotoCapture component ----------
-interface PhotoCaptureProps {
+// ---------- Active photo card (wizard) ----------
+interface ActivePhotoCardProps {
   photoKey: string;
   title: string;
   description: string;
@@ -238,13 +241,23 @@ interface PhotoCaptureProps {
   icon: React.ReactNode;
   color: string;
   index: number;
-  dataUrl: string | undefined;
-  onCapture: (key: string, file: File) => Promise<void>;
-  onCameraCapture: (key: string, dataUrl: string) => Promise<void>;
+  total: number;
+  pendingDataUrl: string | null;
+  acceptedDataUrl: string | undefined;
+  savedOnServer: boolean;
+  onFileSelected: (key: string, file: File) => Promise<void>;
+  onCameraCaptured: (key: string, dataUrl: string) => Promise<void>;
+  onAccept: (key: string) => void;
+  onRetake: () => void;
   isProcessing: boolean;
+  photoOfLabel: string;
 }
 
-function PhotoCapture({ photoKey, title, description, tip, icon, color, index, dataUrl, onCapture, onCameraCapture, isProcessing }: PhotoCaptureProps) {
+function ActivePhotoCard({
+  photoKey, title, description, tip, icon, color, index, total,
+  pendingDataUrl, acceptedDataUrl, savedOnServer,
+  onFileSelected, onCameraCaptured, onAccept, onRetake, isProcessing, photoOfLabel,
+}: ActivePhotoCardProps) {
   const galleryRef = useRef<HTMLInputElement>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -254,29 +267,42 @@ function PhotoCapture({ photoKey, title, description, tip, icon, color, index, d
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    await onCapture(photoKey, file);
+    setCameraError(null);
+    await onFileSelected(photoKey, file);
     e.target.value = "";
   };
 
-  const hasPhoto = !!dataUrl;
+  const hasPending = !!pendingDataUrl;
+  const hasAccepted = !!acceptedDataUrl || savedOnServer;
 
   return (
     <>
       {cameraOpen && (
         <CameraModal
           title={title}
-          onCapture={async (url) => { setCameraOpen(false); await onCameraCapture(photoKey, url); }}
+          onCapture={async (url) => { setCameraOpen(false); await onCameraCaptured(photoKey, url); }}
           onClose={() => setCameraOpen(false)}
           onError={(msg) => setCameraError(msg)}
         />
       )}
 
-      <div className={`bg-white rounded-[2rem] overflow-hidden shadow-sm transition-all duration-300 ${hasPhoto ? "ring-2 ring-primary/30 shadow-md" : "hover:shadow-md"}`}>
+      <div className="bg-white rounded-[2rem] overflow-hidden shadow-md ring-2 ring-primary/20">
         {/* Colored accent bar */}
         <div className="h-1" style={{ background: `linear-gradient(to right, ${color}, ${color}40)` }} />
 
+        {/* Foto X de 5 */}
+        <div className="px-6 pt-4 flex items-center justify-between">
+          <span className="text-xs font-black uppercase tracking-widest text-primary">{photoOfLabel}</span>
+          {hasAccepted && !hasPending && (
+            <span className="flex items-center gap-1.5 text-primary text-xs font-bold bg-primary/10 px-3 py-1 rounded-full">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              {t.pCompleted}
+            </span>
+          )}
+        </div>
+
         {/* Guide section */}
-        <div className="bg-[#F5F2EE]/60">
+        <div className="mt-3 bg-[#F5F2EE]/60">
           <button type="button" onClick={() => setGuideOpen(v => !v)} className="w-full flex items-center justify-between px-6 py-3.5 text-left hover:bg-[#F5F2EE]/80 transition-colors">
             <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-2" style={{ color }}>
               <Info className="w-3.5 h-3.5" />
@@ -293,66 +319,90 @@ function PhotoCapture({ photoKey, title, description, tip, icon, color, index, d
         </div>
 
         <div className="p-6">
-          <div className="flex flex-col sm:flex-row gap-5 items-start">
-            {/* Photo preview / placeholder */}
-            <div className="shrink-0 w-full sm:w-auto flex justify-center">
-              {hasPhoto ? (
-                <div className="w-28 h-28 rounded-2xl overflow-hidden shadow-lg ring-2 ring-primary/20">
-                  <img src={dataUrl} alt={title} className="w-full h-full object-cover" />
+          <h3 className="font-bold text-foreground text-lg mb-1">{title}</h3>
+          <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{description}</p>
+
+          {cameraError && (
+            <Alert variant="destructive" className="mb-4 text-left rounded-2xl">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-xs leading-relaxed">{cameraError}</AlertDescription>
+            </Alert>
+          )}
+
+          {hasPending ? (
+            <div className="space-y-4">
+              <div className="rounded-2xl overflow-hidden shadow-lg ring-2 ring-primary/20 max-h-[420px] flex justify-center bg-black/5">
+                <img src={pendingDataUrl!} alt={title} className="object-contain max-h-[420px] w-auto" />
+              </div>
+              <div className="flex gap-2.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => onAccept(photoKey)}
+                  disabled={isProcessing}
+                  className="inline-flex items-center gap-2 text-sm font-bold px-5 py-3 rounded-full bg-primary text-white hover:bg-primary/90 shadow-sm shadow-primary/20 transition-all disabled:opacity-50"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  {t.pUsePhoto}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setCameraError(null); onRetake(); setCameraOpen(true); }}
+                  disabled={isProcessing}
+                  className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-full bg-[#F5F2EE] border border-[#E8E4DE] text-gray-700 hover:bg-[#EDE9E4] transition-all disabled:opacity-50"
+                >
+                  <Camera className="w-4 h-4" />
+                  {t.pRepeatPhoto}
+                </button>
+                <label className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-full cursor-pointer bg-[#F5F2EE] border border-[#E8E4DE] text-gray-700 hover:bg-[#EDE9E4] transition-all select-none ${isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
+                  <ImagePlus className="w-4 h-4" />
+                  {t.pUploadAnother}
+                  <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={isProcessing} />
+                </label>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {acceptedDataUrl ? (
+                <div className="rounded-2xl overflow-hidden shadow-lg ring-2 ring-primary/20 max-h-[420px] flex justify-center bg-black/5">
+                  <img src={acceptedDataUrl} alt={title} className="object-contain max-h-[420px] w-auto" />
+                </div>
+              ) : savedOnServer ? (
+                <div className="rounded-2xl border-2 border-primary/20 bg-primary/5 flex flex-col items-center justify-center py-10 text-primary">
+                  <CheckCircle2 className="w-10 h-10 mb-2" />
+                  <span className="text-sm font-bold">{t.pSavedOnServer}</span>
                 </div>
               ) : (
-                <div className="w-28 h-28 rounded-2xl border-2 border-dashed border-gray-200 bg-[#F5F2EE]/60 flex flex-col items-center justify-center text-gray-300">
-                  <Camera className="w-8 h-8 mb-1.5" />
-                  <span className="text-[10px] uppercase font-black tracking-widest">{index + 1}</span>
+                <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-[#F5F2EE]/60 flex flex-col items-center justify-center py-10 text-gray-300">
+                  <Camera className="w-10 h-10 mb-2" />
+                  <span className="text-[11px] uppercase font-black tracking-widest">{index + 1} / {total}</span>
                 </div>
               )}
-            </div>
-
-            <div className="flex-1 min-w-0 py-1 w-full text-center sm:text-left">
-              <div className="flex flex-col sm:flex-row items-center sm:justify-between mb-2 gap-2">
-                <h3 className="font-bold text-foreground text-lg">{title}</h3>
-                {hasPhoto && (
-                  <div className="flex items-center gap-1.5 text-primary text-xs font-bold bg-primary/10 px-3 py-1.5 rounded-full">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>{t.pCompleted}</span>
-                  </div>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground mb-4 leading-relaxed sm:pr-2">{description}</p>
-
-              {cameraError && (
-                <Alert variant="destructive" className="mb-4 text-left rounded-2xl">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="text-xs leading-relaxed">{cameraError}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="flex gap-2.5 flex-wrap justify-center sm:justify-start">
+              <div className="flex gap-2.5 flex-wrap">
+                {/* Camera access is only requested when the patient taps "Tomar foto" */}
                 <button
                   type="button"
                   onClick={() => { setCameraError(null); setCameraOpen(true); }}
                   disabled={isProcessing}
-                  className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-full cursor-pointer transition-all select-none ${isProcessing ? "opacity-50 pointer-events-none" : ""} ${hasPhoto ? "bg-[#F5F2EE] border border-[#E8E4DE] text-gray-700 hover:bg-[#EDE9E4]" : "bg-primary text-white hover:bg-primary/90 shadow-sm shadow-primary/20"}`}
+                  className={`inline-flex items-center gap-2 text-sm font-bold px-5 py-3 rounded-full transition-all disabled:opacity-50 ${hasAccepted ? "bg-[#F5F2EE] border border-[#E8E4DE] text-gray-700 hover:bg-[#EDE9E4]" : "bg-primary text-white hover:bg-primary/90 shadow-sm shadow-primary/20"}`}
                 >
                   <Camera className="w-4 h-4" />
-                  {hasPhoto ? t.pRetakePhoto : t.pUseCamera}
+                  {hasAccepted ? t.pRepeatPhoto : t.pTakePhoto}
                 </button>
-
-                <label className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-full cursor-pointer transition-all select-none ${isProcessing ? "opacity-50 pointer-events-none" : ""} ${hasPhoto ? "bg-[#F5F2EE] border border-[#E8E4DE] text-gray-700 hover:bg-[#EDE9E4]" : "bg-[#F5F2EE] border border-[#E8E4DE] text-foreground hover:bg-[#EDE9E4]"}`}>
+                <label className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-full cursor-pointer bg-[#F5F2EE] border border-[#E8E4DE] text-foreground hover:bg-[#EDE9E4] transition-all select-none ${isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
                   <ImagePlus className="w-4 h-4" />
-                  {hasPhoto ? t.pChangeFile : t.pUploadPhoto}
+                  {hasAccepted ? t.pUploadAnother : t.pUploadDevice}
                   <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={isProcessing} />
                 </label>
-
-                {isProcessing && (
-                  <span className="inline-flex items-center gap-2 text-sm font-medium text-primary mt-1">
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    {t.pProcessing}
-                  </span>
-                )}
               </div>
             </div>
-          </div>
+          )}
+
+          {isProcessing && (
+            <span className="inline-flex items-center gap-2 text-sm font-medium text-primary mt-3">
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              {t.pProcessing}
+            </span>
+          )}
         </div>
       </div>
     </>
@@ -372,11 +422,18 @@ export default function PatientFlow() {
 
   const [step, setStep] = useState<"intro" | "data" | "photos" | "success">("intro");
   const [photos, setPhotos] = useState<Record<string, string>>({});
+  const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
+  const [resumeOffer, setResumeOffer] = useState(false);
+  const [exitDialog, setExitDialog] = useState<"closed" | "open" | "confirmDiscard">("closed");
+  const [dirty, setDirty] = useState(false);
   const [processingPhoto, setProcessingPhoto] = useState<string | null>(null);
   const [duplicateError, setDuplicateError] = useState(false);
   const [phonePrefix, setPhonePrefix] = useState("+56");
   const [phonePrefixOpen, setPhonePrefixOpen] = useState(false);
   const { toast } = useToast();
+  const [, navigate] = useLocation();
 
   const { data: existingData, isLoading: isLoadingExisting, isError: isTokenError } = useGetPatient(token || "", {
     query: { enabled: !!token, queryKey: getGetPatientQueryKey(token || "") },
@@ -392,7 +449,7 @@ export default function PatientFlow() {
   const canContinue = patientSchema.safeParse(watchedValues).success;
 
   useEffect(() => {
-    if (existingData?.lead && step === "intro") {
+    if (existingData?.lead && step === "intro" && !resumeOffer) {
       const l = existingData.lead;
       form.reset({
         name: l.name || "", documentId: formatRut((l as any).documentId || ""), email: (l as any).email || "",
@@ -402,18 +459,60 @@ export default function PatientFlow() {
         surgeryHistory: (l as any).surgeryHistory || "", consent: l.consent || false,
         marketingConsent: (l as any).marketingConsent || false,
       });
-      setStep("data");
+      const keys = Array.isArray((l as any).photoKeys) ? ((l as any).photoKeys as string[]) : [];
+      if (keys.length > 0) {
+        setSavedKeys(new Set(keys));
+        // Photos already saved on the server: offer to resume from the saved step
+        setResumeOffer(true);
+      } else {
+        setStep("data");
+      }
     }
-  }, [existingData, step]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [existingData, step, resumeOffer]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const createMutation = useCreatePatient();
   const updateMutation = useUpdatePatient();
+  const discardMutation = useDiscardPatientPhotos();
+
+  // A photo counts as completed if it was accepted locally or already saved on the server
+  const isPhotoDone = (key: string) => !!photos[key] || savedKeys.has(key);
+
+  // ---- Server-side draft save (only possible when an invitation token exists) ----
+  // Saves are serialized through a single promise chain so a discard/restart can
+  // (a) wait for every in-flight save to settle and (b) invalidate queued saves
+  // via a generation counter — otherwise a late PUT could re-merge a photo the
+  // patient just asked to discard.
+  const saveChainRef = useRef<Promise<void>>(Promise.resolve());
+  const saveGenRef = useRef(0);
+
+  const saveDraft = useCallback((photosOverride?: Record<string, string>) => {
+    if (!token) return;
+    const gen = saveGenRef.current;
+    const formData = form.getValues();
+    const localPhotos = photosOverride ?? photos;
+    const photoArray = PHOTO_REQUIREMENTS.map(req => ({
+      key: req.key, label: req.title, dataUrl: localPhotos[req.key] ?? "", quality: "Control técnico pendiente",
+    })).filter(p => !!p.dataUrl);
+    saveChainRef.current = saveChainRef.current
+      .then(async () => {
+        // A discard/restart happened while this save was queued — drop it.
+        if (saveGenRef.current !== gen) return;
+        const res = await updateMutation.mutateAsync({ token, data: { ...formData, photos: photoArray } });
+        if (saveGenRef.current !== gen) return; // discarded while in flight; DELETE runs after this chain
+        const keys = Array.isArray((res as any)?.lead?.photoKeys) ? ((res as any).lead.photoKeys as string[]) : [];
+        setSavedKeys(prev => new Set([...prev, ...keys]));
+        setDirty(false);
+        toast({ title: t.pSavedProgress, duration: 2000 });
+      })
+      .catch(() => { /* save errors are non-fatal for the draft flow */ });
+  }, [token, photos, form, updateMutation, toast, t]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePhotoCapture = async (key: string, file: File) => {
     setProcessingPhoto(key);
     try {
       const compressed = await compress(file);
-      setPhotos(prev => ({ ...prev, [key]: compressed }));
+      setPendingPhoto(compressed);
+      setDirty(true);
     } catch {
       toast({ variant: "destructive", title: t.pPhotoError, description: "Intenta nuevamente con otra fotografía." });
     } finally {
@@ -425,7 +524,8 @@ export default function PatientFlow() {
     setProcessingPhoto(key);
     try {
       const compressed = await compressImage(dataUrl);
-      setPhotos(prev => ({ ...prev, [key]: compressed }));
+      setPendingPhoto(compressed);
+      setDirty(true);
     } catch {
       toast({ variant: "destructive", title: t.pPhotoError, description: "Intenta nuevamente." });
     } finally {
@@ -433,9 +533,123 @@ export default function PatientFlow() {
     }
   };
 
+  // "Usar esta foto": accept the pending capture, auto-save, and advance to the next missing photo
+  const handleAcceptPhoto = (key: string) => {
+    if (!pendingPhoto) return;
+    const next = { ...photos, [key]: pendingPhoto };
+    setPhotos(next);
+    setPendingPhoto(null);
+    saveDraft(next);
+    const nextMissing = PHOTO_REQUIREMENTS.findIndex(r => !next[r.key] && !savedKeys.has(r.key));
+    if (nextMissing !== -1) setCurrentPhotoIndex(nextMissing);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // "Repetir" an already-accepted photo: only jumps to that photo, nothing else is cleared
+  const handleRetakeAccepted = (index: number) => {
+    setPendingPhoto(null);
+    setCurrentPhotoIndex(index);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // "Volver": one step back without clearing photos, personal data, or consent
+  const handlePhotoBack = () => {
+    setPendingPhoto(null);
+    if (currentPhotoIndex > 0) {
+      setCurrentPhotoIndex(i => i - 1);
+    } else {
+      setStep("data");
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const handleDataSubmit = (_data: PatientFormValues) => {
     setStep("photos");
+    const firstMissing = PHOTO_REQUIREMENTS.findIndex(r => !isPhotoDone(r.key));
+    setCurrentPhotoIndex(firstMissing === -1 ? 0 : firstMissing);
+    if (token) saveDraft();
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleResume = () => {
+    setResumeOffer(false);
+    setStep("photos");
+    const firstMissing = PHOTO_REQUIREMENTS.findIndex(r => !isPhotoDone(r.key));
+    setCurrentPhotoIndex(firstMissing === -1 ? 0 : firstMissing);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // ---- Exit / discard protection ----
+  // beforeunload only when there are unsaved local changes
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+
+  // Intercept browser back during the photo step with the exit dialog
+  useEffect(() => {
+    if (step !== "photos") return;
+    window.history.pushState({ photoGuard: true }, "");
+    const onPop = () => {
+      window.history.pushState({ photoGuard: true }, "");
+      setExitDialog("open");
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [step]);
+
+  const handleExitKeepProgress = () => {
+    setExitDialog("closed");
+    if (token && dirty) saveDraft();
+    setDirty(false);
+    navigate("/");
+  };
+
+  const clearLocalDraft = () => {
+    setPhotos({});
+    setPendingPhoto(null);
+    setSavedKeys(new Set());
+    setCurrentPhotoIndex(0);
+    setDirty(false);
+  };
+
+  // Invalidate queued/in-flight saves, wait for them to settle, then remove
+  // the server-side draft photos unconditionally (any token may have a draft:
+  // a save could still be in flight when React state says otherwise).
+  const discardServerDraft = async (): Promise<boolean> => {
+    if (!token) return true;
+    saveGenRef.current += 1; // queued saves become no-ops
+    await saveChainRef.current; // in-flight save settles before we delete
+    try {
+      await discardMutation.mutateAsync({ token });
+      return true;
+    } catch {
+      toast({ variant: "destructive", title: "Error", description: t.pSaveError });
+      return false;
+    }
+  };
+
+  // "Descartar preevaluación": remove the sensitive photos from the server draft
+  // (token-authorized DELETE) before leaving, so nothing is offered for resume later.
+  const handleDiscard = async () => {
+    const ok = await discardServerDraft();
+    if (!ok) return; // keep the dialog open so the patient can retry
+    setExitDialog("closed");
+    clearLocalDraft();
+    form.reset();
+    navigate("/");
+  };
+
+  // "Empezar desde el principio": also resets the server draft photos so the
+  // patient truly starts over (personal data stays editable in the form).
+  const handleRestart = async () => {
+    const ok = await discardServerDraft();
+    if (!ok) return;
+    clearLocalDraft();
+    setResumeOffer(false);
+    setStep("data");
   };
 
   const submitFullForm = async () => {
@@ -470,8 +684,9 @@ export default function PatientFlow() {
     }
   };
 
-  const completedPhotos = Object.keys(photos).length;
+  const completedPhotos = PHOTO_REQUIREMENTS.filter(r => isPhotoDone(r.key)).length;
   const isPending = createMutation.isPending || updateMutation.isPending;
+  const activeReq = PHOTO_REQUIREMENTS[currentPhotoIndex];
 
   if (isLoadingExisting) {
     return (
@@ -572,6 +787,35 @@ export default function PatientFlow() {
                 </span>
               );
             })}
+          </div>
+        )}
+
+        {/* ── Resume offer (saved draft found for this token) ── */}
+        {step === "intro" && resumeOffer && (
+          <div className="mb-6 bg-white rounded-[2rem] overflow-hidden shadow-md ring-2 ring-primary/20 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="h-1 bg-gradient-to-r from-primary to-primary/30" />
+            <div className="p-6 md:p-8">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-extrabold text-foreground text-lg mb-1">{t.pResumeTitle}</h3>
+                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                    {t.pResumeDesc} ({completedPhotos}/5)
+                  </p>
+                  <div className="flex gap-2.5 flex-wrap">
+                    <Button onClick={handleResume} className="rounded-full font-bold bg-primary hover:bg-primary/90 text-white px-5">
+                      {t.pResumeCTA}
+                      <ChevronRight className="w-4 h-4 ml-1.5" />
+                    </Button>
+                    <Button variant="outline" disabled={discardMutation.isPending} onClick={handleRestart} className="rounded-full font-semibold border-[#E8E4DE] hover:bg-[#F5F2EE] bg-white">
+                      {t.pResumeRestart}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -891,24 +1135,42 @@ export default function PatientFlow() {
         {step === "photos" && (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
             <div className="mb-6 flex items-start gap-3">
-              <button onClick={() => setStep("data")} className="w-10 h-10 rounded-full bg-white border border-[#E8E4DE] flex items-center justify-center hover:bg-[#F5F2EE] transition-colors text-muted-foreground shrink-0 mt-1 shadow-sm">
-                <ArrowLeft className="w-5 h-5" />
+              <button
+                onClick={handlePhotoBack}
+                className="h-10 px-4 rounded-full bg-white border border-[#E8E4DE] flex items-center gap-2 justify-center hover:bg-[#F5F2EE] transition-colors text-muted-foreground hover:text-foreground shrink-0 mt-1 shadow-sm text-sm font-semibold"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                {t.pBack}
               </button>
-              <div>
+              <div className="flex-1">
                 <h2 className="text-2xl font-extrabold text-foreground tracking-tight">{t.pPhotosTitle}</h2>
                 <p className="text-sm text-muted-foreground font-medium">{t.pPhotosSub}</p>
               </div>
+              <button
+                onClick={() => setExitDialog("open")}
+                className="h-10 px-4 rounded-full bg-white border border-[#E8E4DE] flex items-center justify-center hover:bg-[#F5F2EE] transition-colors text-muted-foreground hover:text-foreground shrink-0 mt-1 shadow-sm text-sm font-semibold"
+              >
+                {t.pExit}
+              </button>
             </div>
 
-            {/* Progress card */}
+            {/* Progress card — "Foto X de 5" */}
             <div className="mb-6 bg-white rounded-[1.75rem] p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-bold text-foreground">{t.pProgress}</span>
+                <span className="text-sm font-bold text-foreground">
+                  {t.pPhotoOf.replace("{n}", String(currentPhotoIndex + 1)).replace("{total}", "5")}
+                </span>
                 <span className={`text-sm font-bold px-3 py-1 rounded-full ${completedPhotos === 5 ? "bg-primary/10 text-primary" : "bg-[#F5F2EE] text-muted-foreground"}`}>{completedPhotos}/5</span>
               </div>
               <div className="flex gap-2">
-                {PHOTO_REQUIREMENTS.map((req) => (
-                  <div key={req.key} className={`flex-1 h-3 rounded-full transition-all duration-500 ${photos[req.key] ? "bg-primary shadow-sm shadow-primary/30" : "bg-[#E8E4DE]"}`} />
+                {PHOTO_REQUIREMENTS.map((req, i) => (
+                  <button
+                    key={req.key}
+                    type="button"
+                    onClick={() => handleRetakeAccepted(i)}
+                    aria-label={req.title}
+                    className={`flex-1 h-3 rounded-full transition-all duration-500 ${isPhotoDone(req.key) ? "bg-primary shadow-sm shadow-primary/30" : i === currentPhotoIndex ? "bg-primary/40" : "bg-[#E8E4DE]"}`}
+                  />
                 ))}
               </div>
               {completedPhotos === 5 && (
@@ -919,24 +1181,57 @@ export default function PatientFlow() {
               )}
             </div>
 
-            <div className="space-y-5">
-              {PHOTO_REQUIREMENTS.map((req, index) => (
-                <PhotoCapture
-                  key={req.key}
-                  photoKey={req.key}
-                  title={req.title}
-                  description={req.description}
-                  tip={req.tip}
-                  icon={req.icon}
-                  color={req.color}
-                  index={index}
-                  dataUrl={photos[req.key]}
-                  onCapture={handlePhotoCapture}
-                  onCameraCapture={handleCameraCapture}
-                  isProcessing={processingPhoto === req.key}
-                />
-              ))}
-            </div>
+            {/* Active photo card */}
+            <ActivePhotoCard
+              key={activeReq.key}
+              photoKey={activeReq.key}
+              title={activeReq.title}
+              description={activeReq.description}
+              tip={activeReq.tip}
+              icon={activeReq.icon}
+              color={activeReq.color}
+              index={currentPhotoIndex}
+              total={5}
+              pendingDataUrl={pendingPhoto}
+              acceptedDataUrl={photos[activeReq.key]}
+              savedOnServer={savedKeys.has(activeReq.key)}
+              onFileSelected={handlePhotoCapture}
+              onCameraCaptured={handleCameraCapture}
+              onAccept={handleAcceptPhoto}
+              onRetake={() => setPendingPhoto(null)}
+              isProcessing={processingPhoto === activeReq.key}
+              photoOfLabel={t.pPhotoOf.replace("{n}", String(currentPhotoIndex + 1)).replace("{total}", "5")}
+            />
+
+            {/* Accepted photo thumbnails */}
+            {completedPhotos > 0 && (
+              <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {PHOTO_REQUIREMENTS.map((req, i) => {
+                  if (!isPhotoDone(req.key) || i === currentPhotoIndex) return null;
+                  return (
+                    <div key={req.key} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#E8E4DE]">
+                      {photos[req.key] ? (
+                        <img src={photos[req.key]} alt={req.title} className="w-full h-24 object-cover" />
+                      ) : (
+                        <div className="w-full h-24 bg-primary/5 flex items-center justify-center text-primary">
+                          <CheckCircle2 className="w-7 h-7" />
+                        </div>
+                      )}
+                      <div className="p-2.5 flex items-center justify-between gap-2">
+                        <span className="text-[11px] font-bold text-foreground truncate">{req.title}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRetakeAccepted(i)}
+                          className="text-[11px] font-semibold text-primary hover:underline shrink-0"
+                        >
+                          {t.pRepeatPhoto}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {duplicateError && (
               <Alert variant="destructive" className="mt-6 rounded-2xl">
@@ -1003,6 +1298,47 @@ export default function PatientFlow() {
           </div>
         )}
       </main>
+
+      {/* ── Exit / discard warning modal ── */}
+      <AlertDialog open={exitDialog !== "closed"} onOpenChange={(open) => { if (!open) setExitDialog("closed"); }}>
+        <AlertDialogContent className="rounded-3xl max-w-md">
+          {exitDialog === "open" && (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t.pExitTitle}</AlertDialogTitle>
+                <AlertDialogDescription>{t.pExitDesc}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="flex flex-col gap-2.5 mt-2">
+                <Button onClick={() => setExitDialog("closed")} className="w-full h-12 rounded-full font-bold bg-primary hover:bg-primary/90 text-white">
+                  {t.pExitContinue}
+                </Button>
+                <Button variant="outline" onClick={handleExitKeepProgress} className="w-full h-12 rounded-full font-semibold border-[#E8E4DE] hover:bg-[#F5F2EE] bg-white">
+                  {t.pExitSave}
+                </Button>
+                <Button variant="destructive" onClick={() => setExitDialog("confirmDiscard")} className="w-full h-12 rounded-full font-semibold">
+                  {t.pExitDiscard}
+                </Button>
+              </div>
+            </>
+          )}
+          {exitDialog === "confirmDiscard" && (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t.pExitDiscard}</AlertDialogTitle>
+                <AlertDialogDescription>{t.pExitDiscardConfirm}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="flex flex-col gap-2.5 mt-2">
+                <Button variant="destructive" disabled={discardMutation.isPending} onClick={handleDiscard} className="w-full h-12 rounded-full font-semibold">
+                  {discardMutation.isPending ? t.pProcessing : t.pExitDiscard}
+                </Button>
+                <Button variant="outline" onClick={() => setExitDialog("open")} className="w-full h-12 rounded-full font-semibold border-[#E8E4DE] hover:bg-[#F5F2EE] bg-white">
+                  {t.cancel}
+                </Button>
+              </div>
+            </>
+          )}
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -42,8 +42,10 @@ export function CameraModal({ onCapture, onClose, onError, title }: CameraModalP
 
     if (!navigator.mediaDevices?.getUserMedia) {
       if (activeTokenRef.current !== token) return;
-      const msg =
-        "Tu navegador no soporta acceso a cámara. Por favor usa la opción «Subir Foto» para seleccionar una imagen de tu galería.";
+      const insecure = typeof window !== "undefined" && !window.isSecureContext;
+      const msg = insecure
+        ? "La cámara no está disponible porque la página no se cargó de forma segura (HTTPS). Usa la opción «Subir desde el dispositivo» para seleccionar una imagen de tu galería."
+        : "Tu navegador no soporta acceso a cámara. Por favor usa la opción «Subir desde el dispositivo» para seleccionar una imagen de tu galería.";
       setPermissionState("unsupported");
       setErrorMessage(msg);
       onError?.(msg);
@@ -74,13 +76,15 @@ export function CameraModal({ onCapture, onClose, onError, title }: CameraModalP
     } catch (err: unknown) {
       if (activeTokenRef.current !== token) return;
 
-      const isDenied =
-        err instanceof Error &&
-        (err.name === "NotAllowedError" || err.name === "PermissionDeniedError");
+      const errName = err instanceof Error ? err.name : "";
+      const isDenied = errName === "NotAllowedError" || errName === "PermissionDeniedError";
+      const isNotFound = errName === "NotFoundError" || errName === "DevicesNotFoundError";
 
       const msg = isDenied
-        ? "Acceso a la cámara denegado. Verifica los permisos en tu navegador y vuelve a intentar, o usa «Subir Foto» para seleccionar una imagen de tu galería."
-        : "No se pudo acceder a la cámara. Usa la opción «Subir Foto» para seleccionar una imagen de tu galería.";
+        ? "Acceso a la cámara denegado. Verifica los permisos en tu navegador y vuelve a intentar, o usa «Subir desde el dispositivo» para seleccionar una imagen de tu galería."
+        : isNotFound
+          ? "No se encontró ninguna cámara en este dispositivo. Usa la opción «Subir desde el dispositivo» para seleccionar una imagen de tu galería."
+          : "No se pudo acceder a la cámara. Usa la opción «Subir desde el dispositivo» para seleccionar una imagen de tu galería.";
 
       setPermissionState("denied");
       setErrorMessage(msg);
@@ -134,7 +138,10 @@ export function CameraModal({ onCapture, onClose, onError, title }: CameraModalP
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col">
+    // Fullscreen on mobile; on desktop a large centered panel so the
+    // viewfinder stays big (>= 360px tall) without awkward letterboxing.
+    <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
+      <div className="w-full h-full sm:h-auto sm:max-w-3xl sm:mx-6 sm:rounded-3xl sm:overflow-hidden bg-black flex flex-col shadow-2xl">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-black/60 backdrop-blur-sm">
         <button
@@ -157,8 +164,9 @@ export function CameraModal({ onCapture, onClose, onError, title }: CameraModalP
         {permissionState !== "granted" && <div className="w-16" />}
       </div>
 
-      {/* Camera preview / error */}
-      <div className="flex-1 relative overflow-hidden flex items-center justify-center bg-black">
+      {/* Camera preview / error — large viewfinder: full width on mobile,
+          min 360px and up to ~65vh tall on desktop */}
+      <div className="flex-1 relative overflow-hidden flex items-center justify-center bg-black min-h-[300px] sm:min-h-[360px] sm:h-[min(65vh,640px)]">
         {permissionState === "requesting" && (
           <div className="flex flex-col items-center gap-4 text-white/70">
             <Camera className="w-12 h-12 animate-pulse" />
@@ -207,19 +215,20 @@ export function CameraModal({ onCapture, onClose, onError, title }: CameraModalP
         )}
       </div>
 
-      {/* Shutter bar */}
+      {/* Shutter bar — large capture button for easy clicking/tapping */}
       {permissionState === "granted" && (
-        <div className="bg-black/80 backdrop-blur-sm py-8 flex items-center justify-center">
+        <div className="bg-black/80 backdrop-blur-sm py-7 flex items-center justify-center">
           <button
             onClick={handleShutter}
-            className="w-18 h-18 rounded-full bg-white border-4 border-white/50 shadow-xl hover:scale-105 active:scale-95 transition-transform flex items-center justify-center"
-            style={{ width: 72, height: 72 }}
+            className="rounded-full bg-white border-4 border-white/50 shadow-xl hover:scale-105 active:scale-95 transition-transform flex items-center justify-center"
+            style={{ width: 88, height: 88 }}
             aria-label="Tomar foto"
           >
-            <div className="w-14 h-14 rounded-full bg-white border-2 border-gray-200 shadow-inner" />
+            <div className="w-[68px] h-[68px] rounded-full bg-white border-2 border-gray-200 shadow-inner" />
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 }

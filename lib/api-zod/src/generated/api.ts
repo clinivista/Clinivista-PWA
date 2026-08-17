@@ -69,6 +69,7 @@ export const GetLeadsResponse = zod.object({
   "status": zod.enum(['nuevo', 'incompleto', 'listo', 'contactar', 'agendado', 'cerrado']),
   "consent": zod.boolean().optional(),
   "photoCount": zod.number(),
+  "photoKeys": zod.array(zod.string()).optional(),
   "hairLossTime": zod.string().nullish(),
   "pattern": zod.string().nullish(),
   "previousTreatment": zod.string().nullish(),
@@ -207,6 +208,7 @@ export const CreateInvitationResponse = zod.object({
   "status": zod.enum(['nuevo', 'incompleto', 'listo', 'contactar', 'agendado', 'cerrado']),
   "consent": zod.boolean().optional(),
   "photoCount": zod.number(),
+  "photoKeys": zod.array(zod.string()).optional(),
   "hairLossTime": zod.string().nullish(),
   "pattern": zod.string().nullish(),
   "previousTreatment": zod.string().nullish(),
@@ -259,6 +261,7 @@ export const CreatePatientResponse = zod.object({
   "status": zod.enum(['nuevo', 'incompleto', 'listo', 'contactar', 'agendado', 'cerrado']),
   "consent": zod.boolean().optional(),
   "photoCount": zod.number(),
+  "photoKeys": zod.array(zod.string()).optional(),
   "hairLossTime": zod.string().nullish(),
   "pattern": zod.string().nullish(),
   "previousTreatment": zod.string().nullish(),
@@ -292,6 +295,7 @@ export const GetPatientResponse = zod.object({
   "status": zod.enum(['nuevo', 'incompleto', 'listo', 'contactar', 'agendado', 'cerrado']),
   "consent": zod.boolean().optional(),
   "photoCount": zod.number(),
+  "photoKeys": zod.array(zod.string()).optional(),
   "hairLossTime": zod.string().nullish(),
   "pattern": zod.string().nullish(),
   "previousTreatment": zod.string().nullish(),
@@ -347,6 +351,41 @@ export const UpdatePatientResponse = zod.object({
   "status": zod.enum(['nuevo', 'incompleto', 'listo', 'contactar', 'agendado', 'cerrado']),
   "consent": zod.boolean().optional(),
   "photoCount": zod.number(),
+  "photoKeys": zod.array(zod.string()).optional(),
+  "hairLossTime": zod.string().nullish(),
+  "pattern": zod.string().nullish(),
+  "previousTreatment": zod.string().nullish(),
+  "norwood": zod.string().nullish(),
+  "appointmentAt": zod.string().nullish(),
+  "isDemo": zod.boolean().nullish()
+})
+})
+
+
+/**
+ * @summary Discard all draft photos for a patient pre-evaluation (public, token-authorized)
+ */
+export const DiscardPatientPhotosParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const DiscardPatientPhotosResponse = zod.object({
+  "ok": zod.boolean(),
+  "lead": zod.object({
+  "id": zod.string(),
+  "token": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "name": zod.string(),
+  "phone": zod.string(),
+  "documentId": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "age": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "status": zod.enum(['nuevo', 'incompleto', 'listo', 'contactar', 'agendado', 'cerrado']),
+  "consent": zod.boolean().optional(),
+  "photoCount": zod.number(),
+  "photoKeys": zod.array(zod.string()).optional(),
   "hairLossTime": zod.string().nullish(),
   "pattern": zod.string().nullish(),
   "previousTreatment": zod.string().nullish(),

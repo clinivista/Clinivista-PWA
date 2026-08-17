@@ -54,7 +54,16 @@ function normalizePhotos(photos: unknown[]): object[] {
 
 function buildLead(payload: Record<string, unknown>, existing: Partial<typeof leadsTable.$inferInsert> = {}) {
   const rawPhotos = Array.isArray(payload.photos) ? payload.photos : [];
-  const photos = normalizePhotos(rawPhotos);
+  const incoming = normalizePhotos(rawPhotos);
+
+  // Merge with any photos already stored on the lead so incremental
+  // draft saves never drop previously uploaded photos. Incoming wins by key.
+  const existingPhotos = Array.isArray(existing.photos) ? (existing.photos as { key?: string }[]) : [];
+  const incomingKeys = new Set(incoming.map((p) => (p as { key: string }).key));
+  const photos = [
+    ...existingPhotos.filter((p) => p?.key && !incomingKeys.has(p.key)),
+    ...incoming,
+  ].slice(0, 5);
 
   return {
     ...existing,
@@ -73,14 +82,17 @@ function buildLead(payload: Record<string, unknown>, existing: Partial<typeof le
     surgeryHistory: clean(payload.surgeryHistory, 250),
     consent: Boolean(payload.consent),
     marketingConsent: Boolean(payload.marketingConsent),
-    photos: photos.length ? photos : (existing.photos ?? []),
-    photoCount: String(photos.length ? photos.length : Number(existing.photoCount ?? 0)),
+    photos,
+    photoCount: String(photos.length),
   };
 }
 
 function leadSummary(lead: typeof leadsTable.$inferSelect) {
   const { photos, symptoms, surgeryHistory, notes, ...safe } = lead;
-  return { ...safe, photoCount: Number(safe.photoCount) || 0 };
+  const photoKeys = (Array.isArray(photos) ? (photos as { key?: string }[]) : [])
+    .map((p) => p?.key)
+    .filter((k): k is string => typeof k === "string");
+  return { ...safe, photoCount: Number(safe.photoCount) || 0, photoKeys };
 }
 
 router.post("/patients", async (req, res): Promise<void> => {
@@ -246,6 +258,35 @@ router.put("/patients/:token", async (req, res): Promise<void> => {
   const [updated] = await db
     .update(leadsTable)
     .set({ ...data, status })
+    .where(eq(leadsTable.id, existing.id))
+    .returning();
+
+  res.json({ ok: true, lead: leadSummary(updated) });
+});
+
+// Discard all draft photos for a lead. The invitation token acts as the bearer
+// credential, mirroring GET/PUT /patients/:token. Personal/contact data is kept
+// (the lead itself is not deleted); only the sensitive clinical photos are removed.
+router.delete("/patients/:token/photos", async (req, res): Promise<void> => {
+  const params = GetPatientParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Token inválido." });
+    return;
+  }
+
+  const [existing] = await db
+    .select()
+    .from(leadsTable)
+    .where(eq(leadsTable.token, params.data.token));
+
+  if (!existing) {
+    res.status(404).json({ error: "Este enlace ya no está disponible." });
+    return;
+  }
+
+  const [updated] = await db
+    .update(leadsTable)
+    .set({ photos: [], photoCount: "0", status: "incompleto", updatedAt: new Date() })
     .where(eq(leadsTable.id, existing.id))
     .returning();
 
