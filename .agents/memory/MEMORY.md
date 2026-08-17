@@ -1,3 +1,4 @@
 - [Language context architecture](language-context.md) — 9-language global context with localStorage persistence; all pages use useLanguage() from src/lib/language.tsx
 - [Lead token security & RUT dedup](lead-token-security.md) — never expose lead tokens on unauthenticated endpoints; 409 duplicates stay generic; RUT logic mirrored front/back.
 - [Drizzle peer split](drizzle-peer-split.md) — optional drizzle peers (pglite) must be added to every package sharing drizzle types, or tsc fails with cross-instance SQL errors.
+- [Playwright on NixOS](playwright-nixos-setup.md) — use system `chromium` Nix package + executablePath; Playwright's own headless shell fails with missing libgbm/libudev.
