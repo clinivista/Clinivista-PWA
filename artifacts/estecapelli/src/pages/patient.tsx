@@ -25,6 +25,7 @@ import {
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage, LANGS, type AppTranslations, type LangCode } from "@/lib/language";
+import { formatRut, validateRut } from "@/lib/rut";
 
 // ---------- Image compression ----------
 function compressImage(src: string): Promise<string> {
@@ -86,20 +87,34 @@ const COUNTRY_PREFIXES = [
   { code: "AU", flag: "🇦🇺", name: "Australia", prefix: "+61" },
 ];
 
+// ---------- City options ----------
+const CITY_OPTIONS = [
+  "Santiago", "Antofagasta", "Arica", "Calama", "Chillán", "Concepción", "Copiapó",
+  "Coquimbo", "Curicó", "Iquique", "La Serena", "Los Ángeles", "Osorno", "Puerto Montt",
+  "Punta Arenas", "Quillota", "Rancagua", "San Antonio", "Talca", "Temuco", "Valdivia",
+  "Valparaíso", "Viña del Mar", "Otra ciudad o comuna",
+];
+
 // ---------- Zod schema ----------
 const patientSchema = z.object({
   name: z.string().min(2, "Ingresa tu nombre completo"),
-  documentId: z.string().min(1, "El documento de identidad es obligatorio"),
+  documentId: z.string().superRefine((value, ctx) => {
+    const result = validateRut(value);
+    if (!result.valid) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: result.error });
+    }
+  }),
   email: z.string().email("Ingresa un correo válido").min(1),
   phone: z.string().min(6, "Ingresa un teléfono válido"),
   age: z.string().optional().refine(v => !v || (Number(v) >= 18 && Number(v) <= 99), "La edad debe estar entre 18 y 99"),
-  city: z.string().optional(),
+  city: z.string().min(1, "Selecciona tu ciudad o comuna"),
   hairLossTime: z.string().optional(),
   pattern: z.string().optional(),
   previousTreatment: z.string().optional(),
   symptoms: z.string().optional(),
   surgeryHistory: z.string().optional(),
   consent: z.boolean().refine(val => val === true, "Debes aceptar para continuar"),
+  marketingConsent: z.boolean().optional(),
 });
 
 type PatientFormValues = z.infer<typeof patientSchema>;
@@ -369,18 +384,23 @@ export default function PatientFlow() {
 
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema),
-    defaultValues: { name: "", documentId: "", email: "", phone: "", age: "", city: "", hairLossTime: "", pattern: "", previousTreatment: "", symptoms: "", surgeryHistory: "", consent: false },
+    defaultValues: { name: "", documentId: "", email: "", phone: "", age: "", city: "", hairLossTime: "", pattern: "", previousTreatment: "", symptoms: "", surgeryHistory: "", consent: false, marketingConsent: false },
   });
+
+  // Live gate for the "Continuar" button: all required fields valid + consent checked
+  const watchedValues = form.watch();
+  const canContinue = patientSchema.safeParse(watchedValues).success;
 
   useEffect(() => {
     if (existingData?.lead && step === "intro") {
       const l = existingData.lead;
       form.reset({
-        name: l.name || "", documentId: (l as any).documentId || "", email: (l as any).email || "",
+        name: l.name || "", documentId: formatRut((l as any).documentId || ""), email: (l as any).email || "",
         phone: l.phone || "", age: l.age || "", city: l.city || "",
         hairLossTime: (l as any).hairLossTime || "", pattern: (l as any).pattern || "",
         previousTreatment: (l as any).previousTreatment || "", symptoms: (l as any).symptoms || "",
         surgeryHistory: (l as any).surgeryHistory || "", consent: l.consent || false,
+        marketingConsent: (l as any).marketingConsent || false,
       });
       setStep("data");
     }
@@ -633,7 +653,20 @@ export default function PatientFlow() {
                     <FormField control={form.control} name="documentId" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm font-bold">{t.pDocId}</FormLabel>
-                        <FormControl><Input placeholder="12.345.678-9" className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base" {...field} /></FormControl>
+                        <FormControl>
+                          <Input
+                            placeholder="12.345.678-5"
+                            inputMode="text"
+                            autoComplete="off"
+                            maxLength={12}
+                            className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base"
+                            name={field.name}
+                            ref={field.ref}
+                            value={field.value}
+                            onChange={e => field.onChange(formatRut(e.target.value))}
+                            onBlur={() => { field.onBlur(); void form.trigger("documentId"); }}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -697,8 +730,18 @@ export default function PatientFlow() {
 
                       <FormField control={form.control} name="city" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-bold">{t.pCity} <span className="font-normal text-muted-foreground">{t.optional}</span></FormLabel>
-                          <FormControl><Input placeholder={t.pCityPlaceholder} className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base" {...field} /></FormControl>
+                          <FormLabel className="text-sm font-bold">{t.pCity}</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base">
+                                <SelectValue placeholder={t.pCityPlaceholder} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="rounded-2xl">
+                              {CITY_OPTIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
                         </FormItem>
                       )} />
                     </div>
@@ -803,10 +846,20 @@ export default function PatientFlow() {
                           <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-0.5 border-primary data-[state=checked]:bg-primary" /></FormControl>
                           <div className="space-y-1">
                             <FormLabel className="text-sm font-medium text-foreground leading-snug cursor-pointer">
-                              {t.pConsentLine1}
+                              {t.pConsentCheckbox}
                             </FormLabel>
                             <FormMessage />
                           </div>
+                        </div>
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="marketingConsent" render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-start gap-3 bg-[#F5F2EE] border border-[#E8E4DE] p-4 rounded-2xl">
+                          <FormControl><Checkbox checked={!!field.value} onCheckedChange={field.onChange} className="mt-0.5" /></FormControl>
+                          <FormLabel className="text-sm font-medium text-muted-foreground leading-snug cursor-pointer">
+                            {t.pConsentMarketing}
+                          </FormLabel>
                         </div>
                       </FormItem>
                     )} />
@@ -820,7 +873,12 @@ export default function PatientFlow() {
                   </Alert>
                 )}
 
-                <Button type="submit" className="w-full h-14 text-base font-bold rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 group">
+                <Button
+                  type="submit"
+                  disabled={!canContinue}
+                  aria-disabled={!canContinue}
+                  className="w-full h-14 text-base font-bold rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 group disabled:opacity-50"
+                >
                   {t.pContinueCTA}
                   <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>

@@ -1,1 +1,2 @@
 - [Language context architecture](language-context.md) — 9-language global context with localStorage persistence; all pages use useLanguage() from src/lib/language.tsx
+- [Lead token security & RUT dedup](lead-token-security.md) — never expose lead tokens on unauthenticated endpoints; 409 duplicates stay generic; RUT logic mirrored front/back.

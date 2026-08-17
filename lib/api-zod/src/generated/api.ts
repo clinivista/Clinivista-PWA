@@ -234,6 +234,7 @@ export const CreatePatientBody = zod.object({
   "symptoms": zod.string().optional(),
   "surgeryHistory": zod.string().optional(),
   "consent": zod.boolean(),
+  "marketingConsent": zod.boolean().optional(),
   "photos": zod.array(zod.object({
   "key": zod.string(),
   "label": zod.string(),
@@ -321,6 +322,7 @@ export const UpdatePatientBody = zod.object({
   "symptoms": zod.string().optional(),
   "surgeryHistory": zod.string().optional(),
   "consent": zod.boolean(),
+  "marketingConsent": zod.boolean().optional(),
   "photos": zod.array(zod.object({
   "key": zod.string(),
   "label": zod.string(),

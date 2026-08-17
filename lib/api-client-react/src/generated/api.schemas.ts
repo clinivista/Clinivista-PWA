@@ -163,6 +163,7 @@ export interface PatientInput {
   symptoms?: string;
   surgeryHistory?: string;
   consent: boolean;
+  marketingConsent?: boolean;
   photos?: PatientPhoto[];
 }
 

@@ -1,4 +1,5 @@
-import { pgTable, text, boolean, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, boolean, jsonb, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -20,11 +21,15 @@ export const leadsTable = pgTable("leads", {
   name: text("name").notNull().default(""),
   phone: text("phone").notNull().default(""),
   documentId: text("document_id").default(""),
+  // Normalized RUT (digits + uppercase K, no punctuation), e.g. "12345678K".
+  // Named without a centre prefix so a future composite unique (centreId, documentNormalized) can replace the global one.
+  documentNormalized: text("document_normalized").default(""),
   email: text("email").default(""),
   age: text("age").default(""),
   city: text("city").default(""),
   status: text("status").notNull().default("nuevo"),
   consent: boolean("consent").notNull().default(false),
+  marketingConsent: boolean("marketing_consent").notNull().default(false),
   photoCount: text("photo_count").notNull().default("0"),
   photos: jsonb("photos").notNull().default([]),
   hairLossTime: text("hair_loss_time").default(""),
@@ -36,7 +41,11 @@ export const leadsTable = pgTable("leads", {
   norwood: text("norwood").default(""),
   appointmentAt: text("appointment_at").default(""),
   isDemo: boolean("is_demo").default(false),
-});
+}, (table) => [
+  uniqueIndex("leads_document_normalized_unique")
+    .on(table.documentNormalized)
+    .where(sql`${table.documentNormalized} IS NOT NULL AND ${table.documentNormalized} <> ''`),
+]);
 
 export const insertLeadSchema = createInsertSchema(leadsTable).omit({ createdAt: true, updatedAt: true });
 export type InsertLead = z.infer<typeof insertLeadSchema>;
