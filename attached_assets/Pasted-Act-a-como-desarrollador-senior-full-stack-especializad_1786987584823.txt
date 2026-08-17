@@ -1,0 +1,544 @@
+Actúa como desarrollador senior full-stack especializado en PWA, experiencia de usuario, seguridad de datos clínicos y aplicaciones médicas.
+
+Debes trabajar directamente sobre el código existente de Clinivista en este proyecto de Replit. No quiero solamente recomendaciones, explicaciones ni fragmentos aislados: revisa, modifica, prueba y deja funcionando la aplicación completa.
+
+## 1. Revisión obligatoria antes de implementar cambios
+
+Antes de realizar las modificaciones solicitadas:
+
+1. Revisa todo el código de la aplicación, incluidos:
+
+   * Estructura del proyecto.
+   * Rutas del paciente y del panel administrativo.
+   * Componentes, vistas y estilos.
+   * Formularios y validaciones.
+   * Flujo de preevaluación.
+   * Captura y carga de fotografías.
+   * Persistencia del avance.
+   * API y lógica del servidor.
+   * Modelo y estructura de datos.
+   * Generación de enlaces para pacientes.
+   * Manejo de tokens.
+   * Variables de entorno.
+   * Autenticación y permisos existentes.
+   * Comportamiento responsive y PWA.
+
+2. Ejecuta la aplicación y reproduce los flujos principales antes de modificarla.
+
+3. Ejecuta las herramientas disponibles de diagnóstico, pruebas, lint y compilación.
+
+4. Identifica y corrige primero los errores reales encontrados, especialmente:
+
+   * Errores de ejecución.
+   * Enlaces rotos.
+   * Problemas de navegación.
+   * Validaciones que puedan omitirse.
+   * Pérdida inesperada del estado.
+   * Errores de consola.
+   * Solicitudes fallidas al servidor.
+   * Problemas de visualización en dispositivos móviles y computadores.
+   * Duplicación de registros.
+   * Problemas de seguridad o exposición de información sensible.
+
+5. No elimines funcionalidades existentes ni reescribas todo el proyecto innecesariamente. Conserva la tecnología, arquitectura y diseño general actuales, salvo que un cambio sea imprescindible para corregir un problema.
+
+6. Antes de modificar la base de datos o su estructura, crea una migración segura o un mecanismo compatible con los registros existentes. No borres información real.
+
+7. Una vez terminada la revisión inicial y corregidos los errores comprobados, implementa los siguientes cambios.
+
+---
+
+# CAMBIOS FUNCIONALES OBLIGATORIOS
+
+## 2. El enlace del paciente debe abrir directamente la preevaluación
+
+Actualmente, el enlace enviado al paciente dirige al home de la aplicación. Esto debe cambiar.
+
+### Comportamiento requerido
+
+* Todo enlace creado para enviarse por WhatsApp, copiarse, compartirse o convertirse en código QR debe dirigir directamente al primer paso de la preevaluación.
+* El paciente no debe tener que pasar por el home, una landing page ni seleccionar manualmente “Comenzar”.
+* Utiliza la ruta que mejor se adapte a la arquitectura existente, por ejemplo:
+
+`/pre-evaluacion?token=TOKEN_DEL_PACIENTE`
+
+o:
+
+`/pre-evaluacion/TOKEN_DEL_PACIENTE`
+
+* Conserva el home público si actualmente cumple otra función, pero elimínalo del recorrido del paciente que accede mediante una invitación.
+* Actualiza todos los lugares desde donde se genera o copia el enlace.
+* El token debe conservar la asociación correcta con el centro y la preevaluación.
+* Si el token es inválido, está vencido o no existe, muestra una pantalla clara y segura. No redirijas al usuario silenciosamente al home.
+* El mensaje debe indicar que el enlace no es válido o ha expirado y ofrecer una forma de contactar al centro.
+* No expongas información del paciente en la URL.
+
+### Criterio de aceptación
+
+Al abrir desde WhatsApp un enlace generado para un paciente, debe aparecer inmediatamente el primer paso de su preevaluación.
+
+---
+
+## 3. Máscara y validación completa del RUT chileno
+
+Implementa una máscara de ingreso y una validación real del RUT mediante su dígito verificador.
+
+### Experiencia de ingreso
+
+* El campo debe llamarse “RUT”.
+* Incluir un ejemplo o placeholder como:
+
+`12.345.678-5`
+
+* Permitir que el usuario escriba el RUT con o sin puntos y con o sin guion.
+* Mientras escribe, formatearlo visualmente como:
+
+`12.345.678-5`
+
+* Aceptar dígito verificador numérico o letra K.
+* Convertir automáticamente `k` minúscula en `K`.
+* No permitir letras distintas de K.
+* El cursor no debe saltar de forma molesta mientras se aplica la máscara.
+* El campo debe funcionar correctamente al escribir, borrar, pegar o reemplazar el contenido desde dispositivos móviles y computadores.
+
+### Normalización
+
+Para almacenamiento y comparación, crear una versión normalizada:
+
+* Sin puntos.
+* Sin guion.
+* Sin espacios.
+* Con K mayúscula.
+
+Ejemplo:
+
+* Valor mostrado: `12.345.678-5`
+* Valor normalizado: `123456785`
+
+No utilices el valor con formato para detectar duplicados.
+
+### Validación
+
+Validar:
+
+* Que exista un cuerpo numérico y un dígito verificador.
+* Que tenga la cantidad de caracteres definida para el alcance chileno del MVP.
+* Considerar como regla inicial un cuerpo de 7 u 8 dígitos más el dígito verificador.
+* Que el dígito verificador sea correcto según el algoritmo módulo 11 utilizado en Chile.
+* Que no sea una secuencia vacía o evidentemente inválida.
+
+Algoritmo:
+
+1. Tomar los números del cuerpo del RUT desde derecha a izquierda.
+2. Multiplicarlos sucesivamente por 2, 3, 4, 5, 6 y 7, reiniciando el ciclo cuando sea necesario.
+3. Sumar los resultados.
+4. Calcular `11 - (suma % 11)`.
+5. Si el resultado es 11, el dígito verificador es `0`.
+6. Si el resultado es 10, el dígito verificador es `K`.
+7. En los demás casos, corresponde al número resultante.
+
+Ejemplos para pruebas:
+
+* `12.345.678-5`: válido.
+* `12345678-5`: válido y debe normalizarse igual.
+* `12.345.678-9`: inválido.
+* La entrada con `k` debe convertirse en `K`.
+
+### Mensajes
+
+La validación debe producir mensajes breves y específicos:
+
+* Campo vacío: “Ingresa tu RUT.”
+* Formato incompleto: “Ingresa un RUT completo, incluido el dígito verificador.”
+* Dígito incorrecto: “El RUT ingresado no es válido. Revísalo e inténtalo nuevamente.”
+* Duplicado o registro existente: utilizar el flujo descrito en el punto siguiente.
+
+Valida al perder el foco y nuevamente al intentar continuar. No muestres un mensaje de error agresivo mientras el usuario todavía está escribiendo.
+
+La validación debe existir tanto en frontend como en backend. Nunca confíes exclusivamente en la validación del navegador.
+
+---
+
+## 4. Evitar pacientes duplicados mediante el RUT
+
+El RUT debe utilizarse como identificador único de negocio, pero no como clave primaria técnica.
+
+### Modelo recomendado
+
+* Cada paciente debe conservar un ID interno inmutable, preferentemente UUID.
+
+* Guardar también:
+
+  * `document_type`, inicialmente `RUT`.
+  * `document_country`, inicialmente `CL`.
+  * `rut_normalized` o `document_normalized`.
+  * `center_id` o identificador equivalente del centro.
+
+* Crear un índice o restricción única compuesta equivalente a:
+
+`center_id + document_type + document_normalized`
+
+Esto es necesario porque Clinivista será utilizada por diferentes centros médicos. Un mismo paciente puede estar registrado legítimamente en más de un centro, por lo que el RUT no debe ser único globalmente entre organizaciones.
+
+### Comportamiento ante duplicados
+
+La protección debe ejecutarse en el servidor y en la base de datos, no solamente mediante una consulta desde el frontend.
+
+Si el RUT ya existe dentro del mismo centro:
+
+* No crear un segundo paciente.
+* No sobrescribir información automáticamente.
+* Asociar la nueva preevaluación al paciente existente.
+* Cada evaluación o tratamiento debe conservar su propio ID, fecha, estado, fotografías y seguimiento.
+* Si existe una preevaluación incompleta asociada al mismo enlace o flujo, ofrecer continuarla de manera segura.
+* Si ya existe una preevaluación terminada, crear una nueva evaluación vinculada al paciente existente, solamente cuando corresponda al flujo solicitado.
+* Evitar condiciones de carrera mediante una restricción única de base de datos y manejo adecuado del error de duplicidad.
+
+Si la aplicación actual no dispone todavía de entidades separadas, adaptar progresivamente el modelo hacia:
+
+* `patients`: identidad y datos permanentes del paciente.
+* `evaluations`: cada preevaluación, control o registro fotográfico.
+* `photos`: fotografías vinculadas a una evaluación.
+* `consents`: aceptación, versión y fecha del consentimiento.
+
+Realiza cualquier cambio mediante una migración compatible y sin borrar los registros existentes.
+
+---
+
+## 5. Ciudad sin selección predeterminada
+
+Actualmente aparece Santiago seleccionado automáticamente. Debe eliminarse este comportamiento.
+
+### Requisitos
+
+* El valor inicial del campo ciudad o comuna debe estar vacío.
+* La primera opción debe ser un placeholder no seleccionable, por ejemplo:
+
+“Selecciona tu ciudad o comuna”
+
+* Santiago debe seguir disponible como una opción, pero no debe estar preseleccionado.
+* Si el campo es obligatorio, impedir continuar mientras permanezca vacío y mostrar:
+
+“Selecciona tu ciudad o comuna.”
+
+* Si el paciente está recuperando una preevaluación guardada, mostrar la ciudad que él ya seleccionó. No volver a dejarla vacía en ese caso.
+* Revisa que el valor “Santiago” no esté asignado automáticamente en el frontend, backend, esquema de base de datos, datos iniciales o funciones de normalización.
+
+---
+
+## 6. Consentimiento informado explícito y comprensible
+
+Sustituye el consentimiento actual por una opción explícita. No debe parecer que el usuario acepta solamente por presionar el botón.
+
+### Texto principal sugerido
+
+Mostrar una casilla inicialmente desmarcada con el siguiente contenido:
+
+“Acepto el tratamiento de mis datos personales y fotografías clínicas para gestionar esta preevaluación, permitir su revisión por el equipo autorizado y recibir el posterior contacto del centro de salud. Declaro haber leído y comprendido la información de privacidad y entiendo que esta preevaluación no reemplaza una consulta médica ni entrega un diagnóstico.”
+
+* La palabra inicial “Acepto” debe ser claramente visible.
+* Agregar un enlace visible a “Información de privacidad” o “Leer consentimiento”, según la estructura actual.
+* El enlace debe abrir el contenido sin hacer perder los datos ya ingresados.
+* No marcar la casilla por defecto.
+* No utilizar casillas premarcadas.
+
+### Consentimiento comercial
+
+Si existe consentimiento para publicidad, promociones, recordatorios comerciales o comunicaciones de marketing:
+
+* Mantenerlo separado del consentimiento clínico y de privacidad.
+* Debe ser opcional.
+* Debe estar inicialmente desmarcado.
+* Rechazarlo no puede impedir completar la preevaluación.
+
+### Registro
+
+Al enviar la preevaluación, almacenar al menos:
+
+* Aceptación: verdadero.
+* Fecha y hora.
+* Versión del texto o política aceptada.
+* Identificador de la evaluación.
+* Identificador del centro.
+
+No afirmar en la interfaz que este mecanismo garantiza por sí solo el cumplimiento de toda la legislación. Mantener el texto disponible para posterior revisión jurídica.
+
+---
+
+## 7. Bloquear el avance hasta aceptar el consentimiento
+
+El botón “Continuar” debe permanecer desactivado mientras el consentimiento obligatorio no esté aceptado.
+
+### Comportamiento
+
+* Estado inicial: desactivado.
+
+* Activarlo solamente cuando:
+
+  * Los campos obligatorios estén completos.
+  * El RUT sea válido.
+  * Se haya aceptado el consentimiento obligatorio.
+
+* El estado desactivado debe ser visualmente evidente, pero mantener contraste y legibilidad.
+
+* Incluir los atributos accesibles correspondientes, como `disabled` y `aria-disabled`.
+
+* No permitir activar el botón mediante clic, teclado, manipulación del formulario o envío con Enter.
+
+* Validar nuevamente el consentimiento en el backend.
+
+* Si alguien intenta enviar una solicitud directamente sin consentimiento, el servidor debe rechazarla con un error controlado.
+
+* Si el usuario desmarca el consentimiento, el botón debe volver inmediatamente al estado desactivado.
+
+---
+
+# MEJORAS DEL PROCESO FOTOGRÁFICO
+
+## 8. Navegación hacia atrás sin pérdida del avance
+
+Agregar un botón visible “Volver” en todas las etapas del proceso fotográfico, excepto cuando no exista una etapa anterior.
+
+### Requisitos
+
+* Volver al paso anterior no debe borrar:
+
+  * Datos personales.
+  * RUT.
+  * Ciudad.
+  * Consentimiento.
+  * Fotografías ya aceptadas.
+  * Progreso general.
+
+* El paciente debe poder revisar una fotografía anterior y repetir solamente esa imagen.
+
+* Incluir acciones claras:
+
+  * “Usar esta foto”.
+  * “Repetir foto”.
+  * “Subir otra foto”.
+  * “Volver”.
+
+* No reiniciar el proceso completo cuando se repita una fotografía.
+
+* Mostrar progreso, por ejemplo:
+
+“Foto 2 de 5”
+
+* Conservar las vistas fotográficas actuales del protocolo, como frontal, vértex, temporales y zona donante, sin introducir diagnóstico automático.
+
+---
+
+## 9. Guardado automático y recuperación del avance
+
+El proceso no debe depender únicamente del estado temporal en memoria.
+
+### Comportamiento requerido
+
+* Guardar un borrador después de completar datos importantes y después de aceptar cada fotografía.
+* Preferir persistencia segura en el servidor, vinculada al token y al ID de la evaluación.
+* Puede utilizarse almacenamiento local como apoyo temporal, pero no debe ser el único mecanismo para un flujo real.
+* Si el navegador se recarga o se cierra accidentalmente, recuperar el último paso guardado.
+* Mostrar un mensaje discreto como:
+
+“Avance guardado”
+
+* Al volver a abrir el enlace, ofrecer continuar desde el punto guardado.
+* No almacenar fotografías clínicas indefinidamente en `localStorage`.
+* No registrar RUT, fotografías o datos clínicos completos en logs de consola, herramientas analíticas o mensajes de error.
+
+---
+
+## 10. Advertencia antes de descartar el avance
+
+No mostrar advertencias innecesarias al utilizar el botón normal “Volver”. La advertencia debe aparecer solamente cuando una acción vaya a eliminar o abandonar realmente la preevaluación.
+
+Crear un modal accesible con:
+
+### Título
+
+“¿Quieres salir de la preevaluación?”
+
+### Texto
+
+“Tu avance guardado estará disponible cuando vuelvas a abrir este enlace. Si eliges descartar la preevaluación, se eliminarán los datos y fotografías cargados.”
+
+### Botones
+
+* Principal: “Continuar con la preevaluación”.
+* Secundario: “Salir y conservar el avance”.
+* Destructivo, solamente cuando corresponda: “Descartar preevaluación”.
+
+Antes de ejecutar “Descartar preevaluación”, solicitar una segunda confirmación breve o hacer muy evidente que la acción eliminará el avance.
+
+No utilices textos ambiguos como “Continuar”, cuando no esté claro si significa continuar trabajando o continuar con la salida.
+
+Usa `beforeunload` únicamente si existen cambios todavía no guardados. Ten presente que los navegadores suelen mostrar su propio mensaje y no permiten personalizarlo.
+
+---
+
+## 11. Mejorar la captura de fotografías en Mac y computadores
+
+La captura debe ser cómoda tanto en dispositivos móviles como en Mac o PC.
+
+### Acciones disponibles
+
+Mostrar opciones claramente separadas:
+
+* “Tomar foto”.
+* “Subir desde el dispositivo”.
+
+### Cámara
+
+* Si el navegador permite acceso a la cámara mediante `getUserMedia`, mostrar una vista previa amplia.
+* Solicitar permiso solamente cuando el usuario elija “Tomar foto”.
+* Manejar correctamente permiso rechazado, cámara no disponible o conexión no segura.
+* Ante un error, permitir inmediatamente usar “Subir desde el dispositivo”.
+* Detener el stream de la cámara al abandonar el paso o cerrar la vista para no dejar la cámara activa.
+* En teléfonos, utilizar la cámara posterior cuando sea posible.
+* Mantener compatibilidad con el atributo `capture="environment"` como alternativa móvil.
+
+### Carga de archivo
+
+* Permitir formatos de imagen compatibles con navegadores actuales.
+* Mostrar vista previa.
+* Validar tamaño y tipo antes de enviar.
+* Conservar la compresión existente siempre que no deteriore excesivamente la utilidad clínica.
+* Mostrar errores comprensibles, no mensajes técnicos.
+
+### Compatibilidad mínima a probar
+
+* Safari en macOS.
+* Chrome en macOS.
+* Safari en iPhone.
+* Chrome en Android.
+* Vista responsive en pantallas pequeñas.
+
+---
+
+## 12. Aumentar el área objetivo de la fotografía
+
+El cuadro o guía objetivo actual es demasiado pequeño.
+
+### Diseño requerido
+
+* Aumentar considerablemente el visor y el área de encuadre.
+
+* En escritorio debe utilizar una parte amplia del contenido disponible, con una altura práctica aproximada de 360 a 500 píxeles según el tamaño de pantalla.
+
+* En teléfonos debe aprovechar casi todo el ancho útil.
+
+* Mantener una proporción adecuada para fotografías clínicas.
+
+* La guía visual debe ser clara y no tapar el rostro o zona que se está fotografiando.
+
+* Mostrar junto al visor:
+
+  * Nombre de la vista requerida.
+  * Ejemplo o guía visual existente.
+  * Instrucción breve.
+  * Indicador de progreso.
+  * Botón de captura suficientemente grande.
+
+* Los controles deben ser utilizables mediante mouse, trackpad, teclado y pantalla táctil.
+
+* Evitar botones pequeños o demasiado juntos.
+
+---
+
+# REQUISITOS DE DISEÑO Y SEGURIDAD
+
+## 13. Mantener el propósito general de Clinivista
+
+Clinivista no es una aplicación exclusiva de trasplante capilar ni de un centro específico.
+
+* Mantén componentes, nombres y estructuras reutilizables para diferentes centros y especialidades médicas.
+* Los protocolos fotográficos deben poder configurarse por centro o especialidad.
+* No agregues textos que hagan parecer que toda la plataforma pertenece exclusivamente a Estecapelli.
+* El protocolo capilar puede conservar sus cinco vistas y la Escala de Norwood cuando corresponda, pero sin convertirlos en requisitos universales de todos los centros.
+* No implementar diagnóstico automático.
+* No calcular automáticamente número de injertos.
+* No entregar recomendaciones terapéuticas automáticas.
+* Mantener explícito que la preevaluación no reemplaza la consulta médica y que la revisión final es humana.
+
+## 14. Accesibilidad y presentación
+
+* Mantener un diseño moderno, limpio, simple y responsive.
+* Conservar la identidad visual actual de Clinivista.
+* Mantener textos fáciles de comprender.
+* Utilizar etiquetas visibles, mensajes de error cercanos al campo y estados de foco.
+* No utilizar solamente colores para comunicar errores o estados.
+* Evitar cambios visuales que perjudiquen el flujo existente.
+* Mantener un objetivo táctil adecuado para botones y controles.
+
+## 15. Seguridad
+
+* Validar y normalizar todos los datos en el backend.
+* No confiar en campos ocultos o valores enviados por el navegador para determinar el centro o paciente.
+* Verificar el token antes de devolver información.
+* No exponer datos personales de otros pacientes al detectar un RUT duplicado.
+* Aplicar la unicidad del RUT dentro del centro correspondiente.
+* No incluir información sensible en URLs, logs o mensajes técnicos.
+* No debilitar la autenticación del panel administrativo.
+* No colocar contraseñas, secretos o credenciales directamente en el código.
+* Conservarlos en variables de entorno.
+* Si descubres que las fotografías se almacenan sin protección o dentro de archivos públicos, informa y corrige el problema dentro de lo razonable para el MVP, sin borrar archivos existentes.
+
+---
+
+# PRUEBAS Y CRITERIOS DE ACEPTACIÓN
+
+## 16. Pruebas mínimas obligatorias
+
+Crea o actualiza pruebas para verificar:
+
+1. El enlace generado para WhatsApp abre directamente la preevaluación.
+2. Un token inválido muestra una pantalla controlada.
+3. `12.345.678-5` es aceptado.
+4. `12345678-5` se normaliza al mismo RUT.
+5. `12.345.678-9` es rechazado.
+6. La letra `k` se convierte en `K`.
+7. Un RUT repetido dentro del mismo centro no crea otro paciente.
+8. El mismo RUT puede existir legítimamente en centros distintos.
+9. Una nueva evaluación puede asociarse a un paciente existente.
+10. La ciudad aparece inicialmente vacía.
+11. Santiago no aparece preseleccionado.
+12. El botón Continuar está desactivado sin consentimiento.
+13. El botón se activa al cumplir todos los requisitos.
+14. El backend rechaza una solicitud sin consentimiento.
+15. Volver a una fotografía anterior conserva el avance.
+16. Repetir una fotografía no elimina las demás.
+17. Recargar la página recupera el borrador.
+18. Descartar solicita confirmación.
+19. La cámara se detiene al salir del paso.
+20. La carga de archivos funciona en Mac.
+21. El flujo funciona en móvil y escritorio.
+22. El panel administrativo y los estados existentes continúan funcionando.
+23. No aparecen errores nuevos en consola, servidor, lint o compilación.
+
+Si el proyecto no dispone de infraestructura de pruebas, crea pruebas razonables para las funciones críticas —especialmente RUT, duplicados, consentimiento y rutas— y complementa con una verificación manual documentada.
+
+---
+
+# ENTREGA FINAL
+
+Cuando termines:
+
+1. Ejecuta nuevamente la aplicación completa.
+2. Ejecuta pruebas, lint y compilación disponibles.
+3. Corrige cualquier regresión detectada.
+4. No dejes código comentado, duplicado o funciones temporales innecesarias.
+5. No dejes datos personales reales dentro de pruebas.
+6. Entrega un informe final indicando:
+
+   * Errores encontrados durante la revisión inicial.
+   * Errores corregidos.
+   * Archivos modificados.
+   * Cambios realizados en la base de datos.
+   * Migraciones ejecutadas.
+   * Pruebas creadas y resultado de cada una.
+   * Pruebas manuales realizadas.
+   * Cualquier limitación pendiente.
+   * Instrucciones necesarias para probar el nuevo flujo.
+
+Comienza ahora revisando todo el repositorio. Primero corrige los errores comprobados y después implementa cada requisito. No te limites a describir lo que harías: realiza los cambios en el código y deja el MVP funcionando.
