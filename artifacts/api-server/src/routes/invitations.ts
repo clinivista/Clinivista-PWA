@@ -49,7 +49,7 @@ router.post("/invitations", async (req, res): Promise<void> => {
 
   const host = req.headers.host ?? "localhost";
   const protocol = req.headers["x-forwarded-proto"] ?? "https";
-  const link = `${protocol}://${host}/?token=${token}`;
+  const link = `${protocol}://${host}/patient?token=${token}`;
 
   res.status(201).json({ ok: true, lead: leadSummary(inserted), link });
 });

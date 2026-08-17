@@ -363,7 +363,7 @@ export default function PatientFlow() {
   const [phonePrefixOpen, setPhonePrefixOpen] = useState(false);
   const { toast } = useToast();
 
-  const { data: existingData, isLoading: isLoadingExisting } = useGetPatient(token || "", {
+  const { data: existingData, isLoading: isLoadingExisting, isError: isTokenError } = useGetPatient(token || "", {
     query: { enabled: !!token, queryKey: getGetPatientQueryKey(token || "") },
   });
 
@@ -459,6 +459,38 @@ export default function PatientFlow() {
         <div className="text-muted-foreground font-medium flex items-center gap-3 bg-white px-6 py-4 rounded-full shadow-sm">
           <RefreshCw className="w-5 h-5 animate-spin text-primary" />
           {t.loading}
+        </div>
+      </div>
+    );
+  }
+
+  // Invalid / expired invitation token — show clear error instead of the default flow
+  if (token && isTokenError) {
+    return (
+      <div className="min-h-[100dvh] bg-[#F5F2EE] flex items-center justify-center p-4 font-sans">
+        <div className="bg-white rounded-[2.5rem] shadow-sm max-w-md w-full overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500">
+          <div className="h-1.5 bg-gradient-to-r from-red-400 to-amber-400" />
+          <div className="p-8 md:p-10 text-center">
+            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-10 h-10 text-red-500" />
+            </div>
+            <h1 className="text-2xl font-extrabold text-foreground mb-3 tracking-tight">
+              Este enlace no es válido o ha expirado
+            </h1>
+            <p className="text-muted-foreground mb-8 leading-relaxed text-base">
+              El enlace de invitación que usaste ya no está disponible. Por favor contacta al centro para solicitar un nuevo enlace de pre-evaluación.
+            </p>
+            <p className="text-sm text-muted-foreground mb-6 bg-[#F5F2EE] border border-[#E8E4DE] rounded-2xl p-4 leading-relaxed">
+              Escríbenos por WhatsApp o responde al mensaje donde recibiste este enlace y te enviaremos uno nuevo.
+            </p>
+            <div className="space-y-3">
+              <Link href="/">
+                <span className="w-full h-14 inline-flex items-center justify-center text-base font-semibold rounded-full bg-[#F5F2EE] border border-[#E8E4DE] text-foreground hover:bg-[#EDE9E4] transition-colors cursor-pointer">
+                  Ir al inicio
+                </span>
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     );

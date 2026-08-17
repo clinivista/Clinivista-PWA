@@ -4,7 +4,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
-import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
+import { Route, Switch, useLocation, useSearch, Redirect, Router as WouterRouter } from 'wouter';
 import { LanguageProvider } from '@/lib/language';
 
 import Home from '@/pages/home';
@@ -18,11 +18,21 @@ const queryClient = new QueryClient({
   },
 });
 
+function HomeWithTokenRedirect() {
+  // Legacy invitation links pointed to /?token=TOKEN — forward them to /patient
+  const search = useSearch();
+  const token = new URLSearchParams(search).get('token');
+  if (token) {
+    return <Redirect to={`/patient?token=${encodeURIComponent(token)}`} replace />;
+  }
+  return <Home />;
+}
+
 function Router() {
   return (
     <RoutedErrorBoundary>
       <Switch>
-        <Route path="/" component={Home} />
+        <Route path="/" component={HomeWithTokenRedirect} />
         <Route path="/patient" component={Patient} />
         <Route path="/admin" component={Admin} />
         <Route path="/admin/login" component={Login} />
