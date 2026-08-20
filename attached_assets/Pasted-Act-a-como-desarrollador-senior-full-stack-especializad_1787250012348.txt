@@ -1,0 +1,587 @@
+Actúa como desarrollador senior full-stack especializado en PWA, captura de imágenes de alta resolución, UX móvil, privacidad de datos clínicos y sistemas de seguimiento fotográfico médico.
+
+Trabaja directamente sobre el código existente de Clinivista en Replit. No respondas solamente con recomendaciones: revisa, modifica, prueba y deja funcionando el nuevo módulo.
+
+# Objetivo principal
+
+Transformar la sección de fotografías del paciente en un “Estudio Fotográfico Clínico Clinivista”.
+
+Este módulo debe convertirse en la principal ventaja competitiva de la plataforma: una experiencia guiada, profesional, simple y segura que permita al paciente capturar fotografías de alta calidad, revisarlas y aplicar ajustes técnicos antes de enviarlas al equipo clínico.
+
+Clinivista no debe funcionar como una aplicación de retoque estético ni como un sistema de diagnóstico. La plataforma debe mejorar la calidad técnica de las imágenes —encuadre, orientación, iluminación, exposición y nitidez— sin alterar hallazgos clínicos.
+
+## Principio clínico obligatorio
+
+Cada fotografía debe manejar dos versiones:
+
+1. `original`
+
+   * Archivo original recibido desde cámara o carga del dispositivo.
+   * No puede ser sobrescrito ni eliminado por un ajuste del paciente.
+   * Debe conservarse para revisión clínica y trazabilidad.
+
+2. `versión_clínica_ajustada`
+
+   * Copia derivada de la fotografía original.
+   * Permite únicamente correcciones técnicas autorizadas.
+   * Debe registrar todos los ajustes aplicados.
+   * Debe estar vinculada a la foto original.
+
+Nunca reemplazar silenciosamente la imagen original con una versión editada.
+
+Mostrar en la interfaz:
+
+“Los ajustes mejoran la calidad técnica de la imagen y no modifican la evaluación médica. El equipo clínico conserva acceso a la fotografía original.”
+
+---
+
+# 1. Revisión obligatoria antes de modificar
+
+Antes de desarrollar el módulo:
+
+1. Revisa todo el repositorio y la arquitectura actual.
+2. Identifica cómo funciona hoy:
+
+   * El flujo de preevaluación.
+   * Las vistas fotográficas.
+   * El guardado de imágenes.
+   * La compresión actual.
+   * El envío al backend.
+   * El borrador y recuperación de avance.
+   * La relación entre paciente, evaluación, fotografías y centro.
+3. Ejecuta la aplicación y prueba el flujo actual completo.
+4. Corrige errores reales encontrados antes de añadir nuevas funciones.
+5. No elimines ni rompas funcionalidades existentes:
+
+   * Enlace directo a preevaluación.
+   * Validación de RUT.
+   * Consentimiento obligatorio.
+   * Botón Continuar bloqueado sin consentimiento.
+   * Ciudad sin valor predeterminado.
+   * Navegación hacia atrás.
+   * Guardado y recuperación de avance.
+   * Panel administrativo.
+   * Estados de evaluación.
+   * Flujo responsive.
+6. Conserva la tecnología existente, salvo que un cambio sea imprescindible.
+7. Si existe Git, crea un checkpoint o commit antes de realizar cambios.
+
+---
+
+# 2. Nuevo módulo: Estudio Fotográfico Clínico Clinivista
+
+Reemplaza la experiencia actual de carga de foto por un flujo de tres etapas para cada vista requerida.
+
+## Etapa A: Preparación y captura guiada
+
+Antes de abrir la cámara, mostrar:
+
+* Nombre de la vista requerida.
+* Progreso, por ejemplo: “Foto 2 de 5”.
+* Instrucción breve y específica.
+* Ejemplo visual o silueta de referencia.
+* Recomendación de iluminación.
+* Recomendación de distancia.
+* Recomendación de fondo.
+* Indicador de orientación: vertical u horizontal.
+* Botón visible “Tomar foto”.
+* Botón secundario “Subir desde el dispositivo”.
+* Botón “Volver”, sin pérdida de avance.
+
+Para protocolo capilar, conservar inicialmente las cinco vistas:
+
+1. Frontal.
+2. Vértex.
+3. Temporal derecha.
+4. Temporal izquierda.
+5. Zona donante.
+
+Diseñar la arquitectura para que cada centro o especialidad pueda configurar sus propias vistas fotográficas.
+
+Cada vista debe poder definir:
+
+* Identificador.
+* Nombre.
+* Texto de instrucción.
+* Orientación recomendada.
+* Relación de aspecto sugerida.
+* Área o guía visual de encuadre.
+* Número mínimo y máximo de fotografías.
+* Resolución mínima.
+* Si es obligatoria.
+* Ejemplo visual.
+* Frecuencia de controles.
+* Reglas de captura especiales.
+
+## Cámara
+
+Cuando el paciente seleccione “Tomar foto”:
+
+* Solicitar permiso de cámara solo en ese momento.
+* Intentar utilizar la cámara trasera en dispositivos móviles.
+* Solicitar la máxima resolución disponible de forma progresiva.
+* Usar restricciones ideales de cámara como:
+
+  * Resolución ideal cercana a 1920 × 1080 como mínimo.
+  * Intentar 4K cuando el dispositivo lo permita.
+  * Mantener fallback seguro si el navegador o dispositivo no lo soporta.
+* No bloquear el flujo si no existe cámara o el permiso es rechazado.
+* Mostrar inmediatamente la alternativa “Subir desde el dispositivo”.
+* Detener el stream de cámara al abandonar la vista o cerrar el módulo.
+
+En móvil, utilizar `capture="environment"` cuando corresponda.
+
+En Mac y PC:
+
+* Permitir usar cámara web si está disponible.
+* Permitir carga de archivo como alternativa principal.
+* Hacer que el área de cámara sea grande, cómoda y visible.
+* El visor no debe ser pequeño ni sentirse como una ventana secundaria.
+
+## Guía de encuadre
+
+Sobre la vista de cámara, mostrar una guía visual no permanente:
+
+* Marco grande.
+* Línea de horizonte o nivel.
+* Silueta o zona objetivo según protocolo.
+* Indicador de distancia cuando sea posible.
+* Señal discreta de iluminación.
+* Señal de orientación correcta.
+
+La guía nunca debe quedar incorporada dentro de la fotografía final.
+
+No usar filtros de belleza, suavizado de piel, cambios faciales ni efectos visuales.
+
+---
+
+# 3. Control técnico de calidad antes de aceptar una fotografía
+
+Después de capturar o cargar una imagen, realizar una revisión técnica automática básica. Esta revisión no debe interpretar contenido clínico.
+
+Evaluar, cuando sea técnicamente posible:
+
+* Resolución.
+* Relación de aspecto.
+* Orientación.
+* Tamaño de archivo.
+* Exposición insuficiente.
+* Sobreexposición.
+* Contraste excesivamente bajo.
+* Desenfoque técnico.
+* Encuadre posiblemente insuficiente.
+* Imagen demasiado oscura.
+* Imagen demasiado pequeña para una revisión útil.
+
+Mostrar resultados como sugerencias claras, nunca como diagnóstico.
+
+Ejemplos:
+
+* “La imagen parece oscura. Recomendamos aumentar la iluminación o ajustar la exposición.”
+* “La fotografía podría estar desenfocada. Puedes repetirla para obtener una imagen más clara.”
+* “La resolución es baja para este protocolo. Intenta usar la cámara principal del teléfono.”
+* “La imagen cumple los criterios técnicos básicos.”
+
+El paciente debe poder:
+
+* “Usar esta foto”.
+* “Ajustar foto”.
+* “Repetir foto”.
+* “Subir otra foto”.
+* “Volver”.
+
+No impedir automáticamente avanzar por una advertencia técnica, salvo que falte una fotografía obligatoria o la imagen sea inválida o inutilizable.
+
+Registrar los avisos técnicos mostrados, pero no presentarlos como hallazgos clínicos.
+
+---
+
+# 4. Editor fotográfico clínico: ajustes técnicos no destructivos
+
+Después de capturar o cargar una fotografía, mostrar un botón principal:
+
+“Ajustar calidad de foto”
+
+Al abrirlo, desplegar un editor visual amplio, moderno y fácil de utilizar, estilo estudio fotográfico profesional.
+
+Debe funcionar correctamente en móviles, Mac y PC.
+
+## Diseño del editor
+
+La pantalla debe incluir:
+
+* Vista grande de la imagen.
+* Opción “Comparar original”.
+* Controles de edición en un panel inferior en móvil y lateral en escritorio.
+* Botón “Restablecer ajustes”.
+* Botón “Cancelar”.
+* Botón “Guardar ajustes”.
+* Indicador “Original protegido”.
+* Mensaje visible:
+
+“Ajustes técnicos no destructivos. No se modifican hallazgos clínicos.”
+
+## Herramientas permitidas
+
+Permitir solamente ajustes técnicos y reversibles:
+
+### A. Recorte y encuadre
+
+* Recorte libre.
+* Relación de aspecto recomendada por protocolo.
+* Centrado.
+* Reencuadre.
+* Corrección de inclinación leve.
+* Rotación en múltiplos de 90 grados.
+* Mantener la orientación clínica de la imagen.
+* No permitir espejo horizontal o vertical sin advertencia explícita y registro de auditoría.
+
+### B. Luz y color
+
+Permitir controles moderados de:
+
+* Exposición.
+* Brillo.
+* Contraste.
+* Altas luces.
+* Sombras.
+* Temperatura de color.
+* Balance de blancos.
+* Saturación moderada.
+* Claridad moderada.
+
+Mantener límites conservadores. No permitir valores extremos que cambien artificialmente la apariencia de lesiones, pigmentación, inflamación, cabello, piel o cicatrices.
+
+### C. Nitidez técnica
+
+Permitir:
+
+* Nitidez moderada.
+* Reducción moderada de ruido.
+* Corrección de compresión visual cuando sea posible.
+
+No utilizar funciones de “super resolución”, reconstrucción generativa, inventar píxeles clínicos ni aumento artificial de resolución por IA.
+
+### D. Correcciones de orientación
+
+* Aplicar automáticamente orientación EXIF cuando corresponda.
+* Mostrar al usuario la imagen correctamente orientada.
+* Guardar la orientación original y los cambios realizados.
+
+## Herramientas estrictamente prohibidas
+
+No implementar:
+
+* Filtros de belleza.
+* Suavizado de piel.
+* Eliminación de manchas.
+* Clonado.
+* Pincel corrector.
+* Licuar.
+* Remodelación facial o corporal.
+* Cambio de volumen de cabello.
+* Alteración de color localizada.
+* Eliminación o incorporación de objetos.
+* Cambio de fondo.
+* Desenfoque de fondo.
+* Maquillaje virtual.
+* Reducción de arrugas.
+* Blanqueamiento dental.
+* Ojos, labios o facciones modificables.
+* Filtros artísticos.
+* Stickers.
+* Texto incorporado sobre la fotografía.
+* Generación de imágenes.
+* Retoque por inteligencia artificial.
+* Escalado artificial mediante IA.
+* Cualquier herramienta que pueda modificar un hallazgo clínico.
+
+No usar el concepto “Photoshop” en la interfaz del paciente. Utilizar el nombre:
+
+“Ajustes técnicos de imagen”
+
+---
+
+# 5. Alta definición y calidad de archivo
+
+Clinivista debe priorizar calidad clínica y no una compresión agresiva.
+
+## Requisitos
+
+* Aceptar JPEG, PNG, WebP y HEIC/HEIF cuando sea posible.
+* Si se recibe HEIC/HEIF y el navegador no lo soporta para edición, convertirlo de forma controlada a JPEG de alta calidad, conservando el original cuando sea posible.
+* Permitir carga de fotografías de alta resolución.
+* No reducir una imagen original solamente para ahorrar espacio.
+* No guardar fotos clínicas grandes como Base64 dentro de JSON o localStorage.
+* No enviar imágenes en logs.
+* No incluir imágenes ni RUT en URLs.
+* No guardar fotografías clínicas de forma indefinida en localStorage.
+
+## Almacenamiento
+
+Para cada foto, almacenar al menos:
+
+* `photo_id`.
+* `patient_id`.
+* `evaluation_id`.
+* `center_id`.
+* `protocol_view_id`.
+* `original_file_url` privada.
+* `adjusted_file_url` privada.
+* `original_mime_type`.
+* `original_width`.
+* `original_height`.
+* `original_file_size`.
+* `adjusted_width`.
+* `adjusted_height`.
+* `adjusted_file_size`.
+* `captured_at`.
+* `uploaded_at`.
+* `created_by`.
+* `quality_warnings`.
+* `edit_parameters`.
+* `original_hash`.
+* `adjusted_hash`.
+* `version`.
+* `status`.
+
+La imagen original debe conservarse en almacenamiento privado y protegido. La versión ajustada debe ser una copia derivada con trazabilidad.
+
+Si el entorno actual de Replit utiliza persistencia local o JSON solo para pruebas, no almacenar fotografías pesadas dentro del mismo archivo de datos. Crear una capa de almacenamiento separada y claramente marcada como no apta para producción si no existe todavía almacenamiento privado configurado.
+
+## Exportación de versión ajustada
+
+* Mantener la resolución original cuando sea compatible con el navegador.
+* Nunca ampliar una fotografía por encima de su resolución original.
+* Si se requiere una copia optimizada, conservar la dimensión clínica suficiente y usar compresión de alta calidad.
+* Usar JPEG de calidad alta para fotografías clínicas derivadas, por ejemplo entre 90 y 95.
+* Mostrar dimensiones y tamaño de archivo en el editor.
+* Informar si el dispositivo entregó una imagen demasiado pequeña.
+
+---
+
+# 6. Edición local y trazabilidad
+
+Priorizar procesamiento local en el navegador para los ajustes visuales básicos.
+
+Usar Canvas, OffscreenCanvas, Web Worker o una solución equivalente para evitar bloquear la interfaz, especialmente en fotografías de alta resolución.
+
+Requisitos:
+
+* La edición no debe congelar la interfaz.
+* Mostrar indicador de procesamiento.
+* Mantener el original intacto.
+* Mantener parámetros de edición de manera estructurada.
+* Permitir restablecer todos los ajustes.
+* Permitir comparar “Original / Ajustada” mediante botón presionado o deslizador.
+* Guardar borrador de edición de manera segura.
+* Si el paciente vuelve al paso anterior, no perder fotos ni ajustes ya guardados.
+* Si recarga la página, recuperar el borrador de forma segura.
+* Si intenta descartar una foto ajustada, pedir confirmación clara.
+
+Texto del modal:
+
+Título: “¿Descartar esta fotografía?”
+
+Texto: “Se eliminará la versión ajustada de esta foto. La fotografía original seguirá disponible mientras la evaluación esté guardada.”
+
+Botones:
+
+* “Mantener fotografía”.
+* “Descartar versión ajustada”.
+
+---
+
+# 7. Flujo de aceptación de cada fotografía
+
+Cada vista debe seguir este flujo:
+
+1. Instrucción de captura.
+2. Cámara o carga de archivo.
+3. Vista previa.
+4. Control técnico de calidad.
+5. Ajustes técnicos opcionales.
+6. Comparación original/ajustada.
+7. Confirmación de fotografía.
+8. Guardado de versión original y versión ajustada.
+9. Avance a siguiente vista.
+
+No permitir que una fotografía quede marcada como completa si no se ha guardado correctamente.
+
+Mostrar estado visual por cada toma:
+
+* Pendiente.
+* Foto cargada.
+* Requiere revisión técnica.
+* Ajustada.
+* Lista.
+
+---
+
+# 8. Configuración por especialidad y centro
+
+No construir este estudio fotográfico exclusivamente para trasplante capilar.
+
+Implementar una estructura reutilizable para protocolos por especialidad y centro.
+
+Cada protocolo debe poder definir:
+
+* Especialidad.
+* Centro.
+* Nombre del protocolo.
+* Vistas requeridas.
+* Instrucciones por vista.
+* Ejemplo visual por vista.
+* Relación de aspecto.
+* Orientación recomendada.
+* Resolución mínima.
+* Controles de calidad.
+* Frecuencia de seguimiento.
+* Campos clínicos adicionales.
+* Si requiere foto pretratamiento, postratamiento o control.
+
+Mantener inicialmente el protocolo capilar existente, incluyendo:
+
+* Frontal.
+* Vértex.
+* Temporal derecha.
+* Temporal izquierda.
+* Zona donante.
+* Escala de Norwood como campo para registro o validación profesional, nunca como clasificación automática.
+
+Preparar la arquitectura para módulos futuros:
+
+* Dermatología.
+* Medicina estética.
+* Cirugía plástica y reconstructiva.
+* Odontología y ortodoncia.
+* Heridas y pie diabético.
+* Flebología.
+* Rehabilitación y traumatología.
+* Oculoplastia.
+
+---
+
+# 9. Panel administrativo y revisión clínica
+
+Actualizar el panel del equipo para que cada fotografía muestre:
+
+* Miniatura de la versión ajustada.
+* Acceso a la fotografía original.
+* Botón “Comparar original y ajustada”.
+* Estado de calidad técnica.
+* Fecha de captura.
+* Vista o protocolo asociado.
+* Historial de ajustes técnicos.
+* Usuario que realizó la carga.
+* Si la foto fue tomada con cámara o subida como archivo.
+* Resolución original.
+* Resolución ajustada.
+
+El personal autorizado debe poder:
+
+* Ver ambas versiones.
+* Elegir cuál usar para revisión.
+* Marcar una fotografía como “Solicitar repetición”.
+* Añadir una nota interna.
+* Ver el motivo de la solicitud de repetición.
+* No modificar ni borrar el original desde el panel sin permiso específico y trazabilidad.
+
+No incorporar análisis automático de alopecia, lesiones, heridas, simetría, vasos, dientes ni ningún hallazgo clínico.
+
+---
+
+# 10. Diseño visual y experiencia de usuario
+
+El estudio fotográfico debe sentirse moderno, profesional y simple.
+
+Principios:
+
+* Calidad visual premium.
+* Interfaz clara, no intimidante.
+* Botones grandes.
+* Excelente uso con una mano en móvil.
+* Vista de cámara amplia.
+* Diseño responsivo.
+* Alto contraste.
+* Instrucciones cortas.
+* Progreso siempre visible.
+* Microinteracciones suaves.
+* Estados de guardado visibles.
+* Nunca ocultar acciones importantes detrás de iconos sin texto.
+
+Usar lenguaje simple para pacientes y lenguaje más técnico para el panel profesional.
+
+Ejemplos de textos para pacientes:
+
+* “Ubica tu rostro dentro de la guía.”
+* “Busca una zona bien iluminada.”
+* “Evita usar filtros de cámara.”
+* “Revisa la nitidez antes de continuar.”
+* “Puedes repetir la fotografía si no quedaste conforme.”
+* “Tu avance se guarda automáticamente.”
+
+---
+
+# 11. Seguridad y privacidad obligatoria
+
+* Verificar token antes de devolver o aceptar fotografías.
+* Asegurar que un paciente solo acceda a su propia evaluación.
+* Asegurar que un centro no pueda acceder a registros de otro centro.
+* No exponer URLs públicas permanentes de imágenes clínicas.
+* No registrar fotografías, RUT, consentimientos ni datos sensibles en consola.
+* No usar fotografías clínicas para entrenamiento de modelos, análisis externo o marketing.
+* Separar consentimiento clínico de consentimiento comercial.
+* Mantener registro de aceptación de consentimiento, versión, fecha, centro y evaluación.
+* Mantener acceso por roles.
+* Registrar eventos relevantes de fotografía: carga, edición, eliminación, solicitud de repetición y aprobación.
+
+---
+
+# 12. Pruebas obligatorias antes de entregar
+
+Crear o actualizar pruebas para verificar:
+
+1. El flujo actual de preevaluación sigue funcionando.
+2. El enlace desde WhatsApp abre directamente la preevaluación.
+3. El consentimiento sigue siendo obligatorio.
+4. El RUT continúa validándose correctamente.
+5. El paciente puede tomar una foto desde móvil.
+6. El paciente puede subir una foto desde Mac.
+7. El paciente puede volver a una foto anterior sin perder avance.
+8. Una fotografía original nunca es sobrescrita por la versión ajustada.
+9. Restablecer ajustes devuelve la imagen a su estado original.
+10. Los parámetros de edición se guardan correctamente.
+11. No se permite usar herramientas prohibidas de retoque.
+12. No se amplía artificialmente una fotografía de baja resolución.
+13. La carga de una imagen de alta resolución no bloquea la interfaz.
+14. La cámara se detiene al abandonar la captura.
+15. El borrador se recupera tras recargar la página.
+16. El panel profesional puede comparar original y versión ajustada.
+17. Un usuario de otro centro no puede acceder a la foto.
+18. No se generan errores de consola.
+19. El flujo funciona en Safari macOS, Chrome macOS, Safari iPhone y Chrome Android.
+20. Las fotografías no quedan almacenadas como Base64 dentro de JSON, localStorage o logs.
+
+---
+
+# 13. Entrega final
+
+Cuando termines:
+
+1. Ejecuta la aplicación.
+2. Ejecuta pruebas, lint y compilación disponibles.
+3. Corrige errores encontrados.
+4. Entrega un informe final con:
+
+   * Archivos modificados.
+   * Funciones implementadas.
+   * Cambios de base de datos o almacenamiento.
+   * Bibliotecas agregadas y sus licencias.
+   * Pruebas ejecutadas.
+   * Resultado de pruebas.
+   * Limitaciones actuales.
+   * Requisitos pendientes para producción.
+   * Instrucciones para probar el Estudio Fotográfico Clínico.
+
+No declares que la aplicación cumple regulación sanitaria, protección de datos o requisitos legales sin una auditoría externa. No implementes diagnóstico automático, retoque estético, reconstrucción por IA ni ninguna alteración de hallazgos clínicos.
