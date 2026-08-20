@@ -16,12 +16,16 @@ vi.mock("@workspace/db", async () => {
 
 import * as mockedDb from "@workspace/db";
 import patientsRouter from "./patients";
+import leadsRouter from "./leads";
+import { createSession } from "../lib/sessions";
+import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
 
 const pglite = (mockedDb as unknown as { __pglite: { exec(sql: string): Promise<unknown> } }).__pglite;
 
 const app = express();
 app.use(express.json({ limit: "20mb" }));
 app.use("/api", patientsRouter);
+app.use("/api", leadsRouter);
 
 // Fixture data only — not a real person.
 const VALID_BODY = {
@@ -60,16 +64,59 @@ beforeAll(async () => {
       notes text DEFAULT '',
       norwood text DEFAULT '',
       appointment_at text DEFAULT '',
-      is_demo boolean DEFAULT false
+       is_demo boolean DEFAULT false,
+       center_id text DEFAULT 'default-center',
+       protocol_id text DEFAULT 'capillary-initial'
     );
     CREATE UNIQUE INDEX IF NOT EXISTS leads_document_normalized_unique
       ON leads (document_normalized)
       WHERE document_normalized IS NOT NULL AND document_normalized <> '';
+     CREATE TABLE IF NOT EXISTS clinical_centers (
+       id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
+       active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now()
+     );
+     CREATE TABLE IF NOT EXISTS clinical_protocols (
+       id text PRIMARY KEY, center_id text NOT NULL DEFAULT 'default-center',
+       name text NOT NULL, version text NOT NULL DEFAULT '1', active boolean NOT NULL DEFAULT true,
+       created_at timestamptz NOT NULL DEFAULT now()
+     );
+     CREATE TABLE IF NOT EXISTS clinical_protocol_views (
+       id text PRIMARY KEY, protocol_id text NOT NULL, key text NOT NULL, label text NOT NULL,
+       position integer NOT NULL DEFAULT 0, requirements jsonb NOT NULL DEFAULT '{}',
+       active boolean NOT NULL DEFAULT true,
+       UNIQUE (protocol_id, key)
+     );
+     CREATE TABLE IF NOT EXISTS clinical_evaluations (
+       id text PRIMARY KEY, lead_id text NOT NULL UNIQUE, center_id text NOT NULL DEFAULT 'default-center',
+       protocol_id text NOT NULL DEFAULT 'capillary-initial', status text NOT NULL DEFAULT 'draft',
+       created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
+     );
+     CREATE TABLE IF NOT EXISTS clinical_photos (
+       id text PRIMARY KEY, evaluation_id text NOT NULL, view_id text NOT NULL, status text NOT NULL DEFAULT 'draft',
+       original_object_path text NOT NULL, derivative_object_path text, original_mime_type text NOT NULL,
+       original_bytes integer NOT NULL, original_sha256 text NOT NULL, width integer, height integer,
+       source text NOT NULL DEFAULT 'upload', capture_metadata jsonb NOT NULL DEFAULT '{}',
+       edit_params jsonb, created_at timestamptz NOT NULL DEFAULT now(), confirmed_at timestamptz,
+       discarded_at timestamptz
+     );
+     CREATE TABLE IF NOT EXISTS clinical_photo_audit_events (
+       id text PRIMARY KEY, photo_id text NOT NULL, evaluation_id text NOT NULL, action text NOT NULL,
+       actor_type text NOT NULL, actor_id text, details jsonb NOT NULL DEFAULT '{}',
+       created_at timestamptz NOT NULL DEFAULT now()
+     );
   `);
 });
 
 beforeEach(async () => {
-  await pglite.exec("DELETE FROM leads;");
+  await pglite.exec(`
+    DELETE FROM clinical_photo_audit_events;
+    DELETE FROM clinical_photos;
+    DELETE FROM clinical_evaluations;
+    DELETE FROM clinical_protocol_views;
+    DELETE FROM clinical_protocols;
+    DELETE FROM clinical_centers;
+    DELETE FROM leads;
+  `);
 });
 
 async function countLeads(): Promise<number> {
@@ -77,6 +124,12 @@ async function countLeads(): Promise<number> {
     rows: Array<{ n: number }>;
   }>;
   return res[0].rows[0].n;
+}
+
+async function createPatient(overrides: Record<string, unknown> = {}) {
+  const res = await request(app).post("/api/patients").send({ ...VALID_BODY, ...overrides });
+  expect(res.status).toBe(201);
+  return res.body.lead as { id: string; token: string };
 }
 
 describe("POST /api/patients", () => {
@@ -192,5 +245,210 @@ describe("PUT /api/patients/:token", () => {
       .send({ ...VALID_BODY, city: "Valparaíso" });
     expect(res.status).toBe(200);
     expect(res.body.lead.city).toBe("Valparaíso");
+  });
+});
+
+describe("Clinical photo API", () => {
+  const JPEG_BYTES = Buffer.from(
+    "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AVN//2Q==",
+    "base64",
+  );
+
+  async function uploadDraft(token: string, key = "frontal") {
+    const res = await request(app)
+      .post(`/api/patients/${token}/photos`)
+      .set("Content-Type", "image/jpeg")
+      .set("x-photo-key", key)
+      .set("x-photo-source", "upload")
+      .send(JPEG_BYTES);
+    expect(res.status).toBe(201);
+    return res.body as { id: string; originalObjectPath?: string; dataUrl?: string };
+  }
+
+  it("stores binary photo metadata outside lead JSON and never returns image bytes", async () => {
+    const lead = await createPatient();
+    const photo = await uploadDraft(lead.token);
+    expect(photo.dataUrl).toBeUndefined();
+    expect(photo.originalObjectPath).toBeUndefined();
+
+    const status = await request(app).get(`/api/patients/${lead.token}/photos`);
+    expect(status.status).toBe(200);
+    expect(status.body.photos).toHaveLength(1);
+    expect(JSON.stringify(status.body)).not.toContain("base64");
+    expect(JSON.stringify(status.body)).not.toContain("data:image");
+
+    const leadRow = (await pglite.exec("SELECT photos, photo_count FROM leads LIMIT 1;")) as Array<{
+      rows: Array<{ photos: unknown; photo_count: string }>;
+    }>;
+    expect(leadRow[0].rows[0].photos).toEqual([]);
+    expect(leadRow[0].rows[0].photo_count).toBe("0");
+  });
+
+  it("rejects arbitrary, truncated, and MIME-mismatched image bytes before storage", async () => {
+    const lead = await createPatient();
+    for (const body of [
+      Buffer.from("not an image"),
+      JPEG_BYTES.subarray(0, 20),
+      Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkk", "base64"),
+    ]) {
+      await request(app)
+        .post(`/api/patients/${lead.token}/photos`)
+        .set("Content-Type", "image/jpeg")
+        .set("x-photo-key", "frontal")
+        .set("x-photo-source", "upload")
+        .send(body)
+        .expect(400);
+    }
+    await request(app).get(`/api/patients/${lead.token}/photos`).expect(200).expect((response) => {
+      expect(response.body.photos).toEqual([]);
+    });
+  });
+
+  it("migrates a historical Base64 photo only after a verified private reference exists", async () => {
+    const lead = await createPatient();
+    const dataUrl = `data:image/jpeg;base64,${JPEG_BYTES.toString("base64")}`;
+    await pglite.exec(`
+      UPDATE leads
+         SET photos = '${JSON.stringify([{ key: "frontal", dataUrl }]).replace(/'/g, "''")}'::jsonb
+       WHERE token = '${lead.token}';
+    `);
+
+    const result = await request(app).get(`/api/patients/${lead.token}/photos`);
+    expect(result.status).toBe(200);
+    expect(result.body.photos).toHaveLength(1);
+    expect(JSON.stringify(result.body)).not.toContain("base64");
+
+    const rows = (await pglite.exec(`
+      SELECT photos FROM leads WHERE token = '${lead.token}';
+      SELECT original_object_path, original_sha256 FROM clinical_photos LIMIT 1;
+    `)) as Array<{ rows: Array<Record<string, unknown>> }>;
+    expect(rows[0].rows[0].photos).toEqual([expect.objectContaining({
+      key: "frontal",
+      migratedPhotoId: expect.any(String),
+    })]);
+    expect(JSON.stringify(rows[0].rows[0].photos)).not.toContain("dataUrl");
+    expect(rows[1].rows[0].original_object_path).toBeTruthy();
+    expect(rows[1].rows[0].original_sha256).toHaveLength(64);
+  });
+
+  it("removes every legacy Base64 payload, quarantining duplicate or unknown views", async () => {
+    const lead = await createPatient();
+    const validDataUrl = `data:image/jpeg;base64,${JPEG_BYTES.toString("base64")}`;
+    await pglite.exec(`
+      UPDATE leads
+         SET photos = '${JSON.stringify([
+           { key: "frontal", dataUrl: validDataUrl },
+           { key: "frontal", dataUrl: validDataUrl },
+           { key: "unknown-view", dataUrl: validDataUrl },
+           { key: "broken", dataUrl: "data:image/jpeg;base64,not-valid***" },
+         ]).replace(/'/g, "''")}'::jsonb
+       WHERE token = '${lead.token}';
+    `);
+    await request(app).get(`/api/patients/${lead.token}/photos`).expect(200);
+
+    const rows = (await pglite.exec(`
+      SELECT photos FROM leads WHERE token = '${lead.token}';
+      SELECT status, count(*)::int AS n FROM clinical_photos GROUP BY status ORDER BY status;
+    `)) as Array<{ rows: Array<Record<string, unknown>> }>;
+    expect(JSON.stringify(rows[0].rows[0].photos)).not.toContain("dataUrl");
+    expect(rows[0].rows[0].photos).toEqual(expect.arrayContaining([
+      expect.objectContaining({ migrationDisposition: "migrated" }),
+      expect.objectContaining({ migrationDisposition: "quarantined" }),
+      expect.objectContaining({ migrationDisposition: "redacted_invalid_legacy_payload" }),
+    ]));
+    expect(rows[1].rows).toEqual(expect.arrayContaining([
+      expect.objectContaining({ status: "confirmed", n: 1 }),
+      expect.objectContaining({ status: "quarantined", n: 2 }),
+    ]));
+  });
+
+  it("keeps the original immutable while adding a separately-audited adjusted derivative", async () => {
+    const lead = await createPatient();
+    const draft = await uploadDraft(lead.token);
+    const confirmed = await request(app).post(`/api/patients/${lead.token}/photos/${draft.id}/confirm`);
+    expect(confirmed.status).toBe(200);
+
+    const derivative = await request(app)
+      .post(`/api/patients/${lead.token}/photos/${draft.id}/adjusted`)
+      .set("Content-Type", "image/jpeg")
+      .set("x-edit-params", JSON.stringify({ brightness: 8, crop: "square" }))
+      .send(Buffer.from([...JPEG_BYTES, 0x01]));
+    expect(derivative.status).toBe(403);
+
+    const rows = (await pglite.exec(`
+      SELECT original_object_path, derivative_object_path, original_sha256, edit_params
+      FROM clinical_photos WHERE id = '${draft.id}';
+      SELECT action FROM clinical_photo_audit_events WHERE photo_id = '${draft.id}' ORDER BY created_at;
+    `)) as Array<{ rows: Array<Record<string, unknown>> }>;
+    expect(rows[0].rows[0].original_object_path).toBeTruthy();
+    expect(rows[0].rows[0].derivative_object_path).toBeNull();
+    expect(rows[0].rows[0].original_sha256).toHaveLength(64);
+    expect(rows[0].rows[0].edit_params).toBeNull();
+    expect(rows[1].rows.map((row) => row.action)).toEqual([
+      "uploaded",
+      "confirmed",
+    ]);
+  });
+
+  it("rejects access across patient tokens and only discards the requested draft", async () => {
+    const first = await createPatient();
+    const second = await createPatient({
+      documentId: "20.347.878-K",
+      phone: "+56922222222",
+      email: "otra@example.com",
+    });
+    const firstDraft = await uploadDraft(first.token);
+    const secondDraft = await uploadDraft(second.token);
+
+    const crossRead = await request(app).get(`/api/patients/${second.token}/photos`);
+    expect(crossRead.status).toBe(200);
+    expect(crossRead.body.photos.map((photo: { id: string }) => photo.id)).toEqual([secondDraft.id]);
+
+    const crossDiscard = await request(app).delete(`/api/patients/${second.token}/photos/${firstDraft.id}`);
+    expect(crossDiscard.status).toBe(404);
+
+    const discard = await request(app).delete(`/api/patients/${first.token}/photos/${firstDraft.id}`);
+    expect(discard.status).toBe(200);
+    const firstStatus = await request(app).get(`/api/patients/${first.token}/photos`);
+    expect(firstStatus.body.photos).toEqual([]);
+    const secondStatus = await request(app).get(`/api/patients/${second.token}/photos`);
+    expect(secondStatus.body.photos).toHaveLength(1);
+  });
+
+  it("does not allow a confirmed original to be discarded by the patient", async () => {
+    const lead = await createPatient();
+    const draft = await uploadDraft(lead.token);
+    await request(app).post(`/api/patients/${lead.token}/photos/${draft.id}/confirm`).expect(200);
+    await request(app).delete(`/api/patients/${lead.token}/photos/${draft.id}`).expect(404);
+    await request(app).get(`/api/patients/${lead.token}/photos`).expect(200);
+  });
+});
+
+describe("Clinical center isolation", () => {
+  it("does not list or reveal cases belonging to another center", async () => {
+    const ownLead = await createPatient();
+    const otherLead = await createPatient({
+      documentId: "20.347.878-K",
+      phone: "+56922222222",
+      email: "otro-centro@example.com",
+    });
+    await pglite.exec(`
+      UPDATE leads
+         SET center_id = 'other-center', protocol_id = 'other-center-capillary-initial'
+       WHERE id = '${otherLead.id}';
+    `);
+    const session = createSession({ centerId: DEFAULT_CENTER_ID, role: "admin" });
+
+    const list = await request(app)
+      .get("/api/leads")
+      .set("Cookie", `clinivista_session=${session}`);
+    expect(list.status).toBe(200);
+    expect(list.body.leads.map((lead: { id: string }) => lead.id)).toEqual([ownLead.id]);
+    expect(JSON.stringify(list.body)).not.toContain(otherLead.id);
+
+    await request(app)
+      .get(`/api/leads/${otherLead.id}`)
+      .set("Cookie", `clinivista_session=${session}`)
+      .expect(404);
   });
 });

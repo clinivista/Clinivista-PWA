@@ -33,6 +33,8 @@ import type {
   LeadStats,
   LoginResult,
   PatientInput,
+  PatientPhotoStatus,
+  PatientPhotoStatusResult,
   PatientResult,
   SimpleOk
 } from './api.schemas';
@@ -741,6 +743,88 @@ export const usePatchLead = <TError = ErrorType<ErrorResponse>,
       return useMutation(getPatchLeadMutationOptions(options));
     }
 
+export const getGetLeadPhotoFileUrl = (id: string,
+    photoId: string,) => {
+
+
+
+
+  return `/api/leads/${id}/photos/${photoId}`
+}
+
+/**
+ * @summary Stream a clinical photo to an authorized staff session
+ */
+export const getLeadPhotoFile = async (id: string,
+    photoId: string, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getGetLeadPhotoFileUrl(id,photoId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLeadPhotoFileQueryKey = (id: string,
+    photoId: string,) => {
+    return [
+    `/api/leads/${id}/photos/${photoId}`
+    ] as const;
+    }
+
+
+export const getGetLeadPhotoFileQueryOptions = <TData = Awaited<ReturnType<typeof getLeadPhotoFile>>, TError = ErrorType<ErrorResponse>>(id: string,
+    photoId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLeadPhotoFile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLeadPhotoFileQueryKey(id,photoId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLeadPhotoFile>>> = ({ signal }) => getLeadPhotoFile(id,photoId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && photoId !== null && photoId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLeadPhotoFile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLeadPhotoFileQueryResult = NonNullable<Awaited<ReturnType<typeof getLeadPhotoFile>>>
+export type GetLeadPhotoFileQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Stream a clinical photo to an authorized staff session
+ */
+
+export function useGetLeadPhotoFile<TData = Awaited<ReturnType<typeof getLeadPhotoFile>>, TError = ErrorType<ErrorResponse>>(
+ id: string,
+    photoId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLeadPhotoFile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLeadPhotoFileQueryOptions(id,photoId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getCreateInvitationUrl = () => {
 
 
@@ -1032,6 +1116,155 @@ export const useUpdatePatient = <TError = ErrorType<ErrorResponse>,
       return useMutation(getUpdatePatientMutationOptions(options));
     }
 
+export const getGetPatientPhotoStatusUrl = (token: string,) => {
+
+
+
+
+  return `/api/patients/${token}/photos`
+}
+
+/**
+ * @summary List private clinical photo metadata for the token holder
+ */
+export const getPatientPhotoStatus = async (token: string, options?: Parameters<typeof customFetch>[1]): Promise<PatientPhotoStatusResult> => {
+
+  return customFetch<PatientPhotoStatusResult>(getGetPatientPhotoStatusUrl(token),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPatientPhotoStatusQueryKey = (token: string,) => {
+    return [
+    `/api/patients/${token}/photos`
+    ] as const;
+    }
+
+
+export const getGetPatientPhotoStatusQueryOptions = <TData = Awaited<ReturnType<typeof getPatientPhotoStatus>>, TError = ErrorType<ErrorResponse>>(token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPatientPhotoStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPatientPhotoStatusQueryKey(token);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPatientPhotoStatus>>> = ({ signal }) => getPatientPhotoStatus(token, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: token !== null && token !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPatientPhotoStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPatientPhotoStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getPatientPhotoStatus>>>
+export type GetPatientPhotoStatusQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary List private clinical photo metadata for the token holder
+ */
+
+export function useGetPatientPhotoStatus<TData = Awaited<ReturnType<typeof getPatientPhotoStatus>>, TError = ErrorType<ErrorResponse>>(
+ token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPatientPhotoStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPatientPhotoStatusQueryOptions(token,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUploadPatientPhotoUrl = (token: string,) => {
+
+
+
+
+  return `/api/patients/${token}/photos`
+}
+
+/**
+ * @summary Upload a private original clinical photo for the token holder
+ */
+export const uploadPatientPhoto = async (token: string,
+    uploadPatientPhotoBody: Blob, options?: Parameters<typeof customFetch>[1]): Promise<PatientPhotoStatus> => {
+
+  return customFetch<PatientPhotoStatus>(getUploadPatientPhotoUrl(token),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'image/jpeg', ...options?.headers },
+    body: uploadPatientPhotoBody
+  }
+);}
+
+
+
+
+
+export const getUploadPatientPhotoMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadPatientPhoto>>, TError,{token: string;data: BodyType<Blob>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof uploadPatientPhoto>>, TError,{token: string;data: BodyType<Blob>}, TContext> => {
+
+const mutationKey = ['uploadPatientPhoto'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadPatientPhoto>>, {token: string;data: BodyType<Blob>}> = (props) => {
+          const {token,data} = props ?? {};
+
+          return  uploadPatientPhoto(token,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadPatientPhotoMutationResult = NonNullable<Awaited<ReturnType<typeof uploadPatientPhoto>>>
+    export type UploadPatientPhotoMutationBody = BodyType<Blob>
+    export type UploadPatientPhotoMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Upload a private original clinical photo for the token holder
+ */
+export const useUploadPatientPhoto = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadPatientPhoto>>, TError,{token: string;data: BodyType<Blob>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof uploadPatientPhoto>>,
+        TError,
+        {token: string;data: BodyType<Blob>},
+        TContext
+      > => {
+      return useMutation(getUploadPatientPhotoMutationOptions(options));
+    }
+
 export const getDiscardPatientPhotosUrl = (token: string,) => {
 
 
@@ -1101,5 +1334,225 @@ export const useDiscardPatientPhotos = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getDiscardPatientPhotosMutationOptions(options));
+    }
+
+export const getConfirmPatientPhotoUrl = (token: string,
+    photoId: string,) => {
+
+
+
+
+  return `/api/patients/${token}/photos/${photoId}/confirm`
+}
+
+/**
+ * @summary Confirm a draft clinical photo for the token holder
+ */
+export const confirmPatientPhoto = async (token: string,
+    photoId: string, options?: Parameters<typeof customFetch>[1]): Promise<PatientPhotoStatus> => {
+
+  return customFetch<PatientPhotoStatus>(getConfirmPatientPhotoUrl(token,photoId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getConfirmPatientPhotoMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmPatientPhoto>>, TError,{token: string;photoId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmPatientPhoto>>, TError,{token: string;photoId: string}, TContext> => {
+
+const mutationKey = ['confirmPatientPhoto'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmPatientPhoto>>, {token: string;photoId: string}> = (props) => {
+          const {token,photoId} = props ?? {};
+
+          return  confirmPatientPhoto(token,photoId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfirmPatientPhotoMutationResult = NonNullable<Awaited<ReturnType<typeof confirmPatientPhoto>>>
+
+    export type ConfirmPatientPhotoMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Confirm a draft clinical photo for the token holder
+ */
+export const useConfirmPatientPhoto = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmPatientPhoto>>, TError,{token: string;photoId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof confirmPatientPhoto>>,
+        TError,
+        {token: string;photoId: string},
+        TContext
+      > => {
+      return useMutation(getConfirmPatientPhotoMutationOptions(options));
+    }
+
+export const getCreatePatientAdjustedPhotoUrl = (token: string,
+    photoId: string,) => {
+
+
+
+
+  return `/api/patients/${token}/photos/${photoId}/adjusted`
+}
+
+/**
+ * @summary Store an adjusted derivative without replacing the original
+ */
+export const createPatientAdjustedPhoto = async (token: string,
+    photoId: string,
+    createPatientAdjustedPhotoBody: Blob, options?: Parameters<typeof customFetch>[1]): Promise<PatientPhotoStatus> => {
+
+  return customFetch<PatientPhotoStatus>(getCreatePatientAdjustedPhotoUrl(token,photoId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'image/jpeg', ...options?.headers },
+    body: createPatientAdjustedPhotoBody
+  }
+);}
+
+
+
+
+
+export const getCreatePatientAdjustedPhotoMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPatientAdjustedPhoto>>, TError,{token: string;photoId: string;data: BodyType<Blob>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPatientAdjustedPhoto>>, TError,{token: string;photoId: string;data: BodyType<Blob>}, TContext> => {
+
+const mutationKey = ['createPatientAdjustedPhoto'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPatientAdjustedPhoto>>, {token: string;photoId: string;data: BodyType<Blob>}> = (props) => {
+          const {token,photoId,data} = props ?? {};
+
+          return  createPatientAdjustedPhoto(token,photoId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePatientAdjustedPhotoMutationResult = NonNullable<Awaited<ReturnType<typeof createPatientAdjustedPhoto>>>
+    export type CreatePatientAdjustedPhotoMutationBody = BodyType<Blob>
+    export type CreatePatientAdjustedPhotoMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Store an adjusted derivative without replacing the original
+ */
+export const useCreatePatientAdjustedPhoto = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPatientAdjustedPhoto>>, TError,{token: string;photoId: string;data: BodyType<Blob>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPatientAdjustedPhoto>>,
+        TError,
+        {token: string;photoId: string;data: BodyType<Blob>},
+        TContext
+      > => {
+      return useMutation(getCreatePatientAdjustedPhotoMutationOptions(options));
+    }
+
+export const getDiscardPatientPhotoUrl = (token: string,
+    photoId: string,) => {
+
+
+
+
+  return `/api/patients/${token}/photos/${photoId}`
+}
+
+/**
+ * @summary Discard one draft or superseded clinical photo for the token holder
+ */
+export const discardPatientPhoto = async (token: string,
+    photoId: string, options?: Parameters<typeof customFetch>[1]): Promise<SimpleOk> => {
+
+  return customFetch<SimpleOk>(getDiscardPatientPhotoUrl(token,photoId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDiscardPatientPhotoMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof discardPatientPhoto>>, TError,{token: string;photoId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof discardPatientPhoto>>, TError,{token: string;photoId: string}, TContext> => {
+
+const mutationKey = ['discardPatientPhoto'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof discardPatientPhoto>>, {token: string;photoId: string}> = (props) => {
+          const {token,photoId} = props ?? {};
+
+          return  discardPatientPhoto(token,photoId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DiscardPatientPhotoMutationResult = NonNullable<Awaited<ReturnType<typeof discardPatientPhoto>>>
+
+    export type DiscardPatientPhotoMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Discard one draft or superseded clinical photo for the token holder
+ */
+export const useDiscardPatientPhoto = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof discardPatientPhoto>>, TError,{token: string;photoId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof discardPatientPhoto>>,
+        TError,
+        {token: string;photoId: string},
+        TContext
+      > => {
+      return useMutation(getDiscardPatientPhotoMutationOptions(options));
     }
 

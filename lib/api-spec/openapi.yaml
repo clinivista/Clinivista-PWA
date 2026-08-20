@@ -220,6 +220,50 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /leads/{id}/photos/{photoId}:
+    get:
+      operationId: getLeadPhotoFile
+      tags: [leads]
+      summary: Stream a clinical photo to an authorized staff session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Private image stream
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /invitations:
     post:
       operationId: createInvitation
@@ -325,6 +369,86 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
   /patients/{token}/photos:
+    get:
+      operationId: getPatientPhotoStatus
+      tags: [patients]
+      summary: List private clinical photo metadata for the token holder
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Photo state without image bytes or object URLs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientPhotoStatusResult"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: uploadPatientPhoto
+      tags: [patients]
+      summary: Upload a private original clinical photo for the token holder
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-photo-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: x-photo-source
+          in: header
+          required: true
+          schema:
+            type: string
+            enum: [camera, upload]
+        - name: x-photo-width
+          in: header
+          schema:
+            type: string
+        - name: x-photo-height
+          in: header
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
+          image/webp:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "201":
+          description: Draft original stored privately
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientPhotoStatus"
+        "400":
+          description: Invalid photo input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     delete:
       operationId: discardPatientPhotos
       tags: [patients]
@@ -344,6 +468,115 @@ paths:
                 $ref: "#/components/schemas/PatientResult"
         "404":
           description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /patients/{token}/photos/{photoId}/confirm:
+    post:
+      operationId: confirmPatientPhoto
+      tags: [patients]
+      summary: Confirm a draft clinical photo for the token holder
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Confirmed photo metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientPhotoStatus"
+        "404":
+          description: Draft photo not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /patients/{token}/photos/{photoId}/adjusted:
+    post:
+      operationId: createPatientAdjustedPhoto
+      tags: [patients]
+      summary: Store an adjusted derivative without replacing the original
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-edit-params
+          in: header
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
+          image/webp:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "201":
+          description: Adjusted derivative metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientPhotoStatus"
+        "404":
+          description: Original photo not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /patients/{token}/photos/{photoId}:
+    delete:
+      operationId: discardPatientPhoto
+      tags: [patients]
+      summary: Discard one draft or superseded clinical photo for the token holder
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Draft photo discarded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimpleOk"
+        "404":
+          description: Draft photo not found
           content:
             application/json:
               schema:
@@ -411,6 +644,51 @@ components:
           type: string
         createdAt:
           type: string
+
+    PatientPhotoStatus:
+      type: object
+      required: [id, key, label, status, source, mimeType, sizeBytes, sha256, createdAt, hasOriginal, hasAdjusted]
+      properties:
+        id:
+          type: string
+        key:
+          type: string
+        label:
+          type: string
+        status:
+          type: string
+          enum: [draft, confirmed, superseded, discarded]
+        source:
+          type: string
+          enum: [camera, upload]
+        mimeType:
+          type: string
+        sizeBytes:
+          type: number
+        sha256:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        confirmedAt:
+          type: ["string", "null"]
+          format: date-time
+        hasOriginal:
+          type: boolean
+        hasAdjusted:
+          type: boolean
+        editParams: {}
+
+    PatientPhotoStatusResult:
+      type: object
+      required: [ok, photos]
+      properties:
+        ok:
+          type: boolean
+        photos:
+          type: array
+          items:
+            $ref: "#/components/schemas/PatientPhotoStatus"
 
     LeadStatus:
       type: string
@@ -492,7 +770,7 @@ components:
         photos:
           type: array
           items:
-            $ref: "#/components/schemas/PhotoEntry"
+            $ref: "#/components/schemas/PatientPhotoStatus"
         hairLossTime:
           type: ["string", "null"]
         pattern:
@@ -554,19 +832,6 @@ components:
         link:
           type: string
 
-    PatientPhoto:
-      type: object
-      required: [key, label, dataUrl]
-      properties:
-        key:
-          type: string
-        label:
-          type: string
-        dataUrl:
-          type: string
-        quality:
-          type: string
-
     PatientInput:
       type: object
       required: [name, phone, consent]
@@ -597,10 +862,6 @@ components:
           type: boolean
         marketingConsent:
           type: boolean
-        photos:
-          type: array
-          items:
-            $ref: "#/components/schemas/PatientPhoto"
 
     PatientResult:
       type: object

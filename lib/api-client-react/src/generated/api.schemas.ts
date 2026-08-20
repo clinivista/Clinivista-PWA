@@ -39,6 +39,46 @@ export interface PhotoEntry {
   createdAt: string;
 }
 
+export type PatientPhotoStatusStatus = typeof PatientPhotoStatusStatus[keyof typeof PatientPhotoStatusStatus];
+
+
+export const PatientPhotoStatusStatus = {
+  draft: 'draft',
+  confirmed: 'confirmed',
+  superseded: 'superseded',
+  discarded: 'discarded',
+} as const;
+
+export type PatientPhotoStatusSource = typeof PatientPhotoStatusSource[keyof typeof PatientPhotoStatusSource];
+
+
+export const PatientPhotoStatusSource = {
+  camera: 'camera',
+  upload: 'upload',
+} as const;
+
+export interface PatientPhotoStatus {
+  id: string;
+  key: string;
+  label: string;
+  status: PatientPhotoStatusStatus;
+  source: PatientPhotoStatusSource;
+  mimeType: string;
+  sizeBytes: number;
+  sha256: string;
+  createdAt: string;
+  /** @nullable */
+  confirmedAt?: string | null;
+  hasOriginal: boolean;
+  hasAdjusted: boolean;
+  editParams?: unknown;
+}
+
+export interface PatientPhotoStatusResult {
+  ok: boolean;
+  photos: PatientPhotoStatus[];
+}
+
 export type LeadStatus = typeof LeadStatus[keyof typeof LeadStatus];
 
 
@@ -98,7 +138,7 @@ export interface Lead {
   status: LeadStatus;
   consent?: boolean;
   photoCount: number;
-  photos: PhotoEntry[];
+  photos: PatientPhotoStatus[];
   /** @nullable */
   hairLossTime?: string | null;
   /** @nullable */
@@ -144,13 +184,6 @@ export interface InvitationResult {
   link: string;
 }
 
-export interface PatientPhoto {
-  key: string;
-  label: string;
-  dataUrl: string;
-  quality?: string;
-}
-
 export interface PatientInput {
   name: string;
   phone: string;
@@ -165,7 +198,6 @@ export interface PatientInput {
   surgeryHistory?: string;
   consent: boolean;
   marketingConsent?: boolean;
-  photos?: PatientPhoto[];
 }
 
 export interface PatientResult {

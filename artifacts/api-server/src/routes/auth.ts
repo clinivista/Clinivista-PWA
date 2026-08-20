@@ -1,13 +1,17 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import crypto from "crypto";
 import { AdminLoginBody } from "@workspace/api-zod";
-import { createSession, isValidSession, destroySession } from "../lib/sessions";
+import { createSession, getSession, isValidSession, destroySession } from "../lib/sessions";
 import { getSessionToken } from "../lib/helpers";
 
 const router: IRouter = Router();
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "demo-clinivista";
-const IS_DEMO_PASSWORD = !process.env.ADMIN_PASSWORD;
+const configuredAdminPassword = process.env.ADMIN_PASSWORD;
+if (process.env.NODE_ENV === "production" && !configuredAdminPassword) {
+  throw new Error("ADMIN_PASSWORD must be configured in production.");
+}
+const ADMIN_PASSWORD = configuredAdminPassword ?? "demo-clinivista";
+const IS_DEMO_PASSWORD = !configuredAdminPassword;
 
 function getToken(req: Request): string | undefined {
   return getSessionToken(req.headers.cookie);
@@ -19,6 +23,11 @@ export function requireAuth(req: Request, res: Response): boolean {
     return false;
   }
   return true;
+}
+
+export function getAuthContext(req: Request): { centerId: string; role: "admin" } | undefined {
+  const session = getSession(getToken(req));
+  return session ? { centerId: session.centerId, role: session.role } : undefined;
 }
 
 router.get("/auth/me", (req, res): void => {
@@ -43,10 +52,13 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     return;
   }
 
-  const token = createSession();
+  const token = createSession({
+    centerId: process.env.DEFAULT_CENTER_ID ?? "default-center",
+    role: "admin",
+  });
   res.setHeader(
     "Set-Cookie",
-    `clinivista_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=43200`,
+    `clinivista_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=43200${process.env.NODE_ENV === "production" ? "; Secure" : ""}`,
   );
   res.json({ ok: true, demoPassword: IS_DEMO_PASSWORD });
 });

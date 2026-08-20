@@ -12,7 +12,7 @@
  *   B. Duplicate: submit → API returns 409 → duplicate warning card is shown.
  */
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LanguageProvider } from "@/lib/language";
@@ -73,6 +73,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  cleanup();
+  window.history.replaceState({}, "", "/patient");
   vi.restoreAllMocks();
 });
 
@@ -131,10 +133,10 @@ async function tickConsent(user: ReturnType<typeof setupUser>) {
 
 async function uploadAndAcceptPhoto(user: ReturnType<typeof setupUser>) {
   const fakeFile = new File(["fake"], "photo.jpg", { type: "image/jpeg" });
-  const fileInput = document.querySelector(
-    'input[type="file"]',
-  ) as HTMLInputElement;
-  expect(fileInput, "file input must exist in the photos step").not.toBeNull();
+  await waitFor(() => {
+    expect(document.querySelector('input[type="file"]')).not.toBeNull();
+  });
+  const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
 
   await user.upload(fileInput, fakeFile);
 
@@ -169,6 +171,21 @@ const DUPLICATE_BODY = {
   duplicate: true,
 };
 
+const PHOTO_STATUS_BODY = {
+  id: "photo-test-1",
+  key: "frontal",
+  label: "Vista frontal",
+  status: "draft",
+  source: "upload",
+  mimeType: "image/jpeg",
+  sizeBytes: 4,
+  sha256: "a".repeat(64),
+  createdAt: new Date().toISOString(),
+  confirmedAt: null,
+  hasOriginal: true,
+  hasAdjusted: false,
+};
+
 function jsonResponse(body: object, status: number) {
   return new Response(JSON.stringify(body), {
     status,
@@ -181,9 +198,18 @@ function jsonResponse(body: object, status: number) {
 // ---------------------------------------------------------------------------
 describe("Full patient form flow — end to end", () => {
   it("shows the success screen with the 24-h message after a successful submission", async () => {
-    // customFetch calls fetch(); we return 201 here.
-    // react-query detects success → calls onSuccess → component sets step="success".
-    fetchSpy.mockResolvedValue(jsonResponse(SUCCESS_BODY, 201));
+    fetchSpy.mockImplementation(async (input, init) => {
+      const url = String(input);
+      const method = init?.method ?? "GET";
+      if (url.endsWith("/api/patients") && method === "POST") return jsonResponse(SUCCESS_BODY, 201);
+      if (url.includes("/api/patients/test-token-abc") && method === "GET") return jsonResponse(SUCCESS_BODY, 200);
+      if (url.includes("/photos/photo-test-1/confirm") && method === "POST") {
+        return jsonResponse({ ...PHOTO_STATUS_BODY, status: "confirmed", confirmedAt: new Date().toISOString() }, 200);
+      }
+      if (url.includes("/photos") && method === "POST") return jsonResponse(PHOTO_STATUS_BODY, 201);
+      if (url.includes("/api/patients/test-token-abc") && method === "PUT") return jsonResponse(SUCCESS_BODY, 200);
+      throw new Error(`Unexpected request: ${method} ${url}`);
+    });
 
     const user = setupUser();
     renderFlow();
@@ -220,7 +246,7 @@ describe("Full patient form flow — end to end", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/24 horas hábiles/i)).toBeInTheDocument();
 
-    // 8. The real POST was made to /api/patients
+    // 8. The form first creates the tokenized evaluation, then uploads binary photo data.
     expect(fetchSpy).toHaveBeenCalledWith(
       expect.stringContaining("/api/patients"),
       expect.objectContaining({ method: "POST" }),
@@ -228,9 +254,6 @@ describe("Full patient form flow — end to end", () => {
   });
 
   it("shows the duplicate warning card when the API returns 409", async () => {
-    // customFetch calls fetch(); we return 409 here.
-    // customFetch throws ApiError(status=409, data={duplicate:true}).
-    // react-query → onError → patient.tsx checks err.status===409 → setDuplicateError(true).
     fetchSpy.mockResolvedValue(jsonResponse(DUPLICATE_BODY, 409));
 
     const user = setupUser();
@@ -244,16 +267,7 @@ describe("Full patient form flow — end to end", () => {
       screen.getByRole("button", { name: /Continuar a Fotografías/i }),
     );
 
-    // 4. Upload one photo
-    await uploadAndAcceptPhoto(user);
-
-    // 5. Submit
-    const submitBtn = await screen.findByRole("button", {
-      name: /Enviar Evaluación/i,
-    });
-    await user.click(submitBtn);
-
-    // 6. Duplicate warning appears; success screen does not.
+    // Creating the tokenized evaluation is rejected before images are accepted.
     expect(
       await screen.findByText(
         /Ya existe una evaluación registrada con este teléfono o correo/i,
@@ -263,7 +277,7 @@ describe("Full patient form flow — end to end", () => {
       screen.queryByText("¡Tu evaluación fue recibida!"),
     ).not.toBeInTheDocument();
 
-    // 7. The real POST was attempted
+    // The public creation endpoint was attempted once and no image upload occurred.
     expect(fetchSpy).toHaveBeenCalledWith(
       expect.stringContaining("/api/patients"),
       expect.objectContaining({ method: "POST" }),

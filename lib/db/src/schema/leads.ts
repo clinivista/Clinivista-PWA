@@ -41,6 +41,8 @@ export const leadsTable = pgTable("leads", {
   norwood: text("norwood").default(""),
   appointmentAt: text("appointment_at").default(""),
   isDemo: boolean("is_demo").default(false),
+  centerId: text("center_id").default("default-center"),
+  protocolId: text("protocol_id").default("capillary-initial"),
 }, (table) => [
   uniqueIndex("leads_document_normalized_unique")
     .on(table.documentNormalized)

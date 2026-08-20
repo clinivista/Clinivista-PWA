@@ -2,8 +2,9 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { db, leadsTable } from "@workspace/db";
 import { CreateInvitationBody } from "@workspace/api-zod";
-import { requireAuth } from "./auth";
+import { getAuthContext, requireAuth } from "./auth";
 import { uid, clean, cleanPhone } from "../lib/helpers";
+import { defaultProtocolIdForCenter, ensureClinicalConfiguration } from "../lib/clinical-photos";
 
 const router: IRouter = Router();
 
@@ -14,6 +15,8 @@ function leadSummary(lead: typeof leadsTable.$inferSelect) {
 
 router.post("/invitations", async (req, res): Promise<void> => {
   if (!requireAuth(req, res)) return;
+  const context = getAuthContext(req);
+  if (!context) return;
 
   const parsed = CreateInvitationBody.safeParse(req.body);
   if (!parsed.success) {
@@ -21,6 +24,8 @@ router.post("/invitations", async (req, res): Promise<void> => {
     return;
   }
 
+  const protocolId = defaultProtocolIdForCenter(context.centerId);
+  await ensureClinicalConfiguration(context.centerId, protocolId);
   const token = uid(24);
   const newLead = {
     id: uid(),
@@ -42,6 +47,8 @@ router.post("/invitations", async (req, res): Promise<void> => {
     norwood: "",
     appointmentAt: "",
     isDemo: false,
+    centerId: context.centerId,
+    protocolId,
   };
 
   await db.insert(leadsTable).values(newLead);

@@ -1,43 +1,57 @@
-import { Router, type IRouter, type Request, type Response } from "express";
+import { Router, type IRouter } from "express";
 import { eq, sql } from "drizzle-orm";
 import { db, leadsTable } from "@workspace/db";
 import {
+  GetLeadPhotoFileParams,
   GetLeadsQueryParams,
   GetLeadByIdParams,
   PatchLeadParams,
   PatchLeadBody,
 } from "@workspace/api-zod";
-import { requireAuth } from "./auth";
+import { getAuthContext, requireAuth } from "./auth";
 import { clean } from "../lib/helpers";
+import { DEFAULT_CENTER_ID, deleteClinicalDataForLead, getPhotoForStaff, getPhotoStatusesForLead } from "../lib/clinical-photos";
+import { privatePhotoStorage } from "../lib/clinical-photo-storage";
 
 const router: IRouter = Router();
 
 const ALLOWED_STATUSES = ["nuevo", "incompleto", "listo", "contactar", "agendado", "cerrado"];
 
-function leadSummary(lead: typeof leadsTable.$inferSelect) {
+async function leadSummary(lead: typeof leadsTable.$inferSelect) {
   const { photos, symptoms, surgeryHistory, notes, ...safe } = lead;
+  const clinicalPhotos = await getPhotoStatusesForLead(lead);
+  const legacyKeys = Array.isArray(photos)
+    ? (photos as Array<{ key?: unknown }>).flatMap((photo) => typeof photo?.key === "string" ? [photo.key] : [])
+    : [];
+  const visibleClinical = clinicalPhotos.filter((photo) => ["draft", "confirmed"].includes(photo.status));
   return {
     ...safe,
-    photoCount: Number(safe.photoCount) || 0,
+    photoCount: new Set([...legacyKeys, ...visibleClinical.map((photo) => photo.key)]).size,
+    photoKeys: [...new Set([...legacyKeys, ...visibleClinical.map((photo) => photo.key)])],
   };
 }
 
-function leadFull(lead: typeof leadsTable.$inferSelect) {
+async function leadFull(lead: typeof leadsTable.$inferSelect) {
+  const { photos: _legacyPhotos, ...safe } = lead;
+  const photos = await getPhotoStatusesForLead(lead);
   return {
-    ...lead,
-    photoCount: Number(lead.photoCount) || 0,
-    photos: Array.isArray(lead.photos) ? lead.photos : [],
+    ...safe,
+    photoCount: photos.filter((photo) => ["draft", "confirmed"].includes(photo.status)).length,
+    photos,
   };
 }
 
 router.get("/leads", async (req, res): Promise<void> => {
   if (!requireAuth(req, res)) return;
+  const context = getAuthContext(req);
+  if (!context) return;
 
   const qp = GetLeadsQueryParams.safeParse(req.query);
   const status = qp.success ? (qp.data.status ?? "") : "";
   const search = qp.success ? (qp.data.search ?? "") : "";
 
-  const allLeads = await db.select().from(leadsTable).orderBy(sql`${leadsTable.createdAt} desc`);
+  const allLeads = (await db.select().from(leadsTable).orderBy(sql`${leadsTable.createdAt} desc`))
+    .filter((lead) => (lead.centerId ?? DEFAULT_CENTER_ID) === context.centerId);
 
   let leads = allLeads;
   if (status && status !== "todos") {
@@ -51,13 +65,16 @@ router.get("/leads", async (req, res): Promise<void> => {
     );
   }
 
-  res.json({ leads: leads.map(leadSummary) });
+  res.json({ leads: await Promise.all(leads.map(leadSummary)) });
 });
 
 router.get("/leads/stats", async (req, res): Promise<void> => {
   if (!requireAuth(req, res)) return;
+  const context = getAuthContext(req);
+  if (!context) return;
 
-  const allLeads = await db.select().from(leadsTable);
+  const allLeads = (await db.select().from(leadsTable))
+    .filter((lead) => (lead.centerId ?? DEFAULT_CENTER_ID) === context.centerId);
   const counts: Record<string, number> = {};
   for (const lead of allLeads) {
     const s = lead.status || "nuevo";
@@ -69,6 +86,8 @@ router.get("/leads/stats", async (req, res): Promise<void> => {
 
 router.get("/leads/:id", async (req, res): Promise<void> => {
   if (!requireAuth(req, res)) return;
+  const context = getAuthContext(req);
+  if (!context) return;
 
   const params = GetLeadByIdParams.safeParse(req.params);
   if (!params.success) {
@@ -81,16 +100,48 @@ router.get("/leads/:id", async (req, res): Promise<void> => {
     .from(leadsTable)
     .where(eq(leadsTable.id, params.data.id));
 
-  if (!lead) {
+  if (!lead || (lead.centerId ?? DEFAULT_CENTER_ID) !== context.centerId) {
     res.status(404).json({ error: "Caso no encontrado." });
     return;
   }
 
-  res.json(leadFull(lead));
+  res.json(await leadFull(lead));
+});
+
+router.get("/leads/:id/photos/:photoId", async (req, res): Promise<void> => {
+  if (!requireAuth(req, res)) return;
+  const context = getAuthContext(req);
+  const params = GetLeadPhotoFileParams.safeParse(req.params);
+  if (!context || !params.success) {
+    res.status(400).json({ error: "Solicitud inválida." });
+    return;
+  }
+  const [lead] = await db.select().from(leadsTable).where(eq(leadsTable.id, params.data.id));
+  if (!lead || (lead.centerId ?? DEFAULT_CENTER_ID) !== context.centerId) {
+    res.status(404).json({ error: "Foto no encontrada." });
+    return;
+  }
+  const photo = await getPhotoForStaff(lead, params.data.photoId);
+  if (!photo) {
+    res.status(404).json({ error: "Foto no encontrada." });
+    return;
+  }
+  try {
+    const file = await privatePhotoStorage.read(photo.derivativeObjectPath ?? photo.originalObjectPath);
+    res.setHeader("Content-Type", file.contentType);
+    res.setHeader("Cache-Control", "private, no-store");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Length", String(file.bytes.length));
+    res.send(file.bytes);
+  } catch {
+    res.status(404).json({ error: "Foto no encontrada." });
+  }
 });
 
 router.delete("/leads/:id", async (req, res): Promise<void> => {
   if (!requireAuth(req, res)) return;
+  const context = getAuthContext(req);
+  if (!context) return;
 
   const params = GetLeadByIdParams.safeParse(req.params);
   if (!params.success) {
@@ -103,11 +154,12 @@ router.delete("/leads/:id", async (req, res): Promise<void> => {
     .from(leadsTable)
     .where(eq(leadsTable.id, params.data.id));
 
-  if (!lead) {
+  if (!lead || (lead.centerId ?? DEFAULT_CENTER_ID) !== context.centerId) {
     res.status(404).json({ error: "Caso no encontrado." });
     return;
   }
 
+  await deleteClinicalDataForLead(lead);
   await db.delete(leadsTable).where(eq(leadsTable.id, params.data.id));
 
   res.json({ ok: true });
@@ -115,6 +167,8 @@ router.delete("/leads/:id", async (req, res): Promise<void> => {
 
 router.patch("/leads/:id", async (req, res): Promise<void> => {
   if (!requireAuth(req, res)) return;
+  const context = getAuthContext(req);
+  if (!context) return;
 
   const params = PatchLeadParams.safeParse(req.params);
   if (!params.success) {
@@ -139,6 +193,12 @@ router.patch("/leads/:id", async (req, res): Promise<void> => {
   if (body.data.norwood !== undefined) updates.norwood = clean(body.data.norwood, 20);
   if (body.data.appointmentAt !== undefined) updates.appointmentAt = clean(body.data.appointmentAt, 40);
 
+  const [existing] = await db.select().from(leadsTable).where(eq(leadsTable.id, params.data.id));
+  if (!existing || (existing.centerId ?? DEFAULT_CENTER_ID) !== context.centerId) {
+    res.status(404).json({ error: "Caso no encontrado." });
+    return;
+  }
+
   const [updated] = await db
     .update(leadsTable)
     .set(updates)
@@ -150,7 +210,7 @@ router.patch("/leads/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json(leadFull(updated));
+  res.json(await leadFull(updated));
 });
 
 export default router;

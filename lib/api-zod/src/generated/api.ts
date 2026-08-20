@@ -109,11 +109,19 @@ export const GetLeadByIdResponse = zod.object({
   "consent": zod.boolean().optional(),
   "photoCount": zod.number(),
   "photos": zod.array(zod.object({
+  "id": zod.string(),
   "key": zod.string(),
   "label": zod.string(),
-  "dataUrl": zod.string(),
-  "quality": zod.string(),
-  "createdAt": zod.string()
+  "status": zod.enum(['draft', 'confirmed', 'superseded', 'discarded']),
+  "source": zod.enum(['camera', 'upload']),
+  "mimeType": zod.string(),
+  "sizeBytes": zod.number(),
+  "sha256": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "confirmedAt": zod.coerce.date().nullish(),
+  "hasOriginal": zod.boolean(),
+  "hasAdjusted": zod.boolean(),
+  "editParams": zod.unknown().optional()
 })),
   "hairLossTime": zod.string().nullish(),
   "pattern": zod.string().nullish(),
@@ -166,11 +174,19 @@ export const PatchLeadResponse = zod.object({
   "consent": zod.boolean().optional(),
   "photoCount": zod.number(),
   "photos": zod.array(zod.object({
+  "id": zod.string(),
   "key": zod.string(),
   "label": zod.string(),
-  "dataUrl": zod.string(),
-  "quality": zod.string(),
-  "createdAt": zod.string()
+  "status": zod.enum(['draft', 'confirmed', 'superseded', 'discarded']),
+  "source": zod.enum(['camera', 'upload']),
+  "mimeType": zod.string(),
+  "sizeBytes": zod.number(),
+  "sha256": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "confirmedAt": zod.coerce.date().nullish(),
+  "hasOriginal": zod.boolean(),
+  "hasAdjusted": zod.boolean(),
+  "editParams": zod.unknown().optional()
 })),
   "hairLossTime": zod.string().nullish(),
   "pattern": zod.string().nullish(),
@@ -182,6 +198,17 @@ export const PatchLeadResponse = zod.object({
   "appointmentAt": zod.string().nullish(),
   "isDemo": zod.boolean().nullish()
 })
+
+
+/**
+ * @summary Stream a clinical photo to an authorized staff session
+ */
+export const GetLeadPhotoFileParams = zod.object({
+  "id": zod.coerce.string(),
+  "photoId": zod.coerce.string()
+})
+
+export const GetLeadPhotoFileResponse = zod.unknown()
 
 
 /**
@@ -236,13 +263,7 @@ export const CreatePatientBody = zod.object({
   "symptoms": zod.string().optional(),
   "surgeryHistory": zod.string().optional(),
   "consent": zod.boolean(),
-  "marketingConsent": zod.boolean().optional(),
-  "photos": zod.array(zod.object({
-  "key": zod.string(),
-  "label": zod.string(),
-  "dataUrl": zod.string(),
-  "quality": zod.string().optional()
-})).optional()
+  "marketingConsent": zod.boolean().optional()
 })
 
 export const CreatePatientResponse = zod.object({
@@ -326,13 +347,7 @@ export const UpdatePatientBody = zod.object({
   "symptoms": zod.string().optional(),
   "surgeryHistory": zod.string().optional(),
   "consent": zod.boolean(),
-  "marketingConsent": zod.boolean().optional(),
-  "photos": zod.array(zod.object({
-  "key": zod.string(),
-  "label": zod.string(),
-  "dataUrl": zod.string(),
-  "quality": zod.string().optional()
-})).optional()
+  "marketingConsent": zod.boolean().optional()
 })
 
 export const UpdatePatientResponse = zod.object({
@@ -359,6 +374,64 @@ export const UpdatePatientResponse = zod.object({
   "appointmentAt": zod.string().nullish(),
   "isDemo": zod.boolean().nullish()
 })
+})
+
+
+/**
+ * @summary List private clinical photo metadata for the token holder
+ */
+export const GetPatientPhotoStatusParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const GetPatientPhotoStatusResponse = zod.object({
+  "ok": zod.boolean(),
+  "photos": zod.array(zod.object({
+  "id": zod.string(),
+  "key": zod.string(),
+  "label": zod.string(),
+  "status": zod.enum(['draft', 'confirmed', 'superseded', 'discarded']),
+  "source": zod.enum(['camera', 'upload']),
+  "mimeType": zod.string(),
+  "sizeBytes": zod.number(),
+  "sha256": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "confirmedAt": zod.coerce.date().nullish(),
+  "hasOriginal": zod.boolean(),
+  "hasAdjusted": zod.boolean(),
+  "editParams": zod.unknown().optional()
+}))
+})
+
+
+/**
+ * @summary Upload a private original clinical photo for the token holder
+ */
+export const UploadPatientPhotoParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const UploadPatientPhotoHeader = zod.object({
+  "x-photo-key": zod.string(),
+  "x-photo-source": zod.enum(['camera', 'upload']),
+  "x-photo-width": zod.string().optional(),
+  "x-photo-height": zod.string().optional()
+})
+
+export const UploadPatientPhotoResponse = zod.object({
+  "id": zod.string(),
+  "key": zod.string(),
+  "label": zod.string(),
+  "status": zod.enum(['draft', 'confirmed', 'superseded', 'discarded']),
+  "source": zod.enum(['camera', 'upload']),
+  "mimeType": zod.string(),
+  "sizeBytes": zod.number(),
+  "sha256": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "confirmedAt": zod.coerce.date().nullish(),
+  "hasOriginal": zod.boolean(),
+  "hasAdjusted": zod.boolean(),
+  "editParams": zod.unknown().optional()
 })
 
 
@@ -393,6 +466,73 @@ export const DiscardPatientPhotosResponse = zod.object({
   "appointmentAt": zod.string().nullish(),
   "isDemo": zod.boolean().nullish()
 })
+})
+
+
+/**
+ * @summary Confirm a draft clinical photo for the token holder
+ */
+export const ConfirmPatientPhotoParams = zod.object({
+  "token": zod.coerce.string(),
+  "photoId": zod.coerce.string()
+})
+
+export const ConfirmPatientPhotoResponse = zod.object({
+  "id": zod.string(),
+  "key": zod.string(),
+  "label": zod.string(),
+  "status": zod.enum(['draft', 'confirmed', 'superseded', 'discarded']),
+  "source": zod.enum(['camera', 'upload']),
+  "mimeType": zod.string(),
+  "sizeBytes": zod.number(),
+  "sha256": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "confirmedAt": zod.coerce.date().nullish(),
+  "hasOriginal": zod.boolean(),
+  "hasAdjusted": zod.boolean(),
+  "editParams": zod.unknown().optional()
+})
+
+
+/**
+ * @summary Store an adjusted derivative without replacing the original
+ */
+export const CreatePatientAdjustedPhotoParams = zod.object({
+  "token": zod.coerce.string(),
+  "photoId": zod.coerce.string()
+})
+
+export const CreatePatientAdjustedPhotoHeader = zod.object({
+  "x-edit-params": zod.string().optional()
+})
+
+export const CreatePatientAdjustedPhotoResponse = zod.object({
+  "id": zod.string(),
+  "key": zod.string(),
+  "label": zod.string(),
+  "status": zod.enum(['draft', 'confirmed', 'superseded', 'discarded']),
+  "source": zod.enum(['camera', 'upload']),
+  "mimeType": zod.string(),
+  "sizeBytes": zod.number(),
+  "sha256": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "confirmedAt": zod.coerce.date().nullish(),
+  "hasOriginal": zod.boolean(),
+  "hasAdjusted": zod.boolean(),
+  "editParams": zod.unknown().optional()
+})
+
+
+/**
+ * @summary Discard one draft or superseded clinical photo for the token holder
+ */
+export const DiscardPatientPhotoParams = zod.object({
+  "token": zod.coerce.string(),
+  "photoId": zod.coerce.string()
+})
+
+export const DiscardPatientPhotoResponse = zod.object({
+  "ok": zod.boolean()
 })
 
 

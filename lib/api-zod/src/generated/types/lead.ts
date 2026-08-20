@@ -6,7 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { LeadStatus } from './leadStatus';
-import type { PhotoEntry } from './photoEntry';
+import type { PatientPhotoStatus } from './patientPhotoStatus';
 
 export interface Lead {
   id: string;
@@ -22,7 +22,7 @@ export interface Lead {
   status: LeadStatus;
   consent?: boolean;
   photoCount: number;
-  photos: PhotoEntry[];
+  photos: PatientPhotoStatus[];
   /** @nullable */
   hairLossTime?: string | null;
   /** @nullable */

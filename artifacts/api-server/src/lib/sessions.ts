@@ -1,24 +1,34 @@
 import crypto from "crypto";
 
 // In-memory session store (sufficient for MVP single-instance deployment)
-const sessions = new Map<string, { expiresAt: number }>();
+export type SessionContext = {
+  expiresAt: number;
+  centerId: string;
+  role: "admin";
+};
+
+const sessions = new Map<string, SessionContext>();
 
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 
-export function createSession(): string {
+export function createSession(context: Omit<SessionContext, "expiresAt">): string {
   const token = crypto.randomBytes(24).toString("hex");
-  sessions.set(token, { expiresAt: Date.now() + SESSION_TTL_MS });
+  sessions.set(token, { ...context, expiresAt: Date.now() + SESSION_TTL_MS });
   return token;
 }
 
-export function isValidSession(token: string | undefined): boolean {
-  if (!token) return false;
+export function getSession(token: string | undefined): SessionContext | undefined {
+  if (!token) return undefined;
   const session = sessions.get(token);
   if (!session || session.expiresAt <= Date.now()) {
     if (session) sessions.delete(token);
-    return false;
+    return undefined;
   }
-  return true;
+  return session;
+}
+
+export function isValidSession(token: string | undefined): boolean {
+  return Boolean(getSession(token));
 }
 
 export function destroySession(token: string | undefined): void {

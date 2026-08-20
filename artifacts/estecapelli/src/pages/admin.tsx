@@ -408,16 +408,18 @@ export default function Admin() {
                       <h3 className="text-lg font-extrabold text-foreground mb-5">{t.adminPhotoReg} ({fullLead.photos?.length || 0}/5)</h3>
                       {fullLead.photos && fullLead.photos.length > 0 ? (
                         <div className="grid grid-cols-2 gap-3">
-                          {fullLead.photos.map(p => (
+                          {fullLead.photos.map(p => {
+                            const photoUrl = `/api/leads/${encodeURIComponent(fullLead.id)}/photos/${encodeURIComponent(p.id)}`;
+                            return (
                             <div
-                              key={p.key}
+                              key={p.id}
                               className="rounded-2xl overflow-hidden bg-[#F5F2EE] cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all shadow-sm"
-                              onClick={() => setExpandedPhoto(p.dataUrl)}
+                              onClick={() => setExpandedPhoto(photoUrl)}
                             >
-                              <img src={p.dataUrl} alt={p.label} className="w-full h-40 object-cover" />
+                              <img src={photoUrl} alt={p.label} className="w-full h-40 object-cover" />
                               <div className="p-3 text-xs font-bold text-center text-muted-foreground">{p.label}</div>
                             </div>
-                          ))}
+                          ); })}
                         </div>
                       ) : (
                         <div className="bg-[#F5F2EE] rounded-2xl p-10 text-center text-muted-foreground flex flex-col items-center">

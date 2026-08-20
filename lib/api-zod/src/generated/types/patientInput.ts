@@ -5,7 +5,6 @@
  * Estecapelli API — Preevaluación capilar
  * OpenAPI spec version: 0.1.0
  */
-import type { PatientPhoto } from './patientPhoto';
 
 export interface PatientInput {
   name: string;
@@ -21,5 +20,4 @@ export interface PatientInput {
   surgeryHistory?: string;
   consent: boolean;
   marketingConsent?: boolean;
-  photos?: PatientPhoto[];
 }

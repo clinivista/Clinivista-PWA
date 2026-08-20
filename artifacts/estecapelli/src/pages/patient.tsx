@@ -60,6 +60,12 @@ function compress(file: File): Promise<string> {
   });
 }
 
+async function dataUrlToFile(dataUrl: string, name: string): Promise<File> {
+  const response = await fetch(dataUrl);
+  const blob = await response.blob();
+  return new File([blob], name, { type: blob.type || "image/jpeg" });
+}
+
 // ---------- Country phone prefixes ----------
 const COUNTRY_PREFIXES = [
   { code: "CL", flag: "🇨🇱", name: "Chile", prefix: "+56" },
@@ -414,6 +420,7 @@ export default function PatientFlow() {
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
   const token = params.get("token");
+  const [patientToken, setPatientToken] = useState<string | null>(token);
   const { t, lang, setLang } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
   const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
@@ -423,6 +430,8 @@ export default function PatientFlow() {
   const [step, setStep] = useState<"intro" | "data" | "photos" | "success">("intro");
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
+  const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
+  const [pendingPhotoSource, setPendingPhotoSource] = useState<"camera" | "upload">("upload");
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
   const [resumeOffer, setResumeOffer] = useState(false);
@@ -474,7 +483,7 @@ export default function PatientFlow() {
   const updateMutation = useUpdatePatient();
   const discardMutation = useDiscardPatientPhotos();
 
-  // A photo counts as completed if it was accepted locally or already saved on the server
+  // A photo counts as completed if it was confirmed privately or is ready locally.
   const isPhotoDone = (key: string) => !!photos[key] || savedKeys.has(key);
 
   // ---- Server-side draft save (only possible when an invitation token exists) ----
@@ -485,19 +494,15 @@ export default function PatientFlow() {
   const saveChainRef = useRef<Promise<void>>(Promise.resolve());
   const saveGenRef = useRef(0);
 
-  const saveDraft = useCallback((photosOverride?: Record<string, string>) => {
-    if (!token) return;
+  const saveDraft = useCallback(() => {
+    if (!patientToken) return;
     const gen = saveGenRef.current;
     const formData = form.getValues();
-    const localPhotos = photosOverride ?? photos;
-    const photoArray = PHOTO_REQUIREMENTS.map(req => ({
-      key: req.key, label: req.title, dataUrl: localPhotos[req.key] ?? "", quality: "Control técnico pendiente",
-    })).filter(p => !!p.dataUrl);
     saveChainRef.current = saveChainRef.current
       .then(async () => {
         // A discard/restart happened while this save was queued — drop it.
         if (saveGenRef.current !== gen) return;
-        const res = await updateMutation.mutateAsync({ token, data: { ...formData, photos: photoArray } });
+        const res = await updateMutation.mutateAsync({ token: patientToken, data: formData });
         if (saveGenRef.current !== gen) return; // discarded while in flight; DELETE runs after this chain
         const keys = Array.isArray((res as any)?.lead?.photoKeys) ? ((res as any).lead.photoKeys as string[]) : [];
         setSavedKeys(prev => new Set([...prev, ...keys]));
@@ -505,13 +510,15 @@ export default function PatientFlow() {
         toast({ title: t.pSavedProgress, duration: 2000 });
       })
       .catch(() => { /* save errors are non-fatal for the draft flow */ });
-  }, [token, photos, form, updateMutation, toast, t]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [patientToken, form, updateMutation, toast, t]);
 
   const handlePhotoCapture = async (key: string, file: File) => {
     setProcessingPhoto(key);
     try {
       const compressed = await compress(file);
       setPendingPhoto(compressed);
+      setPendingPhotoFile(file);
+      setPendingPhotoSource("upload");
       setDirty(true);
     } catch {
       toast({ variant: "destructive", title: t.pPhotoError, description: "Intenta nuevamente con otra fotografía." });
@@ -525,6 +532,8 @@ export default function PatientFlow() {
     try {
       const compressed = await compressImage(dataUrl);
       setPendingPhoto(compressed);
+      setPendingPhotoFile(await dataUrlToFile(dataUrl, `camera-${key}.jpg`));
+      setPendingPhotoSource("camera");
       setDirty(true);
     } catch {
       toast({ variant: "destructive", title: t.pPhotoError, description: "Intenta nuevamente." });
@@ -534,12 +543,38 @@ export default function PatientFlow() {
   };
 
   // "Usar esta foto": accept the pending capture, auto-save, and advance to the next missing photo
-  const handleAcceptPhoto = (key: string) => {
-    if (!pendingPhoto) return;
+  const handleAcceptPhoto = async (key: string) => {
+    if (!pendingPhoto || !pendingPhotoFile || !patientToken) return;
+    setProcessingPhoto(key);
+    try {
+      const contentType = pendingPhotoFile.type || "image/jpeg";
+      const upload = await fetch(`/api/patients/${encodeURIComponent(patientToken)}/photos`, {
+        method: "POST",
+        headers: {
+          "Content-Type": contentType,
+          "x-photo-key": key,
+          "x-photo-source": pendingPhotoSource,
+        },
+        body: pendingPhotoFile,
+      });
+      if (!upload.ok) throw new Error("Upload failed");
+      const uploaded = await upload.json() as { id: string; key: string };
+      const confirmation = await fetch(`/api/patients/${encodeURIComponent(patientToken)}/photos/${encodeURIComponent(uploaded.id)}/confirm`, {
+        method: "POST",
+      });
+      if (!confirmation.ok) throw new Error("Confirmation failed");
+    } catch {
+      toast({ variant: "destructive", title: t.pPhotoError, description: t.pSaveError });
+      return;
+    } finally {
+      setProcessingPhoto(null);
+    }
     const next = { ...photos, [key]: pendingPhoto };
     setPhotos(next);
     setPendingPhoto(null);
-    saveDraft(next);
+    setPendingPhotoFile(null);
+    setSavedKeys(prev => new Set([...prev, key]));
+    saveDraft();
     const nextMissing = PHOTO_REQUIREMENTS.findIndex(r => !next[r.key] && !savedKeys.has(r.key));
     if (nextMissing !== -1) setCurrentPhotoIndex(nextMissing);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -563,12 +598,38 @@ export default function PatientFlow() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleDataSubmit = (_data: PatientFormValues) => {
+  const continueToPhotos = () => {
     setStep("photos");
     const firstMissing = PHOTO_REQUIREMENTS.findIndex(r => !isPhotoDone(r.key));
     setCurrentPhotoIndex(firstMissing === -1 ? 0 : firstMissing);
-    if (token) saveDraft();
+    if (patientToken) saveDraft();
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDataSubmit = (data: PatientFormValues) => {
+    if (patientToken) {
+      continueToPhotos();
+      return;
+    }
+    setDuplicateError(false);
+    createMutation.mutate({ data }, {
+      onSuccess: (result) => {
+        const newToken = result.lead.token;
+        setPatientToken(newToken);
+        window.history.replaceState({}, "", `/patient?token=${encodeURIComponent(newToken)}`);
+        setStep("photos");
+        setCurrentPhotoIndex(0);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      },
+      onError: (error: unknown) => {
+        const err = error as { status?: number; data?: { duplicate?: boolean } };
+        if (err?.status === 409 || err?.data?.duplicate) {
+          setDuplicateError(true);
+          return;
+        }
+        toast({ variant: "destructive", title: "Error", description: t.pSaveError });
+      },
+    });
   };
 
   const handleResume = () => {
@@ -602,7 +663,7 @@ export default function PatientFlow() {
 
   const handleExitKeepProgress = () => {
     setExitDialog("closed");
-    if (token && dirty) saveDraft();
+    if (patientToken && dirty) saveDraft();
     setDirty(false);
     navigate("/");
   };
@@ -610,6 +671,7 @@ export default function PatientFlow() {
   const clearLocalDraft = () => {
     setPhotos({});
     setPendingPhoto(null);
+    setPendingPhotoFile(null);
     setSavedKeys(new Set());
     setCurrentPhotoIndex(0);
     setDirty(false);
@@ -619,11 +681,11 @@ export default function PatientFlow() {
   // the server-side draft photos unconditionally (any token may have a draft:
   // a save could still be in flight when React state says otherwise).
   const discardServerDraft = async (): Promise<boolean> => {
-    if (!token) return true;
+    if (!patientToken) return true;
     saveGenRef.current += 1; // queued saves become no-ops
     await saveChainRef.current; // in-flight save settles before we delete
     try {
-      await discardMutation.mutateAsync({ token });
+      await discardMutation.mutateAsync({ token: patientToken });
       return true;
     } catch {
       toast({ variant: "destructive", title: "Error", description: t.pSaveError });
@@ -660,20 +722,14 @@ export default function PatientFlow() {
       return;
     }
     const formData = form.getValues();
-    const photoArray = PHOTO_REQUIREMENTS.map(req => ({
-      key: req.key, label: req.title, dataUrl: photos[req.key] ?? "", quality: "Control técnico pendiente",
-    })).filter(p => !!p.dataUrl);
-
-    const payload = { ...formData, photos: photoArray };
-
-    if (token) {
-      updateMutation.mutate({ token, data: payload }, {
+    if (patientToken) {
+      updateMutation.mutate({ token: patientToken, data: formData }, {
         onSuccess: () => { setStep("success"); window.scrollTo({ top: 0, behavior: "smooth" }); },
         onError: () => toast({ variant: "destructive", title: "Error", description: t.pSaveError }),
       });
     } else {
       setDuplicateError(false);
-      createMutation.mutate({ data: payload }, {
+      createMutation.mutate({ data: formData }, {
         onSuccess: () => { setStep("success"); window.scrollTo({ top: 0, behavior: "smooth" }); },
         onError: (error: unknown) => {
           const err = error as { status?: number; data?: { duplicate?: boolean } };
