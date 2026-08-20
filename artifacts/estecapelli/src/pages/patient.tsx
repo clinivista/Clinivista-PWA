@@ -364,6 +364,7 @@ export default function PatientFlow() {
   const [duplicateError, setDuplicateError] = useState(false);
   const [phonePrefix, setPhonePrefix] = useState("+56");
   const [phonePrefixOpen, setPhonePrefixOpen] = useState(false);
+  const hydratedTokenRef = useRef<string | null>(null);
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
@@ -381,7 +382,11 @@ export default function PatientFlow() {
   const canContinue = patientSchema.safeParse(watchedValues).success;
 
   useEffect(() => {
-    if (existingData?.lead && step === "intro" && !resumeOffer) {
+    // The photo-status request and the patient summary are independent. The
+    // former can resolve first and show the resume card, so use a per-token
+    // hydration guard instead of resumeOffer as a proxy for "form restored".
+    // Otherwise an invited patient can resume with their RUT and consent blank.
+    if (existingData?.lead && step === "intro" && hydratedTokenRef.current !== token) {
       const l = existingData.lead;
       form.reset({
         name: l.name || "", documentId: formatRut((l as any).documentId || ""), email: (l as any).email || "",
@@ -399,8 +404,9 @@ export default function PatientFlow() {
       } else {
         setStep("data");
       }
+      hydratedTokenRef.current = token;
     }
-  }, [existingData, step, resumeOffer]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [existingData, step, token, form]);
 
   // The photo endpoint intentionally returns metadata only. On a reload we
   // restore the confirmed states without pulling private image bytes into JSON,
