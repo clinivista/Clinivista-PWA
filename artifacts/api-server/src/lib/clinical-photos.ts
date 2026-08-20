@@ -40,6 +40,9 @@ export type PhotoStatus = {
   confirmedAt: Date | null;
   hasOriginal: boolean;
   hasAdjusted: boolean;
+  width: number | null;
+  height: number | null;
+  captureMetadata: unknown;
   editParams?: unknown;
 };
 
@@ -57,6 +60,9 @@ function photoStatus(photo: ClinicalPhoto, view: { key: string; label: string })
     confirmedAt: photo.confirmedAt,
     hasOriginal: Boolean(photo.originalObjectPath),
     hasAdjusted: Boolean(photo.derivativeObjectPath),
+    width: photo.width,
+    height: photo.height,
+    captureMetadata: photo.captureMetadata,
     ...(photo.editParams ? { editParams: photo.editParams } : {}),
   };
 }
@@ -254,6 +260,7 @@ export async function createClinicalPhoto(input: {
   bytes: Buffer;
   width?: number;
   height?: number;
+  captureMetadata?: Record<string, unknown>;
 }): Promise<PhotoStatus> {
   const evaluation = await ensureEvaluationForLead(input.lead);
   const [view] = await db.select().from(protocolViewsTable).where(and(
@@ -293,7 +300,7 @@ export async function createClinicalPhoto(input: {
     width: input.width,
     height: input.height,
     source: input.source,
-    captureMetadata: { storage: privatePhotoStorage.mode },
+    captureMetadata: { storage: privatePhotoStorage.mode, ...(input.captureMetadata ?? {}) },
     createdAt: now,
   }).returning();
   await writeAuditEvent(photo, "uploaded", "patient", input.lead.id, { view: input.key });
@@ -347,22 +354,28 @@ export async function discardClinicalPhoto(lead: Lead, photoId: string): Promise
   return true;
 }
 
-export async function discardAllDraftPhotos(lead: Lead): Promise<void> {
+/** Patient restart/discard is a privacy operation: remove every capture object
+ * and its database/audit references, including already confirmed drafts. */
+export async function discardAllPatientCapturePhotos(lead: Lead): Promise<void> {
   const evaluation = await ensureEvaluationForLead(lead);
-  const photos = await db.select().from(clinicalPhotosTable).where(and(
-    eq(clinicalPhotosTable.evaluationId, evaluation.id),
-    eq(clinicalPhotosTable.status, "draft"),
-  ));
+  const photos = await db.select().from(clinicalPhotosTable)
+    .where(eq(clinicalPhotosTable.evaluationId, evaluation.id));
   for (const photo of photos) {
     await privatePhotoStorage.remove(photo.derivativeObjectPath ?? photo.originalObjectPath);
     if (photo.derivativeObjectPath) await privatePhotoStorage.remove(photo.originalObjectPath);
   }
-  if (!photos.length) return;
   const ids = photos.map((photo) => photo.id);
-  await db.update(clinicalPhotosTable)
-    .set({ status: "discarded", discardedAt: new Date(), derivativeObjectPath: null })
-    .where(inArray(clinicalPhotosTable.id, ids));
-  await Promise.all(photos.map((photo) => writeAuditEvent(photo, "drafts_discarded", "patient", lead.id, {})));
+  await db.transaction(async (tx) => {
+    if (ids.length) {
+      await tx.delete(photoAuditEventsTable).where(inArray(photoAuditEventsTable.photoId, ids));
+      await tx.delete(clinicalPhotosTable).where(inArray(clinicalPhotosTable.id, ids));
+    }
+    // Clear the historical JSON payload in the same operation. The status
+    // endpoint lazily migrates that payload, so it must not survive restart.
+    await tx.update(leadsTable)
+      .set({ photos: [], photoCount: "0", status: "incompleto", updatedAt: new Date() })
+      .where(eq(leadsTable.id, lead.id));
+  });
 }
 
 export async function getPhotoForStaff(lead: Lead, photoId: string) {

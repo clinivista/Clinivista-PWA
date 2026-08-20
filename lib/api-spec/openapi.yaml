@@ -421,6 +421,11 @@ paths:
           in: header
           schema:
             type: string
+        - name: x-photo-metadata
+          in: header
+          description: JSON with non-clinical capture and technical review metadata
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -507,7 +512,7 @@ paths:
     post:
       operationId: createPatientAdjustedPhoto
       tags: [patients]
-      summary: Store an adjusted derivative without replacing the original
+      summary: Reserved for the technical editor (not available in patient capture)
       parameters:
         - name: token
           in: path
@@ -539,14 +544,8 @@ paths:
               type: string
               format: binary
       responses:
-        "201":
-          description: Adjusted derivative metadata
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PatientPhotoStatus"
-        "404":
-          description: Original photo not found
+        "403":
+          description: The patient capture flow cannot create edited derivatives
           content:
             application/json:
               schema:
@@ -677,6 +676,11 @@ components:
           type: boolean
         hasAdjusted:
           type: boolean
+        width:
+          type: ["number", "null"]
+        height:
+          type: ["number", "null"]
+        captureMetadata: {}
         editParams: {}
 
     PatientPhotoStatusResult:
@@ -861,6 +865,8 @@ components:
         consent:
           type: boolean
         marketingConsent:
+          type: boolean
+        submit:
           type: boolean
 
     PatientResult:

@@ -121,6 +121,9 @@ export const GetLeadByIdResponse = zod.object({
   "confirmedAt": zod.coerce.date().nullish(),
   "hasOriginal": zod.boolean(),
   "hasAdjusted": zod.boolean(),
+  "width": zod.number().nullish(),
+  "height": zod.number().nullish(),
+  "captureMetadata": zod.unknown().optional(),
   "editParams": zod.unknown().optional()
 })),
   "hairLossTime": zod.string().nullish(),
@@ -186,6 +189,9 @@ export const PatchLeadResponse = zod.object({
   "confirmedAt": zod.coerce.date().nullish(),
   "hasOriginal": zod.boolean(),
   "hasAdjusted": zod.boolean(),
+  "width": zod.number().nullish(),
+  "height": zod.number().nullish(),
+  "captureMetadata": zod.unknown().optional(),
   "editParams": zod.unknown().optional()
 })),
   "hairLossTime": zod.string().nullish(),
@@ -263,7 +269,8 @@ export const CreatePatientBody = zod.object({
   "symptoms": zod.string().optional(),
   "surgeryHistory": zod.string().optional(),
   "consent": zod.boolean(),
-  "marketingConsent": zod.boolean().optional()
+  "marketingConsent": zod.boolean().optional(),
+  "submit": zod.boolean().optional()
 })
 
 export const CreatePatientResponse = zod.object({
@@ -347,7 +354,8 @@ export const UpdatePatientBody = zod.object({
   "symptoms": zod.string().optional(),
   "surgeryHistory": zod.string().optional(),
   "consent": zod.boolean(),
-  "marketingConsent": zod.boolean().optional()
+  "marketingConsent": zod.boolean().optional(),
+  "submit": zod.boolean().optional()
 })
 
 export const UpdatePatientResponse = zod.object({
@@ -399,6 +407,9 @@ export const GetPatientPhotoStatusResponse = zod.object({
   "confirmedAt": zod.coerce.date().nullish(),
   "hasOriginal": zod.boolean(),
   "hasAdjusted": zod.boolean(),
+  "width": zod.number().nullish(),
+  "height": zod.number().nullish(),
+  "captureMetadata": zod.unknown().optional(),
   "editParams": zod.unknown().optional()
 }))
 })
@@ -415,7 +426,8 @@ export const UploadPatientPhotoHeader = zod.object({
   "x-photo-key": zod.string(),
   "x-photo-source": zod.enum(['camera', 'upload']),
   "x-photo-width": zod.string().optional(),
-  "x-photo-height": zod.string().optional()
+  "x-photo-height": zod.string().optional(),
+  "x-photo-metadata": zod.string().optional().describe('JSON with non-clinical capture and technical review metadata')
 })
 
 export const UploadPatientPhotoResponse = zod.object({
@@ -431,6 +443,9 @@ export const UploadPatientPhotoResponse = zod.object({
   "confirmedAt": zod.coerce.date().nullish(),
   "hasOriginal": zod.boolean(),
   "hasAdjusted": zod.boolean(),
+  "width": zod.number().nullish(),
+  "height": zod.number().nullish(),
+  "captureMetadata": zod.unknown().optional(),
   "editParams": zod.unknown().optional()
 })
 
@@ -490,12 +505,15 @@ export const ConfirmPatientPhotoResponse = zod.object({
   "confirmedAt": zod.coerce.date().nullish(),
   "hasOriginal": zod.boolean(),
   "hasAdjusted": zod.boolean(),
+  "width": zod.number().nullish(),
+  "height": zod.number().nullish(),
+  "captureMetadata": zod.unknown().optional(),
   "editParams": zod.unknown().optional()
 })
 
 
 /**
- * @summary Store an adjusted derivative without replacing the original
+ * @summary Reserved for the technical editor (not available in patient capture)
  */
 export const CreatePatientAdjustedPhotoParams = zod.object({
   "token": zod.coerce.string(),
@@ -506,21 +524,7 @@ export const CreatePatientAdjustedPhotoHeader = zod.object({
   "x-edit-params": zod.string().optional()
 })
 
-export const CreatePatientAdjustedPhotoResponse = zod.object({
-  "id": zod.string(),
-  "key": zod.string(),
-  "label": zod.string(),
-  "status": zod.enum(['draft', 'confirmed', 'superseded', 'discarded']),
-  "source": zod.enum(['camera', 'upload']),
-  "mimeType": zod.string(),
-  "sizeBytes": zod.number(),
-  "sha256": zod.string(),
-  "createdAt": zod.coerce.date(),
-  "confirmedAt": zod.coerce.date().nullish(),
-  "hasOriginal": zod.boolean(),
-  "hasAdjusted": zod.boolean(),
-  "editParams": zod.unknown().optional()
-})
+export const CreatePatientAdjustedPhotoResponse = zod.void()
 
 
 /**

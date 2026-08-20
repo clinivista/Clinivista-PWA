@@ -20,4 +20,5 @@ export interface PatientInput {
   surgeryHistory?: string;
   consent: boolean;
   marketingConsent?: boolean;
+  submit?: boolean;
 }

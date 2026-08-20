@@ -71,6 +71,11 @@ export interface PatientPhotoStatus {
   confirmedAt?: string | null;
   hasOriginal: boolean;
   hasAdjusted: boolean;
+  /** @nullable */
+  width?: number | null;
+  /** @nullable */
+  height?: number | null;
+  captureMetadata?: unknown;
   editParams?: unknown;
 }
 
@@ -198,6 +203,7 @@ export interface PatientInput {
   surgeryHistory?: string;
   consent: boolean;
   marketingConsent?: boolean;
+  submit?: boolean;
 }
 
 export interface PatientResult {

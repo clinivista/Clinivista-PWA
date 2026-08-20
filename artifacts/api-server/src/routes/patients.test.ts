@@ -246,6 +246,21 @@ describe("PUT /api/patients/:token", () => {
     expect(res.status).toBe(200);
     expect(res.body.lead.city).toBe("Valparaíso");
   });
+
+  it("refuses finalization until all five distinct required views are confirmed", async () => {
+    const lead = await createPatient();
+    const image = Buffer.from(
+      "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AVN//2Q==",
+      "base64",
+    );
+    for (let index = 0; index < 5; index += 1) {
+      const draft = await request(app).post(`/api/patients/${lead.token}/photos`)
+        .set("Content-Type", "image/jpeg").set("x-photo-key", "frontal").set("x-photo-source", "upload").send(image);
+      await request(app).post(`/api/patients/${lead.token}/photos/${draft.body.id}/confirm`).expect(200);
+    }
+    const res = await request(app).put(`/api/patients/${lead.token}`).send({ ...VALID_BODY, submit: true });
+    expect(res.status).toBe(422);
+  });
 });
 
 describe("Clinical photo API", () => {
@@ -282,6 +297,40 @@ describe("Clinical photo API", () => {
     }>;
     expect(leadRow[0].rows[0].photos).toEqual([]);
     expect(leadRow[0].rows[0].photo_count).toBe("0");
+  });
+
+  it("removes confirmed captures and private references when the patient restarts", async () => {
+    const lead = await createPatient();
+    const draft = await uploadDraft(lead.token, "frontal");
+    await request(app).post(`/api/patients/${lead.token}/photos/${draft.id}/confirm`).expect(200);
+
+    const discarded = await request(app).delete(`/api/patients/${lead.token}/photos`).expect(200);
+    expect(discarded.body.lead.photoCount).toBe(0);
+    expect(discarded.body.lead.status).toBe("incompleto");
+    await request(app).get(`/api/patients/${lead.token}/photos`).expect(200).expect(({ body }) => {
+      expect(body.photos).toEqual([]);
+    });
+    const rows = await pglite.exec("SELECT count(*)::int AS n FROM clinical_photos;") as Array<{ rows: Array<{ n: number }> }>;
+    expect(rows[0].rows[0].n).toBe(0);
+  });
+
+  it("removes legacy photo JSON before a restart can migrate it again", async () => {
+    const lead = await createPatient();
+    const legacyDataUrl = `data:image/jpeg;base64,${JPEG_BYTES.toString("base64")}`;
+    await pglite.exec(`UPDATE leads SET photos = '${JSON.stringify([{ key: "frontal", dataUrl: legacyDataUrl }]).replace(/'/g, "''")}'::jsonb WHERE token = '${lead.token}';`);
+
+    await request(app).delete(`/api/patients/${lead.token}/photos`).expect(200).expect(({ body }) => {
+      expect(body.lead.photoCount).toBe(0);
+      expect(body.lead.status).toBe("incompleto");
+      expect(body.lead.photoKeys).toEqual([]);
+    });
+    await request(app).get(`/api/patients/${lead.token}/photos`).expect(200).expect(({ body }) => {
+      expect(body.photos).toEqual([]);
+    });
+    const rows = await pglite.exec(`SELECT photos FROM leads WHERE token = '${lead.token}';`) as Array<{ rows: Array<{ photos: unknown }> }>;
+    expect(rows[0].rows[0].photos).toEqual([]);
+    const clinical = await pglite.exec("SELECT count(*)::int AS n FROM clinical_photos;") as Array<{ rows: Array<{ n: number }> }>;
+    expect(clinical[0].rows[0].n).toBe(0);
   });
 
   it("rejects arbitrary, truncated, and MIME-mismatched image bytes before storage", async () => {

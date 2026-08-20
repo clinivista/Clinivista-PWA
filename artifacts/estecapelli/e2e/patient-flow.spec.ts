@@ -101,7 +101,7 @@ async function tickConsent(page: Page): Promise<void> {
  * A minimal 1×1 white PNG is synthesised inline so the test has no external
  * file dependency. The browser's real FileReader and canvas APIs process it.
  */
-async function uploadAndAcceptPhoto(page: Page): Promise<void> {
+async function uploadAndAcceptRequiredPhotos(page: Page): Promise<void> {
   // Synthesise a minimal valid PNG (1×1 white pixel, 67 bytes).
   const pngBytes = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
@@ -112,14 +112,13 @@ async function uploadAndAcceptPhoto(page: Page): Promise<void> {
 
   // The file input is hidden inside the upload label; setInputFiles bypasses
   // the visibility restriction and fires the change event normally.
-  const fileInput = page.locator('input[type="file"]').first();
-  await fileInput.setInputFiles(tmpFile);
-
-  // After FileReader + canvas compression, the preview and "Usar esta foto"
-  // button become visible — wait up to 15 s for the browser image pipeline.
-  const acceptBtn = page.getByRole("button", { name: /Usar esta foto/i });
-  await expect(acceptBtn).toBeVisible({ timeout: 15_000 });
-  await acceptBtn.click();
+  for (let index = 0; index < 5; index += 1) {
+    const fileInput = page.locator('input[type="file"]').first();
+    await fileInput.setInputFiles(tmpFile);
+    const acceptBtn = page.getByRole("button", { name: /Usar esta foto/i });
+    await expect(acceptBtn).toBeVisible({ timeout: 15_000 });
+    await acceptBtn.click();
+  }
 
   // Clean up temp file
   fs.unlinkSync(tmpFile);
@@ -159,8 +158,8 @@ test.describe("Patient form browser flow", () => {
       page.getByRole("button", { name: /Enviar Evaluación/i }),
     ).toBeVisible();
 
-    // 5. Upload + accept one photo (exercises real FileReader + canvas)
-    await uploadAndAcceptPhoto(page);
+    // 5. Upload + accept the five mandatory views (real browser image pipeline).
+    await uploadAndAcceptRequiredPhotos(page);
 
     // 6. Submit — button is enabled once ≥1 photo accepted
     const submitBtn = page.getByRole("button", { name: /Enviar Evaluación/i });
@@ -196,7 +195,7 @@ test.describe("Patient form browser flow", () => {
     ).toBeVisible();
 
     // 5. Upload one photo
-    await uploadAndAcceptPhoto(page);
+    await uploadAndAcceptRequiredPhotos(page);
 
     // 6. Submit
     const submitBtn = page.getByRole("button", { name: /Enviar Evaluación/i });

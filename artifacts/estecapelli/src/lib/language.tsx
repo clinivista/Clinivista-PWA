@@ -146,6 +146,12 @@ export type AppTranslations = {
   photoTRTitle: string; photoTRDesc: string; photoTRTip: string;
   photoTLTitle: string; photoTLDesc: string; photoTLTip: string;
   photoDonorTitle: string; photoDonorDesc: string; photoDonorTip: string;
+  photoLightEven?: string; photoDistanceFace?: string; photoDistanceTop?: string;
+  photoDistanceBack?: string; photoBackgroundPlain?: string;
+  photoTechnicalReview?: string; photoTechnicalIntro?: string; photoOriginalNote?: string;
+  photoResolution?: string; photoOrientation?: string; photoExposure?: string;
+  photoContrast?: string; photoSharpness?: string; photoWarnings?: string;
+  photoContinueAnyway?: string; photoInvalidFormat?: string;
 
   // ── Patient – Success ──
   pSuccessTitle: string;
@@ -324,6 +330,8 @@ const T: Record<LangCode, AppTranslations> = {
     photoTRTitle: "Temporal derecha", photoTRDesc: "Gira levemente hacia la izquierda para mostrar la entrada derecha.", photoTRTip: "Gira la cabeza ~30° hacia tu izquierda. La cámara debe mostrar claramente la entrada del lado derecho.",
     photoTLTitle: "Temporal izquierda", photoTLDesc: "Gira levemente hacia la derecha para mostrar la entrada izquierda.", photoTLTip: "Gira la cabeza ~30° hacia tu derecha. La cámara debe mostrar claramente la entrada del lado izquierdo.",
     photoDonorTitle: "Zona donante", photoDonorDesc: "Fotografía de la nuca / parte posterior de la cabeza.", photoDonorTip: "Inclina la cabeza ligeramente hacia adelante. La cámara apunta a la nuca, mostrando la zona posterior completa.",
+    photoLightEven: "Luz frontal, uniforme y sin reflejos directos.", photoDistanceFace: "Aproximadamente a un brazo de distancia.", photoDistanceTop: "Pide ayuda y mantén el teléfono a 60–90 cm.", photoDistanceBack: "Aproximadamente a un brazo de distancia.", photoBackgroundPlain: "Fondo liso y despejado.",
+    photoTechnicalReview: "Revisión técnica", photoTechnicalIntro: "Estas recomendaciones revisan la calidad de la captura, no interpretan rasgos médicos.", photoOriginalNote: "El archivo original se conserva sin reducir.", photoResolution: "Resolución", photoOrientation: "Orientación", photoExposure: "Exposición", photoContrast: "Contraste", photoSharpness: "Nitidez", photoWarnings: "Recomendaciones", photoContinueAnyway: "Continuar de todas formas", photoInvalidFormat: "Este formato no se puede procesar en este navegador. Prueba JPEG, PNG o WebP.",
 
     pSuccessTitle: "¡Tu evaluación fue recibida!", pSuccessDesc: "Nuestro equipo revisará tu información y fotografías. Recibirás una respuesta en un plazo máximo de 24 horas hábiles.",
     pSuccessNext: "¿Qué sigue ahora?", pSuccessStep1: "Revisión de tu caso (hasta 24 h hábiles)", pSuccessStep2: "Te contactaremos por WhatsApp o correo", pSuccessStep3: "Coordinamos tu consulta",
@@ -453,6 +461,8 @@ const T: Record<LangCode, AppTranslations> = {
     photoTRTitle: "Right temple", photoTRDesc: "Turn slightly left to show the right hairline.", photoTRTip: "Turn your head ~30° to your left. The camera should clearly show the right side entry.",
     photoTLTitle: "Left temple", photoTLDesc: "Turn slightly right to show the left hairline.", photoTLTip: "Turn your head ~30° to your right. The camera should clearly show the left side entry.",
     photoDonorTitle: "Donor area", photoDonorDesc: "Photo of the nape / back of the head.", photoDonorTip: "Tilt your head slightly forward. Camera points at the nape, showing the full posterior area.",
+    photoLightEven: "Even front light without direct reflections.", photoDistanceFace: "About an arm's length away.", photoDistanceTop: "Ask for help and keep the phone 60–90 cm away.", photoDistanceBack: "About an arm's length away.", photoBackgroundPlain: "Plain, uncluttered background.",
+    photoTechnicalReview: "Technical review", photoTechnicalIntro: "These recommendations check capture quality, not medical features.", photoOriginalNote: "The original file is kept without resizing.", photoResolution: "Resolution", photoOrientation: "Orientation", photoExposure: "Exposure", photoContrast: "Contrast", photoSharpness: "Sharpness", photoWarnings: "Recommendations", photoContinueAnyway: "Continue anyway", photoInvalidFormat: "This format cannot be processed in this browser. Try JPEG, PNG or WebP.",
 
     pSuccessTitle: "Your evaluation was received!", pSuccessDesc: "Our team will review your information and photos. You will receive a response within 24 business hours.",
     pSuccessNext: "What happens next?", pSuccessStep1: "Review of your case (up to 24 business hours)", pSuccessStep2: "We will contact you via WhatsApp or email", pSuccessStep3: "We schedule your consultation",

@@ -27,38 +27,10 @@ import {
   useGetPatient, getGetPatientQueryKey, useCreatePatient, useUpdatePatient, useDiscardPatientPhotos,
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage, LANGS, type AppTranslations, type LangCode } from "@/lib/language";
+import { useLanguage, LANGS, type LangCode } from "@/lib/language";
 import { formatRut, validateRut } from "@/lib/rut";
-
-// ---------- Image compression ----------
-function compressImage(src: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onerror = reject;
-    img.onload = () => {
-      const max = 1400;
-      const scale = Math.min(1, max / Math.max(img.width, img.height));
-      const c = document.createElement("canvas");
-      c.width = Math.round(img.width * scale);
-      c.height = Math.round(img.height * scale);
-      const ctx = c.getContext("2d");
-      if (ctx) ctx.drawImage(img, 0, 0, c.width, c.height);
-      resolve(c.toDataURL("image/jpeg", 0.72));
-    };
-    img.src = src;
-  });
-}
-
-function compress(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onerror = reject;
-    r.onload = () => {
-      if (typeof r.result === "string") compressImage(r.result).then(resolve).catch(reject);
-    };
-    r.readAsDataURL(file);
-  });
-}
+import { getCapillaryPhotoProtocol, type PhotoProtocolView } from "@/lib/photo-protocol";
+import { formatBytes, reviewPhotoTechnicalQuality, type TechnicalPhotoReview } from "@/lib/photo-quality";
 
 async function dataUrlToFile(dataUrl: string, name: string): Promise<File> {
   const response = await fetch(dataUrl);
@@ -128,129 +100,16 @@ const patientSchema = z.object({
 
 type PatientFormValues = z.infer<typeof patientSchema>;
 
-// ---------- Photo definitions ----------
-function getPhotoRequirements(t: AppTranslations) {
-  return [
-    {
-      key: "frontal",
-      title: t.photoFrontalTitle,
-      description: t.photoFrontalDesc,
-      tip: t.photoFrontalTip,
-      color: "#00A9A5",
-      icon: (
-        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-          <ellipse cx="32" cy="26" rx="14" ry="16" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
-          <path d="M18 22 Q18 8 32 8 Q46 8 46 22" fill="#4a3728" stroke="#3a2718" strokeWidth="1"/>
-          <circle cx="26" cy="24" r="2" fill="#3a2718"/>
-          <circle cx="38" cy="24" r="2" fill="#3a2718"/>
-          <path d="M32 28 Q30 32 32 33 Q34 32 32 28" stroke="#a87c5a" strokeWidth="1" fill="none"/>
-          <path d="M27 37 Q32 41 37 37" stroke="#a87c5a" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-          <rect x="2" y="28" width="10" height="7" rx="1.5" fill="#4a90d9" opacity="0.9"/>
-          <polygon points="12,23 12,38 20,31.5" fill="#4a90d9" opacity="0.9"/>
-          <circle cx="7" cy="31.5" r="2" fill="white" opacity="0.7"/>
-          <path d="M18 44 Q20 50 32 52 Q44 50 46 44" fill="#c9b5a5" stroke="#a87c5a" strokeWidth="1"/>
-        </svg>
-      ),
-    },
-    {
-      key: "vertex",
-      title: t.photoVertexTitle,
-      description: t.photoVertexDesc,
-      tip: t.photoVertexTip,
-      color: "#4F9CF9",
-      icon: (
-        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-          <ellipse cx="32" cy="36" rx="18" ry="20" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
-          <ellipse cx="32" cy="34" rx="17" ry="18" fill="#4a3728"/>
-          <circle cx="32" cy="32" r="6" fill="#6b4f3a" opacity="0.5"/>
-          <ellipse cx="14" cy="38" rx="3" ry="4" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
-          <ellipse cx="50" cy="38" rx="3" ry="4" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
-          <rect x="25" y="2" width="14" height="9" rx="2" fill="#4a90d9" opacity="0.9"/>
-          <circle cx="32" cy="6.5" r="2.5" fill="white" opacity="0.7"/>
-          <line x1="32" y1="11" x2="32" y2="19" stroke="#4a90d9" strokeWidth="2" strokeLinecap="round"/>
-          <polygon points="28,18 32,24 36,18" fill="#4a90d9"/>
-        </svg>
-      ),
-    },
-    {
-      key: "temporalRight",
-      title: t.photoTRTitle,
-      description: t.photoTRDesc,
-      tip: t.photoTRTip,
-      color: "#A78BFA",
-      icon: (
-        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-          <ellipse cx="34" cy="28" rx="13" ry="15" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
-          <path d="M21 22 Q22 8 34 8 Q46 9 47 22 L46 28" fill="#4a3728" stroke="#3a2718" strokeWidth="1"/>
-          <path d="M43 14 Q48 12 47 22" stroke="#6b4f3a" strokeWidth="2" fill="none"/>
-          <circle cx="30" cy="26" r="2" fill="#3a2718"/>
-          <circle cx="40" cy="25" r="1.5" fill="#3a2718"/>
-          <path d="M43 14 Q50 18 48 28" stroke="#ef4444" strokeWidth="2" fill="none" strokeDasharray="2,2"/>
-          <rect x="2" y="26" width="10" height="7" rx="1.5" fill="#4a90d9" opacity="0.9"/>
-          <polygon points="12,22 12,37 18,29.5" fill="#4a90d9" opacity="0.9"/>
-          <circle cx="7" cy="29.5" r="2" fill="white" opacity="0.7"/>
-          <path d="M21 44 Q26 50 34 51 Q42 50 47 44" fill="#c9b5a5" stroke="#a87c5a" strokeWidth="1"/>
-        </svg>
-      ),
-    },
-    {
-      key: "temporalLeft",
-      title: t.photoTLTitle,
-      description: t.photoTLDesc,
-      tip: t.photoTLTip,
-      color: "#F59E0B",
-      icon: (
-        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-          <ellipse cx="30" cy="28" rx="13" ry="15" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
-          <path d="M43 22 Q42 8 30 8 Q18 9 17 22 L18 28" fill="#4a3728" stroke="#3a2718" strokeWidth="1"/>
-          <path d="M21 14 Q16 12 17 22" stroke="#6b4f3a" strokeWidth="2" fill="none"/>
-          <circle cx="34" cy="26" r="2" fill="#3a2718"/>
-          <circle cx="24" cy="25" r="1.5" fill="#3a2718"/>
-          <path d="M21 14 Q14 18 16 28" stroke="#ef4444" strokeWidth="2" fill="none" strokeDasharray="2,2"/>
-          <rect x="52" y="26" width="10" height="7" rx="1.5" fill="#4a90d9" opacity="0.9"/>
-          <polygon points="52,22 52,37 46,29.5" fill="#4a90d9" opacity="0.9"/>
-          <circle cx="57" cy="29.5" r="2" fill="white" opacity="0.7"/>
-          <path d="M43 44 Q38 50 30 51 Q22 50 17 44" fill="#c9b5a5" stroke="#a87c5a" strokeWidth="1"/>
-        </svg>
-      ),
-    },
-    {
-      key: "donor",
-      title: t.photoDonorTitle,
-      description: t.photoDonorDesc,
-      tip: t.photoDonorTip,
-      color: "#10B981",
-      icon: (
-        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-          <ellipse cx="32" cy="30" rx="18" ry="20" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5"/>
-          <ellipse cx="32" cy="26" rx="17" ry="17" fill="#4a3728"/>
-          <path d="M16 40 Q18 48 32 50 Q46 48 48 40" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
-          <path d="M14 36 Q18 46 32 48 Q46 46 50 36" stroke="#ef4444" strokeWidth="2" fill="none" strokeDasharray="3,2"/>
-          <ellipse cx="14" cy="32" rx="3" ry="4" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
-          <ellipse cx="50" cy="32" rx="3" ry="4" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1"/>
-          <rect x="25" y="2" width="14" height="9" rx="2" fill="#4a90d9" opacity="0.9"/>
-          <circle cx="32" cy="6.5" r="2.5" fill="white" opacity="0.7"/>
-          <line x1="32" y1="11" x2="32" y2="17" stroke="#4a90d9" strokeWidth="2" strokeLinecap="round"/>
-          <polygon points="28,16 32,22 36,16" fill="#4a90d9"/>
-        </svg>
-      ),
-    },
-  ];
-}
-
 // ---------- Active photo card (wizard) ----------
 interface ActivePhotoCardProps {
-  photoKey: string;
-  title: string;
-  description: string;
-  tip: string;
-  icon: React.ReactNode;
-  color: string;
+  view: PhotoProtocolView;
   index: number;
   total: number;
   pendingDataUrl: string | null;
+  pendingReview: TechnicalPhotoReview | null;
   acceptedDataUrl: string | undefined;
   savedOnServer: boolean;
+  serverState?: { status: string; review?: { warningCodes?: string[] }; hasAdjusted?: boolean };
   onFileSelected: (key: string, file: File) => Promise<void>;
   onCameraCaptured: (key: string, dataUrl: string) => Promise<void>;
   onAccept: (key: string) => void;
@@ -260,10 +119,10 @@ interface ActivePhotoCardProps {
 }
 
 function ActivePhotoCard({
-  photoKey, title, description, tip, icon, color, index, total,
-  pendingDataUrl, acceptedDataUrl, savedOnServer,
+  view, index, total, pendingDataUrl, pendingReview, acceptedDataUrl, savedOnServer, serverState,
   onFileSelected, onCameraCaptured, onAccept, onRetake, isProcessing, photoOfLabel,
 }: ActivePhotoCardProps) {
+  const { key: photoKey, title, description, tip, referenceVisual, color, orientation, aspectRatio, light, distance, background } = view;
   const galleryRef = useRef<HTMLInputElement>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -280,6 +139,11 @@ function ActivePhotoCard({
 
   const hasPending = !!pendingDataUrl;
   const hasAccepted = !!acceptedDataUrl || savedOnServer;
+  const captureState = hasPending
+    ? (pendingReview?.warnings.length ? "Requiere revisión técnica" : "Cargada")
+    : savedOnServer
+      ? (serverState?.hasAdjusted ? "Ajustada" : "Lista")
+      : "Pendiente";
 
   return (
     <>
@@ -299,12 +163,10 @@ function ActivePhotoCard({
         {/* Foto X de 5 */}
         <div className="px-6 pt-4 flex items-center justify-between">
           <span className="text-xs font-black uppercase tracking-widest text-primary">{photoOfLabel}</span>
-          {hasAccepted && !hasPending && (
-            <span className="flex items-center gap-1.5 text-primary text-xs font-bold bg-primary/10 px-3 py-1 rounded-full">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              {t.pCompleted}
-            </span>
-          )}
+          <span className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full ${hasAccepted && !hasPending ? "text-primary bg-primary/10" : hasPending ? "text-amber-800 bg-amber-50" : "text-muted-foreground bg-muted"}`}>
+            {hasAccepted && !hasPending && <CheckCircle2 className="w-3.5 h-3.5" />}
+            {captureState}
+          </span>
         </div>
 
         {/* Guide section */}
@@ -317,9 +179,17 @@ function ActivePhotoCard({
             {guideOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
           </button>
           {guideOpen && (
-            <div className="flex items-center gap-4 px-6 pb-4">
-              <div className="w-16 h-16 shrink-0">{icon}</div>
-              <p className="text-xs text-muted-foreground leading-relaxed font-medium">{tip}</p>
+            <div className="flex items-start gap-4 px-6 pb-4">
+              <div className="w-16 h-16 shrink-0">{referenceVisual}</div>
+              <div className="space-y-2 text-xs text-muted-foreground leading-relaxed font-medium">
+                <p>{tip}</p>
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px]">
+                  <div><dt className="font-bold text-foreground">Orientación</dt><dd>{orientation} · {aspectRatio}</dd></div>
+                  <div><dt className="font-bold text-foreground">Luz</dt><dd>{light}</dd></div>
+                  <div><dt className="font-bold text-foreground">Distancia</dt><dd>{distance}</dd></div>
+                  <div><dt className="font-bold text-foreground">Fondo</dt><dd>{background}</dd></div>
+                </dl>
+              </div>
             </div>
           )}
         </div>
@@ -340,6 +210,27 @@ function ActivePhotoCard({
               <div className="rounded-2xl overflow-hidden shadow-lg ring-2 ring-primary/20 max-h-[420px] flex justify-center bg-black/5">
                 <img src={pendingDataUrl!} alt={title} className="object-contain max-h-[420px] w-auto" />
               </div>
+              {pendingReview && (
+                <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4 text-sm">
+                  <h4 className="font-bold text-foreground">{t.photoTechnicalReview ?? "Revisión técnica"}</h4>
+                  <p className="mt-1 text-xs text-muted-foreground">{t.photoTechnicalIntro ?? "Recomendaciones de captura; no analiza rasgos médicos."}</p>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <span><b>{t.photoResolution ?? "Resolución"}:</b> {pendingReview.width} × {pendingReview.height}</span>
+                    <span><b>{t.photoOrientation ?? "Orientación"}:</b> {pendingReview.orientation}</span>
+                    <span><b>{t.photoExposure ?? "Exposición"}:</b> {pendingReview.brightness ?? "—"}</span>
+                    <span><b>{t.photoContrast ?? "Contraste"}:</b> {pendingReview.contrast ?? "—"}</span>
+                    <span><b>{t.photoSharpness ?? "Nitidez"}:</b> {pendingReview.sharpness ?? "—"}</span>
+                    <span>{formatBytes(pendingReview.sizeBytes)} · {pendingReview.mimeType}</span>
+                  </div>
+                  <p className="mt-3 text-xs font-medium text-primary">{t.photoOriginalNote ?? "El archivo original se conserva sin reducir."}</p>
+                  {pendingReview.warnings.length > 0 && (
+                    <div className="mt-3 rounded-xl bg-amber-50 p-3 text-xs text-amber-950">
+                      <b>{t.photoWarnings ?? "Recomendaciones"}:</b>
+                      <ul className="mt-1 list-disc pl-4">{pendingReview.warnings.map(warning => <li key={warning}>{warning}</li>)}</ul>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="flex gap-2.5 flex-wrap">
                 <button
                   type="button"
@@ -362,7 +253,7 @@ function ActivePhotoCard({
                 <label className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-full cursor-pointer bg-[#F5F2EE] border border-[#E8E4DE] text-gray-700 hover:bg-[#EDE9E4] transition-all select-none ${isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
                   <ImagePlus className="w-4 h-4" />
                   {t.pUploadAnother}
-                  <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={isProcessing} />
+                  <input ref={galleryRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic" capture="environment" className="hidden" onChange={handleFile} disabled={isProcessing} />
                 </label>
               </div>
             </div>
@@ -397,7 +288,7 @@ function ActivePhotoCard({
                 <label className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-full cursor-pointer bg-[#F5F2EE] border border-[#E8E4DE] text-foreground hover:bg-[#EDE9E4] transition-all select-none ${isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
                   <ImagePlus className="w-4 h-4" />
                   {hasAccepted ? t.pUploadAnother : t.pUploadDevice}
-                  <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={isProcessing} />
+                  <input ref={galleryRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic" capture="environment" className="hidden" onChange={handleFile} disabled={isProcessing} />
                 </label>
               </div>
             </div>
@@ -425,15 +316,17 @@ export default function PatientFlow() {
   const [langOpen, setLangOpen] = useState(false);
   const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
 
-  const PHOTO_REQUIREMENTS = getPhotoRequirements(t);
+  const PHOTO_REQUIREMENTS = getCapillaryPhotoProtocol(t);
 
   const [step, setStep] = useState<"intro" | "data" | "photos" | "success">("intro");
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
   const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
+  const [pendingReview, setPendingReview] = useState<TechnicalPhotoReview | null>(null);
   const [pendingPhotoSource, setPendingPhotoSource] = useState<"camera" | "upload">("upload");
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
+  const [serverPhotoStates, setServerPhotoStates] = useState<Record<string, { status: string; review?: { warningCodes?: string[] }; hasAdjusted?: boolean }>>({});
   const [resumeOffer, setResumeOffer] = useState(false);
   const [exitDialog, setExitDialog] = useState<"closed" | "open" | "confirmDiscard">("closed");
   const [dirty, setDirty] = useState(false);
@@ -470,14 +363,35 @@ export default function PatientFlow() {
       });
       const keys = Array.isArray((l as any).photoKeys) ? ((l as any).photoKeys as string[]) : [];
       if (keys.length > 0) {
-        setSavedKeys(new Set(keys));
-        // Photos already saved on the server: offer to resume from the saved step
+        // The dedicated status endpoint below decides which photos are
+        // confirmed; this summary only tells us a resumable draft exists.
         setResumeOffer(true);
       } else {
         setStep("data");
       }
     }
   }, [existingData, step, resumeOffer]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // The photo endpoint intentionally returns metadata only. On a reload we
+  // restore the confirmed states without pulling private image bytes into JSON,
+  // localStorage or the browser cache.
+  useEffect(() => {
+    if (!token) return;
+    let alive = true;
+    fetch(`/api/patients/${encodeURIComponent(token)}/photos`)
+      .then(response => response.ok ? response.json() : Promise.reject(new Error("No photo state")))
+      .then((payload: { photos?: Array<{ key: string; status: string; hasAdjusted?: boolean; captureMetadata?: { technicalReview?: { warningCodes?: string[] } } }> }) => {
+        if (!alive) return;
+        const confirmed = (payload.photos ?? []).filter(photo => photo.status === "confirmed");
+        setSavedKeys(new Set(confirmed.map(photo => photo.key)));
+        setServerPhotoStates(Object.fromEntries(confirmed.map(photo => [photo.key, {
+          status: photo.status, review: photo.captureMetadata?.technicalReview, hasAdjusted: photo.hasAdjusted,
+        }])));
+        if (confirmed.length > 0) setResumeOffer(true);
+      })
+      .catch(() => { /* Existing patient summary still provides the safe resume fallback. */ });
+    return () => { alive = false; };
+  }, [token]);
 
   const createMutation = useCreatePatient();
   const updateMutation = useUpdatePatient();
@@ -512,33 +426,42 @@ export default function PatientFlow() {
       .catch(() => { /* save errors are non-fatal for the draft flow */ });
   }, [patientToken, form, updateMutation, toast, t]);
 
-  const handlePhotoCapture = async (key: string, file: File) => {
+  const clearPendingPreview = () => {
+    if (pendingPhoto?.startsWith("blob:")) URL.revokeObjectURL(pendingPhoto);
+    setPendingPhoto(null);
+    setPendingPhotoFile(null);
+    setPendingReview(null);
+  };
+
+  const preparePhoto = async (key: string, file: File, source: "camera" | "upload") => {
     setProcessingPhoto(key);
     try {
-      const compressed = await compress(file);
-      setPendingPhoto(compressed);
+      if (!/^image\/(jpeg|png|webp)$/i.test(file.type)) {
+        throw new Error(t.photoInvalidFormat ?? "Este formato no se puede procesar. Usa JPEG, PNG o WebP.");
+      }
+      const view = PHOTO_REQUIREMENTS.find(requirement => requirement.key === key);
+      if (!view) throw new Error("Vista fotográfica no disponible.");
+      const review = await reviewPhotoTechnicalQuality(file, view);
+      if (pendingPhoto?.startsWith("blob:")) URL.revokeObjectURL(pendingPhoto);
+      setPendingPhoto(URL.createObjectURL(file));
       setPendingPhotoFile(file);
-      setPendingPhotoSource("upload");
+      setPendingReview(review);
+      setPendingPhotoSource(source);
       setDirty(true);
-    } catch {
-      toast({ variant: "destructive", title: t.pPhotoError, description: "Intenta nuevamente con otra fotografía." });
+    } catch (error) {
+      toast({ variant: "destructive", title: t.pPhotoError, description: error instanceof Error ? error.message : "Intenta nuevamente con otra fotografía." });
     } finally {
       setProcessingPhoto(null);
     }
   };
 
+  const handlePhotoCapture = async (key: string, file: File) => preparePhoto(key, file, "upload");
+
   const handleCameraCapture = async (key: string, dataUrl: string) => {
-    setProcessingPhoto(key);
     try {
-      const compressed = await compressImage(dataUrl);
-      setPendingPhoto(compressed);
-      setPendingPhotoFile(await dataUrlToFile(dataUrl, `camera-${key}.jpg`));
-      setPendingPhotoSource("camera");
-      setDirty(true);
+      await preparePhoto(key, await dataUrlToFile(dataUrl, `camera-${key}.jpg`), "camera");
     } catch {
       toast({ variant: "destructive", title: t.pPhotoError, description: "Intenta nuevamente." });
-    } finally {
-      setProcessingPhoto(null);
     }
   };
 
@@ -554,6 +477,16 @@ export default function PatientFlow() {
           "Content-Type": contentType,
           "x-photo-key": key,
           "x-photo-source": pendingPhotoSource,
+          ...(pendingReview ? {
+            "x-photo-width": String(pendingReview.width),
+            "x-photo-height": String(pendingReview.height),
+            "x-photo-metadata": JSON.stringify({ technicalReview: {
+              width: pendingReview.width, height: pendingReview.height, sizeBytes: pendingReview.sizeBytes,
+              mimeType: pendingReview.mimeType, orientation: pendingReview.orientation, aspectRatio: pendingReview.aspectRatio,
+              brightness: pendingReview.brightness, contrast: pendingReview.contrast, sharpness: pendingReview.sharpness,
+              warningCodes: pendingReview.warningCodes,
+            } }),
+          } : {}),
         },
         body: pendingPhotoFile,
       });
@@ -573,7 +506,9 @@ export default function PatientFlow() {
     setPhotos(next);
     setPendingPhoto(null);
     setPendingPhotoFile(null);
+    setPendingReview(null);
     setSavedKeys(prev => new Set([...prev, key]));
+    setServerPhotoStates(prev => ({ ...prev, [key]: { status: "confirmed", review: pendingReview ? { warningCodes: pendingReview.warningCodes } : undefined, hasAdjusted: false } }));
     saveDraft();
     const nextMissing = PHOTO_REQUIREMENTS.findIndex(r => !next[r.key] && !savedKeys.has(r.key));
     if (nextMissing !== -1) setCurrentPhotoIndex(nextMissing);
@@ -582,14 +517,14 @@ export default function PatientFlow() {
 
   // "Repetir" an already-accepted photo: only jumps to that photo, nothing else is cleared
   const handleRetakeAccepted = (index: number) => {
-    setPendingPhoto(null);
+    clearPendingPreview();
     setCurrentPhotoIndex(index);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // "Volver": one step back without clearing photos, personal data, or consent
   const handlePhotoBack = () => {
-    setPendingPhoto(null);
+    clearPendingPreview();
     if (currentPhotoIndex > 0) {
       setCurrentPhotoIndex(i => i - 1);
     } else {
@@ -669,10 +604,11 @@ export default function PatientFlow() {
   };
 
   const clearLocalDraft = () => {
+    Object.values(photos).forEach(url => { if (url.startsWith("blob:")) URL.revokeObjectURL(url); });
     setPhotos({});
-    setPendingPhoto(null);
-    setPendingPhotoFile(null);
+    clearPendingPreview();
     setSavedKeys(new Set());
+    setServerPhotoStates({});
     setCurrentPhotoIndex(0);
     setDirty(false);
   };
@@ -723,8 +659,14 @@ export default function PatientFlow() {
     }
     const formData = form.getValues();
     if (patientToken) {
-      updateMutation.mutate({ token: patientToken, data: formData }, {
-        onSuccess: () => { setStep("success"); window.scrollTo({ top: 0, behavior: "smooth" }); },
+      updateMutation.mutate({ token: patientToken, data: { ...formData, submit: true } }, {
+        onSuccess: (result) => {
+          if (result.lead.status !== "listo") {
+            toast({ variant: "destructive", title: "Faltan fotografías", description: "Guarda las cinco vistas obligatorias antes de enviar." });
+            return;
+          }
+          setStep("success"); window.scrollTo({ top: 0, behavior: "smooth" });
+        },
         onError: () => toast({ variant: "destructive", title: "Error", description: t.pSaveError }),
       });
     } else {
@@ -1240,21 +1182,18 @@ export default function PatientFlow() {
             {/* Active photo card */}
             <ActivePhotoCard
               key={activeReq.key}
-              photoKey={activeReq.key}
-              title={activeReq.title}
-              description={activeReq.description}
-              tip={activeReq.tip}
-              icon={activeReq.icon}
-              color={activeReq.color}
+              view={activeReq}
               index={currentPhotoIndex}
               total={5}
               pendingDataUrl={pendingPhoto}
+              pendingReview={pendingReview}
               acceptedDataUrl={photos[activeReq.key]}
               savedOnServer={savedKeys.has(activeReq.key)}
+              serverState={serverPhotoStates[activeReq.key]}
               onFileSelected={handlePhotoCapture}
               onCameraCaptured={handleCameraCapture}
               onAccept={handleAcceptPhoto}
-              onRetake={() => setPendingPhoto(null)}
+              onRetake={clearPendingPreview}
               isProcessing={processingPhoto === activeReq.key}
               photoOfLabel={t.pPhotoOf.replace("{n}", String(currentPhotoIndex + 1)).replace("{total}", "5")}
             />
@@ -1274,7 +1213,7 @@ export default function PatientFlow() {
                         </div>
                       )}
                       <div className="p-2.5 flex items-center justify-between gap-2">
-                        <span className="text-[11px] font-bold text-foreground truncate">{req.title}</span>
+                        <span className="text-[11px] font-bold text-foreground truncate">{req.title} <span className="text-primary">{serverPhotoStates[req.key]?.review?.warningCodes?.length ? "· revisar" : "· lista"}</span></span>
                         <button
                           type="button"
                           onClick={() => handleRetakeAccepted(i)}
@@ -1299,7 +1238,7 @@ export default function PatientFlow() {
             <div className="mt-8">
               <Button
                 onClick={submitFullForm}
-                disabled={isPending || completedPhotos < 1}
+                disabled={isPending || completedPhotos < PHOTO_REQUIREMENTS.filter(photo => photo.required).length}
                 className={`w-full h-16 text-lg font-bold rounded-full shadow-xl group transition-all ${completedPhotos === 5 ? "bg-primary hover:bg-primary/90 text-white shadow-primary/25" : "bg-primary/80 hover:bg-primary/70 text-white"}`}
               >
                 {isPending ? (
@@ -1308,7 +1247,7 @@ export default function PatientFlow() {
                   <><CheckCircle2 className="w-5 h-5 mr-3" />{t.pSubmitCTA} ({completedPhotos}/5)</>
                 )}
               </Button>
-              {completedPhotos < 5 && !isPending && (
+              {completedPhotos < PHOTO_REQUIREMENTS.filter(photo => photo.required).length && !isPending && (
                 <p className="text-center text-xs text-muted-foreground mt-3 font-medium">
                   {completedPhotos}/5 {t.pCompleted.toLowerCase()}
                 </p>

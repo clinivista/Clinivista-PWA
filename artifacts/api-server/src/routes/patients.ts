@@ -21,7 +21,7 @@ import {
   DEFAULT_PROTOCOL_ID,
   confirmClinicalPhoto,
   createClinicalPhoto,
-  discardAllDraftPhotos,
+  discardAllPatientCapturePhotos,
   discardClinicalPhoto,
   ensureDefaultClinicalConfiguration,
   getPhotoStatusesForLead,
@@ -177,9 +177,47 @@ function parseOptionalPixelDimension(value: string | undefined): number | undefi
   return numeric > 0 && numeric <= 20_000 ? numeric : null;
 }
 
+const ALLOWED_TECHNICAL_WARNING_CODES = new Set(["low_resolution", "aspect_ratio", "orientation", "exposure", "low_contrast", "low_sharpness"]);
+
+function parseCaptureMetadata(value: string | undefined): Record<string, unknown> | null {
+  if (!value) return {};
+  if (value.length > 8_000) return null;
+  try {
+    const parsed = JSON.parse(value);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) || Object.keys(parsed).some(key => key !== "technicalReview")) return null;
+    const review = (parsed as Record<string, unknown>).technicalReview;
+    if (!review || typeof review !== "object" || Array.isArray(review)) return null;
+    const allowedKeys = new Set(["width", "height", "sizeBytes", "mimeType", "orientation", "aspectRatio", "brightness", "contrast", "sharpness", "warningCodes"]);
+    if (Object.keys(review as Record<string, unknown>).some(key => !allowedKeys.has(key))) return null;
+    const values = review as Record<string, unknown>;
+    const integer = (key: string, max: number) => Number.isInteger(values[key]) && Number(values[key]) > 0 && Number(values[key]) <= max;
+    const metric = (key: string) => values[key] === null || (typeof values[key] === "number" && Number.isFinite(values[key]) && values[key] >= 0 && values[key] <= 255);
+    if (!integer("width", 20_000) || !integer("height", 20_000) || !integer("sizeBytes", 100_000_000)
+      || !["image/jpeg", "image/png", "image/webp"].includes(String(values.mimeType))
+      || !["portrait", "landscape", "square"].includes(String(values.orientation))
+      || typeof values.aspectRatio !== "number" || !Number.isFinite(values.aspectRatio) || values.aspectRatio <= 0 || values.aspectRatio > 10
+      || !metric("brightness") || !metric("contrast") || !metric("sharpness")
+      || !Array.isArray(values.warningCodes) || values.warningCodes.length > ALLOWED_TECHNICAL_WARNING_CODES.size
+      || values.warningCodes.some(code => typeof code !== "string" || !ALLOWED_TECHNICAL_WARNING_CODES.has(code))) return null;
+    return { technicalReview: { width: values.width, height: values.height, sizeBytes: values.sizeBytes, mimeType: values.mimeType, orientation: values.orientation, aspectRatio: values.aspectRatio, brightness: values.brightness, contrast: values.contrast, sharpness: values.sharpness, warningCodes: values.warningCodes } };
+  } catch {
+    return null;
+  }
+}
+
 function updatedStatus(existingStatus: string | null, completedPhotos: number): string {
   if (completedPhotos < 5) return "incompleto";
   return existingStatus === "nuevo" || existingStatus === "incompleto" ? "listo" : existingStatus ?? "listo";
+}
+
+const REQUIRED_CAPILLARY_VIEW_KEYS = new Set(["frontal", "vertex", "temporalRight", "temporalLeft", "donor"]);
+
+function completedRequiredViews(photos: Awaited<ReturnType<typeof getPhotoStatusesForLead>>): number {
+  return new Set(
+    photos
+      .filter((photo) => photo.status === "confirmed" && REQUIRED_CAPILLARY_VIEW_KEYS.has(photo.key))
+      .map((photo) => photo.key),
+  ).size;
 }
 
 router.post("/patients", async (req, res): Promise<void> => {
@@ -279,7 +317,11 @@ router.put("/patients/:token", async (req, res): Promise<void> => {
     return;
   }
   const clinicalPhotos = await getPhotoStatusesForLead(existing);
-  const completed = clinicalPhotos.filter((photo) => photo.status === "confirmed").length;
+  const completed = completedRequiredViews(clinicalPhotos);
+  if ((req.body as Record<string, unknown>).submit === true && completed < 5) {
+    res.status(422).json({ error: "Debes guardar las cinco fotografías obligatorias antes de enviar." });
+    return;
+  }
   const [updated] = await db.update(leadsTable)
     .set({ ...data, status: updatedStatus(existing.status, completed), photoCount: String(completed) })
     .where(eq(leadsTable.id, existing.id)).returning();
@@ -306,7 +348,8 @@ router.post("/patients/:token/photos", express.raw({ type: ["image/jpeg", "image
   const image = await parseImageRequest(req);
   const width = headers.success ? parseOptionalPixelDimension(headers.data["x-photo-width"]) : null;
   const height = headers.success ? parseOptionalPixelDimension(headers.data["x-photo-height"]) : null;
-  if (!params.success || !headers.success || !image || width === null || height === null
+  const captureMetadata = parseCaptureMetadata(req.headers["x-photo-metadata"] as string | undefined);
+  if (!params.success || !headers.success || !image || width === null || height === null || !captureMetadata
     || (width !== undefined && width !== image.width) || (height !== undefined && height !== image.height)) {
     res.status(400).json({ error: "La foto debe ser JPEG, PNG o WebP y pesar hasta 10 MB." });
     return;
@@ -325,6 +368,7 @@ router.post("/patients/:token/photos", express.raw({ type: ["image/jpeg", "image
       bytes: image.bytes,
       width: image.width,
       height: image.height,
+      captureMetadata,
     });
     res.status(201).json(photo);
   } catch {
@@ -376,12 +420,8 @@ router.delete("/patients/:token/photos", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Este enlace ya no está disponible." });
     return;
   }
-  await discardAllDraftPhotos(existing);
-  const statuses = await getPhotoStatusesForLead(existing);
-  const completed = statuses.filter((photo) => photo.status === "confirmed").length;
-  const [updated] = await db.update(leadsTable)
-    .set({ photoCount: String(completed), status: updatedStatus(existing.status, completed), updatedAt: new Date() })
-    .where(eq(leadsTable.id, existing.id)).returning();
+  await discardAllPatientCapturePhotos(existing);
+  const [updated] = await db.select().from(leadsTable).where(eq(leadsTable.id, existing.id));
   res.json({ ok: true, lead: await leadSummary(updated) });
 });
 

@@ -53,13 +53,25 @@ export function CameraModal({ onCapture, onClose, onError, title }: CameraModalP
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: facing },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-        },
-      });
+      // Start with a rear, high-resolution request, then progressively relax
+      // constraints for older phones and desktop cameras.
+      const attempts: MediaStreamConstraints[] = [
+        { video: { facingMode: { ideal: facing }, width: { ideal: 2560 }, height: { ideal: 1440 } }, audio: false },
+        { video: { facingMode: { ideal: facing }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false },
+        { video: { facingMode: { ideal: facing } }, audio: false },
+        { video: true, audio: false },
+      ];
+      let stream: MediaStream | null = null;
+      let lastError: unknown;
+      for (const constraints of attempts) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          break;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      if (!stream) throw lastError instanceof Error ? lastError : new Error("Camera unavailable");
 
       // If the component unmounted or startCamera was called again while we waited,
       // discard the late stream immediately to avoid leaving the camera open.

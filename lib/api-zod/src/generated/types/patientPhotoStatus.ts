@@ -22,5 +22,10 @@ export interface PatientPhotoStatus {
   confirmedAt?: Date | null;
   hasOriginal: boolean;
   hasAdjusted: boolean;
+  /** @nullable */
+  width?: number | null;
+  /** @nullable */
+  height?: number | null;
+  captureMetadata?: unknown;
   editParams?: unknown;
 }

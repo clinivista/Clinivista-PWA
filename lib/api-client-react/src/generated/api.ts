@@ -1419,13 +1419,13 @@ export const getCreatePatientAdjustedPhotoUrl = (token: string,
 }
 
 /**
- * @summary Store an adjusted derivative without replacing the original
+ * @summary Reserved for the technical editor (not available in patient capture)
  */
 export const createPatientAdjustedPhoto = async (token: string,
     photoId: string,
-    createPatientAdjustedPhotoBody: Blob, options?: Parameters<typeof customFetch>[1]): Promise<PatientPhotoStatus> => {
+    createPatientAdjustedPhotoBody: Blob, options?: Parameters<typeof customFetch>[1]): Promise<unknown> => {
 
-  return customFetch<PatientPhotoStatus>(getCreatePatientAdjustedPhotoUrl(token,photoId),
+  return customFetch<unknown>(getCreatePatientAdjustedPhotoUrl(token,photoId),
   {
     ...options,
     method: 'POST',
@@ -1470,7 +1470,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreatePatientAdjustedPhotoMutationError = ErrorType<ErrorResponse>
 
     /**
- * @summary Store an adjusted derivative without replacing the original
+ * @summary Reserved for the technical editor (not available in patient capture)
  */
 export const useCreatePatientAdjustedPhoto = <TError = ErrorType<ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPatientAdjustedPhoto>>, TError,{token: string;photoId: string;data: BodyType<Blob>}, TContext>, request?: SecondParameter<typeof customFetch>}

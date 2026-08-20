@@ -131,20 +131,17 @@ async function tickConsent(user: ReturnType<typeof setupUser>) {
   await user.click(checkboxes[0]);
 }
 
-async function uploadAndAcceptPhoto(user: ReturnType<typeof setupUser>) {
-  const fakeFile = new File(["fake"], "photo.jpg", { type: "image/jpeg" });
-  await waitFor(() => {
-    expect(document.querySelector('input[type="file"]')).not.toBeNull();
-  });
-  const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-
-  await user.upload(fileInput, fakeFile);
-
-  // After FileReader + canvas pipeline resolves, the preview and accept button appear.
-  const acceptBtn = await screen.findByRole("button", {
-    name: /Usar esta foto/i,
-  });
-  await user.click(acceptBtn);
+async function uploadAndAcceptRequiredPhotos(user: ReturnType<typeof setupUser>) {
+  for (let index = 0; index < 5; index += 1) {
+    const fakeFile = new File(["fake"], `photo-${index}.jpg`, { type: "image/jpeg" });
+    await waitFor(() => {
+      expect(document.querySelector('input[type="file"]')).not.toBeNull();
+    });
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(fileInput, fakeFile);
+    const acceptBtn = await screen.findByRole("button", { name: /Usar esta foto/i });
+    await user.click(acceptBtn);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -230,8 +227,8 @@ describe("Full patient form flow — end to end", () => {
     expect(continueBtn).toBeEnabled();
     await user.click(continueBtn);
 
-    // 5. Upload + accept one photo  →  submit button becomes enabled
-    await uploadAndAcceptPhoto(user);
+    // 5. Upload + accept all mandatory protocol views → submit becomes enabled.
+    await uploadAndAcceptRequiredPhotos(user);
 
     // 6. Submit the evaluation
     const submitBtn = await screen.findByRole("button", {
