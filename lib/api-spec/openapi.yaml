@@ -512,7 +512,7 @@ paths:
     post:
       operationId: createPatientAdjustedPhoto
       tags: [patients]
-      summary: Reserved for the technical editor (not available in patient capture)
+      summary: Save a validated technical derivative while preserving the private original
       parameters:
         - name: token
           in: path
@@ -544,8 +544,110 @@ paths:
               type: string
               format: binary
       responses:
-        "403":
-          description: The patient capture flow cannot create edited derivatives
+        "201":
+          description: Technical derivative stored privately
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientPhotoStatus"
+        "400":
+          description: Technical parameters or derivative exceed safe limits
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: discardPatientAdjustedPhoto
+      tags: [patients]
+      summary: Discard only a technical derivative; the original remains protected
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Technical derivative discarded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimpleOk"
+        "404":
+          description: Technical derivative not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      operationId: getPatientAdjustedPhotoFile
+      tags: [patients]
+      summary: Stream the server-rendered technical derivative for patient review
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Server-rendered private technical derivative stream
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Technical derivative not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /patients/{token}/photos/{photoId}/original:
+    get:
+      operationId: getPatientOriginalPhotoFile
+      tags: [patients]
+      summary: Stream the protected original for the token holder's local technical editor
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Original private image stream
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Original photo not found
           content:
             application/json:
               schema:

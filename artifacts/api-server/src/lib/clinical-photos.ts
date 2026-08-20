@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import sharp from "sharp";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import {
   centersTable,
@@ -18,6 +19,22 @@ import { createObjectKey, privatePhotoStorage } from "./clinical-photo-storage";
 export const DEFAULT_CENTER_ID = process.env.DEFAULT_CENTER_ID ?? "default-center";
 export const DEFAULT_PROTOCOL_ID = process.env.DEFAULT_PROTOCOL_ID
   ?? (DEFAULT_CENTER_ID === "default-center" ? "capillary-initial" : `${DEFAULT_CENTER_ID}-capillary-initial`);
+const photoMutationChains = new Map<string, Promise<void>>();
+
+async function serializePhotoMutation<T>(photoId: string, operation: () => Promise<T>): Promise<T> {
+  const previous = photoMutationChains.get(photoId) ?? Promise.resolve();
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  const next = previous.catch(() => undefined).then(() => gate);
+  photoMutationChains.set(photoId, next);
+  await previous.catch(() => undefined);
+  try {
+    return await operation();
+  } finally {
+    release();
+    if (photoMutationChains.get(photoId) === next) photoMutationChains.delete(photoId);
+  }
+}
 
 const INITIAL_VIEWS = [
   ["frontal", "Vista frontal"],
@@ -322,23 +339,147 @@ export async function confirmClinicalPhoto(lead: Lead, photoId: string): Promise
 export async function createAdjustedPhoto(input: {
   lead: Lead;
   photoId: string;
-  contentType: string;
-  bytes: Buffer;
-  editParams: unknown;
+  editParams: Record<string, unknown>;
 }): Promise<PhotoStatus | null> {
-  const located = await findOwnedPhoto(input.lead, input.photoId);
-  if (!located || located.photo.status === "discarded") return null;
-  const stored = await privatePhotoStorage.put({
-    key: createObjectKey("adjusted"),
-    bytes: input.bytes,
-    contentType: input.contentType,
+  return serializePhotoMutation(input.photoId, async () => {
+    const located = await findOwnedPhoto(input.lead, input.photoId);
+    if (!located || located.photo.status !== "confirmed") return null;
+
+    const rendered = await renderTrustedTechnicalDerivative(located.photo, input.editParams);
+    const derivativeSha256 = crypto.createHash("sha256").update(rendered.bytes).digest("hex");
+    let stored: { objectPath: string } | null = null;
+    try {
+      stored = await privatePhotoStorage.put({
+        key: createObjectKey("adjusted"),
+        bytes: rendered.bytes,
+        contentType: "image/jpeg",
+      });
+      const derivativeDetails = {
+        sha256: derivativeSha256,
+        sizeBytes: rendered.bytes.length,
+        mimeType: "image/jpeg",
+        width: rendered.width,
+        height: rendered.height,
+        renderer: "server-sharp-v1",
+      };
+      const [photo] = await db.transaction(async (tx) => {
+        const [updated] = await tx.update(clinicalPhotosTable)
+          .set({
+            derivativeObjectPath: stored!.objectPath,
+            editParams: { ...input.editParams, derivative: derivativeDetails },
+          })
+          .where(and(eq(clinicalPhotosTable.id, input.photoId), eq(clinicalPhotosTable.status, "confirmed")))
+          .returning();
+        if (!updated) throw new Error("Clinical photo was no longer confirmed.");
+        await tx.insert(photoAuditEventsTable).values({
+          id: uid(18),
+          photoId: updated.id,
+          evaluationId: updated.evaluationId,
+          action: "adjusted_version_created",
+          actorType: "patient",
+          actorId: input.lead.id,
+          details: {
+            originalSha256: located.photo.originalSha256,
+            derivativeSha256,
+            derivativeBytes: rendered.bytes.length,
+            params: input.editParams,
+            renderer: "server-sharp-v1",
+          },
+        });
+        return [updated];
+      });
+      if (located.photo.derivativeObjectPath) {
+        await privatePhotoStorage.remove(located.photo.derivativeObjectPath).catch(() => undefined);
+      }
+      return photoStatus(photo, located.view);
+    } catch (error) {
+      if (stored) await privatePhotoStorage.remove(stored.objectPath).catch(() => undefined);
+      throw error;
+    }
   });
-  const [photo] = await db.update(clinicalPhotosTable)
-    .set({ derivativeObjectPath: stored.objectPath, editParams: input.editParams })
-    .where(eq(clinicalPhotosTable.id, input.photoId))
-    .returning();
-  await writeAuditEvent(photo, "adjusted_version_created", "patient", input.lead.id, {});
-  return photoStatus(photo, located.view);
+}
+
+export async function discardAdjustedPhoto(lead: Lead, photoId: string): Promise<boolean> {
+  return serializePhotoMutation(photoId, async () => {
+    const located = await findOwnedPhoto(lead, photoId);
+    if (!located || located.photo.status !== "confirmed" || !located.photo.derivativeObjectPath) return false;
+    const derivativePath = located.photo.derivativeObjectPath;
+    const [photo] = await db.transaction(async (tx) => {
+      const [updated] = await tx.update(clinicalPhotosTable)
+        .set({ derivativeObjectPath: null, editParams: null })
+        .where(and(
+          eq(clinicalPhotosTable.id, photoId),
+          eq(clinicalPhotosTable.status, "confirmed"),
+          eq(clinicalPhotosTable.derivativeObjectPath, derivativePath),
+        ))
+        .returning();
+      if (!updated) throw new Error("Clinical derivative changed before discard.");
+      await tx.insert(photoAuditEventsTable).values({
+        id: uid(18),
+        photoId: updated.id,
+        evaluationId: updated.evaluationId,
+        action: "adjusted_version_discarded",
+        actorType: "patient",
+        actorId: lead.id,
+        details: { originalSha256: located.photo.originalSha256 },
+      });
+      return [updated];
+    });
+    await privatePhotoStorage.remove(derivativePath);
+    return Boolean(photo);
+  });
+}
+
+async function renderTrustedTechnicalDerivative(photo: ClinicalPhoto, params: Record<string, unknown>) {
+  const crop = params.crop as { x: number; y: number; width: number; height: number };
+  const original = await privatePhotoStorage.read(photo.originalObjectPath);
+  const oriented = await sharp(original.bytes, { failOn: "error", limitInputPixels: 40_000_000 })
+    .rotate()
+    .toBuffer({ resolveWithObject: true });
+  if (crop.x < 0 || crop.y < 0 || crop.x + crop.width > oriented.info.width || crop.y + crop.height > oriented.info.height) {
+    throw new Error("Technical crop did not match the normalized original.");
+  }
+  const value = (key: string) => Number(params[key]);
+  const exposure = 2 ** value("exposure");
+  const brightness = (1 + value("brightness") / 100) * exposure * (1 + (value("highlights") + value("shadows")) / 500);
+  const contrast = 1 + value("contrast") / 100;
+  const temperature = value("temperature");
+  const detail = value("clarity") + value("sharpness");
+  const pipeline = sharp(oriented.data, { failOn: "error" })
+    .extract({ left: crop.x, top: crop.y, width: crop.width, height: crop.height })
+    .rotate(value("rotation"), { background: { r: 0, g: 0, b: 0, alpha: 1 } })
+    .resize(crop.width, crop.height, { fit: "fill", withoutEnlargement: true })
+    .modulate({ brightness, saturation: 1 + value("saturation") / 100 })
+    .linear(contrast, 128 * (1 - contrast));
+  if (temperature !== 0) {
+    pipeline.tint(temperature > 0 ? { r: 255, g: 250, b: 245 } : { r: 245, g: 250, b: 255 });
+  }
+  if (value("noiseReduction") > 0) pipeline.blur(Math.min(1.2, value("noiseReduction") / 12));
+  if (detail > 0) pipeline.sharpen({ sigma: Math.min(1.2, 0.3 + detail / 30) });
+  const result = await pipeline.jpeg({ quality: 92, progressive: true }).toBuffer({ resolveWithObject: true });
+  return { bytes: result.data, width: result.info.width, height: result.info.height };
+}
+
+export async function getPatientPhotoFile(
+  lead: Lead,
+  photoId: string,
+  rendition: "original" | "adjusted",
+): Promise<{ objectPath: string; mimeType: string } | null> {
+  const located = await findOwnedPhoto(lead, photoId);
+  if (!located || located.photo.status !== "confirmed") return null;
+  const objectPath = rendition === "original"
+    ? located.photo.originalObjectPath
+    : located.photo.derivativeObjectPath;
+  if (!objectPath) return null;
+  return {
+    objectPath,
+    mimeType: rendition === "original"
+      ? located.photo.originalMimeType
+      : String((located.photo.editParams as Record<string, unknown> | null)?.derivative
+        && typeof (located.photo.editParams as Record<string, unknown>).derivative === "object"
+        ? ((located.photo.editParams as Record<string, unknown>).derivative as Record<string, unknown>).mimeType ?? "image/jpeg"
+        : "image/jpeg"),
+  };
 }
 
 export async function discardClinicalPhoto(lead: Lead, photoId: string): Promise<boolean> {

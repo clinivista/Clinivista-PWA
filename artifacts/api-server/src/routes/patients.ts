@@ -5,6 +5,8 @@ import { db, leadsTable } from "@workspace/db";
 import {
   ConfirmPatientPhotoParams,
   CreatePatientBody,
+  CreatePatientAdjustedPhotoHeader,
+  CreatePatientAdjustedPhotoParams,
   DiscardPatientPhotoParams,
   DiscardPatientPhotosParams,
   GetPatientParams,
@@ -20,12 +22,16 @@ import {
   DEFAULT_CENTER_ID,
   DEFAULT_PROTOCOL_ID,
   confirmClinicalPhoto,
+  createAdjustedPhoto,
   createClinicalPhoto,
+  discardAdjustedPhoto,
   discardAllPatientCapturePhotos,
   discardClinicalPhoto,
   ensureDefaultClinicalConfiguration,
+  getPatientPhotoFile,
   getPhotoStatusesForLead,
 } from "../lib/clinical-photos";
+import { privatePhotoStorage } from "../lib/clinical-photo-storage";
 
 const router: IRouter = Router();
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -175,6 +181,68 @@ function parseOptionalPixelDimension(value: string | undefined): number | undefi
   if (!/^\d{1,5}$/.test(value)) return null;
   const numeric = Number(value);
   return numeric > 0 && numeric <= 20_000 ? numeric : null;
+}
+
+const EDIT_NUMERIC_LIMITS = {
+  rotation: [-5, 5],
+  exposure: [-0.35, 0.35],
+  brightness: [-12, 12],
+  contrast: [-15, 15],
+  highlights: [-15, 15],
+  shadows: [-15, 15],
+  temperature: [-10, 10],
+  saturation: [-12, 12],
+  clarity: [0, 15],
+  sharpness: [0, 15],
+  noiseReduction: [0, 15],
+} as const;
+
+function parseTechnicalEditParams(value: string | undefined, original: { width: number | null; height: number | null }): Record<string, unknown> | null {
+  if (!value || value.length > 6_000 || !original.width || !original.height) return null;
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    const params = parsed as Record<string, unknown>;
+    const allowedKeys = new Set(["version", "crop", ...Object.keys(EDIT_NUMERIC_LIMITS)]);
+    if (Object.keys(params).some((key) => !allowedKeys.has(key)) || params.version !== 1) return null;
+    for (const [key, [min, max]] of Object.entries(EDIT_NUMERIC_LIMITS)) {
+      const numeric = params[key];
+      if (typeof numeric !== "number" || !Number.isFinite(numeric) || numeric < min || numeric > max) return null;
+    }
+    const crop = params.crop;
+    if (!crop || typeof crop !== "object" || Array.isArray(crop)) return null;
+    const cropValues = crop as Record<string, unknown>;
+    if (Object.keys(cropValues).some((key) => !["x", "y", "width", "height", "aspectRatio"].includes(key))) return null;
+    const numericCrop = ["x", "y", "width", "height"].every((key) => (
+      typeof cropValues[key] === "number" && Number.isFinite(cropValues[key])
+    ));
+    const cropFits = (width: number, height: number) => (
+      Number(cropValues.x) >= 0 && Number(cropValues.y) >= 0
+      && Number(cropValues.width) >= width / 1.25 && Number(cropValues.height) >= height / 1.25
+      && Number(cropValues.x) + Number(cropValues.width) <= width
+      && Number(cropValues.y) + Number(cropValues.height) <= height
+    );
+    // Browsers normalize EXIF orientation while decoding. A portrait JPEG can
+    // therefore have the same pixels as the stored original with width/height
+    // swapped; accept that equivalent orientation, never a larger pixel area.
+    if (!numericCrop || !(cropFits(original.width, original.height) || cropFits(original.height, original.width))) return null;
+    if (cropValues.aspectRatio !== undefined
+      && (typeof cropValues.aspectRatio !== "number" || !Number.isFinite(cropValues.aspectRatio)
+        || cropValues.aspectRatio < 0.5 || cropValues.aspectRatio > 2)) return null;
+    return {
+      version: 1,
+      crop: {
+        x: Math.round(Number(cropValues.x)),
+        y: Math.round(Number(cropValues.y)),
+        width: Math.round(Number(cropValues.width)),
+        height: Math.round(Number(cropValues.height)),
+        ...(cropValues.aspectRatio === undefined ? {} : { aspectRatio: Number(cropValues.aspectRatio) }),
+      },
+      ...Object.fromEntries(Object.keys(EDIT_NUMERIC_LIMITS).map((key) => [key, Number(params[key])])),
+    };
+  } catch {
+    return null;
+  }
 }
 
 const ALLOWED_TECHNICAL_WARNING_CODES = new Set(["low_resolution", "aspect_ratio", "orientation", "exposure", "low_contrast", "low_sharpness"]);
@@ -391,8 +459,93 @@ router.post("/patients/:token/photos/:photoId/confirm", async (req, res): Promis
   res.json(photo);
 });
 
+async function streamPatientPhotoRendition(req: express.Request, res: express.Response, rendition: "original" | "adjusted"): Promise<void> {
+  const params = CreatePatientAdjustedPhotoParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Solicitud inválida." });
+    return;
+  }
+  const lead = await findLeadByToken(params.data.token);
+  const photo = lead ? await getPatientPhotoFile(lead, params.data.photoId, rendition) : null;
+  if (!photo) {
+    res.status(404).json({ error: "Foto no encontrada." });
+    return;
+  }
+  try {
+    const file = await privatePhotoStorage.read(photo.objectPath);
+    res.setHeader("Content-Type", file.contentType);
+    res.setHeader("Cache-Control", "private, no-store");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Length", String(file.bytes.length));
+    res.send(file.bytes);
+  } catch {
+    res.status(404).json({ error: "Foto no encontrada." });
+  }
+}
+
+router.get("/patients/:token/photos/:photoId/original", async (req, res): Promise<void> => {
+  await streamPatientPhotoRendition(req, res, "original");
+});
+
+router.get("/patients/:token/photos/:photoId/adjusted", async (req, res): Promise<void> => {
+  await streamPatientPhotoRendition(req, res, "adjusted");
+});
+
 router.post("/patients/:token/photos/:photoId/adjusted", express.raw({ type: ["image/jpeg", "image/png", "image/webp"], limit: MAX_PHOTO_BYTES }), async (req, res): Promise<void> => {
-  res.status(403).json({ error: "La edición técnica solo está disponible desde el editor clínico autorizado." });
+  const params = CreatePatientAdjustedPhotoParams.safeParse(req.params);
+  const headers = CreatePatientAdjustedPhotoHeader.safeParse(req.headers);
+  const image = await parseImageRequest(req);
+  if (!params.success || !headers.success || !image) {
+    res.status(400).json({ error: "La versión ajustada debe ser JPEG, PNG o WebP válido." });
+    return;
+  }
+  const lead = await findLeadByToken(params.data.token);
+  if (!lead) {
+    res.status(404).json({ error: "Este enlace ya no está disponible." });
+    return;
+  }
+  const statuses = await getPhotoStatusesForLead(lead);
+  const original = statuses.find((photo) => photo.id === params.data.photoId);
+  const editParams = original ? parseTechnicalEditParams(headers.data["x-edit-params"], original) : null;
+  if (!original || !editParams) {
+    res.status(400).json({ error: "Los ajustes técnicos exceden los límites permitidos." });
+    return;
+  }
+  const photo = await createAdjustedPhoto({
+    lead,
+    photoId: params.data.photoId,
+    editParams: {
+      ...editParams,
+      original: {
+        sha256: original.sha256,
+        width: original.width,
+        height: original.height,
+      },
+      output: {
+        width: Math.round((editParams.crop as { width: number }).width),
+        height: Math.round((editParams.crop as { height: number }).height),
+      },
+    },
+  });
+  if (!photo) {
+    res.status(404).json({ error: "Foto no encontrada." });
+    return;
+  }
+  res.status(201).json(photo);
+});
+
+router.delete("/patients/:token/photos/:photoId/adjusted", async (req, res): Promise<void> => {
+  const params = CreatePatientAdjustedPhotoParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Solicitud inválida." });
+    return;
+  }
+  const lead = await findLeadByToken(params.data.token);
+  if (!lead || !(await discardAdjustedPhoto(lead, params.data.photoId))) {
+    res.status(404).json({ error: "Versión ajustada no encontrada." });
+    return;
+  }
+  res.json({ ok: true });
 });
 
 router.delete("/patients/:token/photos/:photoId", async (req, res): Promise<void> => {

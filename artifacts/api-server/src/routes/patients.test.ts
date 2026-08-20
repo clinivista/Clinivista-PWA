@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
 import express from "express";
 import request from "supertest";
+import { createHash } from "node:crypto";
+import sharp from "sharp";
 
 // Replace the real Postgres-backed db with an in-memory PGlite instance so
 // tests exercise real SQL (including the partial unique index) without
@@ -269,13 +271,13 @@ describe("Clinical photo API", () => {
     "base64",
   );
 
-  async function uploadDraft(token: string, key = "frontal") {
+  async function uploadDraft(token: string, key = "frontal", bytes = JPEG_BYTES) {
     const res = await request(app)
       .post(`/api/patients/${token}/photos`)
       .set("Content-Type", "image/jpeg")
       .set("x-photo-key", key)
       .set("x-photo-source", "upload")
-      .send(JPEG_BYTES);
+      .send(bytes);
     expect(res.status).toBe(201);
     return res.body as { id: string; originalObjectPath?: string; dataUrl?: string };
   }
@@ -413,16 +415,22 @@ describe("Clinical photo API", () => {
 
   it("keeps the original immutable while adding a separately-audited adjusted derivative", async () => {
     const lead = await createPatient();
-    const draft = await uploadDraft(lead.token);
+    const technicalOriginal = await sharp({ create: { width: 100, height: 80, channels: 3, background: "#888888" } }).jpeg().toBuffer();
+    const draft = await uploadDraft(lead.token, "frontal", technicalOriginal);
     const confirmed = await request(app).post(`/api/patients/${lead.token}/photos/${draft.id}/confirm`);
     expect(confirmed.status).toBe(200);
 
     const derivative = await request(app)
       .post(`/api/patients/${lead.token}/photos/${draft.id}/adjusted`)
       .set("Content-Type", "image/jpeg")
-      .set("x-edit-params", JSON.stringify({ brightness: 8, crop: "square" }))
-      .send(Buffer.from([...JPEG_BYTES, 0x01]));
-    expect(derivative.status).toBe(403);
+      .set("x-edit-params", JSON.stringify({
+        version: 1,
+        crop: { x: 0, y: 0, width: 100, height: 80, aspectRatio: 1.25 },
+        rotation: 0, exposure: 0, brightness: 8, contrast: 0, highlights: 0, shadows: 0,
+        temperature: 0, saturation: 0, clarity: 0, sharpness: 0, noiseReduction: 0,
+      }))
+      .send(JPEG_BYTES);
+    expect(derivative.status).toBe(201);
 
     const rows = (await pglite.exec(`
       SELECT original_object_path, derivative_object_path, original_sha256, edit_params
@@ -430,13 +438,80 @@ describe("Clinical photo API", () => {
       SELECT action FROM clinical_photo_audit_events WHERE photo_id = '${draft.id}' ORDER BY created_at;
     `)) as Array<{ rows: Array<Record<string, unknown>> }>;
     expect(rows[0].rows[0].original_object_path).toBeTruthy();
-    expect(rows[0].rows[0].derivative_object_path).toBeNull();
+    expect(rows[0].rows[0].derivative_object_path).toBeTruthy();
     expect(rows[0].rows[0].original_sha256).toHaveLength(64);
-    expect(rows[0].rows[0].edit_params).toBeNull();
+    expect(rows[0].rows[0].edit_params).toEqual(expect.objectContaining({
+      version: 1,
+      brightness: 8,
+      original: expect.objectContaining({ sha256: expect.any(String) }),
+      derivative: expect.objectContaining({ sha256: expect.any(String) }),
+    }));
+    expect((rows[0].rows[0].edit_params as { derivative: { sha256: string } }).derivative.sha256)
+      .not.toBe(createHash("sha256").update(JPEG_BYTES).digest("hex"));
     expect(rows[1].rows.map((row) => row.action)).toEqual([
       "uploaded",
       "confirmed",
+      "adjusted_version_created",
     ]);
+
+    const original = await request(app).get(`/api/patients/${lead.token}/photos/${draft.id}/original`);
+    expect(original.status).toBe(200);
+    expect(original.headers["cache-control"]).toBe("private, no-store");
+    expect(original.headers["content-type"]).toContain("image/jpeg");
+
+    const adjusted = await request(app).get(`/api/patients/${lead.token}/photos/${draft.id}/adjusted`);
+    expect(adjusted.status).toBe(200);
+    expect(adjusted.headers["cache-control"]).toBe("private, no-store");
+    expect(adjusted.headers["content-type"]).toContain("image/jpeg");
+
+    await request(app).delete(`/api/patients/${lead.token}/photos/${draft.id}/adjusted`).expect(200);
+    const afterDiscard = (await pglite.exec(`
+      SELECT original_object_path, derivative_object_path, original_sha256, edit_params
+      FROM clinical_photos WHERE id = '${draft.id}';
+      SELECT action FROM clinical_photo_audit_events WHERE photo_id = '${draft.id}' ORDER BY created_at;
+    `)) as Array<{ rows: Array<Record<string, unknown>> }>;
+    expect(afterDiscard[0].rows[0].original_object_path).toBe(rows[0].rows[0].original_object_path);
+    expect(afterDiscard[0].rows[0].original_sha256).toBe(rows[0].rows[0].original_sha256);
+    expect(afterDiscard[0].rows[0].derivative_object_path).toBeNull();
+    expect(afterDiscard[0].rows[0].edit_params).toBeNull();
+    expect(afterDiscard[1].rows.map((row) => row.action)).toContain("adjusted_version_discarded");
+  });
+
+  it("rejects an adjusted upload with values outside the conservative technical limits", async () => {
+    const lead = await createPatient();
+    const technicalOriginal = await sharp({ create: { width: 100, height: 80, channels: 3, background: "#888888" } }).jpeg().toBuffer();
+    const draft = await uploadDraft(lead.token, "frontal", technicalOriginal);
+    await request(app).post(`/api/patients/${lead.token}/photos/${draft.id}/confirm`).expect(200);
+
+    const result = await request(app)
+      .post(`/api/patients/${lead.token}/photos/${draft.id}/adjusted`)
+      .set("Content-Type", "image/jpeg")
+      .set("x-edit-params", JSON.stringify({
+        version: 1,
+        crop: { x: 0, y: 0, width: 100, height: 80 },
+        rotation: 45, exposure: 0, brightness: 0, contrast: 0, highlights: 0, shadows: 0,
+        temperature: 0, saturation: 0, clarity: 0, sharpness: 0, noiseReduction: 0,
+      }))
+      .send(JPEG_BYTES);
+    expect(result.status).toBe(400);
+
+    const rows = (await pglite.exec(`
+      SELECT derivative_object_path, edit_params FROM clinical_photos WHERE id = '${draft.id}';
+    `)) as Array<{ rows: Array<Record<string, unknown>> }>;
+    expect(rows[0].rows[0].derivative_object_path).toBeNull();
+    expect(rows[0].rows[0].edit_params).toBeNull();
+
+    const extremeCrop = await request(app)
+      .post(`/api/patients/${lead.token}/photos/${draft.id}/adjusted`)
+      .set("Content-Type", "image/jpeg")
+      .set("x-edit-params", JSON.stringify({
+        version: 1,
+        crop: { x: 0, y: 0, width: 1, height: 1 },
+        rotation: 0, exposure: 0, brightness: 0, contrast: 0, highlights: 0, shadows: 0,
+        temperature: 0, saturation: 0, clarity: 0, sharpness: 0, noiseReduction: 0,
+      }))
+      .send(JPEG_BYTES);
+    expect(extremeCrop.status).toBe(400);
   });
 
   it("rejects access across patient tokens and only discards the requested draft", async () => {

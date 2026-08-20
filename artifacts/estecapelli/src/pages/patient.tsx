@@ -3,7 +3,7 @@ import { useSearch, Link, useLocation } from "wouter";
 import {
   Camera, Check, CheckCircle2, ChevronRight, Info, ArrowLeft,
   ShieldCheck, Activity, ImagePlus, RefreshCw, Timer,
-  ChevronDown, ChevronUp, AlertCircle,
+  ChevronDown, ChevronUp, AlertCircle, SlidersHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CameraModal } from "@/components/camera-modal";
+import { PhotoEditor } from "@/components/photo-editor";
+import type { TechnicalPhotoParams } from "@/lib/photo-editor";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -109,11 +111,12 @@ interface ActivePhotoCardProps {
   pendingReview: TechnicalPhotoReview | null;
   acceptedDataUrl: string | undefined;
   savedOnServer: boolean;
-  serverState?: { status: string; review?: { warningCodes?: string[] }; hasAdjusted?: boolean };
+  serverState?: ServerPhotoState;
   onFileSelected: (key: string, file: File) => Promise<void>;
   onCameraCaptured: (key: string, dataUrl: string) => Promise<void>;
   onAccept: (key: string) => void;
   onRetake: () => void;
+  onEdit: (key: string) => void;
   isProcessing: boolean;
   photoOfLabel: string;
 }
@@ -121,6 +124,7 @@ interface ActivePhotoCardProps {
 function ActivePhotoCard({
   view, index, total, pendingDataUrl, pendingReview, acceptedDataUrl, savedOnServer, serverState,
   onFileSelected, onCameraCaptured, onAccept, onRetake, isProcessing, photoOfLabel,
+  onEdit,
 }: ActivePhotoCardProps) {
   const { key: photoKey, title, description, tip, referenceVisual, color, orientation, aspectRatio, light, distance, background } = view;
   const galleryRef = useRef<HTMLInputElement>(null);
@@ -285,6 +289,17 @@ function ActivePhotoCard({
                   <Camera className="w-4 h-4" />
                   {hasAccepted ? t.pRepeatPhoto : t.pTakePhoto}
                 </button>
+                {savedOnServer && serverState?.id && (
+                  <button
+                    type="button"
+                    onClick={() => onEdit(photoKey)}
+                    disabled={isProcessing}
+                    className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-full bg-primary/10 border border-primary/20 text-primary hover:bg-primary/15 transition-all disabled:opacity-50"
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                    Ajustes técnicos de imagen
+                  </button>
+                )}
                 <label className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-full cursor-pointer bg-[#F5F2EE] border border-[#E8E4DE] text-foreground hover:bg-[#EDE9E4] transition-all select-none ${isProcessing ? "opacity-50 pointer-events-none" : ""}`}>
                   <ImagePlus className="w-4 h-4" />
                   {hasAccepted ? t.pUploadAnother : t.pUploadDevice}
@@ -306,6 +321,18 @@ function ActivePhotoCard({
   );
 }
 
+type ServerPhotoState = {
+  id?: string;
+  status: string;
+  review?: { warningCodes?: string[] };
+  hasAdjusted?: boolean;
+  width?: number | null;
+  height?: number | null;
+  mimeType?: string;
+  sizeBytes?: number;
+  editParams?: unknown;
+};
+
 // ---------- Main component ----------
 export default function PatientFlow() {
   const searchString = useSearch();
@@ -326,7 +353,10 @@ export default function PatientFlow() {
   const [pendingPhotoSource, setPendingPhotoSource] = useState<"camera" | "upload">("upload");
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
-  const [serverPhotoStates, setServerPhotoStates] = useState<Record<string, { status: string; review?: { warningCodes?: string[] }; hasAdjusted?: boolean }>>({});
+  const [serverPhotoStates, setServerPhotoStates] = useState<Record<string, ServerPhotoState>>({});
+  const [editorPhotoKey, setEditorPhotoKey] = useState<string | null>(null);
+  const [editorSaving, setEditorSaving] = useState(false);
+  const [adjustedDiscardOpen, setAdjustedDiscardOpen] = useState(false);
   const [resumeOffer, setResumeOffer] = useState(false);
   const [exitDialog, setExitDialog] = useState<"closed" | "open" | "confirmDiscard">("closed");
   const [dirty, setDirty] = useState(false);
@@ -380,12 +410,13 @@ export default function PatientFlow() {
     let alive = true;
     fetch(`/api/patients/${encodeURIComponent(token)}/photos`)
       .then(response => response.ok ? response.json() : Promise.reject(new Error("No photo state")))
-      .then((payload: { photos?: Array<{ key: string; status: string; hasAdjusted?: boolean; captureMetadata?: { technicalReview?: { warningCodes?: string[] } } }> }) => {
+      .then((payload: { photos?: Array<{ id: string; key: string; status: string; hasAdjusted?: boolean; width?: number | null; height?: number | null; mimeType?: string; sizeBytes?: number; editParams?: unknown; captureMetadata?: { technicalReview?: { warningCodes?: string[] } } }> }) => {
         if (!alive) return;
         const confirmed = (payload.photos ?? []).filter(photo => photo.status === "confirmed");
         setSavedKeys(new Set(confirmed.map(photo => photo.key)));
         setServerPhotoStates(Object.fromEntries(confirmed.map(photo => [photo.key, {
           status: photo.status, review: photo.captureMetadata?.technicalReview, hasAdjusted: photo.hasAdjusted,
+          id: photo.id, width: photo.width, height: photo.height, mimeType: photo.mimeType, sizeBytes: photo.sizeBytes, editParams: photo.editParams,
         }])));
         if (confirmed.length > 0) setResumeOffer(true);
       })
@@ -469,6 +500,7 @@ export default function PatientFlow() {
   const handleAcceptPhoto = async (key: string) => {
     if (!pendingPhoto || !pendingPhotoFile || !patientToken) return;
     setProcessingPhoto(key);
+    let confirmedPhoto: ServerPhotoState | null = null;
     try {
       const contentType = pendingPhotoFile.type || "image/jpeg";
       const upload = await fetch(`/api/patients/${encodeURIComponent(patientToken)}/photos`, {
@@ -496,6 +528,7 @@ export default function PatientFlow() {
         method: "POST",
       });
       if (!confirmation.ok) throw new Error("Confirmation failed");
+      confirmedPhoto = await confirmation.json() as ServerPhotoState;
     } catch {
       toast({ variant: "destructive", title: t.pPhotoError, description: t.pSaveError });
       return;
@@ -508,11 +541,83 @@ export default function PatientFlow() {
     setPendingPhotoFile(null);
     setPendingReview(null);
     setSavedKeys(prev => new Set([...prev, key]));
-    setServerPhotoStates(prev => ({ ...prev, [key]: { status: "confirmed", review: pendingReview ? { warningCodes: pendingReview.warningCodes } : undefined, hasAdjusted: false } }));
+    setServerPhotoStates(prev => ({
+      ...prev,
+      [key]: {
+        ...confirmedPhoto,
+        status: "confirmed",
+        review: pendingReview ? { warningCodes: pendingReview.warningCodes } : undefined,
+        hasAdjusted: false,
+      },
+    }));
     saveDraft();
     const nextMissing = PHOTO_REQUIREMENTS.findIndex(r => !next[r.key] && !savedKeys.has(r.key));
     if (nextMissing !== -1) setCurrentPhotoIndex(nextMissing);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const editorDraftKey = (photoId: string) => `estecapelli.technical-photo-draft.${photoId}`;
+
+  const openTechnicalEditor = (key: string) => {
+    if (!patientToken || !serverPhotoStates[key]?.id) {
+      toast({ variant: "destructive", title: t.pPhotoError, description: "La foto debe estar confirmada antes de ajustarla." });
+      return;
+    }
+    setEditorPhotoKey(key);
+  };
+
+  const saveTechnicalAdjustment = async (
+    params: TechnicalPhotoParams,
+    blob: Blob,
+    metadata: { width: number; height: number },
+  ) => {
+    const key = editorPhotoKey;
+    const state = key ? serverPhotoStates[key] : undefined;
+    if (!key || !state?.id || !patientToken) throw new Error("No encontramos la fotografía original.");
+    setEditorSaving(true);
+    try {
+      const response = await fetch(`/api/patients/${encodeURIComponent(patientToken)}/photos/${encodeURIComponent(state.id)}/adjusted`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "image/jpeg",
+          "x-edit-params": JSON.stringify(params),
+          "x-adjusted-width": String(metadata.width),
+          "x-adjusted-height": String(metadata.height),
+        },
+        body: blob,
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(error?.error ?? "No pudimos guardar la versión ajustada.");
+      }
+      const updated = await response.json() as ServerPhotoState;
+      setServerPhotoStates((current) => ({ ...current, [key]: { ...current[key], ...updated, hasAdjusted: true } }));
+      localStorage.removeItem(editorDraftKey(state.id));
+      toast({ title: "Versión ajustada guardada", description: "El original permanece protegido y sin cambios." });
+      return `/api/patients/${encodeURIComponent(patientToken)}/photos/${encodeURIComponent(state.id)}/adjusted?version=${Date.now()}`;
+    } finally {
+      setEditorSaving(false);
+    }
+  };
+
+  const discardTechnicalAdjustment = async () => {
+    const key = editorPhotoKey;
+    const state = key ? serverPhotoStates[key] : undefined;
+    if (!key || !state?.id || !patientToken) return;
+    setEditorSaving(true);
+    try {
+      const response = await fetch(`/api/patients/${encodeURIComponent(patientToken)}/photos/${encodeURIComponent(state.id)}/adjusted`, { method: "DELETE" });
+      if (!response.ok) throw new Error("No pudimos descartar la versión ajustada.");
+      localStorage.removeItem(editorDraftKey(state.id));
+      setServerPhotoStates((current) => ({ ...current, [key]: { ...current[key], hasAdjusted: false, editParams: undefined } }));
+      setAdjustedDiscardOpen(false);
+      setEditorPhotoKey(null);
+      toast({ title: "Versión ajustada descartada", description: "El archivo original se conservó sin cambios." });
+    } catch (error) {
+      toast({ variant: "destructive", title: t.pPhotoError, description: error instanceof Error ? error.message : t.pSaveError });
+    } finally {
+      setEditorSaving(false);
+    }
   };
 
   // "Repetir" an already-accepted photo: only jumps to that photo, nothing else is cleared
@@ -605,11 +710,15 @@ export default function PatientFlow() {
 
   const clearLocalDraft = () => {
     Object.values(photos).forEach(url => { if (url.startsWith("blob:")) URL.revokeObjectURL(url); });
+    Object.values(serverPhotoStates).forEach((photo) => {
+      if (photo.id) localStorage.removeItem(editorDraftKey(photo.id));
+    });
     setPhotos({});
     clearPendingPreview();
     setSavedKeys(new Set());
     setServerPhotoStates({});
     setCurrentPhotoIndex(0);
+    setEditorPhotoKey(null);
     setDirty(false);
   };
 
@@ -685,6 +794,16 @@ export default function PatientFlow() {
   const completedPhotos = PHOTO_REQUIREMENTS.filter(r => isPhotoDone(r.key)).length;
   const isPending = createMutation.isPending || updateMutation.isPending;
   const activeReq = PHOTO_REQUIREMENTS[currentPhotoIndex];
+  const editorState = editorPhotoKey ? serverPhotoStates[editorPhotoKey] : undefined;
+  const editorView = editorPhotoKey ? PHOTO_REQUIREMENTS.find((view) => view.key === editorPhotoKey) : undefined;
+  const editorDraft = (() => {
+    if (!editorState?.id) return editorState?.editParams;
+    try {
+      return JSON.parse(localStorage.getItem(editorDraftKey(editorState.id)) ?? "null") ?? editorState.editParams;
+    } catch {
+      return editorState.editParams;
+    }
+  })();
 
   if (isLoadingExisting) {
     return (
@@ -1194,6 +1313,7 @@ export default function PatientFlow() {
               onCameraCaptured={handleCameraCapture}
               onAccept={handleAcceptPhoto}
               onRetake={clearPendingPreview}
+              onEdit={openTechnicalEditor}
               isProcessing={processingPhoto === activeReq.key}
               photoOfLabel={t.pPhotoOf.replace("{n}", String(currentPhotoIndex + 1)).replace("{total}", "5")}
             />
@@ -1334,6 +1454,43 @@ export default function PatientFlow() {
           )}
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={adjustedDiscardOpen} onOpenChange={setAdjustedDiscardOpen}>
+        <AlertDialogContent className="rounded-3xl max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Descartar la versión ajustada?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará únicamente la copia ajustada y sus parámetros. El archivo original se conservará protegido y sin cambios.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="mt-2 flex flex-col gap-2.5">
+            <Button variant="destructive" disabled={editorSaving} onClick={discardTechnicalAdjustment} className="h-12 rounded-full font-semibold">
+              {editorSaving ? t.pProcessing : "Descartar versión ajustada"}
+            </Button>
+            <Button variant="outline" disabled={editorSaving} onClick={() => setAdjustedDiscardOpen(false)} className="h-12 rounded-full border-[#E8E4DE] bg-white font-semibold hover:bg-[#F5F2EE]">
+              {t.cancel}
+            </Button>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {editorPhotoKey && editorState?.id && editorView && patientToken && (
+        <PhotoEditor
+          originalUrl={`/api/patients/${encodeURIComponent(patientToken)}/photos/${encodeURIComponent(editorState.id)}/original`}
+          photoLabel={editorView.title}
+          initialParams={editorDraft}
+          isSaving={editorSaving}
+          hasSavedAdjustment={Boolean(editorState.hasAdjusted)}
+          adjustedUrl={editorState.hasAdjusted ? `/api/patients/${encodeURIComponent(patientToken)}/photos/${encodeURIComponent(editorState.id)}/adjusted` : undefined}
+          onClose={() => setEditorPhotoKey(null)}
+          onDraftChange={(params) => {
+            localStorage.setItem(editorDraftKey(editorState.id!), JSON.stringify(params));
+            setDirty(true);
+          }}
+          onDiscardAdjustment={() => setAdjustedDiscardOpen(true)}
+          onSave={saveTechnicalAdjustment}
+        />
+      )}
     </div>
   );
 }

@@ -513,7 +513,7 @@ export const ConfirmPatientPhotoResponse = zod.object({
 
 
 /**
- * @summary Reserved for the technical editor (not available in patient capture)
+ * @summary Save a validated technical derivative while preserving the private original
  */
 export const CreatePatientAdjustedPhotoParams = zod.object({
   "token": zod.coerce.string(),
@@ -524,7 +524,59 @@ export const CreatePatientAdjustedPhotoHeader = zod.object({
   "x-edit-params": zod.string().optional()
 })
 
-export const CreatePatientAdjustedPhotoResponse = zod.void()
+export const CreatePatientAdjustedPhotoResponse = zod.object({
+  "id": zod.string(),
+  "key": zod.string(),
+  "label": zod.string(),
+  "status": zod.enum(['draft', 'confirmed', 'superseded', 'discarded']),
+  "source": zod.enum(['camera', 'upload']),
+  "mimeType": zod.string(),
+  "sizeBytes": zod.number(),
+  "sha256": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "confirmedAt": zod.coerce.date().nullish(),
+  "hasOriginal": zod.boolean(),
+  "hasAdjusted": zod.boolean(),
+  "width": zod.number().nullish(),
+  "height": zod.number().nullish(),
+  "captureMetadata": zod.unknown().optional(),
+  "editParams": zod.unknown().optional()
+})
+
+
+/**
+ * @summary Discard only a technical derivative; the original remains protected
+ */
+export const DiscardPatientAdjustedPhotoParams = zod.object({
+  "token": zod.coerce.string(),
+  "photoId": zod.coerce.string()
+})
+
+export const DiscardPatientAdjustedPhotoResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Stream the server-rendered technical derivative for patient review
+ */
+export const GetPatientAdjustedPhotoFileParams = zod.object({
+  "token": zod.coerce.string(),
+  "photoId": zod.coerce.string()
+})
+
+export const GetPatientAdjustedPhotoFileResponse = zod.unknown()
+
+
+/**
+ * @summary Stream the protected original for the token holder's local technical editor
+ */
+export const GetPatientOriginalPhotoFileParams = zod.object({
+  "token": zod.coerce.string(),
+  "photoId": zod.coerce.string()
+})
+
+export const GetPatientOriginalPhotoFileResponse = zod.unknown()
 
 
 /**
