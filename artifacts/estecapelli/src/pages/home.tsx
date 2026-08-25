@@ -17,7 +17,11 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
           <Link href="/">
             <div className="flex items-center cursor-pointer group">
-              <BrandLogo className="h-10 w-[132px] group-hover:scale-[1.03] transition-transform" />
+              <BrandLogo
+                className="h-10 w-10 rounded-full group-hover:scale-105 transition-transform"
+                imageClassName="scale-[1.65] -translate-y-[10%]"
+                alt="Clinivista"
+              />
             </div>
           </Link>
 
@@ -228,7 +232,7 @@ export default function Home() {
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
               <Link href="/">
                 <div className="flex items-center cursor-pointer group">
-                  <BrandLogo className="h-12 w-[154px] group-hover:scale-[1.03] transition-transform" />
+                  <BrandLogo className="h-24 w-24 rounded-2xl group-hover:scale-[1.03] transition-transform" />
                   <div>
                     <div className="text-xs text-gray-400 font-medium">{t.footerProtocol}</div>
                   </div>

@@ -861,7 +861,10 @@ export default function PatientFlow() {
       <header className="bg-white px-5 py-4 shadow-sm border-b border-[#E8E4DE] flex items-center justify-between sticky top-0 z-40">
         <Link href="/">
           <div className="flex items-center cursor-pointer group">
-            <BrandLogo className="h-12 w-[156px] group-hover:scale-[1.03] transition-transform" />
+            <BrandLogo
+              className="h-11 w-11 rounded-full group-hover:scale-105 transition-transform"
+              imageClassName="scale-[1.65] -translate-y-[10%]"
+            />
           </div>
         </Link>
 

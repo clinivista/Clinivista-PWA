@@ -51,33 +51,33 @@
 }
 
 :root {
-  /* Clinivista Palette: Vivid Violet-Indigo (#5B4CF5) and Charcoal (#1A1A2E) */
-  --background: 250 50% 99%;       /* off-white with soft lavender tint */
-  --foreground: 240 65% 14%;       /* rich charcoal #1A1A2E */
+  /* Clinivista gloss palette: mint/turquoise, clinical blue and violet */
+  --background: 36 27% 95%;
+  --foreground: 230 42% 15%;
 
-  --border: 240 20% 90%;
-  --input: 240 20% 90%;
-  --ring: 249 89% 63%;             /* violet-indigo #5B4CF5 */
+  --border: 220 24% 87%;
+  --input: 220 24% 87%;
+  --ring: 249 89% 63%;
 
   --card: 0 0% 100%;
-  --card-foreground: 240 65% 14%;
-  --card-border: 240 20% 94%;
+  --card-foreground: 230 42% 15%;
+  --card-border: 220 24% 91%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 240 65% 14%;
-  --popover-border: 240 20% 90%;
+  --popover-foreground: 230 42% 15%;
+  --popover-border: 220 24% 87%;
 
-  --primary: 249 89% 63%;          /* vivid violet-indigo #5B4CF5 */
+  --primary: 249 89% 63%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 249 50% 96%;        /* soft lavender surface */
-  --secondary-foreground: 240 65% 14%;
+  --secondary: 165 44% 91%;
+  --secondary-foreground: 230 42% 15%;
 
-  --muted: 249 30% 96%;
-  --muted-foreground: 240 20% 48%;
+  --muted: 36 22% 91%;
+  --muted-foreground: 225 18% 45%;
 
-  --accent: 249 80% 96%;           /* light indigo tint */
-  --accent-foreground: 249 89% 50%;
+  --accent: 193 70% 94%;
+  --accent-foreground: 205 80% 35%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
