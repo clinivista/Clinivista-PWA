@@ -146,8 +146,7 @@ export default function Admin() {
           <Link href="/">
             <div className="flex items-center cursor-pointer group">
               <BrandLogo
-                className="h-12 w-12 rounded-full group-hover:scale-105 transition-transform"
-                imageClassName="scale-[1.65] -translate-y-[10%]"
+                className="h-14 w-14 rounded-xl group-hover:scale-105 transition-transform"
               />
             </div>
           </Link>
@@ -514,8 +513,7 @@ export default function Admin() {
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground font-medium">
                   <BrandLogo
-                    className="h-12 w-12 mb-4 rounded-full animate-pulse"
-                    imageClassName="scale-[1.65] -translate-y-[10%]"
+                    className="h-14 w-14 mb-4 rounded-xl animate-pulse"
                   />
                   {t.adminLoadingLead}
                 </div>

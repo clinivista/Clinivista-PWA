@@ -18,8 +18,7 @@ export default function Home() {
           <Link href="/">
             <div className="flex items-center cursor-pointer group">
               <BrandLogo
-                className="h-10 w-10 rounded-full group-hover:scale-105 transition-transform"
-                imageClassName="scale-[1.65] -translate-y-[10%]"
+                className="h-12 w-12 rounded-xl group-hover:scale-105 transition-transform"
                 alt="Clinivista"
               />
             </div>
