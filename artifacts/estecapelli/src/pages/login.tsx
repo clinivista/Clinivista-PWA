@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
-import { Activity, ArrowRight, Lock } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAdminLogin, useGetAuthMe, getGetAuthMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/lib/language";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -58,11 +59,8 @@ export default function Login() {
         <div className="absolute inset-0 bg-gradient-to-r from-[#0B1F33]/95 via-[#0B1F33]/70 to-[#0B1F33]/40" />
         <div className="relative z-10 p-16 max-w-2xl w-full">
           <Link href="/">
-            <div className="flex items-center gap-3 mb-10 cursor-pointer group w-fit">
-              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform">
-                <Activity className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-3xl font-extrabold text-white tracking-tight">Clinivista</span>
+            <div className="flex items-center mb-10 cursor-pointer group w-fit">
+              <BrandLogo className="h-16 w-[205px] group-hover:scale-[1.03] transition-transform" />
             </div>
           </Link>
 
@@ -92,11 +90,8 @@ export default function Login() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <Link href="/">
-            <div className="lg:hidden flex items-center justify-center gap-3 mb-10 cursor-pointer group">
-              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-                <Activity className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-2xl font-extrabold text-foreground tracking-tight">Clinivista</span>
+            <div className="lg:hidden flex items-center justify-center mb-10 cursor-pointer group">
+              <BrandLogo className="h-14 w-[180px] group-hover:scale-[1.03] transition-transform" />
             </div>
           </Link>
 

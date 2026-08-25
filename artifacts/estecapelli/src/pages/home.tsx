@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Activity, ChevronDown, ArrowRight, Check } from "lucide-react";
+import { ChevronDown, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function Home() {
   const { lang, setLang, t } = useLanguage();
@@ -15,11 +16,8 @@ export default function Home() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-[#0B1F33]/90 backdrop-blur-md border-b border-white/10">
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
           <Link href="/">
-            <div className="flex items-center gap-2.5 cursor-pointer group">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-md shadow-primary/30 group-hover:scale-105 transition-transform">
-                <Activity className="w-4 h-4 text-white" />
-              </div>
-              <span className="font-extrabold text-lg text-white tracking-tight">Clinivista</span>
+            <div className="flex items-center cursor-pointer group">
+              <BrandLogo className="h-10 w-[132px] group-hover:scale-[1.03] transition-transform" />
             </div>
           </Link>
 
@@ -229,12 +227,9 @@ export default function Home() {
           <div className="bg-white rounded-[2rem] p-8 shadow-sm mb-6">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
               <Link href="/">
-                <div className="flex items-center gap-2.5 cursor-pointer group">
-                  <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-                    <Activity className="w-4 h-4 text-white" />
-                  </div>
+                <div className="flex items-center cursor-pointer group">
+                  <BrandLogo className="h-12 w-[154px] group-hover:scale-[1.03] transition-transform" />
                   <div>
-                    <div className="font-extrabold text-[#0B1F33] text-base leading-tight">Clinivista</div>
                     <div className="text-xs text-gray-400 font-medium">{t.footerProtocol}</div>
                   </div>
                 </div>

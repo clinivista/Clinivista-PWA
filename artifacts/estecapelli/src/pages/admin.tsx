@@ -4,7 +4,7 @@ import { format, parseISO } from "date-fns";
 import { es as dateFnsEs } from "date-fns/locale";
 import {
   Users, LogOut, CheckCircle2, Link as LinkIcon,
-  Search, ChevronRight, X, Phone, Activity, AlertTriangle, Camera, Mail, CreditCard, Trash2, ChevronDown, Check
+  Search, ChevronRight, X, Phone, AlertTriangle, Camera, Mail, CreditCard, Trash2, ChevronDown, Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
+import { BrandLogo } from "@/components/brand-logo";
 
 const STATUS_COLORS: Record<string, string> = {
   nuevo: "bg-blue-100 text-blue-700",
@@ -143,11 +144,8 @@ export default function Admin() {
       <aside className="w-full md:w-72 bg-[#0B1F33] text-white flex-shrink-0 flex flex-col md:min-h-[100dvh] shadow-2xl relative z-30 md:rounded-r-[2.5rem]">
         <div className="p-7 flex items-center gap-3 border-b border-white/10">
           <Link href="/">
-            <div className="flex items-center gap-3 cursor-pointer group">
-              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-md shadow-primary/30 group-hover:scale-105 transition-transform">
-                <Activity className="w-5 h-5 text-white" />
-              </div>
-              <span className="font-extrabold text-2xl tracking-tight group-hover:text-white/80 transition-colors">Clinivista</span>
+            <div className="flex items-center cursor-pointer group">
+              <BrandLogo className="h-14 w-[180px] group-hover:scale-[1.03] transition-transform" />
             </div>
           </Link>
         </div>
@@ -479,7 +477,7 @@ export default function Admin() {
                     <div className="bg-white p-6 md:p-8 rounded-[1.75rem] shadow-sm">
                       <h3 className="text-lg font-extrabold text-foreground mb-5 flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Activity className="w-4 h-4 text-primary" />
+                          <span className="h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
                         </div>
                         {t.adminClinicalNotes}
                       </h3>
@@ -512,7 +510,7 @@ export default function Admin() {
                 </>
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground font-medium">
-                  <Activity className="w-8 h-8 animate-pulse text-primary mb-4" />
+                  <BrandLogo className="h-12 w-[156px] mb-4 animate-pulse" />
                   {t.adminLoadingLead}
                 </div>
               )}

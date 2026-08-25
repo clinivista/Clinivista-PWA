@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearch, Link, useLocation } from "wouter";
 import {
   Camera, Check, CheckCircle2, ChevronRight, Info, ArrowLeft,
-  ShieldCheck, Activity, ImagePlus, RefreshCw, Timer,
+  ShieldCheck, ImagePlus, RefreshCw, Timer,
   ChevronDown, ChevronUp, AlertCircle, SlidersHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ import { useLanguage, LANGS, type LangCode } from "@/lib/language";
 import { formatRut, validateRut } from "@/lib/rut";
 import { getCapillaryPhotoProtocol, type PhotoProtocolView } from "@/lib/photo-protocol";
 import { formatBytes, reviewPhotoTechnicalQuality, type TechnicalPhotoReview } from "@/lib/photo-quality";
+import { BrandLogo } from "@/components/brand-logo";
 
 async function dataUrlToFile(dataUrl: string, name: string): Promise<File> {
   const response = await fetch(dataUrl);
@@ -859,11 +860,8 @@ export default function PatientFlow() {
       {/* Header */}
       <header className="bg-white px-5 py-4 shadow-sm border-b border-[#E8E4DE] flex items-center justify-between sticky top-0 z-40">
         <Link href="/">
-          <div className="flex items-center gap-2.5 cursor-pointer group">
-            <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm shadow-primary/20">
-              <Activity className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-foreground tracking-tight">Clinivista</span>
+          <div className="flex items-center cursor-pointer group">
+            <BrandLogo className="h-12 w-[156px] group-hover:scale-[1.03] transition-transform" />
           </div>
         </Link>
 
