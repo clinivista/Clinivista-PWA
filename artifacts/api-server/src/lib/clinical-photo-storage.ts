@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
+import { AwsClient } from "aws4fetch";
 
 export type StoredPhotoObject = {
   objectPath: string;
@@ -8,13 +9,12 @@ export type StoredPhotoObject = {
 };
 
 export interface PrivatePhotoStorage {
-  readonly mode: "app-storage" | "local-development-only";
+  readonly mode: "s3-private-bucket" | "local-development-only";
   put(input: { key: string; bytes: Buffer; contentType: string }): Promise<StoredPhotoObject>;
   read(objectPath: string): Promise<{ bytes: Buffer; contentType: string }>;
   remove(objectPath: string): Promise<void>;
 }
 
-const SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
 const LOCAL_ROOT = process.env.CLINICAL_PHOTO_LOCAL_DIR ?? "/tmp/estecapelli-private-photos";
 
 function assertObjectPath(value: string): string {
@@ -57,51 +57,65 @@ class LocalDevelopmentPhotoStorage implements PrivatePhotoStorage {
   }
 }
 
-function parsePrivateDirectory(): { bucketName: string; prefix: string } {
-  const privateDir = process.env.PRIVATE_OBJECT_DIR ?? "";
-  const parts = privateDir.replace(/^\/+/, "").split("/").filter(Boolean);
-  if (parts.length < 2) {
-    throw new Error("PRIVATE_OBJECT_DIR is not configured.");
+const SIGNED_URL_TTL_SECONDS = 5 * 60;
+
+// S3-compatible private bucket (Cloudflare R2 in production). All four are required together.
+const S3_ENV_VARS = ["S3_ENDPOINT", "S3_BUCKET", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY"] as const;
+
+export type S3Config = {
+  endpoint: string;
+  bucket: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  region: string;
+};
+
+export function readS3Config(): S3Config | undefined {
+  const configured = S3_ENV_VARS.filter((name) => process.env[name]);
+  if (configured.length === 0) return undefined;
+  if (configured.length < S3_ENV_VARS.length) {
+    const missing = S3_ENV_VARS.filter((name) => !process.env[name]);
+    throw new Error(`Clinical photo storage is partially configured; missing ${missing.join(", ")}.`);
   }
-  return { bucketName: parts[0], prefix: parts.slice(1).join("/") };
+  const endpoint = new URL(process.env.S3_ENDPOINT!);
+  if (endpoint.protocol !== "https:") {
+    throw new Error("S3_ENDPOINT must be an https:// URL.");
+  }
+  return {
+    endpoint: endpoint.origin,
+    bucket: process.env.S3_BUCKET!,
+    accessKeyId: process.env.S3_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
+    // R2 uses "auto"; set S3_REGION for other S3-compatible providers.
+    region: process.env.S3_REGION || "auto",
+  };
 }
 
-async function signedObjectUrl(
-  objectName: string,
-  method: "GET" | "PUT" | "DELETE",
-): Promise<string> {
-  const { bucketName } = parsePrivateDirectory();
-  const response = await fetch(`${SIDECAR_ENDPOINT}/object-storage/signed-object-url`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      bucket_name: bucketName,
-      object_name: objectName,
-      method,
-      expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
-    }),
-    signal: AbortSignal.timeout(30_000),
-  });
-  if (!response.ok) {
-    throw new Error(`Unable to sign private object request (${response.status}).`);
+export class S3PhotoStorage implements PrivatePhotoStorage {
+  readonly mode = "s3-private-bucket" as const;
+  private readonly client: AwsClient;
+
+  constructor(private readonly config: S3Config) {
+    this.client = new AwsClient({
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
+      service: "s3",
+      region: config.region,
+    });
   }
-  const data = await response.json() as { signed_url?: string };
-  if (!data.signed_url) throw new Error("Private object signing returned no URL.");
-  return data.signed_url;
-}
 
-class AppStoragePhotoStorage implements PrivatePhotoStorage {
-  readonly mode = "app-storage" as const;
-
-  private objectName(objectPath: string): string {
-    const pathPart = assertObjectPath(objectPath).replace("/objects/", "");
-    const { prefix } = parsePrivateDirectory();
-    return `${prefix}/${pathPart}`;
+  // Short-lived presigned URL, used only server-side: the browser never sees bucket URLs.
+  private async signedUrl(objectPath: string, method: "GET" | "PUT" | "DELETE"): Promise<string> {
+    const objectKey = assertObjectPath(objectPath).replace("/objects/", "");
+    const url = new URL(`${this.config.endpoint}/${this.config.bucket}/${objectKey}`);
+    url.searchParams.set("X-Amz-Expires", String(SIGNED_URL_TTL_SECONDS));
+    const signed = await this.client.sign(url.toString(), { method, aws: { signQuery: true } });
+    return signed.url;
   }
 
   async put(input: { key: string; bytes: Buffer; contentType: string }): Promise<StoredPhotoObject> {
     const objectPath = `/objects/clinical/${input.key}`;
-    const response = await fetch(await signedObjectUrl(this.objectName(objectPath), "PUT"), {
+    const response = await fetch(await this.signedUrl(objectPath, "PUT"), {
       method: "PUT",
       headers: { "Content-Type": input.contentType, "Cache-Control": "private, no-store" },
       body: input.bytes,
@@ -112,7 +126,7 @@ class AppStoragePhotoStorage implements PrivatePhotoStorage {
   }
 
   async read(objectPath: string): Promise<{ bytes: Buffer; contentType: string }> {
-    const response = await fetch(await signedObjectUrl(this.objectName(objectPath), "GET"), {
+    const response = await fetch(await this.signedUrl(objectPath, "GET"), {
       signal: AbortSignal.timeout(60_000),
     });
     if (!response.ok) throw new Error(`Private photo was unavailable (${response.status}).`);
@@ -123,7 +137,7 @@ class AppStoragePhotoStorage implements PrivatePhotoStorage {
   }
 
   async remove(objectPath: string): Promise<void> {
-    const response = await fetch(await signedObjectUrl(this.objectName(objectPath), "DELETE"), {
+    const response = await fetch(await this.signedUrl(objectPath, "DELETE"), {
       method: "DELETE",
       signal: AbortSignal.timeout(30_000),
     });
@@ -134,11 +148,12 @@ class AppStoragePhotoStorage implements PrivatePhotoStorage {
 }
 
 function createPrivatePhotoStorage(): PrivatePhotoStorage {
-  if (process.env.NODE_ENV !== "test" && process.env.PRIVATE_OBJECT_DIR) {
-    return new AppStoragePhotoStorage();
+  const s3Config = process.env.NODE_ENV === "test" ? undefined : readS3Config();
+  if (s3Config) {
+    return new S3PhotoStorage(s3Config);
   }
   if (process.env.NODE_ENV === "production") {
-    throw new Error("Clinical photos require PRIVATE_OBJECT_DIR in production.");
+    throw new Error(`Clinical photos require a private bucket in production: set ${S3_ENV_VARS.join(", ")}.`);
   }
   return new LocalDevelopmentPhotoStorage();
 }

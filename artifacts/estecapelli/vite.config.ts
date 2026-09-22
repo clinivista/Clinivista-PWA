@@ -27,6 +27,8 @@ if (!basePath) {
   );
 }
 
+const apiProxyTarget = process.env.API_PROXY_TARGET;
+
 export default defineConfig({
   base: basePath,
   plugins: [
@@ -72,6 +74,10 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    // Local development only: Replit's router already serves /api on the same origin.
+    ...(apiProxyTarget
+      ? { proxy: { '/api': { target: apiProxyTarget, changeOrigin: true } } }
+      : {}),
   },
   preview: {
     port,
