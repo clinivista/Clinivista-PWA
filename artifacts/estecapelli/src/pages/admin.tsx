@@ -4,7 +4,7 @@ import { format, parseISO } from "date-fns";
 import { es as dateFnsEs } from "date-fns/locale";
 import {
   Users, LogOut, CheckCircle2, Link as LinkIcon,
-  Search, ChevronRight, X, Phone, AlertTriangle, Camera, Mail, CreditCard, Trash2, ChevronDown, Check
+  Search, ChevronRight, X, Phone, AlertTriangle, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,7 @@ export default function Admin() {
   const queryClient = useQueryClient();
   const { t, lang, setLang } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
 
   const STATUS_LABELS: Record<string, string> = {
@@ -96,6 +97,13 @@ export default function Admin() {
     if (!isAuthLoading && !authStatus?.authenticated) setLocation("/admin/login");
   }, [isAuthLoading, authStatus, setLocation]);
 
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMobileNavOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileNavOpen]);
+
   if (isAuthLoading || !authStatus?.authenticated) return <div className="min-h-[100dvh] bg-[#F5F2EE]" />;
 
   const handleLogout = () => {
@@ -139,10 +147,33 @@ export default function Admin() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#F5F2EE] flex flex-col md:flex-row font-sans selection:bg-primary/20">
+    <div className="h-[100dvh] bg-[#F5F2EE] flex flex-col md:flex-row font-sans selection:bg-primary/20">
+      {/* Mobile top bar */}
+      <div className="md:hidden bg-[#0B1F33] text-white px-4 py-3 flex items-center justify-between shrink-0 z-30">
+        <Link href="/">
+          <div className="flex items-center cursor-pointer">
+            <BrandLogo className="h-10 w-10 rounded-lg" />
+          </div>
+        </Link>
+        <button
+          type="button"
+          onClick={() => setMobileNavOpen(true)}
+          aria-label={t.adminMenuOpen}
+          aria-expanded={mobileNavOpen}
+          className="w-11 h-11 rounded-2xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+      </div>
+
+      {/* Mobile nav overlay */}
+      {mobileNavOpen && (
+        <div className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setMobileNavOpen(false)} />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-full md:w-72 bg-[#0B1F33] text-white flex-shrink-0 flex flex-col md:min-h-[100dvh] shadow-2xl relative z-30 md:rounded-r-[2.5rem]">
-        <div className="p-7 flex items-center gap-3 border-b border-white/10">
+      <aside className={`fixed inset-y-0 left-0 w-72 max-w-[85vw] z-50 transition-transform duration-300 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} md:static md:translate-x-0 md:max-w-none md:z-30 bg-[#0B1F33] text-white flex-shrink-0 flex flex-col md:min-h-[100dvh] shadow-2xl rounded-r-[2rem] md:rounded-r-[2.5rem] overflow-y-auto`}>
+        <div className="p-7 flex items-center justify-between gap-3 border-b border-white/10">
           <Link href="/">
             <div className="flex items-center cursor-pointer group">
               <BrandLogo
@@ -150,6 +181,14 @@ export default function Admin() {
               />
             </div>
           </Link>
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen(false)}
+            aria-label={t.adminMenuClose}
+            className="md:hidden w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         <div className="p-6 flex-1">
@@ -198,7 +237,9 @@ export default function Admin() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col h-[100dvh] overflow-hidden relative">
+      <main className="flex-1 flex flex-col min-h-0 md:h-[100dvh] overflow-hidden relative">
+        {/* Mobile: whole content scrolls; desktop: only the patient list scrolls */}
+        <div className="flex-1 min-h-0 flex flex-col overflow-y-auto md:overflow-hidden">
         {authStatus.demoPassword && (
           <div className="bg-amber-50 text-amber-800 px-4 py-3 text-sm font-semibold flex items-center gap-2 justify-center shrink-0 border-b border-amber-200">
             <AlertTriangle className="w-5 h-5 shrink-0" />
@@ -207,14 +248,14 @@ export default function Admin() {
         )}
 
         {/* Topbar */}
-        <header className="bg-white border-b border-[#E8E4DE] p-6 md:px-10 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 z-20">
+        <header className="bg-white border-b border-[#E8E4DE] p-4 sm:p-6 md:px-10 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 z-20">
           <div>
-            <h1 className="text-2xl font-extrabold text-foreground tracking-tight">{t.adminDashTitle}</h1>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">{t.adminDashTitle}</h1>
             <p className="text-sm text-muted-foreground font-medium mt-1">{t.adminDashSub}</p>
           </div>
           <Button
             onClick={() => { setIsInviteOpen(true); setInviteResult(null); inviteForm.reset(); }}
-            className="gap-2 h-12 px-6 rounded-full font-bold shadow-lg shadow-primary/20 shrink-0"
+            className="gap-2 h-12 px-6 rounded-full font-bold shadow-lg shadow-primary/20 shrink-0 w-full md:w-auto"
           >
             <LinkIcon className="w-4 h-4" />
             {t.adminNewLink}
@@ -222,30 +263,30 @@ export default function Admin() {
         </header>
 
         {/* Stats Strip — floating cards on bg */}
-        <div className="px-6 md:px-10 py-6 shrink-0 grid grid-cols-2 md:grid-cols-4 gap-4 bg-[#F5F2EE]">
-          <div className="bg-white p-5 rounded-[1.5rem] shadow-sm hover:-translate-y-0.5 transition-transform">
+        <div className="px-4 sm:px-6 md:px-10 py-4 sm:py-6 shrink-0 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 bg-[#F5F2EE]">
+          <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm hover:-translate-y-0.5 transition-transform">
             <p className="text-xs text-muted-foreground font-bold mb-2 uppercase tracking-wider">{t.adminTotal}</p>
-            <p className="text-3xl font-extrabold text-foreground">{stats?.total || 0}</p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-foreground">{stats?.total || 0}</p>
           </div>
-          <div className="bg-white p-5 rounded-[1.5rem] shadow-sm ring-1 ring-blue-100 hover:-translate-y-0.5 transition-transform">
+          <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm ring-1 ring-blue-100 hover:-translate-y-0.5 transition-transform">
             <p className="text-xs text-blue-500 font-bold mb-2 uppercase tracking-wider">{t.adminNew}</p>
-            <p className="text-3xl font-extrabold text-blue-700">{stats?.counts?.nuevo || 0}</p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-blue-700">{stats?.counts?.nuevo || 0}</p>
           </div>
-          <div className="bg-white p-5 rounded-[1.5rem] shadow-sm ring-1 ring-emerald-100 hover:-translate-y-0.5 transition-transform">
+          <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm ring-1 ring-emerald-100 hover:-translate-y-0.5 transition-transform">
             <p className="text-xs text-emerald-500 font-bold mb-2 uppercase tracking-wider">{t.adminReady}</p>
-            <p className="text-3xl font-extrabold text-emerald-700">
+            <p className="text-2xl sm:text-3xl font-extrabold text-emerald-700">
               {(stats?.counts?.listo || 0) + (stats?.counts?.agendado || 0)}
             </p>
           </div>
-          <div className="bg-white p-5 rounded-[1.5rem] shadow-sm ring-1 ring-amber-100 hover:-translate-y-0.5 transition-transform">
+          <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm ring-1 ring-amber-100 hover:-translate-y-0.5 transition-transform">
             <p className="text-xs text-amber-500 font-bold mb-2 uppercase tracking-wider">{t.adminPending}</p>
-            <p className="text-3xl font-extrabold text-amber-700">{stats?.counts?.incompleto || 0}</p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-amber-700">{stats?.counts?.incompleto || 0}</p>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="px-6 md:px-10 pb-4 flex gap-3 bg-[#F5F2EE] shrink-0">
-          <div className="relative flex-1 max-w-sm">
+        <div className="px-4 sm:px-6 md:px-10 pb-4 flex flex-wrap gap-3 bg-[#F5F2EE] shrink-0">
+          <div className="relative flex-1 basis-60 sm:max-w-sm">
             <Search className="w-5 h-5 absolute left-4 top-3.5 text-muted-foreground" />
             <Input
               placeholder={t.adminSearchPlaceholder}
@@ -255,7 +296,7 @@ export default function Admin() {
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[200px] h-12 bg-white border-[#E8E4DE] rounded-2xl font-medium shadow-sm">
+            <SelectTrigger className="w-full sm:w-[200px] h-12 bg-white border-[#E8E4DE] rounded-2xl font-medium shadow-sm">
               <SelectValue placeholder={t.adminAllStatuses} />
             </SelectTrigger>
             <SelectContent className="rounded-2xl">
@@ -268,7 +309,7 @@ export default function Admin() {
         </div>
 
         {/* Patient List */}
-        <div className="flex-1 overflow-y-auto px-6 md:px-10 pb-10 bg-[#F5F2EE]">
+        <div className="md:flex-1 md:min-h-0 md:overflow-y-auto px-4 sm:px-6 md:px-10 pb-10 bg-[#F5F2EE]">
           <div className="bg-white rounded-[1.75rem] overflow-hidden shadow-sm">
             {leadsLoading ? (
               <div className="p-16 text-center text-muted-foreground font-medium">{t.adminLoading}</div>
@@ -281,7 +322,44 @@ export default function Admin() {
                 <p className="text-sm">{t.adminEmptySub}</p>
               </div>
             ) : (
-              <table className="w-full text-sm text-left">
+              <>
+              {/* Mobile: cards */}
+              <ul className="md:hidden divide-y divide-[#F5F2EE]">
+                {leadsData?.leads.map(lead => (
+                  <li key={lead.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedLeadId(lead.id)}
+                      className={`w-full text-left p-4 flex items-center gap-3 hover:bg-primary/4 transition-colors ${selectedLeadId === lead.id ? 'bg-primary/5' : ''}`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="font-bold text-foreground text-base truncate">{lead.name || "—"}</div>
+                            <div className="text-muted-foreground font-medium text-sm truncate">{lead.phone}</div>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 ${STATUS_COLORS[lead.status]}`}>
+                            {STATUS_LABELS[lead.status]}
+                          </span>
+                        </div>
+                        <div className="mt-2 flex items-center gap-4 text-sm">
+                          <span className={`flex items-center gap-1.5 font-bold ${lead.photoCount === 5 ? 'text-primary' : 'text-muted-foreground'}`}>
+                            <Camera className="w-4 h-4" />
+                            {lead.photoCount}/5
+                          </span>
+                          <span className="text-muted-foreground font-medium">
+                            {format(parseISO(lead.createdAt), "d MMM, yyyy", { locale: dateFnsEs })}
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Desktop: table */}
+              <table className="hidden md:table w-full text-sm text-left">
                 <thead className="bg-[#F5F2EE] text-muted-foreground font-bold uppercase tracking-wider text-xs">
                   <tr>
                     <th className="px-6 py-4">{t.adminColPatient}</th>
@@ -325,8 +403,11 @@ export default function Admin() {
                   ))}
                 </tbody>
               </table>
+              </>
             )}
           </div>
+        </div>
+
         </div>
 
         {/* Details Drawer */}
