@@ -199,6 +199,7 @@ function jsonResponse(body: object, status: number) {
 }
 
 const RESUME_TOKEN = "resume-owner-token";
+const PATIENT_TOKEN_KEY = "estecapelli.patient-token";
 const RESUME_LEAD = {
   id: "resume-lead-1",
   token: RESUME_TOKEN,
@@ -316,6 +317,28 @@ describe("Full patient form flow — end to end", () => {
       expect.stringContaining("/api/patients"),
       expect.objectContaining({ method: "POST" }),
     );
+
+    // 9. A finished evaluation is no longer offered for resume on this device.
+    expect(window.localStorage.getItem(PATIENT_TOKEN_KEY)).toBeNull();
+  });
+
+  it("remembers the new evaluation's token on this device once it is created", async () => {
+    fetchSpy.mockImplementation(async (input, init) => {
+      const url = String(input);
+      const method = init?.method ?? "GET";
+      if (url.endsWith("/api/patients") && method === "POST") return jsonResponse(SUCCESS_BODY, 201);
+      if (url.includes("/api/patients/test-token-abc")) return jsonResponse(SUCCESS_BODY, 200);
+      throw new Error(`Unexpected request: ${method} ${url}`);
+    });
+
+    const user = setupUser();
+    renderFlow();
+    await goToDataStep(user);
+    await fillForm(user);
+    await tickConsent(user);
+    await user.click(screen.getByRole("button", { name: /Continuar a Fotografías/i }));
+
+    await waitFor(() => expect(window.localStorage.getItem(PATIENT_TOKEN_KEY)).toBe("test-token-abc"));
   });
 
   it("shows the duplicate warning card when the API returns 409", async () => {
@@ -347,6 +370,49 @@ describe("Full patient form flow — end to end", () => {
       expect.stringContaining("/api/patients"),
       expect.objectContaining({ method: "POST" }),
     );
+  });
+
+  it("tells the patient to resume from the original device when the 409 is for an in-progress evaluation", async () => {
+    fetchSpy.mockResolvedValue(jsonResponse({ ...DUPLICATE_BODY, resumable: true }, 409));
+
+    const user = setupUser();
+    renderFlow();
+    await goToDataStep(user);
+    await fillForm(user);
+    await tickConsent(user);
+    await user.click(screen.getByRole("button", { name: /Continuar a Fotografías/i }));
+
+    expect(await screen.findByText(/Ya tienes una evaluación en curso/i)).toBeInTheDocument();
+    expect(screen.getByText(/mismo dispositivo y navegador/i)).toBeInTheDocument();
+    expect(screen.getByText(/contacta a la clínica/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Ya existe una evaluación registrada/i)).not.toBeInTheDocument();
+    expect(window.localStorage.getItem(PATIENT_TOKEN_KEY)).toBeNull();
+  });
+
+  it("resumes automatically from the token remembered on this device, without a token in the URL", async () => {
+    window.localStorage.setItem(PATIENT_TOKEN_KEY, RESUME_TOKEN);
+    installResumeResponses([resumedPhoto("frontal"), resumedPhoto("vertex")]);
+
+    const user = setupUser();
+    renderFlow();
+
+    expect(await screen.findByText("Tienes un avance guardado")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Continuar donde quedé" }));
+    expect(await screen.findByRole("heading", { name: "Temporal derecha" })).toBeInTheDocument();
+    expect(fetchSpy.mock.calls.some(([, init]) => (init?.method ?? "GET") === "POST")).toBe(false);
+  });
+
+  it("drops a remembered token the server no longer knows and starts a fresh evaluation", async () => {
+    window.localStorage.setItem(PATIENT_TOKEN_KEY, "stale-token");
+    fetchSpy.mockResolvedValue(jsonResponse({ error: "Este enlace ya no está disponible." }, 404));
+
+    const user = setupUser();
+    renderFlow();
+
+    await waitFor(() => expect(window.localStorage.getItem(PATIENT_TOKEN_KEY)).toBeNull());
+    expect(screen.queryByText(/Este enlace ya no está disponible/i)).not.toBeInTheDocument();
+    await goToDataStep(user);
+    expect(await screen.findByRole("button", { name: /Continuar a Fotografías/i })).toBeInTheDocument();
   });
 
   it("resumes the token owner's metadata-only draft at the first required view still missing", async () => {

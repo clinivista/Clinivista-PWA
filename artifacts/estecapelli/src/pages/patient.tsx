@@ -334,11 +334,29 @@ type ServerPhotoState = {
   editParams?: unknown;
 };
 
+// ---------- Resume token (this device only) ----------
+// The token is the bearer credential for the patient's own evaluation. Keeping
+// it on the device that created it lets the patient resume after leaving,
+// without the server ever handing it out for a phone/email/RUT match.
+const PATIENT_TOKEN_KEY = "estecapelli.patient-token";
+
+function readStoredPatientToken(): string | null {
+  try { return localStorage.getItem(PATIENT_TOKEN_KEY); } catch { return null; }
+}
+function storePatientToken(token: string) {
+  try { localStorage.setItem(PATIENT_TOKEN_KEY, token); } catch { /* storage unavailable: resume only via URL */ }
+}
+function clearStoredPatientToken() {
+  try { localStorage.removeItem(PATIENT_TOKEN_KEY); } catch { /* ignore */ }
+}
+
 // ---------- Main component ----------
 export default function PatientFlow() {
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
-  const token = params.get("token");
+  const urlToken = params.get("token");
+  const [storedToken, setStoredToken] = useState<string | null>(() => urlToken ? null : readStoredPatientToken());
+  const token = urlToken ?? storedToken;
   const [patientToken, setPatientToken] = useState<string | null>(token);
   const { t, lang, setLang } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
@@ -362,16 +380,32 @@ export default function PatientFlow() {
   const [exitDialog, setExitDialog] = useState<"closed" | "open" | "confirmDiscard">("closed");
   const [dirty, setDirty] = useState(false);
   const [processingPhoto, setProcessingPhoto] = useState<string | null>(null);
-  const [duplicateError, setDuplicateError] = useState(false);
+  const [duplicateError, setDuplicateError] = useState<"inProgress" | "exists" | null>(null);
   const [phonePrefix, setPhonePrefix] = useState("+56");
   const [phonePrefixOpen, setPhonePrefixOpen] = useState(false);
   const hydratedTokenRef = useRef<string | null>(null);
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
-  const { data: existingData, isLoading: isLoadingExisting, isError: isTokenError } = useGetPatient(token || "", {
-    query: { enabled: !!token, queryKey: getGetPatientQueryKey(token || "") },
+  const { data: existingData, isLoading: isLoadingExisting, isError: isTokenError, error: tokenError } = useGetPatient(token || "", {
+    query: { enabled: !!token, queryKey: getGetPatientQueryKey(token || ""), retry: false },
   });
+
+  // Remember a working token on this device (covers invitation links too).
+  useEffect(() => {
+    if (token && existingData?.lead) storePatientToken(token);
+  }, [token, existingData]);
+
+  // A remembered token the server no longer knows is dropped silently so the
+  // patient gets a fresh form instead of an "invalid link" screen. Network
+  // errors keep it, so a flaky connection does not lose the evaluation.
+  useEffect(() => {
+    if (urlToken || !storedToken || !isTokenError) return;
+    if ((tokenError as { status?: number } | null)?.status !== 404) return;
+    clearStoredPatientToken();
+    setStoredToken(null);
+    setPatientToken(null);
+  }, [urlToken, storedToken, isTokenError, tokenError]);
 
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema),
@@ -653,25 +687,32 @@ export default function PatientFlow() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const duplicateKind = (error: unknown): "inProgress" | "exists" | null => {
+    const err = error as { status?: number; data?: { duplicate?: boolean; resumable?: boolean } };
+    if (err?.status !== 409 && !err?.data?.duplicate) return null;
+    return err?.data?.resumable ? "inProgress" : "exists";
+  };
+
   const handleDataSubmit = (data: PatientFormValues) => {
     if (patientToken) {
       continueToPhotos();
       return;
     }
-    setDuplicateError(false);
+    setDuplicateError(null);
     createMutation.mutate({ data }, {
       onSuccess: (result) => {
         const newToken = result.lead.token;
         setPatientToken(newToken);
+        storePatientToken(newToken);
         window.history.replaceState({}, "", `/patient?token=${encodeURIComponent(newToken)}`);
         setStep("photos");
         setCurrentPhotoIndex(0);
         window.scrollTo({ top: 0, behavior: "smooth" });
       },
       onError: (error: unknown) => {
-        const err = error as { status?: number; data?: { duplicate?: boolean } };
-        if (err?.status === 409 || err?.data?.duplicate) {
-          setDuplicateError(true);
+        const kind = duplicateKind(error);
+        if (kind) {
+          setDuplicateError(kind);
           return;
         }
         toast({ variant: "destructive", title: "Error", description: t.pSaveError });
@@ -752,6 +793,7 @@ export default function PatientFlow() {
     if (!ok) return; // keep the dialog open so the patient can retry
     setExitDialog("closed");
     clearLocalDraft();
+    clearStoredPatientToken();
     form.reset();
     navigate("/");
   };
@@ -781,17 +823,18 @@ export default function PatientFlow() {
             toast({ variant: "destructive", title: "Faltan fotografías", description: "Guarda las cinco vistas obligatorias antes de enviar." });
             return;
           }
+          clearStoredPatientToken();
           setStep("success"); window.scrollTo({ top: 0, behavior: "smooth" });
         },
         onError: () => toast({ variant: "destructive", title: "Error", description: t.pSaveError }),
       });
     } else {
-      setDuplicateError(false);
+      setDuplicateError(null);
       createMutation.mutate({ data: formData }, {
         onSuccess: () => { setStep("success"); window.scrollTo({ top: 0, behavior: "smooth" }); },
         onError: (error: unknown) => {
-          const err = error as { status?: number; data?: { duplicate?: boolean } };
-          if (err?.status === 409 || err?.data?.duplicate) { setDuplicateError(true); return; }
+          const kind = duplicateKind(error);
+          if (kind) { setDuplicateError(kind); return; }
           toast({ variant: "destructive", title: "Error", description: t.pSaveError });
         },
       });
@@ -824,7 +867,7 @@ export default function PatientFlow() {
   }
 
   // Invalid / expired invitation token — show clear error instead of the default flow
-  if (token && isTokenError) {
+  if (urlToken && isTokenError) {
     return (
       <div className="min-h-[100dvh] bg-[#F5F2EE] flex items-center justify-center p-4 font-sans">
         <div className="bg-white rounded-[2.5rem] shadow-sm max-w-md w-full overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500">
@@ -1234,7 +1277,7 @@ export default function PatientFlow() {
                 {duplicateError && (
                   <Alert variant="destructive" className="rounded-2xl">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{t.pDuplicate}</AlertDescription>
+                    <AlertDescription>{duplicateError === "inProgress" ? t.pDuplicateInProgress : t.pDuplicate}</AlertDescription>
                   </Alert>
                 )}
 
@@ -1355,7 +1398,7 @@ export default function PatientFlow() {
             {duplicateError && (
               <Alert variant="destructive" className="mt-6 rounded-2xl">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{t.pDuplicate}</AlertDescription>
+                <AlertDescription>{duplicateError === "inProgress" ? t.pDuplicateInProgress : t.pDuplicate}</AlertDescription>
               </Alert>
             )}
 

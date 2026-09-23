@@ -183,6 +183,7 @@ describe("POST /api/patients", () => {
     });
     expect(res.status).toBe(409);
     expect(res.body.duplicate).toBe(true);
+    expect(res.body.resumable).toBe(true);
     // The 409 must never leak the existing lead's token (bearer credential)
     expect(JSON.stringify(res.body)).not.toContain(first.body.lead.token);
     expect(await countLeads()).toBe(1);
@@ -197,6 +198,72 @@ describe("POST /api/patients", () => {
     });
     expect(res.status).toBe(409);
     expect(await countLeads()).toBe(1);
+  });
+
+  it("flags a phone/email duplicate of an in-progress evaluation as resumable without leaking its token", async () => {
+    const first = await request(app).post("/api/patients").send(VALID_BODY);
+    expect(first.body.lead.status).toBe("incompleto");
+
+    for (const retry of [
+      { documentId: "20.347.878-K", email: "otra@example.com" }, // same phone
+      { documentId: "20.347.878-K", phone: "+56922222222" }, // same email
+    ]) {
+      const res = await request(app).post("/api/patients").send({ ...VALID_BODY, ...retry });
+      expect(res.status).toBe(409);
+      expect(res.body).toMatchObject({ duplicate: true, resumable: true });
+      expect(JSON.stringify(res.body)).not.toContain(first.body.lead.token);
+      expect(res.body.lead).toBeUndefined();
+    }
+    expect(await countLeads()).toBe(1);
+  });
+
+  it("flags a duplicate of a finished evaluation as not resumable", async () => {
+    const first = await request(app).post("/api/patients").send(VALID_BODY);
+    await pglite.exec(`UPDATE leads SET status = 'listo' WHERE id = '${first.body.lead.id}'`);
+
+    const byPhone = await request(app).post("/api/patients").send({
+      ...VALID_BODY,
+      documentId: "20.347.878-K",
+      email: "otra@example.com",
+    });
+    expect(byPhone.status).toBe(409);
+    expect(byPhone.body).toMatchObject({ duplicate: true, resumable: false });
+
+    const byRut = await request(app).post("/api/patients").send({
+      ...VALID_BODY,
+      phone: "+56922222222",
+      email: "otra@example.com",
+    });
+    expect(byRut.status).toBe(409);
+    expect(byRut.body).toMatchObject({ duplicate: true, resumable: false });
+    expect(await countLeads()).toBe(1);
+  });
+});
+
+describe("resuming an in-progress evaluation with its own token", () => {
+  it("restores the saved data and keeps saving progress into the same lead", async () => {
+    const created = await request(app).post("/api/patients").send(VALID_BODY);
+    const { token, id } = created.body.lead;
+
+    // The patient leaves and comes back on the same device (stored token).
+    const resumed = await request(app).get(`/api/patients/${token}`);
+    expect(resumed.status).toBe(200);
+    expect(resumed.body.lead).toMatchObject({ id, name: VALID_BODY.name, phone: VALID_BODY.phone, status: "incompleto" });
+
+    // Continuing with the same phone/email/RUT is an update, never a duplicate.
+    const saved = await request(app).put(`/api/patients/${token}`).send({ ...VALID_BODY, city: "Concepción" });
+    expect(saved.status).toBe(200);
+    expect(saved.body.lead).toMatchObject({ id, city: "Concepción", status: "incompleto" });
+    expect(await countLeads()).toBe(1);
+  });
+
+  it("does not let a fresh registration take over the in-progress lead", async () => {
+    const created = await request(app).post("/api/patients").send(VALID_BODY);
+    const retry = await request(app).post("/api/patients").send({ ...VALID_BODY, name: "Otra Persona" });
+    expect(retry.status).toBe(409);
+
+    const lead = await request(app).get(`/api/patients/${created.body.lead.token}`);
+    expect(lead.body.lead.name).toBe(VALID_BODY.name);
   });
 });
 

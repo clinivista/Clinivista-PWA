@@ -119,6 +119,7 @@ export type AppTranslations = {
   pSubmitCTA: string;
   pSending: string;
   pDuplicate: string;
+  pDuplicateInProgress: string;
   pBack: string;
   pExit: string;
   pTakePhoto: string;
@@ -325,7 +326,7 @@ const T: Record<LangCode, AppTranslations> = {
     pExitSave: "Salir y conservar el avance",
     pExitDiscard: "Descartar preevaluación",
     pExitDiscardConfirm: "¿Seguro que quieres descartar todo el avance? Esta acción no se puede deshacer.",
-    pDuplicate: "Ya existe una evaluación registrada con este teléfono o correo. Si necesitas ayuda, contáctanos directamente.",
+    pDuplicate: "Ya existe una evaluación registrada con este teléfono o correo. Si necesitas ayuda, contáctanos directamente.", pDuplicateInProgress: "Ya tienes una evaluación en curso con estos datos. Para retomarla, vuelve a abrir esta página desde el mismo dispositivo y navegador donde la empezaste. Si no puedes, contacta a la clínica y te ayudaremos a continuar.",
 
     photoFrontalTitle: "Vista frontal", photoFrontalDesc: "De frente, centrado, buena iluminación. Muestra la línea de nacimiento del cabello.", photoFrontalTip: "Mira directamente a la cámara con buena luz natural. Mantén el cabello despejado de la frente.",
     photoVertexTitle: "Vértex / Coronilla", photoVertexDesc: "Inclina levemente la cabeza hacia adelante. La cámara apunta hacia abajo.", photoVertexTip: "Inclina la cabeza hacia abajo 45°. Pide a alguien que tome la foto desde arriba, apuntando a la coronilla.",
@@ -456,7 +457,7 @@ const T: Record<LangCode, AppTranslations> = {
     pExitSave: "Exit and keep progress",
     pExitDiscard: "Discard pre-evaluation",
     pExitDiscardConfirm: "Are you sure you want to discard all progress? This cannot be undone.",
-    pDuplicate: "An evaluation with this phone or email already exists. Contact us directly if you need help.",
+    pDuplicate: "An evaluation with this phone or email already exists. Contact us directly if you need help.", pDuplicateInProgress: "You already have an evaluation in progress with these details. To resume it, reopen this page on the same device and browser where you started it. If you can't, contact the clinic and we'll help you continue.",
 
     photoFrontalTitle: "Frontal view", photoFrontalDesc: "Face forward, centered, good lighting. Show the hairline.", photoFrontalTip: "Look directly at the camera with good natural light. Keep hair away from the forehead.",
     photoVertexTitle: "Vertex / Crown", photoVertexDesc: "Tilt your head slightly forward. Camera points down.", photoVertexTip: "Tilt your head 45° down. Have someone take the photo from above, pointing at the crown.",
@@ -582,7 +583,7 @@ const T: Record<LangCode, AppTranslations> = {
     pExitSave: "Sair e manter o progresso",
     pExitDiscard: "Descartar pré-avaliação",
     pExitDiscardConfirm: "Tem certeza de que deseja descartar todo o progresso? Isso não pode ser desfeito.",
-    pDuplicate: "Já existe uma avaliação com este telefone ou e-mail. Contate-nos diretamente se precisar de ajuda.",
+    pDuplicate: "Já existe uma avaliação com este telefone ou e-mail. Contate-nos diretamente se precisar de ajuda.", pDuplicateInProgress: "Você já tem uma avaliação em andamento com estes dados. Para retomá-la, abra novamente esta página no mesmo dispositivo e navegador onde começou. Se não puder, entre em contato com a clínica e ajudaremos você a continuar.",
     photoFrontalTitle: "Vista frontal", photoFrontalDesc: "De frente, centralizado, boa iluminação.", photoFrontalTip: "Olhe diretamente para a câmera com boa luz natural.",
     photoVertexTitle: "Vértex / Coroa", photoVertexDesc: "Incline levemente a cabeça para frente.", photoVertexTip: "Incline a cabeça 45°. Peça a alguém para tirar a foto de cima.",
     photoTRTitle: "Têmpora direita", photoTRDesc: "Vire levemente para a esquerda.", photoTRTip: "Gire a cabeça ~30° para a esquerda.",
@@ -695,7 +696,7 @@ const T: Record<LangCode, AppTranslations> = {
     pExitSave: "Quitter et conserver la progression",
     pExitDiscard: "Abandonner la préévaluation",
     pExitDiscardConfirm: "Voulez-vous vraiment abandonner toute la progression ? Cette action est irréversible.",
-    pDuplicate: "Une évaluation avec ce téléphone ou e-mail existe déjà. Contactez-nous directement si vous avez besoin d'aide.",
+    pDuplicate: "Une évaluation avec ce téléphone ou e-mail existe déjà. Contactez-nous directement si vous avez besoin d'aide.", pDuplicateInProgress: "Vous avez déjà une évaluation en cours avec ces informations. Pour la reprendre, rouvrez cette page sur le même appareil et le même navigateur que ceux utilisés au départ. Sinon, contactez la clinique et nous vous aiderons à continuer.",
     photoFrontalTitle: "Vue frontale", photoFrontalDesc: "Face à l'appareil, centré, bonne luminosité.", photoFrontalTip: "Regardez directement la caméra avec une bonne lumière naturelle.",
     photoVertexTitle: "Vertex / Sommet", photoVertexDesc: "Inclinez légèrement la tête vers l'avant.", photoVertexTip: "Inclinez la tête à 45°. Faites prendre la photo de dessus.",
     photoTRTitle: "Tempe droite", photoTRDesc: "Tournez légèrement vers la gauche.", photoTRTip: "Tournez la tête ~30° vers votre gauche.",
@@ -808,7 +809,7 @@ const T: Record<LangCode, AppTranslations> = {
     pExitSave: "Verlassen und Fortschritt behalten",
     pExitDiscard: "Vorab-Bewertung verwerfen",
     pExitDiscardConfirm: "Möchtest du wirklich den gesamten Fortschritt verwerfen? Das kann nicht rückgängig gemacht werden.",
-    pDuplicate: "Mit dieser Telefonnummer oder E-Mail existiert bereits eine Bewertung.",
+    pDuplicate: "Mit dieser Telefonnummer oder E-Mail existiert bereits eine Bewertung.", pDuplicateInProgress: "Sie haben bereits eine laufende Bewertung mit diesen Angaben. Um sie fortzusetzen, öffnen Sie diese Seite erneut auf demselben Gerät und im selben Browser, in dem Sie begonnen haben. Falls das nicht möglich ist, kontaktieren Sie die Klinik – wir helfen Ihnen weiter.",
     photoFrontalTitle: "Frontansicht", photoFrontalDesc: "Von vorne, zentriert, gute Beleuchtung.", photoFrontalTip: "Schauen Sie direkt in die Kamera bei gutem natürlichem Licht.",
     photoVertexTitle: "Vertex / Scheitel", photoVertexDesc: "Kopf leicht nach vorne neigen.", photoVertexTip: "Kopf 45° nach unten neigen. Jemanden bitten, von oben zu fotografieren.",
     photoTRTitle: "Rechte Schläfe", photoTRDesc: "Leicht nach links drehen.", photoTRTip: "Kopf ~30° nach links drehen.",
@@ -921,7 +922,7 @@ const T: Record<LangCode, AppTranslations> = {
     pExitSave: "Esci e conserva l'avanzamento",
     pExitDiscard: "Elimina la prevalutazione",
     pExitDiscardConfirm: "Sei sicuro di voler eliminare tutto l'avanzamento? Non può essere annullato.",
-    pDuplicate: "Esiste già una valutazione con questo telefono o e-mail.",
+    pDuplicate: "Esiste già una valutazione con questo telefono o e-mail.", pDuplicateInProgress: "Hai già una valutazione in corso con questi dati. Per riprenderla, riapri questa pagina dallo stesso dispositivo e browser in cui l'hai iniziata. Se non puoi, contatta la clinica e ti aiuteremo a continuare.",
     photoFrontalTitle: "Vista frontale", photoFrontalDesc: "Di fronte, centrato, buona illuminazione.", photoFrontalTip: "Guarda direttamente la fotocamera con buona luce naturale.",
     photoVertexTitle: "Vertex / Corona", photoVertexDesc: "Inclina leggermente la testa in avanti.", photoVertexTip: "Inclina la testa 45°. Chiedi a qualcuno di fotografare dall'alto.",
     photoTRTitle: "Tempia destra", photoTRDesc: "Gira leggermente a sinistra.", photoTRTip: "Gira la testa ~30° a sinistra.",
@@ -1034,7 +1035,7 @@ const T: Record<LangCode, AppTranslations> = {
     pExitSave: "Çık ve ilerlemeyi koru",
     pExitDiscard: "Ön değerlendirmeyi sil",
     pExitDiscardConfirm: "Tüm ilerlemeyi silmek istediğine emin misin? Bu geri alınamaz.",
-    pDuplicate: "Bu telefon veya e-posta ile zaten bir değerlendirme var.",
+    pDuplicate: "Bu telefon veya e-posta ile zaten bir değerlendirme var.", pDuplicateInProgress: "Bu bilgilerle devam eden bir değerlendirmeniz zaten var. Devam etmek için bu sayfayı başladığınız aynı cihaz ve tarayıcıdan tekrar açın. Bunu yapamıyorsanız, kliniğe başvurun; devam etmenize yardımcı olalım.",
     photoFrontalTitle: "Ön görünüm", photoFrontalDesc: "Öne bakın, ortalanmış, iyi aydınlatılmış.", photoFrontalTip: "İyi doğal ışıkta doğrudan kameraya bakın.",
     photoVertexTitle: "Vertex / Tepe", photoVertexDesc: "Başı hafifçe öne eğin.", photoVertexTip: "Başı 45° aşağı eğin. Birinin yukarıdan fotoğraf çekmesini isteyin.",
     photoTRTitle: "Sağ şakak", photoTRDesc: "Sağ saç çizgisini göstermek için sola döndürün.", photoTRTip: "Başı ~30° sola döndürün.",
@@ -1147,7 +1148,7 @@ const T: Record<LangCode, AppTranslations> = {
     pExitSave: "الخروج مع الاحتفاظ بالتقدم",
     pExitDiscard: "تجاهل التقييم المسبق",
     pExitDiscardConfirm: "هل أنت متأكد من تجاهل كل التقدم؟ لا يمكن التراجع عن هذا.",
-    pDuplicate: "يوجد تقييم مسجل بهذا الهاتف أو البريد الإلكتروني بالفعل.",
+    pDuplicate: "يوجد تقييم مسجل بهذا الهاتف أو البريد الإلكتروني بالفعل.", pDuplicateInProgress: "لديك بالفعل تقييم قيد التنفيذ بهذه البيانات. لاستئنافه، أعد فتح هذه الصفحة من نفس الجهاز والمتصفح الذي بدأت منه. إذا تعذّر ذلك، تواصل مع العيادة وسنساعدك على المتابعة.",
     photoFrontalTitle: "منظر أمامي", photoFrontalDesc: "مواجهاً الكاميرا، في الوسط، إضاءة جيدة.", photoFrontalTip: "انظر مباشرة إلى الكاميرا في ضوء طبيعي جيد.",
     photoVertexTitle: "قمة الرأس", photoVertexDesc: "أمل الرأس قليلاً للأمام.", photoVertexTip: "أمل الرأس 45° للأسفل. اطلب من شخص التقاط صورة من الأعلى.",
     photoTRTitle: "الصدغ الأيمن", photoTRDesc: "استدر قليلاً لليسار.", photoTRTip: "أدر الرأس ~30° لليسار.",
@@ -1260,7 +1261,7 @@ const T: Record<LangCode, AppTranslations> = {
     pExitSave: "退出并保留进度",
     pExitDiscard: "放弃预评估",
     pExitDiscardConfirm: "确定要放弃所有进度吗？此操作无法撤销。",
-    pDuplicate: "此手机或电子邮件已存在评估记录。",
+    pDuplicate: "此手机或电子邮件已存在评估记录。", pDuplicateInProgress: "您已有一份使用这些信息且正在进行中的评估。如需继续，请在开始评估时使用的同一设备和浏览器上重新打开此页面。如无法做到，请联系诊所，我们会协助您继续。",
     photoFrontalTitle: "正面视图", photoFrontalDesc: "面对镜头，居中，光线良好。", photoFrontalTip: "在自然光下直视相机，保持额前整洁。",
     photoVertexTitle: "头顶/顶部", photoVertexDesc: "头部略微向前倾斜，相机朝下。", photoVertexTip: "头部向下倾45°。请人从上方拍摄头顶。",
     photoTRTitle: "右颞部", photoTRDesc: "略向左转，展示右侧发际。", photoTRTip: "头部向左转约30°。",
