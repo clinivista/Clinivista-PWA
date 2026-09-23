@@ -4,7 +4,7 @@ import { format, parseISO } from "date-fns";
 import { es as dateFnsEs } from "date-fns/locale";
 import {
   Users, LogOut, CheckCircle2, Link as LinkIcon,
-  Search, ChevronRight, X, Phone, AlertTriangle, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu
+  Search, ChevronRight, X, Phone, AlertTriangle, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu, Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
 import { BrandLogo } from "@/components/brand-logo";
+import { buildPatientLink, copyToClipboard } from "@/lib/clipboard";
 
 const STATUS_COLORS: Record<string, string> = {
   nuevo: "bg-blue-100 text-blue-700",
@@ -67,6 +68,7 @@ export default function Admin() {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteResult, setInviteResult] = useState<{link: string, lead: LeadSummary} | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
@@ -96,6 +98,12 @@ export default function Admin() {
   useEffect(() => {
     if (!isAuthLoading && !authStatus?.authenticated) setLocation("/admin/login");
   }, [isAuthLoading, authStatus, setLocation]);
+
+  useEffect(() => {
+    if (!linkCopied) return;
+    const timer = window.setTimeout(() => setLinkCopied(false), 2000);
+    return () => window.clearTimeout(timer);
+  }, [linkCopied]);
 
   useEffect(() => {
     if (!mobileNavOpen) return;
@@ -133,6 +141,17 @@ export default function Admin() {
         toast({ title: t.adminSaved, description: t.adminSavedDesc });
       }
     });
+  };
+
+  const inviteLink = inviteResult ? buildPatientLink(inviteResult.lead.token) : "";
+
+  const handleCopyInviteLink = async () => {
+    if (await copyToClipboard(inviteLink)) {
+      setLinkCopied(true);
+      toast({ title: t.adminInviteLinkCopied, description: t.adminInviteLinkCopiedDesc });
+    } else {
+      toast({ variant: "destructive", title: "Error", description: t.adminInviteCopyError });
+    }
   };
 
   const onInviteSubmit = (data: z.infer<typeof inviteSchema>) => {
@@ -254,7 +273,7 @@ export default function Admin() {
             <p className="text-sm text-muted-foreground font-medium mt-1">{t.adminDashSub}</p>
           </div>
           <Button
-            onClick={() => { setIsInviteOpen(true); setInviteResult(null); inviteForm.reset(); }}
+            onClick={() => { setIsInviteOpen(true); setInviteResult(null); setLinkCopied(false); inviteForm.reset(); }}
             className="gap-2 h-12 px-6 rounded-full font-bold shadow-lg shadow-primary/20 shrink-0 w-full md:w-auto"
           >
             <LinkIcon className="w-4 h-4" />
@@ -685,18 +704,24 @@ export default function Admin() {
                     <h4 className="font-extrabold text-2xl mb-2 text-foreground">{t.adminInviteCreated}</h4>
                     <p className="text-base text-muted-foreground font-medium">{t.adminInviteCreatedSub}</p>
                   </div>
-                  <div className="bg-[#F5F2EE] p-4 rounded-2xl flex items-center gap-3 text-sm break-all">
-                    <span className="flex-1 text-left font-medium text-foreground">{inviteResult.link}</span>
-                    <Button variant="outline" className="h-10 rounded-full font-bold border-[#E8E4DE] shrink-0 bg-white" onClick={() => {
-                      navigator.clipboard.writeText(inviteResult.link);
-                      toast({ title: t.copied, description: "Enlace copiado al portapapeles" });
-                    }}>{t.copy}</Button>
+                  <div className="space-y-3">
+                    <Button
+                      onClick={handleCopyInviteLink}
+                      className={`w-full h-14 gap-2 rounded-full font-bold text-base shadow-lg transition-all hover:scale-[1.01] ${linkCopied ? "bg-emerald-600 hover:bg-emerald-600 shadow-emerald-600/20" : "shadow-primary/20"}`}
+                    >
+                      {linkCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                      {linkCopied ? t.adminInviteLinkCopied : t.adminInviteCopyLink}
+                    </Button>
+                    <span role="status" aria-live="polite" className="sr-only">{linkCopied ? t.adminInviteLinkCopied : ""}</span>
+                    <p data-testid="invite-link" className="bg-[#F5F2EE] px-4 py-3 rounded-2xl text-xs text-muted-foreground font-medium break-all select-all text-left">
+                      {inviteLink}
+                    </p>
                   </div>
                   <Button
                     className="w-full h-14 bg-[#25D366] hover:bg-[#128C7E] text-white gap-2 rounded-full font-bold text-base shadow-lg shadow-[#25D366]/20 transition-all hover:scale-[1.01]"
                     onClick={() => {
                       const phone = inviteResult.lead.phone.replace(/\D/g, '');
-                      const msg = encodeURIComponent(`Hola ${inviteResult.lead.name || ''}, te enviamos el link seguro para tu preevaluación capilar: ${inviteResult.link}`);
+                      const msg = encodeURIComponent(`Hola ${inviteResult.lead.name || ''}, te enviamos el link seguro para tu preevaluación capilar: ${inviteLink}`);
                       window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
                     }}
                   >

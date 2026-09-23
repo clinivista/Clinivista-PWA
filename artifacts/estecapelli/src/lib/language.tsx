@@ -229,6 +229,10 @@ export type AppTranslations = {
   adminInviteGenCTA: string;
   adminInviteCreated: string;
   adminInviteCreatedSub: string;
+  adminInviteCopyLink: string;
+  adminInviteLinkCopied: string;
+  adminInviteLinkCopiedDesc: string;
+  adminInviteCopyError: string;
   adminInviteSendWA: string;
   adminInviteError: string;
   adminLinkError: string;
@@ -365,7 +369,7 @@ const T: Record<LangCode, AppTranslations> = {
     adminDemoWarning: "Estás usando la contraseña de demostración. Configura ADMIN_PASSWORD en los secretos para asegurar el panel.",
     adminInviteTitle: "Nuevo Enlace", adminInviteNameLabel: "Nombre del paciente (opcional)", adminInvitePhoneLabel: "Teléfono móvil *",
     adminInviteGenerating: "Generando...", adminInviteGenCTA: "Generar Link de Evaluación",
-    adminInviteCreated: "¡Enlace creado!", adminInviteCreatedSub: "Cópialo o envíalo directamente",
+    adminInviteCreated: "¡Enlace creado!", adminInviteCreatedSub: "Cópialo o envíalo directamente", adminInviteCopyLink: "Copiar enlace", adminInviteLinkCopied: "Enlace copiado", adminInviteLinkCopiedDesc: "El enlace de preevaluación está en tu portapapeles.", adminInviteCopyError: "No se pudo copiar. Selecciona el enlace y cópialo manualmente.",
     adminInviteSendWA: "Enviar por WhatsApp", adminInviteError: "Error al crear enlace",
     adminLinkError: "Error al crear enlace",
     statusNuevo: "Nuevo", statusIncompleto: "Incompleto", statusListo: "Listo para revisión",
@@ -496,7 +500,7 @@ const T: Record<LangCode, AppTranslations> = {
     adminDemoWarning: "You are using the demo password. Set ADMIN_PASSWORD in secrets to secure the panel.",
     adminInviteTitle: "New Link", adminInviteNameLabel: "Patient name (optional)", adminInvitePhoneLabel: "Mobile phone *",
     adminInviteGenerating: "Generating...", adminInviteGenCTA: "Generate Evaluation Link",
-    adminInviteCreated: "Link created!", adminInviteCreatedSub: "Copy it or send it directly",
+    adminInviteCreated: "Link created!", adminInviteCreatedSub: "Copy it or send it directly", adminInviteCopyLink: "Copy link", adminInviteLinkCopied: "Link copied", adminInviteLinkCopiedDesc: "The pre-evaluation link is on your clipboard.", adminInviteCopyError: "Couldn't copy. Select the link and copy it manually.",
     adminInviteSendWA: "Send via WhatsApp", adminInviteError: "Error creating link",
     adminLinkError: "Error creating link",
     statusNuevo: "New", statusIncompleto: "Incomplete", statusListo: "Ready for review",
@@ -612,7 +616,7 @@ const T: Record<LangCode, AppTranslations> = {
     adminDemoWarning: "Você está usando a senha de demonstração. Configure ADMIN_PASSWORD nos segredos para proteger o painel.",
     adminInviteTitle: "Novo Link", adminInviteNameLabel: "Nome do paciente (opcional)", adminInvitePhoneLabel: "Celular *",
     adminInviteGenerating: "Gerando...", adminInviteGenCTA: "Gerar Link de Avaliação",
-    adminInviteCreated: "Link criado!", adminInviteCreatedSub: "Copie ou envie diretamente",
+    adminInviteCreated: "Link criado!", adminInviteCreatedSub: "Copie ou envie diretamente", adminInviteCopyLink: "Copiar link", adminInviteLinkCopied: "Link copiado", adminInviteLinkCopiedDesc: "O link de pré-avaliação está na sua área de transferência.", adminInviteCopyError: "Não foi possível copiar. Selecione o link e copie manualmente.",
     adminInviteSendWA: "Enviar via WhatsApp", adminInviteError: "Erro ao criar link", adminLinkError: "Erro ao criar link",
     statusNuevo: "Novo", statusIncompleto: "Incompleto", statusListo: "Pronto para revisão",
     statusContactar: "Contatar", statusAgendado: "Agendado", statusCerrado: "Encerrado",
@@ -725,7 +729,7 @@ const T: Record<LangCode, AppTranslations> = {
     adminDemoWarning: "Vous utilisez le mot de passe de démonstration. Configurez ADMIN_PASSWORD dans les secrets.",
     adminInviteTitle: "Nouveau lien", adminInviteNameLabel: "Nom du patient (optionnel)", adminInvitePhoneLabel: "Téléphone *",
     adminInviteGenerating: "Génération...", adminInviteGenCTA: "Générer le lien d'évaluation",
-    adminInviteCreated: "Lien créé !", adminInviteCreatedSub: "Copiez-le ou envoyez-le directement",
+    adminInviteCreated: "Lien créé !", adminInviteCreatedSub: "Copiez-le ou envoyez-le directement", adminInviteCopyLink: "Copier le lien", adminInviteLinkCopied: "Lien copié", adminInviteLinkCopiedDesc: "Le lien de pré-évaluation est dans votre presse-papiers.", adminInviteCopyError: "Impossible de copier. Sélectionnez le lien et copiez-le manuellement.",
     adminInviteSendWA: "Envoyer via WhatsApp", adminInviteError: "Erreur lors de la création du lien", adminLinkError: "Erreur lors de la création du lien",
     statusNuevo: "Nouveau", statusIncompleto: "Incomplet", statusListo: "Prêt pour révision",
     statusContactar: "Contacter", statusAgendado: "Planifié", statusCerrado: "Fermé",
@@ -838,7 +842,7 @@ const T: Record<LangCode, AppTranslations> = {
     adminDemoWarning: "Sie verwenden das Demo-Passwort. Konfigurieren Sie ADMIN_PASSWORD in den Geheimnissen.",
     adminInviteTitle: "Neuer Link", adminInviteNameLabel: "Patientenname (optional)", adminInvitePhoneLabel: "Telefon *",
     adminInviteGenerating: "Generierung...", adminInviteGenCTA: "Bewertungslink generieren",
-    adminInviteCreated: "Link erstellt!", adminInviteCreatedSub: "Kopieren oder direkt senden",
+    adminInviteCreated: "Link erstellt!", adminInviteCreatedSub: "Kopieren oder direkt senden", adminInviteCopyLink: "Link kopieren", adminInviteLinkCopied: "Link kopiert", adminInviteLinkCopiedDesc: "Der Vorbewertungslink ist in Ihrer Zwischenablage.", adminInviteCopyError: "Kopieren fehlgeschlagen. Markieren Sie den Link und kopieren Sie ihn manuell.",
     adminInviteSendWA: "Via WhatsApp senden", adminInviteError: "Fehler beim Erstellen des Links", adminLinkError: "Fehler beim Erstellen des Links",
     statusNuevo: "Neu", statusIncompleto: "Unvollständig", statusListo: "Bereit zur Überprüfung",
     statusContactar: "Kontaktieren", statusAgendado: "Geplant", statusCerrado: "Geschlossen",
@@ -951,7 +955,7 @@ const T: Record<LangCode, AppTranslations> = {
     adminDemoWarning: "Stai usando la password demo. Configura ADMIN_PASSWORD nei segreti.",
     adminInviteTitle: "Nuovo Link", adminInviteNameLabel: "Nome del paziente (opzionale)", adminInvitePhoneLabel: "Cellulare *",
     adminInviteGenerating: "Generazione...", adminInviteGenCTA: "Genera Link di Valutazione",
-    adminInviteCreated: "Link creato!", adminInviteCreatedSub: "Copialo o invialo direttamente",
+    adminInviteCreated: "Link creato!", adminInviteCreatedSub: "Copialo o invialo direttamente", adminInviteCopyLink: "Copia link", adminInviteLinkCopied: "Link copiato", adminInviteLinkCopiedDesc: "Il link di pre-valutazione è negli appunti.", adminInviteCopyError: "Impossibile copiare. Seleziona il link e copialo manualmente.",
     adminInviteSendWA: "Invia via WhatsApp", adminInviteError: "Errore nella creazione del link", adminLinkError: "Errore nella creazione del link",
     statusNuevo: "Nuovo", statusIncompleto: "Incompleto", statusListo: "Pronto per revisione",
     statusContactar: "Contattare", statusAgendado: "Pianificato", statusCerrado: "Chiuso",
@@ -1064,7 +1068,7 @@ const T: Record<LangCode, AppTranslations> = {
     adminDemoWarning: "Demo şifreyi kullanıyorsunuz. Paneli güvence altına almak için gizli ayarlarda ADMIN_PASSWORD yapılandırın.",
     adminInviteTitle: "Yeni Bağlantı", adminInviteNameLabel: "Hasta adı (isteğe bağlı)", adminInvitePhoneLabel: "Cep telefonu *",
     adminInviteGenerating: "Oluşturuluyor...", adminInviteGenCTA: "Değerlendirme Bağlantısı Oluştur",
-    adminInviteCreated: "Bağlantı oluşturuldu!", adminInviteCreatedSub: "Kopyalayın veya doğrudan gönderin",
+    adminInviteCreated: "Bağlantı oluşturuldu!", adminInviteCreatedSub: "Kopyalayın veya doğrudan gönderin", adminInviteCopyLink: "Bağlantıyı kopyala", adminInviteLinkCopied: "Bağlantı kopyalandı", adminInviteLinkCopiedDesc: "Ön değerlendirme bağlantısı panonuzda.", adminInviteCopyError: "Kopyalanamadı. Bağlantıyı seçip elle kopyalayın.",
     adminInviteSendWA: "WhatsApp ile Gönder", adminInviteError: "Bağlantı oluşturma hatası", adminLinkError: "Bağlantı oluşturma hatası",
     statusNuevo: "Yeni", statusIncompleto: "Eksik", statusListo: "İncelemeye hazır",
     statusContactar: "İletişim", statusAgendado: "Planlandı", statusCerrado: "Kapalı",
@@ -1177,7 +1181,7 @@ const T: Record<LangCode, AppTranslations> = {
     adminDemoWarning: "تستخدم كلمة مرور العرض التوضيحي. كوّن ADMIN_PASSWORD في الأسرار لتأمين اللوحة.",
     adminInviteTitle: "رابط جديد", adminInviteNameLabel: "اسم المريض (اختياري)", adminInvitePhoneLabel: "الهاتف المحمول *",
     adminInviteGenerating: "جارٍ الإنشاء...", adminInviteGenCTA: "إنشاء رابط التقييم",
-    adminInviteCreated: "تم إنشاء الرابط!", adminInviteCreatedSub: "انسخه أو أرسله مباشرة",
+    adminInviteCreated: "تم إنشاء الرابط!", adminInviteCreatedSub: "انسخه أو أرسله مباشرة", adminInviteCopyLink: "نسخ الرابط", adminInviteLinkCopied: "تم نسخ الرابط", adminInviteLinkCopiedDesc: "رابط التقييم المسبق موجود في الحافظة.", adminInviteCopyError: "تعذّر النسخ. حدّد الرابط وانسخه يدويًا.",
     adminInviteSendWA: "الإرسال عبر واتساب", adminInviteError: "خطأ في إنشاء الرابط", adminLinkError: "خطأ في إنشاء الرابط",
     statusNuevo: "جديد", statusIncompleto: "غير مكتمل", statusListo: "جاهز للمراجعة",
     statusContactar: "اتصال", statusAgendado: "مجدول", statusCerrado: "مغلق",
@@ -1290,7 +1294,7 @@ const T: Record<LangCode, AppTranslations> = {
     adminDemoWarning: "您正在使用演示密码。请在密钥中配置ADMIN_PASSWORD以保护面板安全。",
     adminInviteTitle: "新建链接", adminInviteNameLabel: "患者姓名（可选）", adminInvitePhoneLabel: "手机号 *",
     adminInviteGenerating: "生成中...", adminInviteGenCTA: "生成评估链接",
-    adminInviteCreated: "链接已创建！", adminInviteCreatedSub: "复制或直接发送",
+    adminInviteCreated: "链接已创建！", adminInviteCreatedSub: "复制或直接发送", adminInviteCopyLink: "复制链接", adminInviteLinkCopied: "链接已复制", adminInviteLinkCopiedDesc: "预评估链接已复制到剪贴板。", adminInviteCopyError: "复制失败。请选中链接并手动复制。",
     adminInviteSendWA: "通过WhatsApp发送", adminInviteError: "创建链接时出错", adminLinkError: "创建链接时出错",
     statusNuevo: "新建", statusIncompleto: "不完整", statusListo: "待审查",
     statusContactar: "联系", statusAgendado: "已安排", statusCerrado: "已关闭",
