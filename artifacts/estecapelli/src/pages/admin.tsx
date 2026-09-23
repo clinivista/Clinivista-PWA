@@ -3,7 +3,7 @@ import { useLocation, Link } from "wouter";
 import { format, parseISO } from "date-fns";
 import { es as dateFnsEs } from "date-fns/locale";
 import {
-  Users, LogOut, CheckCircle2, Link as LinkIcon,
+  Users, LogOut,
   Search, ChevronRight, X, Phone, AlertTriangle, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu, Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,17 +17,12 @@ import {
   useGetLeadStats, getGetLeadStatsQueryKey,
   useGetLeads, getGetLeadsQueryKey,
   useGetLeadById, getGetLeadByIdQueryKey,
-  usePatchLead, useDeleteLead, useCreateInvitation,
-  LeadSummary
+  usePatchLead, useDeleteLead,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
 import { BrandLogo } from "@/components/brand-logo";
-import { buildPatientLink, copyToClipboard } from "@/lib/clipboard";
+import { buildPublicPatientLink, copyToClipboard } from "@/lib/clipboard";
 
 const STATUS_COLORS: Record<string, string> = {
   nuevo: "bg-blue-100 text-blue-700",
@@ -39,11 +34,6 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const NORWOOD_SCALES = ["I", "II", "IIA", "III", "III-V", "IIIA", "IV", "IVA", "V", "VA", "VI", "VII", "No concluyente"];
-
-const inviteSchema = z.object({
-  name: z.string().optional(),
-  phone: z.string().min(8, "Ingresa un teléfono válido")
-});
 
 export default function Admin() {
   const [, setLocation] = useLocation();
@@ -66,8 +56,6 @@ export default function Admin() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
-  const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [inviteResult, setInviteResult] = useState<{link: string, lead: LeadSummary} | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -75,7 +63,6 @@ export default function Admin() {
   const { data: authStatus, isLoading: isAuthLoading } = useGetAuthMe();
   const logoutMutation = useAdminLogout();
   const deleteMutation = useDeleteLead();
-  const inviteMutation = useCreateInvitation();
 
   const { data: stats } = useGetLeadStats({ query: { enabled: authStatus?.authenticated, queryKey: getGetLeadStatsQueryKey() }});
 
@@ -90,10 +77,6 @@ export default function Admin() {
   });
 
   const patchMutation = usePatchLead();
-  const inviteForm = useForm<z.infer<typeof inviteSchema>>({
-    resolver: zodResolver(inviteSchema),
-    defaultValues: { name: "", phone: "" }
-  });
 
   useEffect(() => {
     if (!isAuthLoading && !authStatus?.authenticated) setLocation("/admin/login");
@@ -143,26 +126,13 @@ export default function Admin() {
     });
   };
 
-  const inviteLink = inviteResult ? buildPatientLink(inviteResult.lead.token) : "";
-
-  const handleCopyInviteLink = async () => {
-    if (await copyToClipboard(inviteLink)) {
+  const handleCopyGenericLink = async () => {
+    if (await copyToClipboard(buildPublicPatientLink())) {
       setLinkCopied(true);
       toast({ title: t.adminInviteLinkCopied, description: t.adminInviteLinkCopiedDesc });
     } else {
       toast({ variant: "destructive", title: "Error", description: t.adminInviteCopyError });
     }
-  };
-
-  const onInviteSubmit = (data: z.infer<typeof inviteSchema>) => {
-    inviteMutation.mutate({ data }, {
-      onSuccess: (res) => {
-        setInviteResult(res);
-        queryClient.invalidateQueries({ queryKey: getGetLeadsQueryKey(leadsParams) });
-        queryClient.invalidateQueries({ queryKey: getGetLeadStatsQueryKey() });
-      },
-      onError: () => toast({ variant: "destructive", title: t.adminLinkError })
-    });
   };
 
   return (
@@ -273,11 +243,11 @@ export default function Admin() {
             <p className="text-sm text-muted-foreground font-medium mt-1">{t.adminDashSub}</p>
           </div>
           <Button
-            onClick={() => { setIsInviteOpen(true); setInviteResult(null); setLinkCopied(false); inviteForm.reset(); }}
-            className="gap-2 h-12 px-6 rounded-full font-bold shadow-lg shadow-primary/20 shrink-0 w-full md:w-auto"
+            onClick={handleCopyGenericLink}
+            className={`gap-2 h-12 px-6 rounded-full font-bold shadow-lg transition-all shrink-0 w-full md:w-auto ${linkCopied ? "bg-emerald-600 hover:bg-emerald-600 shadow-emerald-600/20" : "shadow-primary/20"}`}
           >
-            <LinkIcon className="w-4 h-4" />
-            {t.adminNewLink}
+            {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            {linkCopied ? t.adminInviteLinkCopied : t.adminInviteCopyLink}
           </Button>
         </header>
 
@@ -659,79 +629,6 @@ export default function Admin() {
             <X className="w-6 h-6" />
           </button>
           <img src={expandedPhoto} alt="" className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl" />
-        </div>
-      )}
-
-      {/* Invite Modal */}
-      {isInviteOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-          <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-6 md:p-8 border-b border-[#E8E4DE] flex justify-between items-center bg-[#F5F2EE]">
-              <h3 className="text-xl font-extrabold text-foreground">{t.adminInviteTitle}</h3>
-              <button onClick={() => setIsInviteOpen(false)} className="w-10 h-10 hover:bg-[#E8E4DE] rounded-full flex items-center justify-center transition-colors">
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-            <div className="p-6 md:p-8">
-              {!inviteResult ? (
-                <Form {...inviteForm}>
-                  <form onSubmit={inviteForm.handleSubmit(onInviteSubmit)} className="space-y-5">
-                    <FormField control={inviteForm.control} name="name" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-bold text-foreground">{t.adminInviteNameLabel}</FormLabel>
-                        <FormControl><Input placeholder="Ej. Juan Pérez" className="h-12 rounded-2xl text-base bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white" {...field} /></FormControl>
-                      </FormItem>
-                    )} />
-                    <FormField control={inviteForm.control} name="phone" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-bold text-foreground">{t.adminInvitePhoneLabel}</FormLabel>
-                        <FormControl><Input placeholder="+56 9 1234 5678" className="h-12 rounded-2xl text-base bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <Button type="submit" className="w-full h-14 rounded-full text-base font-bold shadow-lg shadow-primary/20 hover:scale-[1.01] transition-all mt-2" disabled={inviteMutation.isPending}>
-                      {inviteMutation.isPending ? t.adminInviteGenerating : t.adminInviteGenCTA}
-                    </Button>
-                  </form>
-                </Form>
-              ) : (
-                <div className="text-center space-y-6 animate-in fade-in">
-                  <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto relative">
-                    <div className="absolute inset-0 bg-emerald-100 animate-ping rounded-full opacity-20" />
-                    <CheckCircle2 className="w-10 h-10 text-emerald-500 relative z-10" />
-                  </div>
-                  <div>
-                    <h4 className="font-extrabold text-2xl mb-2 text-foreground">{t.adminInviteCreated}</h4>
-                    <p className="text-base text-muted-foreground font-medium">{t.adminInviteCreatedSub}</p>
-                  </div>
-                  <div className="space-y-3">
-                    <Button
-                      onClick={handleCopyInviteLink}
-                      className={`w-full h-14 gap-2 rounded-full font-bold text-base shadow-lg transition-all hover:scale-[1.01] ${linkCopied ? "bg-emerald-600 hover:bg-emerald-600 shadow-emerald-600/20" : "shadow-primary/20"}`}
-                    >
-                      {linkCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                      {linkCopied ? t.adminInviteLinkCopied : t.adminInviteCopyLink}
-                    </Button>
-                    <span role="status" aria-live="polite" className="sr-only">{linkCopied ? t.adminInviteLinkCopied : ""}</span>
-                    <p data-testid="invite-link" className="bg-[#F5F2EE] px-4 py-3 rounded-2xl text-xs text-muted-foreground font-medium break-all select-all text-left">
-                      {inviteLink}
-                    </p>
-                  </div>
-                  <Button
-                    className="w-full h-14 bg-[#25D366] hover:bg-[#128C7E] text-white gap-2 rounded-full font-bold text-base shadow-lg shadow-[#25D366]/20 transition-all hover:scale-[1.01]"
-                    onClick={() => {
-                      const phone = inviteResult.lead.phone.replace(/\D/g, '');
-                      const msg = encodeURIComponent(`Hola ${inviteResult.lead.name || ''}, te enviamos el link seguro para tu preevaluación capilar: ${inviteLink}`);
-                      window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
-                    }}
-                  >
-                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.305-.885-.653-1.48-1.459-1.653-1.756-.173-.298-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
-                    {t.adminInviteSendWA}
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       )}
     </div>

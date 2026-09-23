@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { buildPatientLink, copyToClipboard } from "./clipboard";
+import { buildPatientLink, buildPublicPatientLink, copyToClipboard } from "./clipboard";
 
 function setSecureContext(value: boolean) {
   Object.defineProperty(window, "isSecureContext", { configurable: true, value });
@@ -61,5 +61,11 @@ describe("copyToClipboard", () => {
     document.execCommand = vi.fn(() => false);
 
     await expect(copyToClipboard("link")).resolves.toBe(false);
+  });
+});
+
+describe("buildPublicPatientLink", () => {
+  it("is the token-less self-registration URL on the admin panel's origin", () => {
+    expect(buildPublicPatientLink()).toBe(`${window.location.origin}/patient`);
   });
 });

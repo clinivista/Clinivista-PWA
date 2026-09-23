@@ -10,6 +10,16 @@ export function buildPatientLink(token: string): string {
 }
 
 /**
+ * Permanent, token-less self-registration link. /patient without a token
+ * creates the patient's own evaluation on submit, so one link works for
+ * every patient and never expires.
+ */
+export function buildPublicPatientLink(): string {
+  const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+  return `${window.location.origin}${base}/patient`;
+}
+
+/**
  * Copy text to the clipboard. The async Clipboard API only exists in secure
  * contexts (HTTPS or localhost), so plain-HTTP LAN access falls back to a
  * hidden textarea + execCommand("copy"). Resolves to whether the copy worked.
