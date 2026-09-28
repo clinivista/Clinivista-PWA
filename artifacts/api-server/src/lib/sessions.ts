@@ -1,10 +1,13 @@
 import crypto from "crypto";
+import type { UserRole } from "@workspace/db";
 
 // In-memory session store (sufficient for MVP single-instance deployment)
 export type SessionContext = {
   expiresAt: number;
-  centerId: string;
-  role: "admin";
+  userId: string;
+  // null only for "director" accounts, which aren't scoped to one clinic.
+  centerId: string | null;
+  role: UserRole;
 };
 
 const sessions = new Map<string, SessionContext>();

@@ -4,7 +4,7 @@ import { format, parseISO } from "date-fns";
 import { es as dateFnsEs } from "date-fns/locale";
 import {
   Users, LogOut,
-  Search, ChevronRight, X, Phone, AlertTriangle, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu, Copy
+  Search, ChevronRight, X, Phone, Lock, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu, Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,6 +96,34 @@ export default function Admin() {
   }, [mobileNavOpen]);
 
   if (isAuthLoading || !authStatus?.authenticated) return <div className="min-h-[100dvh] bg-[#F5F2EE]" />;
+
+  if (authStatus.user?.role === "director") {
+    return (
+      <div className="min-h-[100dvh] bg-[#F5F2EE] flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white rounded-[2rem] shadow-lg border border-[#E8E4DE] p-10 text-center">
+          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-6 mx-auto">
+            <Lock className="w-6 h-6 text-primary" />
+          </div>
+          <h1 className="text-xl font-bold text-foreground tracking-tight mb-2">Panel de supra-control</h1>
+          <p className="text-sm text-muted-foreground font-medium mb-8">
+            Próximamente: gestión de todas las clínicas, suspensión y exportación de datos desde una sola vista.
+          </p>
+          <Button
+            variant="ghost"
+            className="w-full justify-center text-muted-foreground hover:text-foreground font-medium rounded-2xl h-12"
+            onClick={() => {
+              logoutMutation.mutate(undefined, {
+                onSuccess: () => { queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() }); setLocation("/"); }
+              });
+            }}
+          >
+            <LogOut className="w-5 h-5 mr-3" />
+            {t.logout}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
@@ -229,13 +257,6 @@ export default function Admin() {
       <main className="flex-1 flex flex-col min-h-0 md:h-[100dvh] overflow-hidden relative">
         {/* Mobile: whole content scrolls; desktop: only the patient list scrolls */}
         <div className="flex-1 min-h-0 flex flex-col overflow-y-auto md:overflow-hidden">
-        {authStatus.demoPassword && (
-          <div className="bg-amber-50 text-amber-800 px-4 py-3 text-sm font-semibold flex items-center gap-2 justify-center shrink-0 border-b border-amber-200">
-            <AlertTriangle className="w-5 h-5 shrink-0" />
-            {t.adminDemoWarning}
-          </div>
-        )}
-
         {/* Topbar */}
         <header className="bg-white border-b border-[#E8E4DE] p-4 sm:p-6 md:px-10 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 z-20">
           <div>

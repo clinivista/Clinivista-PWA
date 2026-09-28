@@ -2,7 +2,7 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { db, leadsTable } from "@workspace/db";
 import { CreateInvitationBody } from "@workspace/api-zod";
-import { getAuthContext, requireAuth } from "./auth";
+import { requireStaffAuth } from "./auth";
 import { uid, clean, cleanPhone } from "../lib/helpers";
 import { defaultProtocolIdForCenter, ensureClinicalConfiguration } from "../lib/clinical-photos";
 
@@ -14,8 +14,7 @@ function leadSummary(lead: typeof leadsTable.$inferSelect) {
 }
 
 router.post("/invitations", async (req, res): Promise<void> => {
-  if (!requireAuth(req, res)) return;
-  const context = getAuthContext(req);
+  const context = requireStaffAuth(req, res);
   if (!context) return;
 
   const parsed = CreateInvitationBody.safeParse(req.body);

@@ -50,13 +50,13 @@ paths:
     post:
       operationId: adminLogin
       tags: [auth]
-      summary: Admin login
+      summary: Staff login (email + password)
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AdminCredentials"
+              $ref: "#/components/schemas/LoginCredentials"
       responses:
         "200":
           description: Login result
@@ -708,28 +708,48 @@ components:
 
     AuthStatus:
       type: object
-      required: [authenticated, demoPassword]
+      required: [authenticated]
       properties:
         authenticated:
           type: boolean
-        demoPassword:
-          type: boolean
+        user:
+          $ref: "#/components/schemas/AuthUser"
 
-    AdminCredentials:
+    AuthUser:
       type: object
-      required: [password]
+      required: [id, email, name, role, centerId]
       properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [medico, administrativo, director]
+        centerId:
+          type: string
+          nullable: true
+          description: null only for "director" accounts, which see every clinic.
+
+    LoginCredentials:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
         password:
           type: string
 
     LoginResult:
       type: object
-      required: [ok, demoPassword]
+      required: [ok, user]
       properties:
         ok:
           type: boolean
-        demoPassword:
-          type: boolean
+        user:
+          $ref: "#/components/schemas/AuthUser"
 
     PhotoEntry:
       type: object
