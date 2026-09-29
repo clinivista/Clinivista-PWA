@@ -6,8 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export * from './adminCredentials';
 export * from './authStatus';
+export * from './authUser';
+export * from './authUserRole';
 export * from './errorResponse';
 export * from './getLeads200';
 export * from './getLeadsParams';
@@ -20,6 +21,7 @@ export * from './leadStats';
 export * from './leadStatsCounts';
 export * from './leadStatus';
 export * from './leadSummary';
+export * from './loginCredentials';
 export * from './loginResult';
 export * from './patientInput';
 export * from './patientPhotoStatus';

@@ -21,20 +21,33 @@ export const HealthCheckResponse = zod.object({
  */
 export const GetAuthMeResponse = zod.object({
   "authenticated": zod.boolean(),
-  "demoPassword": zod.boolean()
+  "user": zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['medico', 'administrativo', 'director']),
+  "centerId": zod.string().nullable().describe('null only for \"director\" accounts, which see every clinic.')
+}).optional()
 })
 
 
 /**
- * @summary Admin login
+ * @summary Staff login (email + password)
  */
 export const AdminLoginBody = zod.object({
+  "email": zod.string(),
   "password": zod.string()
 })
 
 export const AdminLoginResponse = zod.object({
   "ok": zod.boolean(),
-  "demoPassword": zod.boolean()
+  "user": zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['medico', 'administrativo', 'director']),
+  "centerId": zod.string().nullable().describe('null only for \"director\" accounts, which see every clinic.')
+})
 })
 
 

@@ -11,6 +11,7 @@ import { BrandLogo } from "@/components/brand-logo";
 
 export default function Login() {
   const [, setLocation] = useLocation();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const queryClient = useQueryClient();
   const loginMutation = useAdminLogin();
@@ -29,8 +30,8 @@ export default function Login() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password) return;
-    loginMutation.mutate({ data: { password } }, {
+    if (!email || !password) return;
+    loginMutation.mutate({ data: { email, password } }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() });
         setLocation("/admin");
@@ -107,6 +108,18 @@ export default function Login() {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-3">
+                <label className="text-xs font-bold text-foreground uppercase tracking-wider ml-1">{t.loginEmailLabel}</label>
+                <Input
+                  type="email"
+                  placeholder={t.loginEmailPlaceholder}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-14 bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-lg px-5 rounded-2xl transition-all shadow-sm focus:ring-2 focus:ring-primary/20"
+                  autoFocus
+                />
+              </div>
+
+              <div className="space-y-3">
                 <label className="text-xs font-bold text-foreground uppercase tracking-wider ml-1">{t.loginLabel}</label>
                 <Input
                   type="password"
@@ -114,14 +127,13 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-14 bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-lg px-5 rounded-2xl transition-all shadow-sm focus:ring-2 focus:ring-primary/20"
-                  autoFocus
                 />
               </div>
 
               <Button
                 type="submit"
                 className="w-full h-14 text-base font-bold rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 group mt-4"
-                disabled={loginMutation.isPending || !password}
+                disabled={loginMutation.isPending || !email || !password}
               >
                 {loginMutation.isPending ? t.loginVerifying : t.loginCTA}
                 {!loginMutation.isPending && <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />}

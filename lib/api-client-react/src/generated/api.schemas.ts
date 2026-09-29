@@ -17,18 +17,37 @@ export interface SimpleOk {
   ok: boolean;
 }
 
-export interface AuthStatus {
-  authenticated: boolean;
-  demoPassword: boolean;
+export type AuthUserRole = typeof AuthUserRole[keyof typeof AuthUserRole];
+
+
+export const AuthUserRole = {
+  medico: 'medico',
+  administrativo: 'administrativo',
+  director: 'director',
+} as const;
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  role: AuthUserRole;
+  /** null only for "director" accounts, which see every clinic. */
+  centerId: string | null;
 }
 
-export interface AdminCredentials {
+export interface AuthStatus {
+  authenticated: boolean;
+  user?: AuthUser;
+}
+
+export interface LoginCredentials {
+  email: string;
   password: string;
 }
 
 export interface LoginResult {
   ok: boolean;
-  demoPassword: boolean;
+  user: AuthUser;
 }
 
 export interface PhotoEntry {

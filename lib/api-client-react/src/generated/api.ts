@@ -20,7 +20,6 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  AdminCredentials,
   AuthStatus,
   ErrorResponse,
   GetLeads200,
@@ -31,6 +30,7 @@ import type {
   Lead,
   LeadPatch,
   LeadStats,
+  LoginCredentials,
   LoginResult,
   PatientInput,
   PatientPhotoStatus,
@@ -229,16 +229,16 @@ export const getAdminLoginUrl = () => {
 }
 
 /**
- * @summary Admin login
+ * @summary Staff login (email + password)
  */
-export const adminLogin = async (adminCredentials: AdminCredentials, options?: Parameters<typeof customFetch>[1]): Promise<LoginResult> => {
+export const adminLogin = async (loginCredentials: LoginCredentials, options?: Parameters<typeof customFetch>[1]): Promise<LoginResult> => {
 
   return customFetch<LoginResult>(getAdminLoginUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(adminCredentials)
+    body: JSON.stringify(loginCredentials)
   }
 );}
 
@@ -247,8 +247,8 @@ export const adminLogin = async (adminCredentials: AdminCredentials, options?: P
 
 
 export const getAdminLoginMutationOptions = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminLogin>>, TError,{data: BodyType<AdminCredentials>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminLogin>>, TError,{data: BodyType<AdminCredentials>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminLogin>>, TError,{data: BodyType<LoginCredentials>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminLogin>>, TError,{data: BodyType<LoginCredentials>}, TContext> => {
 
 const mutationKey = ['adminLogin'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -260,7 +260,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminLogin>>, {data: BodyType<AdminCredentials>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminLogin>>, {data: BodyType<LoginCredentials>}> = (props) => {
           const {data} = props ?? {};
 
           return  adminLogin(data,requestOptions)
@@ -274,18 +274,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type AdminLoginMutationResult = NonNullable<Awaited<ReturnType<typeof adminLogin>>>
-    export type AdminLoginMutationBody = BodyType<AdminCredentials>
+    export type AdminLoginMutationBody = BodyType<LoginCredentials>
     export type AdminLoginMutationError = ErrorType<ErrorResponse>
 
     /**
- * @summary Admin login
+ * @summary Staff login (email + password)
  */
 export const useAdminLogin = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminLogin>>, TError,{data: BodyType<AdminCredentials>}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminLogin>>, TError,{data: BodyType<LoginCredentials>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof adminLogin>>,
         TError,
-        {data: BodyType<AdminCredentials>},
+        {data: BodyType<LoginCredentials>},
         TContext
       > => {
       return useMutation(getAdminLoginMutationOptions(options));

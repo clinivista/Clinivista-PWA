@@ -5,8 +5,9 @@
  * Estecapelli API — Preevaluación capilar
  * OpenAPI spec version: 0.1.0
  */
+import type { AuthUser } from './authUser';
 
 export interface LoginResult {
   ok: boolean;
-  demoPassword: boolean;
+  user: AuthUser;
 }

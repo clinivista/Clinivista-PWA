@@ -1,17 +1,11 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import crypto from "crypto";
+import { eq } from "drizzle-orm";
 import { AdminLoginBody } from "@workspace/api-zod";
+import { db, usersTable, verifyPassword, normalizeEmail, type UserRole } from "@workspace/db";
 import { createSession, getSession, isValidSession, destroySession } from "../lib/sessions";
 import { getSessionToken } from "../lib/helpers";
 
 const router: IRouter = Router();
-
-const configuredAdminPassword = process.env.ADMIN_PASSWORD;
-if (process.env.NODE_ENV === "production" && !configuredAdminPassword) {
-  throw new Error("ADMIN_PASSWORD must be configured in production.");
-}
-const ADMIN_PASSWORD = configuredAdminPassword ?? "demo-clinivista";
-const IS_DEMO_PASSWORD = !configuredAdminPassword;
 
 function getToken(req: Request): string | undefined {
   return getSessionToken(req.headers.cookie);
@@ -25,14 +19,50 @@ export function requireAuth(req: Request, res: Response): boolean {
   return true;
 }
 
-export function getAuthContext(req: Request): { centerId: string; role: "admin" } | undefined {
+/** Any authenticated user — médico, administrativo or director. */
+export function getAuthContext(req: Request): { userId: string; centerId: string | null; role: UserRole } | undefined {
   const session = getSession(getToken(req));
-  return session ? { centerId: session.centerId, role: session.role } : undefined;
+  return session ? { userId: session.userId, centerId: session.centerId, role: session.role } : undefined;
 }
 
-router.get("/auth/me", (req, res): void => {
-  const authenticated = isValidSession(getToken(req));
-  res.json({ authenticated, demoPassword: IS_DEMO_PASSWORD });
+export type StaffAuthContext = { userId: string; centerId: string; role: "medico" | "administrativo" };
+
+/**
+ * médico/administrativo only, with a guaranteed (non-null) centerId — what
+ * every clinic-scoped route (leads, invitations) needs. A "director" session
+ * is valid but out of scope here (it has no single clinic); Phase 3's
+ * supra-control panel is its own set of routes.
+ */
+export function requireStaffAuth(req: Request, res: Response): StaffAuthContext | undefined {
+  const session = getSession(getToken(req));
+  if (!session) {
+    res.status(401).json({ error: "Sesión requerida." });
+    return undefined;
+  }
+  if (session.role === "director" || !session.centerId) {
+    res.status(403).json({ error: "Esta acción requiere una cuenta de clínica (médico o administrativo)." });
+    return undefined;
+  }
+  return { userId: session.userId, centerId: session.centerId, role: session.role };
+}
+
+function authUser(user: typeof usersTable.$inferSelect) {
+  return { id: user.id, email: user.email, name: user.name, role: user.role, centerId: user.centerId };
+}
+
+router.get("/auth/me", async (req, res): Promise<void> => {
+  const session = getSession(getToken(req));
+  if (!session) {
+    res.json({ authenticated: false });
+    return;
+  }
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, session.userId));
+  if (!user || !user.active) {
+    destroySession(getToken(req));
+    res.json({ authenticated: false });
+    return;
+  }
+  res.json({ authenticated: true, user: authUser(user) });
 });
 
 router.post("/auth/login", async (req, res): Promise<void> => {
@@ -42,25 +72,26 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     return;
   }
 
-  const given = parsed.data.password ?? "";
-  const padLen = 64;
-  const a = Buffer.from(given.padEnd(padLen).slice(0, padLen));
-  const b = Buffer.from(ADMIN_PASSWORD.padEnd(padLen).slice(0, padLen));
+  const emailNormalized = normalizeEmail(parsed.data.email);
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.emailNormalized, emailNormalized));
 
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
-    res.status(401).json({ error: "Clave incorrecta." });
+  // Same "invalid credentials" response whether the email doesn't exist, the
+  // account is deactivated, or the password is wrong — never reveal which.
+  if (!user || !user.active || !verifyPassword(parsed.data.password, user.passwordHash)) {
+    res.status(401).json({ error: "Correo o contraseña incorrectos." });
     return;
   }
 
   const token = createSession({
-    centerId: process.env.DEFAULT_CENTER_ID ?? "default-center",
-    role: "admin",
+    userId: user.id,
+    centerId: user.centerId,
+    role: user.role,
   });
   res.setHeader(
     "Set-Cookie",
     `clinivista_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=43200${process.env.NODE_ENV === "production" ? "; Secure" : ""}`,
   );
-  res.json({ ok: true, demoPassword: IS_DEMO_PASSWORD });
+  res.json({ ok: true, user: authUser(user) });
 });
 
 router.post("/auth/logout", (req, res): void => {

@@ -8,7 +8,7 @@ import {
   PatchLeadParams,
   PatchLeadBody,
 } from "@workspace/api-zod";
-import { getAuthContext, requireAuth } from "./auth";
+import { requireStaffAuth } from "./auth";
 import { clean } from "../lib/helpers";
 import { DEFAULT_CENTER_ID, deleteClinicalDataForLead, getPhotoForStaff, getPhotoStatusesForLead } from "../lib/clinical-photos";
 import { privatePhotoStorage } from "../lib/clinical-photo-storage";
@@ -42,8 +42,7 @@ async function leadFull(lead: typeof leadsTable.$inferSelect) {
 }
 
 router.get("/leads", async (req, res): Promise<void> => {
-  if (!requireAuth(req, res)) return;
-  const context = getAuthContext(req);
+  const context = requireStaffAuth(req, res);
   if (!context) return;
 
   const qp = GetLeadsQueryParams.safeParse(req.query);
@@ -69,8 +68,7 @@ router.get("/leads", async (req, res): Promise<void> => {
 });
 
 router.get("/leads/stats", async (req, res): Promise<void> => {
-  if (!requireAuth(req, res)) return;
-  const context = getAuthContext(req);
+  const context = requireStaffAuth(req, res);
   if (!context) return;
 
   const allLeads = (await db.select().from(leadsTable))
@@ -85,8 +83,7 @@ router.get("/leads/stats", async (req, res): Promise<void> => {
 });
 
 router.get("/leads/:id", async (req, res): Promise<void> => {
-  if (!requireAuth(req, res)) return;
-  const context = getAuthContext(req);
+  const context = requireStaffAuth(req, res);
   if (!context) return;
 
   const params = GetLeadByIdParams.safeParse(req.params);
@@ -109,10 +106,10 @@ router.get("/leads/:id", async (req, res): Promise<void> => {
 });
 
 router.get("/leads/:id/photos/:photoId", async (req, res): Promise<void> => {
-  if (!requireAuth(req, res)) return;
-  const context = getAuthContext(req);
+  const context = requireStaffAuth(req, res);
+  if (!context) return;
   const params = GetLeadPhotoFileParams.safeParse(req.params);
-  if (!context || !params.success) {
+  if (!params.success) {
     res.status(400).json({ error: "Solicitud inválida." });
     return;
   }
@@ -139,8 +136,7 @@ router.get("/leads/:id/photos/:photoId", async (req, res): Promise<void> => {
 });
 
 router.delete("/leads/:id", async (req, res): Promise<void> => {
-  if (!requireAuth(req, res)) return;
-  const context = getAuthContext(req);
+  const context = requireStaffAuth(req, res);
   if (!context) return;
 
   const params = GetLeadByIdParams.safeParse(req.params);
@@ -166,8 +162,7 @@ router.delete("/leads/:id", async (req, res): Promise<void> => {
 });
 
 router.patch("/leads/:id", async (req, res): Promise<void> => {
-  if (!requireAuth(req, res)) return;
-  const context = getAuthContext(req);
+  const context = requireStaffAuth(req, res);
   if (!context) return;
 
   const params = PatchLeadParams.safeParse(req.params);
