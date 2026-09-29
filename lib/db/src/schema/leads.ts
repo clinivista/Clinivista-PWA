@@ -22,7 +22,8 @@ export const leadsTable = pgTable("leads", {
   phone: text("phone").notNull().default(""),
   documentId: text("document_id").default(""),
   // Normalized RUT (digits + uppercase K, no punctuation), e.g. "12345678K".
-  // Named without a centre prefix so a future composite unique (centreId, documentNormalized) can replace the global one.
+  // Unique per clinic (see leads_center_document_unique below), not globally —
+  // two different clinics can each have a patient with the same RUT.
   documentNormalized: text("document_normalized").default(""),
   email: text("email").default(""),
   age: text("age").default(""),
@@ -44,8 +45,9 @@ export const leadsTable = pgTable("leads", {
   centerId: text("center_id").default("default-center"),
   protocolId: text("protocol_id").default("capillary-initial"),
 }, (table) => [
-  uniqueIndex("leads_document_normalized_unique")
-    .on(table.documentNormalized)
+  // Per-clinic uniqueness: the same RUT is only a duplicate within one center.
+  uniqueIndex("leads_center_document_unique")
+    .on(table.centerId, table.documentNormalized)
     .where(sql`${table.documentNormalized} IS NOT NULL AND ${table.documentNormalized} <> ''`),
 ]);
 

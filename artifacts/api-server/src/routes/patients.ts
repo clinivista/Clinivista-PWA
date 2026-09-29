@@ -1,6 +1,6 @@
 import express, { Router, type IRouter } from "express";
 import { spawn } from "node:child_process";
-import { eq, or } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { db, leadsTable } from "@workspace/db";
 import {
   ConfirmPatientPhotoParams,
@@ -311,15 +311,20 @@ router.post("/patients", async (req, res): Promise<void> => {
   // Duplicates never return the existing token: phone, email and RUT are not
   // secrets. `resumable` only tells the client that the evaluation is still in
   // progress, so it can point the patient back to the device that holds it.
+  // Scoped to this clinic (DEFAULT_CENTER_ID, the center new patients join
+  // here): the same RUT/phone/email at a different clinic is not a duplicate.
   const [rutDuplicate] = await db.select({ id: leadsTable.id, status: leadsTable.status }).from(leadsTable)
-    .where(eq(leadsTable.documentNormalized, data.documentNormalized)).limit(1);
+    .where(and(eq(leadsTable.documentNormalized, data.documentNormalized), eq(leadsTable.centerId, DEFAULT_CENTER_ID)))
+    .limit(1);
   if (rutDuplicate) {
     res.status(409).json({ error: "Ya existe una evaluación registrada con este RUT.", duplicate: true, resumable: rutDuplicate.status === "incompleto" });
     return;
   }
-  const conditions = [eq(leadsTable.phone, data.phone)];
-  if (data.email) conditions.push(eq(leadsTable.email, data.email));
-  const [duplicate] = await db.select({ id: leadsTable.id, status: leadsTable.status }).from(leadsTable).where(or(...conditions)).limit(1);
+  const contactConditions = [eq(leadsTable.phone, data.phone)];
+  if (data.email) contactConditions.push(eq(leadsTable.email, data.email));
+  const [duplicate] = await db.select({ id: leadsTable.id, status: leadsTable.status }).from(leadsTable)
+    .where(and(or(...contactConditions), eq(leadsTable.centerId, DEFAULT_CENTER_ID)))
+    .limit(1);
   if (duplicate) {
     res.status(409).json({ error: "Ya existe una evaluación con este teléfono o correo.", duplicate: true, resumable: duplicate.status === "incompleto" });
     return;
@@ -377,8 +382,10 @@ router.put("/patients/:token", async (req, res): Promise<void> => {
     return;
   }
   const data = buildLead(parsed.data as Record<string, unknown>, existing);
+  const existingCenterId = existing.centerId ?? DEFAULT_CENTER_ID;
   const [rutClash] = await db.select({ id: leadsTable.id }).from(leadsTable)
-    .where(eq(leadsTable.documentNormalized, data.documentNormalized)).limit(1);
+    .where(and(eq(leadsTable.documentNormalized, data.documentNormalized), eq(leadsTable.centerId, existingCenterId)))
+    .limit(1);
   if (rutClash && rutClash.id !== existing.id) {
     res.status(409).json({ error: "Ya existe una evaluación registrada con este RUT.", duplicate: true });
     return;
