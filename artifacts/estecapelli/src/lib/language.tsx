@@ -164,6 +164,7 @@ export type AppTranslations = {
   pGoHome: string;
   pDataError: string;
   pSaveError: string;
+  pClinicSuspendedError: string;
   pPhotoError: string;
 
   // ── Login ──
@@ -344,7 +345,7 @@ const T: Record<LangCode, AppTranslations> = {
 
     pSuccessTitle: "¡Tu evaluación fue recibida!", pSuccessDesc: "Nuestro equipo revisará tu información y fotografías. Recibirás una respuesta en un plazo máximo de 24 horas hábiles.",
     pSuccessNext: "¿Qué sigue ahora?", pSuccessStep1: "Revisión de tu caso (hasta 24 h hábiles)", pSuccessStep2: "Te contactaremos por WhatsApp o correo", pSuccessStep3: "Coordinamos tu consulta",
-    pGoHome: "Volver al Inicio", pDataError: "Datos incompletos", pSaveError: "No pudimos guardar tu información. Intenta nuevamente.", pPhotoError: "Error al procesar imagen",
+    pGoHome: "Volver al Inicio", pDataError: "Datos incompletos", pSaveError: "No pudimos guardar tu información. Intenta nuevamente.", pClinicSuspendedError: "Esta clínica no está recibiendo nuevas evaluaciones por ahora. Por favor contacta directamente al centro para más información.", pPhotoError: "Error al procesar imagen",
 
     loginTitle: "Bienvenido de vuelta", loginSub: "Ingresa tu correo y contraseña para acceder al panel",
     loginEmailLabel: "Correo electrónico", loginEmailPlaceholder: "tu@clinica.cl",
@@ -476,7 +477,7 @@ const T: Record<LangCode, AppTranslations> = {
 
     pSuccessTitle: "Your evaluation was received!", pSuccessDesc: "Our team will review your information and photos. You will receive a response within 24 business hours.",
     pSuccessNext: "What happens next?", pSuccessStep1: "Review of your case (up to 24 business hours)", pSuccessStep2: "We will contact you via WhatsApp or email", pSuccessStep3: "We schedule your consultation",
-    pGoHome: "Go back home", pDataError: "Incomplete data", pSaveError: "We could not save your information. Please try again.", pPhotoError: "Error processing image",
+    pGoHome: "Go back home", pDataError: "Incomplete data", pSaveError: "We could not save your information. Please try again.", pClinicSuspendedError: "This clinic is not accepting new evaluations right now. Please contact the clinic directly for more information.", pPhotoError: "Error processing image",
 
     loginTitle: "Welcome back", loginSub: "Enter your email and password to access the panel",
     loginEmailLabel: "Email address", loginEmailPlaceholder: "you@clinic.com",
@@ -599,7 +600,7 @@ const T: Record<LangCode, AppTranslations> = {
     photoDonorTitle: "Área doadora", photoDonorDesc: "Foto da nuca / parte posterior.", photoDonorTip: "Incline levemente a cabeça para frente. Câmera aponta para a nuca.",
     pSuccessTitle: "Sua avaliação foi recebida!", pSuccessDesc: "Nossa equipe revisará suas informações e fotos. Você receberá uma resposta em até 24 horas úteis.",
     pSuccessNext: "O que vem a seguir?", pSuccessStep1: "Revisão do seu caso (até 24 h úteis)", pSuccessStep2: "Entraremos em contato por WhatsApp ou e-mail", pSuccessStep3: "Agendaremos sua consulta",
-    pGoHome: "Voltar ao Início", pDataError: "Dados incompletos", pSaveError: "Não foi possível salvar suas informações.", pPhotoError: "Erro ao processar imagem",
+    pGoHome: "Voltar ao Início", pDataError: "Dados incompletos", pSaveError: "Não foi possível salvar suas informações.", pClinicSuspendedError: "Esta clínica não está recebendo novas avaliações no momento. Entre em contato diretamente com a clínica para mais informações.", pPhotoError: "Erro ao processar imagem",
     loginTitle: "Bem-vindo de volta", loginSub: "Digite seu e-mail e senha para acessar o painel",
     loginEmailLabel: "E-mail", loginEmailPlaceholder: "voce@clinica.com",
     loginLabel: "Senha", loginPlaceholder: "••••••••", loginCTA: "Entrar no Painel", loginVerifying: "Verificando...",
@@ -713,7 +714,7 @@ const T: Record<LangCode, AppTranslations> = {
     photoDonorTitle: "Zone donneuse", photoDonorDesc: "Photo de la nuque / partie postérieure.", photoDonorTip: "Inclinez légèrement la tête. La caméra pointe vers la nuque.",
     pSuccessTitle: "Votre évaluation a été reçue !", pSuccessDesc: "Notre équipe examinera vos informations et photos dans un délai de 24 heures ouvrables.",
     pSuccessNext: "Quelle est la suite ?", pSuccessStep1: "Révision de votre cas (jusqu'à 24 h ouvrables)", pSuccessStep2: "Nous vous contacterons par WhatsApp ou e-mail", pSuccessStep3: "Nous planifions votre consultation",
-    pGoHome: "Retour à l'accueil", pDataError: "Données incomplètes", pSaveError: "Impossible de sauvegarder vos informations.", pPhotoError: "Erreur lors du traitement de l'image",
+    pGoHome: "Retour à l'accueil", pDataError: "Données incomplètes", pSaveError: "Impossible de sauvegarder vos informations.", pClinicSuspendedError: "Cette clinique n'accepte pas de nouvelles évaluations pour le moment. Merci de contacter directement la clinique pour plus d'informations.", pPhotoError: "Erreur lors du traitement de l'image",
     loginTitle: "Bon retour", loginSub: "Entrez votre e-mail et mot de passe pour accéder au panneau",
     loginEmailLabel: "Adresse e-mail", loginEmailPlaceholder: "vous@clinique.com",
     loginLabel: "Mot de passe", loginPlaceholder: "••••••••", loginCTA: "Accéder au panneau", loginVerifying: "Vérification...",
@@ -827,7 +828,7 @@ const T: Record<LangCode, AppTranslations> = {
     photoDonorTitle: "Spenderbereich", photoDonorDesc: "Foto des Nackens / Hinterkopfs.", photoDonorTip: "Kopf leicht nach vorne neigen. Kamera auf den Nacken richten.",
     pSuccessTitle: "Ihre Bewertung wurde empfangen!", pSuccessDesc: "Unser Team wird Ihre Informationen und Fotos innerhalb von 24 Werktagen prüfen.",
     pSuccessNext: "Was passiert als nächstes?", pSuccessStep1: "Überprüfung Ihres Falls (bis 24 Werktage)", pSuccessStep2: "Wir kontaktieren Sie per WhatsApp oder E-Mail", pSuccessStep3: "Wir vereinbaren Ihre Konsultation",
-    pGoHome: "Zurück zur Startseite", pDataError: "Unvollständige Daten", pSaveError: "Ihre Informationen konnten nicht gespeichert werden.", pPhotoError: "Fehler beim Verarbeiten des Bildes",
+    pGoHome: "Zurück zur Startseite", pDataError: "Unvollständige Daten", pSaveError: "Ihre Informationen konnten nicht gespeichert werden.", pClinicSuspendedError: "Diese Klinik nimmt derzeit keine neuen Auswertungen an. Bitte wenden Sie sich für weitere Informationen direkt an die Klinik.", pPhotoError: "Fehler beim Verarbeiten des Bildes",
     loginTitle: "Willkommen zurück", loginSub: "Geben Sie Ihre E-Mail und Ihr Passwort ein, um auf das Panel zuzugreifen",
     loginEmailLabel: "E-Mail-Adresse", loginEmailPlaceholder: "sie@klinik.de",
     loginLabel: "Passwort", loginPlaceholder: "••••••••", loginCTA: "Panel betreten", loginVerifying: "Überprüfung...",
@@ -941,7 +942,7 @@ const T: Record<LangCode, AppTranslations> = {
     photoDonorTitle: "Area donatrice", photoDonorDesc: "Foto della nuca / parte posteriore.", photoDonorTip: "Inclina leggermente la testa. La fotocamera punta alla nuca.",
     pSuccessTitle: "La tua valutazione è stata ricevuta!", pSuccessDesc: "Il nostro team esaminerà le tue informazioni e foto entro 24 ore lavorative.",
     pSuccessNext: "Cosa succede ora?", pSuccessStep1: "Revisione del tuo caso (fino a 24 h lavorative)", pSuccessStep2: "Ti contatteremo via WhatsApp o e-mail", pSuccessStep3: "Pianifichiamo la tua consulenza",
-    pGoHome: "Torna alla home", pDataError: "Dati incompleti", pSaveError: "Non è stato possibile salvare le informazioni.", pPhotoError: "Errore nell'elaborazione dell'immagine",
+    pGoHome: "Torna alla home", pDataError: "Dati incompleti", pSaveError: "Non è stato possibile salvare le informazioni.", pClinicSuspendedError: "Questa clinica non sta accettando nuove valutazioni al momento. Contatta direttamente la clinica per maggiori informazioni.", pPhotoError: "Errore nell'elaborazione dell'immagine",
     loginTitle: "Bentornato", loginSub: "Inserisci email e password per accedere al pannello",
     loginEmailLabel: "Indirizzo email", loginEmailPlaceholder: "tu@clinica.it",
     loginLabel: "Password", loginPlaceholder: "••••••••", loginCTA: "Accedi al Pannello", loginVerifying: "Verifica...",
@@ -1055,7 +1056,7 @@ const T: Record<LangCode, AppTranslations> = {
     photoDonorTitle: "Donör bölge", photoDonorDesc: "Ense / başın arka fotoğrafı.", photoDonorTip: "Başı hafifçe öne eğin. Kamera enseyi gösterecek şekilde tutun.",
     pSuccessTitle: "Değerlendirmeniz alındı!", pSuccessDesc: "Ekibimiz bilgilerinizi ve fotoğraflarınızı 24 iş saati içinde inceleyecektir.",
     pSuccessNext: "Bundan sonra ne olur?", pSuccessStep1: "Vakanızın incelenmesi (24 iş saatine kadar)", pSuccessStep2: "WhatsApp veya e-posta ile iletişime geçeceğiz", pSuccessStep3: "Konsültasyonunuzu planlayacağız",
-    pGoHome: "Ana sayfaya dön", pDataError: "Eksik veriler", pSaveError: "Bilgileriniz kaydedilemedi.", pPhotoError: "Görüntü işleme hatası",
+    pGoHome: "Ana sayfaya dön", pDataError: "Eksik veriler", pSaveError: "Bilgileriniz kaydedilemedi.", pClinicSuspendedError: "Bu klinik şu anda yeni değerlendirme kabul etmiyor. Daha fazla bilgi için lütfen doğrudan klinikle iletişime geçin.", pPhotoError: "Görüntü işleme hatası",
     loginTitle: "Tekrar hoş geldiniz", loginSub: "Panele erişmek için e-postanızı ve şifrenizi girin",
     loginEmailLabel: "E-posta adresi", loginEmailPlaceholder: "siz@klinik.com",
     loginLabel: "Şifre", loginPlaceholder: "••••••••", loginCTA: "Panele Gir", loginVerifying: "Doğrulanıyor...",
@@ -1169,7 +1170,7 @@ const T: Record<LangCode, AppTranslations> = {
     photoDonorTitle: "منطقة المانح", photoDonorDesc: "صورة للقفا / مؤخرة الرأس.", photoDonorTip: "أمل الرأس قليلاً للأمام. الكاميرا تتجه نحو القفا.",
     pSuccessTitle: "تم استلام تقييمك!", pSuccessDesc: "سيراجع فريقنا معلوماتك وصورك خلال 24 ساعة عمل.",
     pSuccessNext: "ماذا يحدث بعد ذلك؟", pSuccessStep1: "مراجعة حالتك (حتى 24 ساعة عمل)", pSuccessStep2: "سنتواصل معك عبر واتساب أو البريد الإلكتروني", pSuccessStep3: "نحدد موعد استشارتك",
-    pGoHome: "العودة إلى الرئيسية", pDataError: "بيانات غير مكتملة", pSaveError: "تعذر حفظ معلوماتك.", pPhotoError: "خطأ في معالجة الصورة",
+    pGoHome: "العودة إلى الرئيسية", pDataError: "بيانات غير مكتملة", pSaveError: "تعذر حفظ معلوماتك.", pClinicSuspendedError: "هذه العيادة لا تستقبل تقييمات جديدة في الوقت الحالي. يرجى الاتصال بالعيادة مباشرة لمزيد من المعلومات.", pPhotoError: "خطأ في معالجة الصورة",
     loginTitle: "مرحباً بعودتك", loginSub: "أدخل بريدك الإلكتروني وكلمة المرور للوصول إلى اللوحة",
     loginEmailLabel: "البريد الإلكتروني", loginEmailPlaceholder: "you@clinic.com",
     loginLabel: "كلمة المرور", loginPlaceholder: "••••••••", loginCTA: "الدخول إلى اللوحة", loginVerifying: "جارٍ التحقق...",
@@ -1283,7 +1284,7 @@ const T: Record<LangCode, AppTranslations> = {
     photoDonorTitle: "供区", photoDonorDesc: "枕部/头后部照片。", photoDonorTip: "头部略向前倾，相机对准枕部，展示完整的后部区域。",
     pSuccessTitle: "您的评估已收到！", pSuccessDesc: "我们的团队将在24个工作小时内审查您的信息和照片。",
     pSuccessNext: "接下来会发生什么？", pSuccessStep1: "审查您的案例（最多24个工作小时）", pSuccessStep2: "我们将通过WhatsApp或电子邮件联系您", pSuccessStep3: "我们安排您的咨询",
-    pGoHome: "返回首页", pDataError: "数据不完整", pSaveError: "无法保存您的信息。请重试。", pPhotoError: "处理图像时出错",
+    pGoHome: "返回首页", pDataError: "数据不完整", pSaveError: "无法保存您的信息。请重试。", pClinicSuspendedError: "该诊所目前暂不接受新的评估。请直接联系诊所了解更多信息。", pPhotoError: "处理图像时出错",
     loginTitle: "欢迎回来", loginSub: "请输入邮箱和密码访问控制面板",
     loginEmailLabel: "邮箱地址", loginEmailPlaceholder: "you@clinic.com",
     loginLabel: "密码", loginPlaceholder: "••••••••", loginCTA: "进入面板", loginVerifying: "验证中...",

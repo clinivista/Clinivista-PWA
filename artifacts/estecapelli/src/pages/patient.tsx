@@ -715,7 +715,11 @@ export default function PatientFlow() {
           setDuplicateError(kind);
           return;
         }
-        toast({ variant: "destructive", title: "Error", description: t.pSaveError });
+        // The clinic rejected new registrations (suspended) — retrying won't
+        // help, so this needs its own message instead of the generic one.
+        const err = error as { status?: number };
+        const description = err?.status === 403 ? t.pClinicSuspendedError : t.pSaveError;
+        toast({ variant: "destructive", title: "Error", description });
       },
     });
   };
