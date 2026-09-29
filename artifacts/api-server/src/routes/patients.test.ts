@@ -70,8 +70,8 @@ beforeAll(async () => {
        center_id text DEFAULT 'default-center',
        protocol_id text DEFAULT 'capillary-initial'
     );
-    CREATE UNIQUE INDEX IF NOT EXISTS leads_document_normalized_unique
-      ON leads (document_normalized)
+    CREATE UNIQUE INDEX IF NOT EXISTS leads_center_document_unique
+      ON leads (center_id, document_normalized)
       WHERE document_normalized IS NOT NULL AND document_normalized <> '';
      CREATE TABLE IF NOT EXISTS clinical_centers (
        id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
@@ -628,7 +628,7 @@ describe("Clinical center isolation", () => {
          SET center_id = 'other-center', protocol_id = 'other-center-capillary-initial'
        WHERE id = '${otherLead.id}';
     `);
-    const session = createSession({ centerId: DEFAULT_CENTER_ID, role: "admin" });
+    const session = createSession({ userId: "test-staff-user", centerId: DEFAULT_CENTER_ID, role: "administrativo" });
 
     const list = await request(app)
       .get("/api/leads")
@@ -641,5 +641,21 @@ describe("Clinical center isolation", () => {
       .get(`/api/leads/${otherLead.id}`)
       .set("Cookie", `clinivista_session=${session}`)
       .expect(404);
+  });
+
+  it("does not treat a RUT/phone/email already used at another clinic as a duplicate", async () => {
+    const otherClinicLead = await createPatient();
+    await pglite.exec(`
+      UPDATE leads
+         SET center_id = 'other-center', protocol_id = 'other-center-capillary-initial'
+       WHERE id = '${otherClinicLead.id}';
+    `);
+
+    // Same RUT, phone and email as otherClinicLead, but this clinic (the
+    // default center) has never seen this patient — it must not be rejected
+    // as a duplicate just because another clinic already has that record.
+    const res = await request(app).post("/api/patients").send(VALID_BODY);
+    expect(res.status).toBe(201);
+    expect(res.body.lead.id).not.toBe(otherClinicLead.id);
   });
 });
