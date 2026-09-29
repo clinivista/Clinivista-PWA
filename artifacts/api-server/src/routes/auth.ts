@@ -1,9 +1,10 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { AdminLoginBody } from "@workspace/api-zod";
-import { db, usersTable, centersTable, verifyPassword, normalizeEmail, type UserRole } from "@workspace/db";
+import { db, usersTable, verifyPassword, normalizeEmail, type UserRole } from "@workspace/db";
 import { createSession, getSession, isValidSession, destroySession } from "../lib/sessions";
 import { getSessionToken } from "../lib/helpers";
+import { isCenterActive } from "../lib/centers";
 
 const router: IRouter = Router();
 
@@ -67,9 +68,7 @@ function authUser(user: typeof usersTable.$inferSelect) {
 /** Directors have no single clinic (centerId is null) and are never blocked here. */
 async function centerIsActiveFor(user: typeof usersTable.$inferSelect): Promise<boolean> {
   if (!user.centerId) return true;
-  const [center] = await db.select({ active: centersTable.active }).from(centersTable).where(eq(centersTable.id, user.centerId));
-  // No matching center row yet (e.g. lazily created on first evaluation) counts as active.
-  return !center || center.active;
+  return isCenterActive(user.centerId);
 }
 
 router.get("/auth/me", async (req, res): Promise<void> => {

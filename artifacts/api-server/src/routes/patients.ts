@@ -32,6 +32,7 @@ import {
   getPhotoStatusesForLead,
 } from "../lib/clinical-photos";
 import { privatePhotoStorage } from "../lib/clinical-photo-storage";
+import { isCenterActive } from "../lib/centers";
 
 const router: IRouter = Router();
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -289,6 +290,13 @@ function completedRequiredViews(photos: Awaited<ReturnType<typeof getPhotoStatus
 }
 
 router.post("/patients", async (req, res): Promise<void> => {
+  // A suspended clinic stops taking new patients too, not just staff logins —
+  // otherwise "suspend" would only block the people reviewing evaluations,
+  // not the public form still collecting them.
+  if (!(await isCenterActive(DEFAULT_CENTER_ID))) {
+    res.status(403).json({ error: "Esta clínica no está aceptando nuevas evaluaciones en este momento." });
+    return;
+  }
   const parsed = CreatePatientBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Datos inválidos." });

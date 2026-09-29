@@ -658,4 +658,19 @@ describe("Clinical center isolation", () => {
     expect(res.status).toBe(201);
     expect(res.body.lead.id).not.toBe(otherClinicLead.id);
   });
+
+  it("stops accepting new patients while the clinic is suspended", async () => {
+    await pglite.exec(`
+      INSERT INTO clinical_centers (id, name, slug, active)
+      VALUES ('${DEFAULT_CENTER_ID}', 'Centro principal', '${DEFAULT_CENTER_ID}', false)
+      ON CONFLICT (id) DO UPDATE SET active = false;
+    `);
+
+    const res = await request(app).post("/api/patients").send(VALID_BODY);
+    expect(res.status).toBe(403);
+
+    await pglite.exec(`UPDATE clinical_centers SET active = true WHERE id = '${DEFAULT_CENTER_ID}';`);
+    const resumed = await request(app).post("/api/patients").send(VALID_BODY);
+    expect(resumed.status).toBe(201);
+  });
 });
