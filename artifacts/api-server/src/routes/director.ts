@@ -109,7 +109,10 @@ router.get("/director/centers/:id/export", async (req, res): Promise<void> => {
     exportedAt: new Date().toISOString(),
     center: center ?? { id: params.data.id, name: params.data.id, slug: params.data.id, active: true },
     staff,
-    patients: leads.map(({ photos: _photos, ...lead }) => lead),
+    // `token` is the patient's bearer credential for /api/patients/:token
+    // (their data and clinical photos). This file is meant to leave the
+    // platform, so it must carry the data, never access to it.
+    patients: leads.map(({ photos: _photos, token: _token, ...lead }) => lead),
     note: "Este archivo no incluye las fotografías clínicas en sí (se guardan aparte, en almacenamiento de objetos privado). Contacta a Clinivista para coordinar la transferencia de esas fotos si la clínica deja la plataforma.",
   };
 

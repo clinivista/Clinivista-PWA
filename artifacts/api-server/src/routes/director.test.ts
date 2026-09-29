@@ -186,4 +186,28 @@ describe("GET /api/director/centers/:id/export", () => {
     expect(payload.staff).toHaveLength(1);
     expect(payload.patients.every((p: { centerId: string }) => p.centerId === "clinic-a")).toBe(true);
   });
+
+  it("never includes patient access tokens or staff password hashes", async () => {
+    await seedClinic("clinic-a", { patients: 2, staff: 1 });
+
+    const res = await request(app)
+      .get("/api/director/centers/clinic-a/export")
+      .set("Cookie", `clinivista_session=${directorSession()}`)
+      .expect(200);
+
+    const payload = JSON.parse(res.text);
+    expect(payload.patients).toHaveLength(2);
+    for (const patient of payload.patients) {
+      expect(patient).not.toHaveProperty("token");
+      expect(patient).not.toHaveProperty("photos");
+    }
+    for (const member of payload.staff) {
+      expect(member).not.toHaveProperty("passwordHash");
+    }
+    // Belt and braces: the raw file must not contain any token or hash value.
+    expect(res.text).not.toContain("clinic-a-token-");
+    expect(res.text).not.toMatch(/"passwordHash"|password_hash/);
+    // The patient data itself is still exported.
+    expect(payload.patients.map((p: { name: string }) => p.name).sort()).toEqual(["Paciente 0", "Paciente 1"]);
+  });
 });
