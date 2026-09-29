@@ -4,7 +4,7 @@ import { format, parseISO } from "date-fns";
 import { es as dateFnsEs } from "date-fns/locale";
 import {
   Users, LogOut,
-  Search, ChevronRight, X, Phone, Lock, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu, Copy
+  Search, ChevronRight, X, Phone, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu, Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
 import { BrandLogo } from "@/components/brand-logo";
 import { buildPublicPatientLink, copyToClipboard } from "@/lib/clipboard";
+import { DirectorPanel } from "./director-panel";
 
 const STATUS_COLORS: Record<string, string> = {
   nuevo: "bg-blue-100 text-blue-700",
@@ -99,29 +100,13 @@ export default function Admin() {
 
   if (authStatus.user?.role === "director") {
     return (
-      <div className="min-h-[100dvh] bg-[#F5F2EE] flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white rounded-[2rem] shadow-lg border border-[#E8E4DE] p-10 text-center">
-          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-6 mx-auto">
-            <Lock className="w-6 h-6 text-primary" />
-          </div>
-          <h1 className="text-xl font-bold text-foreground tracking-tight mb-2">Panel de supra-control</h1>
-          <p className="text-sm text-muted-foreground font-medium mb-8">
-            Próximamente: gestión de todas las clínicas, suspensión y exportación de datos desde una sola vista.
-          </p>
-          <Button
-            variant="ghost"
-            className="w-full justify-center text-muted-foreground hover:text-foreground font-medium rounded-2xl h-12"
-            onClick={() => {
-              logoutMutation.mutate(undefined, {
-                onSuccess: () => { queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() }); setLocation("/"); }
-              });
-            }}
-          >
-            <LogOut className="w-5 h-5 mr-3" />
-            {t.logout}
-          </Button>
-        </div>
-      </div>
+      <DirectorPanel
+        onLogout={() => {
+          logoutMutation.mutate(undefined, {
+            onSuccess: () => { queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() }); setLocation("/"); }
+          });
+        }}
+      />
     );
   }
 

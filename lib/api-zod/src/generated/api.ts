@@ -267,6 +267,54 @@ export const CreateInvitationResponse = zod.object({
 
 
 /**
+ * @summary List every clinic with basic stats (director only)
+ */
+export const GetDirectorCentersResponse = zod.object({
+  "centers": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "patientCount": zod.number(),
+  "staffCount": zod.number()
+}))
+})
+
+
+/**
+ * @summary Suspend or reactivate a clinic (director only)
+ */
+export const PatchDirectorCenterParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const PatchDirectorCenterBody = zod.object({
+  "active": zod.boolean()
+})
+
+export const PatchDirectorCenterResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "patientCount": zod.number(),
+  "staffCount": zod.number()
+})
+
+
+/**
+ * @summary Export all of a clinic's patient records as a JSON file (director only)
+ */
+export const GetDirectorCenterExportParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetDirectorCenterExportResponse = zod.unknown()
+
+
+/**
  * @summary Create a new patient pre-evaluation (public)
  */
 export const CreatePatientBody = zod.object({

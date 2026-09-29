@@ -40,6 +40,20 @@ export interface AuthStatus {
   user?: AuthUser;
 }
 
+export interface DirectorCenterSummary {
+  id: string;
+  name: string;
+  slug: string;
+  active: boolean;
+  createdAt: string;
+  patientCount: number;
+  staffCount: number;
+}
+
+export interface DirectorCenterPatch {
+  active: boolean;
+}
+
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -237,5 +251,9 @@ search?: string;
 
 export type GetLeads200 = {
   leads: LeadSummary[];
+};
+
+export type GetDirectorCenters200 = {
+  centers: DirectorCenterSummary[];
 };
 
