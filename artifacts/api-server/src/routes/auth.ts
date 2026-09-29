@@ -4,6 +4,7 @@ import { AdminLoginBody } from "@workspace/api-zod";
 import { db, usersTable, verifyPassword, normalizeEmail, type UserRole } from "@workspace/db";
 import { createSession, getSession, isValidSession, destroySession } from "../lib/sessions";
 import { getSessionToken } from "../lib/helpers";
+import { isCenterActive } from "../lib/centers";
 
 const router: IRouter = Router();
 
@@ -46,8 +47,28 @@ export function requireStaffAuth(req: Request, res: Response): StaffAuthContext 
   return { userId: session.userId, centerId: session.centerId, role: session.role };
 }
 
+/** director only — the supra-control panel that sees every clinic. */
+export function requireDirectorAuth(req: Request, res: Response): { userId: string } | undefined {
+  const session = getSession(getToken(req));
+  if (!session) {
+    res.status(401).json({ error: "Sesión requerida." });
+    return undefined;
+  }
+  if (session.role !== "director") {
+    res.status(403).json({ error: "Esta acción requiere una cuenta de director." });
+    return undefined;
+  }
+  return { userId: session.userId };
+}
+
 function authUser(user: typeof usersTable.$inferSelect) {
   return { id: user.id, email: user.email, name: user.name, role: user.role, centerId: user.centerId };
+}
+
+/** Directors have no single clinic (centerId is null) and are never blocked here. */
+async function centerIsActiveFor(user: typeof usersTable.$inferSelect): Promise<boolean> {
+  if (!user.centerId) return true;
+  return isCenterActive(user.centerId);
 }
 
 router.get("/auth/me", async (req, res): Promise<void> => {
@@ -57,7 +78,7 @@ router.get("/auth/me", async (req, res): Promise<void> => {
     return;
   }
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, session.userId));
-  if (!user || !user.active) {
+  if (!user || !user.active || !(await centerIsActiveFor(user))) {
     destroySession(getToken(req));
     res.json({ authenticated: false });
     return;
@@ -79,6 +100,10 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   // account is deactivated, or the password is wrong — never reveal which.
   if (!user || !user.active || !verifyPassword(parsed.data.password, user.passwordHash)) {
     res.status(401).json({ error: "Correo o contraseña incorrectos." });
+    return;
+  }
+  if (!(await centerIsActiveFor(user))) {
+    res.status(403).json({ error: "Esta clínica está suspendida. Contacta al director de Clinivista." });
     return;
   }
 

@@ -21,7 +21,10 @@ import type {
 
 import type {
   AuthStatus,
+  DirectorCenterPatch,
+  DirectorCenterSummary,
   ErrorResponse,
+  GetDirectorCenters200,
   GetLeads200,
   GetLeadsParams,
   HealthStatus,
@@ -895,6 +898,232 @@ export const useCreateInvitation = <TError = ErrorType<ErrorResponse>,
       > => {
       return useMutation(getCreateInvitationMutationOptions(options));
     }
+
+export const getGetDirectorCentersUrl = () => {
+
+
+
+
+  return `/api/director/centers`
+}
+
+/**
+ * @summary List every clinic with basic stats (director only)
+ */
+export const getDirectorCenters = async ( options?: Parameters<typeof customFetch>[1]): Promise<GetDirectorCenters200> => {
+
+  return customFetch<GetDirectorCenters200>(getGetDirectorCentersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDirectorCentersQueryKey = () => {
+    return [
+    `/api/director/centers`
+    ] as const;
+    }
+
+
+export const getGetDirectorCentersQueryOptions = <TData = Awaited<ReturnType<typeof getDirectorCenters>>, TError = ErrorType<ErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDirectorCenters>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDirectorCentersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDirectorCenters>>> = ({ signal }) => getDirectorCenters({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDirectorCenters>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDirectorCentersQueryResult = NonNullable<Awaited<ReturnType<typeof getDirectorCenters>>>
+export type GetDirectorCentersQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary List every clinic with basic stats (director only)
+ */
+
+export function useGetDirectorCenters<TData = Awaited<ReturnType<typeof getDirectorCenters>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDirectorCenters>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDirectorCentersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPatchDirectorCenterUrl = (id: string,) => {
+
+
+
+
+  return `/api/director/centers/${id}`
+}
+
+/**
+ * @summary Suspend or reactivate a clinic (director only)
+ */
+export const patchDirectorCenter = async (id: string,
+    directorCenterPatch: DirectorCenterPatch, options?: Parameters<typeof customFetch>[1]): Promise<DirectorCenterSummary> => {
+
+  return customFetch<DirectorCenterSummary>(getPatchDirectorCenterUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(directorCenterPatch)
+  }
+);}
+
+
+
+
+
+export const getPatchDirectorCenterMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchDirectorCenter>>, TError,{id: string;data: BodyType<DirectorCenterPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof patchDirectorCenter>>, TError,{id: string;data: BodyType<DirectorCenterPatch>}, TContext> => {
+
+const mutationKey = ['patchDirectorCenter'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof patchDirectorCenter>>, {id: string;data: BodyType<DirectorCenterPatch>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  patchDirectorCenter(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PatchDirectorCenterMutationResult = NonNullable<Awaited<ReturnType<typeof patchDirectorCenter>>>
+    export type PatchDirectorCenterMutationBody = BodyType<DirectorCenterPatch>
+    export type PatchDirectorCenterMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Suspend or reactivate a clinic (director only)
+ */
+export const usePatchDirectorCenter = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchDirectorCenter>>, TError,{id: string;data: BodyType<DirectorCenterPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof patchDirectorCenter>>,
+        TError,
+        {id: string;data: BodyType<DirectorCenterPatch>},
+        TContext
+      > => {
+      return useMutation(getPatchDirectorCenterMutationOptions(options));
+    }
+
+export const getGetDirectorCenterExportUrl = (id: string,) => {
+
+
+
+
+  return `/api/director/centers/${id}/export`
+}
+
+/**
+ * @summary Export all of a clinic's patient records as a JSON file (director only)
+ */
+export const getDirectorCenterExport = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<unknown> => {
+
+  return customFetch<unknown>(getGetDirectorCenterExportUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDirectorCenterExportQueryKey = (id: string,) => {
+    return [
+    `/api/director/centers/${id}/export`
+    ] as const;
+    }
+
+
+export const getGetDirectorCenterExportQueryOptions = <TData = Awaited<ReturnType<typeof getDirectorCenterExport>>, TError = ErrorType<ErrorResponse>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDirectorCenterExport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDirectorCenterExportQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDirectorCenterExport>>> = ({ signal }) => getDirectorCenterExport(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDirectorCenterExport>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDirectorCenterExportQueryResult = NonNullable<Awaited<ReturnType<typeof getDirectorCenterExport>>>
+export type GetDirectorCenterExportQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Export all of a clinic's patient records as a JSON file (director only)
+ */
+
+export function useGetDirectorCenterExport<TData = Awaited<ReturnType<typeof getDirectorCenterExport>>, TError = ErrorType<ErrorResponse>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDirectorCenterExport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDirectorCenterExportQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getCreatePatientUrl = () => {
 

@@ -693,6 +693,15 @@ export default function PatientFlow() {
     return err?.data?.resumable ? "inProgress" : "exists";
   };
 
+  // The clinic rejected the request outright (suspended) — retrying won't
+  // help, so this needs its own message instead of the generic save error.
+  // Used by both places that create a new patient (POST /patients): the
+  // initial data step and the "submit everything at once" fallback below.
+  const createErrorMessage = (error: unknown): string => {
+    const err = error as { status?: number };
+    return err?.status === 403 ? t.pClinicSuspendedError : t.pSaveError;
+  };
+
   const handleDataSubmit = (data: PatientFormValues) => {
     if (patientToken) {
       continueToPhotos();
@@ -715,7 +724,7 @@ export default function PatientFlow() {
           setDuplicateError(kind);
           return;
         }
-        toast({ variant: "destructive", title: "Error", description: t.pSaveError });
+        toast({ variant: "destructive", title: "Error", description: createErrorMessage(error) });
       },
     });
   };
@@ -835,7 +844,7 @@ export default function PatientFlow() {
         onError: (error: unknown) => {
           const kind = duplicateKind(error);
           if (kind) { setDuplicateError(kind); return; }
-          toast({ variant: "destructive", title: "Error", description: t.pSaveError });
+          toast({ variant: "destructive", title: "Error", description: createErrorMessage(error) });
         },
       });
     }

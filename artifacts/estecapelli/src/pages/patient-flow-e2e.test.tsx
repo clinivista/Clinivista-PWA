@@ -16,6 +16,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LanguageProvider } from "@/lib/language";
+import { Toaster } from "@/components/ui/toaster";
 import PatientFlow from "./patient";
 
 vi.mock("@/components/photo-editor", () => ({
@@ -103,6 +104,7 @@ function renderFlow() {
     <QueryClientProvider client={makeQueryClient()}>
       <LanguageProvider>
         <PatientFlow />
+        <Toaster />
       </LanguageProvider>
     </QueryClientProvider>,
   );
@@ -386,6 +388,26 @@ describe("Full patient form flow — end to end", () => {
     expect(screen.getByText(/mismo dispositivo y navegador/i)).toBeInTheDocument();
     expect(screen.getByText(/contacta a la clínica/i)).toBeInTheDocument();
     expect(screen.queryByText(/Ya existe una evaluación registrada/i)).not.toBeInTheDocument();
+    expect(window.localStorage.getItem(PATIENT_TOKEN_KEY)).toBeNull();
+  });
+
+  it("shows a clear, non-generic message when the clinic is suspended (403)", async () => {
+    fetchSpy.mockResolvedValue(
+      jsonResponse({ error: "Esta clínica no está aceptando nuevas evaluaciones en este momento." }, 403),
+    );
+
+    const user = setupUser();
+    renderFlow();
+    await goToDataStep(user);
+    await fillForm(user);
+    await tickConsent(user);
+    await user.click(screen.getByRole("button", { name: /Continuar a Fotografías/i }));
+
+    expect(
+      await screen.findByText(/no está recibiendo nuevas evaluaciones por ahora/i),
+    ).toBeInTheDocument();
+    // Never the generic, misleading "try again" wording — retrying won't help here.
+    expect(screen.queryByText(/Intenta nuevamente/i)).not.toBeInTheDocument();
     expect(window.localStorage.getItem(PATIENT_TOKEN_KEY)).toBeNull();
   });
 
