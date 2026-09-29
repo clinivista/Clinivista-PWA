@@ -227,7 +227,12 @@ async function migrateLegacyPhotoReferences(
       continue;
     }
     const stored = await privatePhotoStorage.put({
-      key: createObjectKey(status === "quarantined" ? "legacy-quarantine" : "original"),
+      key: createObjectKey({
+        centerId: lead.centerId || DEFAULT_CENTER_ID,
+        evaluationId,
+        kind: status === "quarantined" ? "legacy-quarantine" : "original",
+        contentType,
+      }),
       bytes,
       contentType,
     });
@@ -289,7 +294,12 @@ export async function createClinicalPhoto(input: {
 
   const hash = crypto.createHash("sha256").update(input.bytes).digest("hex");
   const stored = await privatePhotoStorage.put({
-    key: createObjectKey("original"),
+    key: createObjectKey({
+      centerId: evaluation.centerId,
+      evaluationId: evaluation.id,
+      kind: "original",
+      contentType: input.contentType,
+    }),
     bytes: input.bytes,
     contentType: input.contentType,
   });
@@ -350,7 +360,12 @@ export async function createAdjustedPhoto(input: {
     let stored: { objectPath: string } | null = null;
     try {
       stored = await privatePhotoStorage.put({
-        key: createObjectKey("adjusted"),
+        key: createObjectKey({
+          centerId: input.lead.centerId || DEFAULT_CENTER_ID,
+          evaluationId: located.photo.evaluationId,
+          kind: "adjusted",
+          contentType: "image/jpeg",
+        }),
         bytes: rendered.bytes,
         contentType: "image/jpeg",
       });
