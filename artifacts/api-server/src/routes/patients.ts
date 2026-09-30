@@ -1,5 +1,5 @@
 import express, { Router, type IRouter } from "express";
-import { spawn } from "node:child_process";
+import sharp from "sharp";
 import { and, eq, or } from "drizzle-orm";
 import { db, leadsTable } from "@workspace/db";
 import {
@@ -128,36 +128,31 @@ function readImageDimensions(contentType: string, bytes: Buffer): { width: numbe
   return null;
 }
 
+// Fully decodes the image (not just its header) to reject truncated or
+// corrupt payloads, and cross-checks the declared content type and the
+// dimensions read from the header against what actually decoded.
+//
+// This used to shell out to ImageMagick's `identify` CLI. That's a system
+// binary the deployment environment happened to have, but it's not a
+// project dependency — anywhere it's missing (as on at least one
+// contributor's machine), every photo upload silently fails here. `sharp`
+// is already a real dependency (used for the technical derivative
+// pipeline below) and decodes fully when asked for pixel data, so this
+// switches to it and drops the external-binary dependency entirely.
 async function fullyDecodeImage(
   contentType: string,
   bytes: Buffer,
   dimensions: { width: number; height: number },
 ): Promise<boolean> {
-  return new Promise((resolve) => {
-    const expectedFormat = contentType === "image/jpeg" ? "JPEG"
-      : contentType === "image/png" ? "PNG" : "WEBP";
-    const decoder = spawn("identify", [
-      "-limit", "memory", "64MiB",
-      "-limit", "map", "128MiB",
-      "-limit", "disk", "0",
-      "-quiet", "-format", "%m:%w:%h", "-",
-    ], { stdio: ["pipe", "pipe", "ignore"] });
-    let output = "";
-    decoder.stdout?.setEncoding("utf8");
-    decoder.stdout?.on("data", (chunk: string) => {
-      output = (output + chunk).slice(0, 100);
-    });
-    const timeout = setTimeout(() => decoder.kill("SIGKILL"), 10_000);
-    decoder.once("error", () => {
-      clearTimeout(timeout);
-      resolve(false);
-    });
-    decoder.once("close", (code) => {
-      clearTimeout(timeout);
-      resolve(code === 0 && output === `${expectedFormat}:${dimensions.width}:${dimensions.height}`);
-    });
-    decoder.stdin.end(bytes);
-  });
+  const expectedFormat = contentType === "image/jpeg" ? "jpeg"
+    : contentType === "image/png" ? "png" : "webp";
+  try {
+    const { info } = await sharp(bytes, { failOn: "error", limitInputPixels: MAX_IMAGE_PIXELS })
+      .toBuffer({ resolveWithObject: true });
+    return info.format === expectedFormat && info.width === dimensions.width && info.height === dimensions.height;
+  } catch {
+    return false;
+  }
 }
 
 async function parseImageRequest(req: express.Request): Promise<{
