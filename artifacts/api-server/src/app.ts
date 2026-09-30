@@ -2,31 +2,13 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import express, { type Express } from "express";
 import cors from "cors";
-import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { createHttpLogger } from "./lib/http-logger";
 
 const app: Express = express();
 
-app.use(
-  pinoHttp({
-    logger,
-    serializers: {
-      req(req) {
-        return {
-          id: req.id,
-          method: req.method,
-          url: req.url?.split("?")[0],
-        };
-      },
-      res(res) {
-        return {
-          statusCode: res.statusCode,
-        };
-      },
-    },
-  }),
-);
+app.use(createHttpLogger(logger));
 app.use(cors());
 // Clinical image bytes use explicit binary routes and private storage, never JSON.
 app.use(express.json({ limit: "1mb" }));
