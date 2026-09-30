@@ -206,26 +206,28 @@ export function DirectorPanel({ onLogout }: { onLogout: () => void }) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 pt-4 border-t border-[#E8E4DE]">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-4 border-t border-[#E8E4DE]">
                 <label htmlFor={`paid-until-${center.id}`} className="text-sm font-semibold text-muted-foreground shrink-0">
                   Registrar pago hasta:
                 </label>
-                <Input
-                  id={`paid-until-${center.id}`}
-                  type="date"
-                  className="h-10 rounded-full max-w-[180px]"
-                  value={paymentDraft[center.id] ?? ""}
-                  onChange={(event) => setPaymentDraft((prev) => ({ ...prev, [center.id]: event.target.value }))}
-                />
-                <Button
-                  variant="outline"
-                  className="rounded-full h-10 font-semibold shrink-0"
-                  disabled={!paymentDraft[center.id] || pendingId === center.id}
-                  onClick={() => handleRecordPayment(center.id)}
-                >
-                  {pendingId === center.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CreditCard className="w-4 h-4 mr-2" />}
-                  Registrar pago
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id={`paid-until-${center.id}`}
+                    type="date"
+                    className="h-10 rounded-full flex-1 min-w-0 sm:max-w-[180px] sm:flex-none"
+                    value={paymentDraft[center.id] ?? ""}
+                    onChange={(event) => setPaymentDraft((prev) => ({ ...prev, [center.id]: event.target.value }))}
+                  />
+                  <Button
+                    variant="outline"
+                    className="rounded-full h-10 font-semibold shrink-0"
+                    disabled={!paymentDraft[center.id] || pendingId === center.id}
+                    onClick={() => handleRecordPayment(center.id)}
+                  >
+                    {pendingId === center.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CreditCard className="w-4 h-4 mr-2" />}
+                    Registrar pago
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
