@@ -5,6 +5,7 @@
  * Estecapelli API — Preevaluación capilar
  * OpenAPI spec version: 0.1.0
  */
+import type { DirectorCenterSummaryPaymentStatus } from './directorCenterSummaryPaymentStatus';
 
 export interface DirectorCenterSummary {
   id: string;
@@ -14,4 +15,7 @@ export interface DirectorCenterSummary {
   createdAt: Date;
   patientCount: number;
   staffCount: number;
+  /** Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment. */
+  paidUntil: Date | null;
+  paymentStatus: DirectorCenterSummaryPaymentStatus;
 }
