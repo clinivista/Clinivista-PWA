@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { readS3Config, S3PhotoStorage, type S3Config } from "./clinical-photo-storage";
+import { createObjectKey, readS3Config, S3PhotoStorage, type S3Config } from "./clinical-photo-storage";
 
 const config: S3Config = {
   endpoint: "https://account123.r2.cloudflarestorage.com",
@@ -67,6 +67,50 @@ describe("S3PhotoStorage", () => {
     await expect(storage.read("/objects/clinical/../secrets")).rejects.toThrow("Invalid private clinical photo path.");
     await expect(storage.read("/other/abc")).rejects.toThrow("Invalid private clinical photo path.");
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("createObjectKey", () => {
+  it("prefixes the key with centerId/evaluationId so a clinic's photos can be found in the bucket without Postgres", () => {
+    const key = createObjectKey({
+      centerId: "clinic-a",
+      evaluationId: "evaluation-lead-1",
+      kind: "original",
+      contentType: "image/jpeg",
+    });
+    expect(key).toMatch(/^clinic-a\/evaluation-lead-1\/[0-9a-f-]{36}\/original\.jpg$/);
+  });
+
+  it("derives the extension from the real content type, never a client-supplied filename", () => {
+    const jpg = createObjectKey({ centerId: "c", evaluationId: "e", kind: "original", contentType: "image/jpeg; charset=binary" });
+    const png = createObjectKey({ centerId: "c", evaluationId: "e", kind: "adjusted", contentType: "image/png" });
+    const webp = createObjectKey({ centerId: "c", evaluationId: "e", kind: "original", contentType: "image/webp" });
+    const unknown = createObjectKey({ centerId: "c", evaluationId: "e", kind: "legacy-quarantine", contentType: "application/octet-stream" });
+
+    expect(jpg).toMatch(/\/original\.jpg$/);
+    expect(png).toMatch(/\/adjusted\.png$/);
+    expect(webp).toMatch(/\/original\.webp$/);
+    // No extension for content we can't map — matches the pre-Fase-4 behavior
+    // of never inventing one, rather than guessing wrong.
+    expect(unknown).toMatch(/\/legacy-quarantine$/);
+  });
+
+  it("sanitizes centerId/evaluationId so neither can reshape the bucket layout or escape the clinic's prefix", () => {
+    const key = createObjectKey({
+      centerId: "../../etc",
+      evaluationId: "some id/with spaces",
+      kind: "original",
+      contentType: "image/jpeg",
+    });
+    expect(key.startsWith("../")).toBe(false);
+    expect(key).not.toContain("..");
+    expect(key).not.toContain(" ");
+    expect(key).toMatch(/^_+etc\/some_id_with_spaces\/[0-9a-f-]{36}\/original\.jpg$/);
+  });
+
+  it("never repeats a key across calls, even with identical inputs", () => {
+    const input = { centerId: "clinic-a", evaluationId: "evaluation-1", kind: "original" as const, contentType: "image/jpeg" };
+    expect(createObjectKey(input)).not.toBe(createObjectKey(input));
   });
 });
 

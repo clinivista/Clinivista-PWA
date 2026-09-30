@@ -160,6 +160,53 @@ function createPrivatePhotoStorage(): PrivatePhotoStorage {
 
 export const privatePhotoStorage = createPrivatePhotoStorage();
 
-export function createObjectKey(kind: "original" | "adjusted" | "legacy-quarantine"): string {
-  return `${crypto.randomUUID()}/${kind}`;
+// Only [a-zA-Z0-9_-] survive into an object key segment — centerId/evaluationId
+// are internal identifiers, but a key built from them must never let a stray
+// "/" or ".." reshape the bucket layout or escape the clinic's own prefix.
+function sanitizeKeySegment(value: string): string {
+  const cleaned = value.replace(/[^a-zA-Z0-9_-]/g, "_");
+  return cleaned || "unknown";
+}
+
+// A real extension (from the actual content type, not the original filename —
+// we never trust that) so objects are recognizable in the bucket; unknown or
+// non-image content (quarantined legacy payloads) gets none, same as before.
+function extensionForContentType(contentType: string): string {
+  switch (contentType.toLowerCase().split(";")[0].trim()) {
+    case "image/jpeg":
+    case "image/jpg":
+      return ".jpg";
+    case "image/png":
+      return ".png";
+    case "image/webp":
+      return ".webp";
+    default:
+      return "";
+  }
+}
+
+/**
+ * Object key convention (Fase 4): `<centerId>/<evaluationId>/<uuid>/<kind><ext>`.
+ * Prefixing by clinic and evaluation makes it possible to list, export, or
+ * delete a clinic's photos directly in the bucket without a Postgres lookup
+ * first — useful for suspension cleanup, per-clinic storage accounting, and
+ * billing. The random UUID (not the patient's name/RUT) still carries the
+ * actual uniqueness, so nothing sensitive ends up in the key itself, and a
+ * signed/private-only access model means the key is never seen by a browser
+ * anyway. Existing objects keep their old `<uuid>/<kind>` keys untouched —
+ * this only changes what NEW photos are named.
+ */
+export function createObjectKey(input: {
+  centerId: string;
+  evaluationId: string;
+  kind: "original" | "adjusted" | "legacy-quarantine";
+  contentType: string;
+}): string {
+  const ext = extensionForContentType(input.contentType);
+  return [
+    sanitizeKeySegment(input.centerId),
+    sanitizeKeySegment(input.evaluationId),
+    crypto.randomUUID(),
+    `${input.kind}${ext}`,
+  ].join("/");
 }
