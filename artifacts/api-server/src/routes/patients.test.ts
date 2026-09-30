@@ -16,11 +16,18 @@ vi.mock("@workspace/db", async () => {
   return { ...schema, db, pool: client, __pglite: client };
 });
 
+import { eq } from "drizzle-orm";
 import * as mockedDb from "@workspace/db";
 import patientsRouter from "./patients";
 import leadsRouter from "./leads";
 import { createSession } from "../lib/sessions";
 import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
+
+const typedMockedDb = mockedDb as unknown as {
+  db: typeof mockedDb.db;
+  evaluationsTable: typeof mockedDb.evaluationsTable;
+  protocolsTable: typeof mockedDb.protocolsTable;
+};
 
 const pglite = (mockedDb as unknown as { __pglite: { exec(sql: string): Promise<unknown> } }).__pglite;
 
@@ -79,7 +86,8 @@ beforeAll(async () => {
      );
      CREATE TABLE IF NOT EXISTS clinical_protocols (
        id text PRIMARY KEY, center_id text NOT NULL DEFAULT 'default-center',
-       name text NOT NULL, version text NOT NULL DEFAULT '1', active boolean NOT NULL DEFAULT true,
+       name text NOT NULL, version text NOT NULL DEFAULT '1',
+       specialty text NOT NULL DEFAULT 'capilar', active boolean NOT NULL DEFAULT true,
        created_at timestamptz NOT NULL DEFAULT now()
      );
      CREATE TABLE IF NOT EXISTS clinical_protocol_views (
@@ -91,6 +99,7 @@ beforeAll(async () => {
      CREATE TABLE IF NOT EXISTS clinical_evaluations (
        id text PRIMARY KEY, lead_id text NOT NULL UNIQUE, center_id text NOT NULL DEFAULT 'default-center',
        protocol_id text NOT NULL DEFAULT 'capillary-initial', status text NOT NULL DEFAULT 'draft',
+       clinical_data jsonb NOT NULL DEFAULT '{}',
        created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
      );
      CREATE TABLE IF NOT EXISTS clinical_photos (
@@ -145,6 +154,25 @@ describe("POST /api/patients", () => {
     expect(res.body.lead.documentId).toBe("12.345.678-5");
     expect(res.body.lead.photos).toBeUndefined();
     expect(await countLeads()).toBe(1);
+  });
+
+  it("mirrors capilar-specific fields into the evaluation's specialty-tagged clinicalData (Fase 5)", async () => {
+    const res = await request(app).post("/api/patients").send({
+      ...VALID_BODY,
+      hairLossTime: "2 años",
+      pattern: "vertex",
+    });
+    expect(res.status).toBe(201);
+
+    const [evaluation] = await typedMockedDb.db.select()
+      .from(typedMockedDb.evaluationsTable)
+      .where(eq(typedMockedDb.evaluationsTable.leadId, res.body.lead.id));
+    expect(evaluation.clinicalData).toMatchObject({ hairLossTime: "2 años", pattern: "vertex" });
+
+    const [protocol] = await typedMockedDb.db.select()
+      .from(typedMockedDb.protocolsTable)
+      .where(eq(typedMockedDb.protocolsTable.id, evaluation.protocolId));
+    expect(protocol.specialty).toBe("capilar");
   });
 
   it("returns 400 when consent field is missing entirely", async () => {

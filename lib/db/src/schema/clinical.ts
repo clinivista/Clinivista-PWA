@@ -15,6 +15,11 @@ export const protocolsTable = pgTable("clinical_protocols", {
   centerId: text("center_id").notNull().default("default-center"),
   name: text("name").notNull(),
   version: text("version").notNull().default("1"),
+  // Fase 5: which specialty module (artifacts/api-server/src/lib/specialties/)
+  // governs this protocol's views and clinical intake fields. Every protocol
+  // today is "capilar" — the tag is what lets Fase 7 add a second specialty
+  // without every protocol query needing to guess.
+  specialty: text("specialty").notNull().default("capilar"),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
@@ -39,6 +44,13 @@ export const evaluationsTable = pgTable("clinical_evaluations", {
   centerId: text("center_id").notNull().default("default-center"),
   protocolId: text("protocol_id").notNull().default("capillary-initial"),
   status: text("status").notNull().default("draft"),
+  // Fase 5: a specialty-tagged, structured snapshot of this evaluation's
+  // clinical intake data (e.g. for "capilar": norwood, pattern, ...). Mirrors
+  // the equivalent `leads` columns for now — see specialties/capilar.ts —
+  // so generic tooling can read clinical data the same way regardless of
+  // specialty, without every future specialty needing its own `leads`
+  // columns.
+  clinicalData: jsonb("clinical_data").notNull().default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
