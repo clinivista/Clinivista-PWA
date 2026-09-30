@@ -1,11 +1,26 @@
 import { Router, type IRouter } from "express";
 import { eq, sql } from "drizzle-orm";
 import { db, centersTable, leadsTable, usersTable } from "@workspace/db";
-import { GetDirectorCenterExportParams, PatchDirectorCenterBody, PatchDirectorCenterParams } from "@workspace/api-zod";
+import {
+  GetDirectorCenterExportParams,
+  PatchDirectorCenterBody,
+  PatchDirectorCenterParams,
+  RecordDirectorCenterPaymentBody,
+  RecordDirectorCenterPaymentParams,
+} from "@workspace/api-zod";
 import { requireDirectorAuth } from "./auth";
 import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
 
 const router: IRouter = Router();
+
+// Manual billing (Fase 6): no payment gateway, no automatic suspension.
+// A clinic with no recorded payment is "sin_registro" (never billed, e.g. a
+// brand-new or demo clinic); past its paidUntil date it's "atrasada" so the
+// director sees it and can choose to suspend; otherwise "al_dia".
+function paymentStatus(paidUntil: Date | null): "al_dia" | "atrasada" | "sin_registro" {
+  if (!paidUntil) return "sin_registro";
+  return paidUntil.getTime() >= Date.now() ? "al_dia" : "atrasada";
+}
 
 async function centerSummaries() {
   const centers = await db.select().from(centersTable);
@@ -37,6 +52,8 @@ async function centerSummaries() {
         createdAt: center?.createdAt ?? new Date(0),
         patientCount,
         staffCount,
+        paidUntil: center?.paidUntil ?? null,
+        paymentStatus: paymentStatus(center?.paidUntil ?? null),
       };
     }),
   );
@@ -71,6 +88,44 @@ router.patch("/director/centers/:id", async (req, res): Promise<void> => {
       name: params.data.id === DEFAULT_CENTER_ID ? "Centro principal" : params.data.id,
       slug: params.data.id,
       active: body.data.active,
+    }).onConflictDoNothing();
+  }
+
+  const summaries = await centerSummaries();
+  const updated = summaries.find((center) => center.id === params.data.id);
+  if (!updated) {
+    res.status(404).json({ error: "Clínica no encontrada." });
+    return;
+  }
+  res.json(updated);
+});
+
+router.post("/director/centers/:id/payments", async (req, res): Promise<void> => {
+  const context = requireDirectorAuth(req, res);
+  if (!context) return;
+
+  const params = RecordDirectorCenterPaymentParams.safeParse(req.params);
+  const body = RecordDirectorCenterPaymentBody.safeParse(req.body);
+  if (!params.success || !body.success) {
+    res.status(400).json({ error: "Datos inválidos." });
+    return;
+  }
+  // RecordDirectorCenterPaymentBody already coerces and validates this into
+  // a real Date (zod.coerce.date() rejects anything that doesn't parse).
+  const paidUntil = body.data.paidUntil;
+
+  const [existing] = await db.select().from(centersTable).where(eq(centersTable.id, params.data.id));
+  if (existing) {
+    await db.update(centersTable).set({ paidUntil }).where(eq(centersTable.id, params.data.id));
+  } else {
+    // Same lazy-creation pattern as the PATCH above: a clinic that only
+    // exists implicitly (via leads/users) gets its row created here, the
+    // first time a director records a payment for it.
+    await db.insert(centersTable).values({
+      id: params.data.id,
+      name: params.data.id === DEFAULT_CENTER_ID ? "Centro principal" : params.data.id,
+      slug: params.data.id,
+      paidUntil,
     }).onConflictDoNothing();
   }
 

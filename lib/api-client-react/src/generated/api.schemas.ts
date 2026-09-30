@@ -40,6 +40,15 @@ export interface AuthStatus {
   user?: AuthUser;
 }
 
+export type DirectorCenterSummaryPaymentStatus = typeof DirectorCenterSummaryPaymentStatus[keyof typeof DirectorCenterSummaryPaymentStatus];
+
+
+export const DirectorCenterSummaryPaymentStatus = {
+  al_dia: 'al_dia',
+  atrasada: 'atrasada',
+  sin_registro: 'sin_registro',
+} as const;
+
 export interface DirectorCenterSummary {
   id: string;
   name: string;
@@ -48,10 +57,18 @@ export interface DirectorCenterSummary {
   createdAt: string;
   patientCount: number;
   staffCount: number;
+  /** Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment. */
+  paidUntil: string | null;
+  paymentStatus: DirectorCenterSummaryPaymentStatus;
 }
 
 export interface DirectorCenterPatch {
   active: boolean;
+}
+
+export interface DirectorCenterPaymentBody {
+  /** The clinic is considered paid through this date. */
+  paidUntil: string;
 }
 
 export interface LoginCredentials {

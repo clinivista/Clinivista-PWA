@@ -7,6 +7,12 @@ export const centersTable = pgTable("clinical_centers", {
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   active: boolean("active").notNull().default(true),
+  // Fase 6 (facturación, alcance manual): the clinic is considered paid up
+  // through this date. A director records it by hand after receiving
+  // payment — there is no payment gateway integration yet, and nothing
+  // suspends the clinic automatically when it lapses; the director sees it
+  // marked "atrasada" and decides.
+  paidUntil: timestamp("paid_until", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

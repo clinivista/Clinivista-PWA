@@ -82,7 +82,8 @@ beforeAll(async () => {
       WHERE document_normalized IS NOT NULL AND document_normalized <> '';
      CREATE TABLE IF NOT EXISTS clinical_centers (
        id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
-       active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now()
+       active boolean NOT NULL DEFAULT true, paid_until timestamptz,
+       created_at timestamptz NOT NULL DEFAULT now()
      );
      CREATE TABLE IF NOT EXISTS clinical_protocols (
        id text PRIMARY KEY, center_id text NOT NULL DEFAULT 'default-center',

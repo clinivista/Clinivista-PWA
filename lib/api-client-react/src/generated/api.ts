@@ -22,6 +22,7 @@ import type {
 import type {
   AuthStatus,
   DirectorCenterPatch,
+  DirectorCenterPaymentBody,
   DirectorCenterSummary,
   ErrorResponse,
   GetDirectorCenters200,
@@ -1046,6 +1047,78 @@ export const usePatchDirectorCenter = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getPatchDirectorCenterMutationOptions(options));
+    }
+
+export const getRecordDirectorCenterPaymentUrl = (id: string,) => {
+
+
+
+
+  return `/api/director/centers/${id}/payments`
+}
+
+/**
+ * @summary Manually record that a clinic has paid through a given date (director only)
+ */
+export const recordDirectorCenterPayment = async (id: string,
+    directorCenterPaymentBody: DirectorCenterPaymentBody, options?: Parameters<typeof customFetch>[1]): Promise<DirectorCenterSummary> => {
+
+  return customFetch<DirectorCenterSummary>(getRecordDirectorCenterPaymentUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(directorCenterPaymentBody)
+  }
+);}
+
+
+
+
+
+export const getRecordDirectorCenterPaymentMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordDirectorCenterPayment>>, TError,{id: string;data: BodyType<DirectorCenterPaymentBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recordDirectorCenterPayment>>, TError,{id: string;data: BodyType<DirectorCenterPaymentBody>}, TContext> => {
+
+const mutationKey = ['recordDirectorCenterPayment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recordDirectorCenterPayment>>, {id: string;data: BodyType<DirectorCenterPaymentBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  recordDirectorCenterPayment(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecordDirectorCenterPaymentMutationResult = NonNullable<Awaited<ReturnType<typeof recordDirectorCenterPayment>>>
+    export type RecordDirectorCenterPaymentMutationBody = BodyType<DirectorCenterPaymentBody>
+    export type RecordDirectorCenterPaymentMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Manually record that a clinic has paid through a given date (director only)
+ */
+export const useRecordDirectorCenterPayment = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recordDirectorCenterPayment>>, TError,{id: string;data: BodyType<DirectorCenterPaymentBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof recordDirectorCenterPayment>>,
+        TError,
+        {id: string;data: BodyType<DirectorCenterPaymentBody>},
+        TContext
+      > => {
+      return useMutation(getRecordDirectorCenterPaymentMutationOptions(options));
     }
 
 export const getGetDirectorCenterExportUrl = (id: string,) => {

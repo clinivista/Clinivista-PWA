@@ -277,7 +277,9 @@ export const GetDirectorCentersResponse = zod.object({
   "active": zod.boolean(),
   "createdAt": zod.coerce.date(),
   "patientCount": zod.number(),
-  "staffCount": zod.number()
+  "staffCount": zod.number(),
+  "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
+  "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro'])
 }))
 })
 
@@ -300,7 +302,33 @@ export const PatchDirectorCenterResponse = zod.object({
   "active": zod.boolean(),
   "createdAt": zod.coerce.date(),
   "patientCount": zod.number(),
-  "staffCount": zod.number()
+  "staffCount": zod.number(),
+  "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
+  "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro'])
+})
+
+
+/**
+ * @summary Manually record that a clinic has paid through a given date (director only)
+ */
+export const RecordDirectorCenterPaymentParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const RecordDirectorCenterPaymentBody = zod.object({
+  "paidUntil": zod.coerce.date().describe('The clinic is considered paid through this date.')
+})
+
+export const RecordDirectorCenterPaymentResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "patientCount": zod.number(),
+  "staffCount": zod.number(),
+  "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
+  "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro'])
 })
 
 

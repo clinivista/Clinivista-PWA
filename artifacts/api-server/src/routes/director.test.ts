@@ -31,7 +31,8 @@ beforeAll(async () => {
   await pglite.exec(`
     CREATE TABLE IF NOT EXISTS clinical_centers (
       id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
-      active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now()
+      active boolean NOT NULL DEFAULT true, paid_until timestamptz,
+      created_at timestamptz NOT NULL DEFAULT now()
     );
     CREATE TABLE IF NOT EXISTS leads (
       id text PRIMARY KEY,
@@ -128,6 +129,62 @@ describe("GET /api/director/centers", () => {
     const byId = Object.fromEntries(res.body.centers.map((c: { id: string }) => [c.id, c]));
     expect(byId["clinic-a"]).toMatchObject({ active: true, patientCount: 3, staffCount: 2 });
     expect(byId["clinic-b"]).toMatchObject({ active: false, patientCount: 1, staffCount: 1 });
+    // Fase 6 (manual billing): a clinic that has never had a payment
+    // recorded shows up as "sin_registro", never a false "atrasada".
+    expect(byId["clinic-a"]).toMatchObject({ paidUntil: null, paymentStatus: "sin_registro" });
+  });
+});
+
+describe("POST /api/director/centers/:id/payments", () => {
+  it("rejects a non-director session", async () => {
+    await seedClinic("clinic-a");
+    const staffSession = createSession({ userId: "s1", centerId: "clinic-a", role: "administrativo" });
+    await request(app)
+      .post("/api/director/centers/clinic-a/payments")
+      .set("Cookie", `clinivista_session=${staffSession}`)
+      .send({ paidUntil: "2027-01-01T00:00:00.000Z" })
+      .expect(403);
+  });
+
+  it("records a future payment date as al_dia and a past one as atrasada", async () => {
+    await seedClinic("clinic-a");
+
+    const future = await request(app)
+      .post("/api/director/centers/clinic-a/payments")
+      .set("Cookie", `clinivista_session=${directorSession()}`)
+      .send({ paidUntil: "2099-01-01T00:00:00.000Z" })
+      .expect(200);
+    expect(future.body.paymentStatus).toBe("al_dia");
+    expect(new Date(future.body.paidUntil).toISOString()).toBe("2099-01-01T00:00:00.000Z");
+
+    const past = await request(app)
+      .post("/api/director/centers/clinic-a/payments")
+      .set("Cookie", `clinivista_session=${directorSession()}`)
+      .send({ paidUntil: "2000-01-01T00:00:00.000Z" })
+      .expect(200);
+    expect(past.body.paymentStatus).toBe("atrasada");
+  });
+
+  it("rejects an invalid date", async () => {
+    await seedClinic("clinic-a");
+    await request(app)
+      .post("/api/director/centers/clinic-a/payments")
+      .set("Cookie", `clinivista_session=${directorSession()}`)
+      .send({ paidUntil: "not-a-date" })
+      .expect(400);
+  });
+
+  it("creates the clinic's row if it only existed implicitly, same as the PATCH endpoint", async () => {
+    // No seedClinic call: this clinic exists only because a lead references it.
+    await pglite.exec(`
+      INSERT INTO leads (id, token, name, phone, center_id) VALUES ('implicit-lead', 'implicit-token', 'Paciente', '+56900000000', 'clinic-implicit');
+    `);
+    const res = await request(app)
+      .post("/api/director/centers/clinic-implicit/payments")
+      .set("Cookie", `clinivista_session=${directorSession()}`)
+      .send({ paidUntil: "2099-01-01T00:00:00.000Z" })
+      .expect(200);
+    expect(res.body.paymentStatus).toBe("al_dia");
   });
 });
 
