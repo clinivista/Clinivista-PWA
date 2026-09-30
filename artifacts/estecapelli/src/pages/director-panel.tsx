@@ -28,9 +28,28 @@ const PAYMENT_STATUS_STYLE: Record<DirectorCenterSummary["paymentStatus"], strin
   sin_registro: "bg-slate-100 text-slate-600",
 };
 
+const CLINIC_TIME_ZONE = "America/Santiago";
+
 function formatPaidUntil(paidUntil: string | null): string | null {
   if (!paidUntil) return null;
-  return new Date(paidUntil).toLocaleDateString("es-CL", { year: "numeric", month: "long", day: "numeric" });
+  return new Date(paidUntil).toLocaleDateString("es-CL", { year: "numeric", month: "long", day: "numeric", timeZone: CLINIC_TIME_ZONE });
+}
+
+// Chile alternates between UTC-3 and UTC-4 depending on daylight saving, so
+// rather than hardcode an offset, ask Intl what America/Santiago's offset
+// from UTC actually is for the instant in question (works for either side
+// of a DST transition). Used so "pagado hasta el 31 de octubre" means
+// midnight at the end of October 31st in Chile, not in UTC — otherwise the
+// clinic could show as "atrasada" a few hours before the local cutoff.
+function utcOffsetMs(instant: Date, timeZone: string): number {
+  const asUtc = new Date(instant.toLocaleString("en-US", { timeZone: "UTC" }));
+  const asZone = new Date(instant.toLocaleString("en-US", { timeZone }));
+  return asUtc.getTime() - asZone.getTime();
+}
+
+function chileEndOfDayIso(dateValue: string): string {
+  const reference = new Date(`${dateValue}T23:59:59.999Z`);
+  return new Date(reference.getTime() + utcOffsetMs(reference, CLINIC_TIME_ZONE)).toISOString();
 }
 
 export function DirectorPanel({ onLogout }: { onLogout: () => void }) {
@@ -69,7 +88,7 @@ export function DirectorPanel({ onLogout }: { onLogout: () => void }) {
     if (!dateValue) return;
     setPendingId(id);
     recordPayment.mutate(
-      { id, data: { paidUntil: new Date(`${dateValue}T23:59:59.999Z`).toISOString() } },
+      { id, data: { paidUntil: chileEndOfDayIso(dateValue) } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetDirectorCentersQueryKey() });
