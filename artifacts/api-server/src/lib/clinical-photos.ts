@@ -15,6 +15,7 @@ import {
 } from "@workspace/db";
 import { uid } from "./helpers";
 import { createObjectKey, privatePhotoStorage } from "./clinical-photo-storage";
+import { SPECIALTY_ID, PROTOCOL_VIEWS, clinicalDataFromLead } from "./specialties/capilar";
 
 export const DEFAULT_CENTER_ID = process.env.DEFAULT_CENTER_ID ?? "default-center";
 export const DEFAULT_PROTOCOL_ID = process.env.DEFAULT_PROTOCOL_ID
@@ -35,14 +36,6 @@ async function serializePhotoMutation<T>(photoId: string, operation: () => Promi
     if (photoMutationChains.get(photoId) === next) photoMutationChains.delete(photoId);
   }
 }
-
-const INITIAL_VIEWS = [
-  ["frontal", "Vista frontal"],
-  ["vertex", "Vista superior / vértex"],
-  ["temporalRight", "Temporal derecha"],
-  ["temporalLeft", "Temporal izquierda"],
-  ["donor", "Zona donante"],
-] as const;
 
 export type PhotoStatus = {
   id: string;
@@ -102,9 +95,10 @@ export async function ensureClinicalConfiguration(
     centerId,
     name: "Protocolo capilar inicial",
     version: "1",
+    specialty: SPECIALTY_ID,
   }).onConflictDoNothing();
   await db.insert(protocolViewsTable).values(
-    INITIAL_VIEWS.map(([key, label], position) => ({
+    PROTOCOL_VIEWS.map(({ key, label, required }, position) => ({
       id: `${protocolId}-${key}`,
       protocolId,
       key,
@@ -112,9 +106,23 @@ export async function ensureClinicalConfiguration(
       position,
       requirements: {
         quality: ["rostro o zona completa visible", "iluminación uniforme", "imagen enfocada"],
+        required,
       },
     })),
   ).onConflictDoNothing();
+}
+
+/** How many of a protocol's views are mandatory before an evaluation can be
+ * submitted — sourced from the protocol's own views instead of a hardcoded
+ * number, so a future specialty's protocol (with a different view count)
+ * is gated correctly without touching this code. */
+export async function getRequiredViewKeys(protocolId: string): Promise<string[]> {
+  const views = await db.select({ key: protocolViewsTable.key, requirements: protocolViewsTable.requirements })
+    .from(protocolViewsTable)
+    .where(and(eq(protocolViewsTable.protocolId, protocolId), eq(protocolViewsTable.active, true)));
+  return views
+    .filter((view) => (view.requirements as Record<string, unknown> | null)?.required !== false)
+    .map((view) => view.key);
 }
 
 export async function ensureDefaultClinicalConfiguration(): Promise<void> {
@@ -138,12 +146,28 @@ export async function ensureEvaluationForLead(lead: Lead) {
     centerId,
     protocolId,
     status: "draft",
+    clinicalData: clinicalDataFromLead(lead),
   }).onConflictDoNothing();
 
   const [evaluation] = await db.select().from(evaluationsTable)
     .where(eq(evaluationsTable.leadId, lead.id));
   if (!evaluation) throw new Error("Unable to initialize clinical evaluation.");
+
+  // Keep clinicalData mirroring the lead's own (still authoritative for now)
+  // capilar columns, so it never drifts stale after the lead is edited.
+  const freshClinicalData = clinicalDataFromLead(lead);
+  if (JSON.stringify(freshClinicalData) !== JSON.stringify(evaluation.clinicalData ?? {})) {
+    await db.update(evaluationsTable)
+      .set({ clinicalData: freshClinicalData, updatedAt: new Date() })
+      .where(eq(evaluationsTable.id, evaluation.id));
+    evaluation.clinicalData = freshClinicalData;
+  }
   return evaluation;
+}
+
+export async function getRequiredViewKeysForLead(lead: Lead): Promise<string[]> {
+  const evaluation = await ensureEvaluationForLead(lead);
+  return getRequiredViewKeys(evaluation.protocolId);
 }
 
 export async function getPhotoStatusesForLead(lead: Lead): Promise<PhotoStatus[]> {

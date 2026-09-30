@@ -33,6 +33,12 @@ export const leadsTable = pgTable("leads", {
   marketingConsent: boolean("marketing_consent").notNull().default(false),
   photoCount: text("photo_count").notNull().default("0"),
   photos: jsonb("photos").notNull().default([]),
+  // Fase 5: these six columns are specific to the "capilar" specialty (see
+  // artifacts/api-server/src/lib/specialties/capilar.ts) and are kept here,
+  // unmigrated, for backward compatibility with existing production data and
+  // API consumers. They are mirrored into clinical_evaluations.clinicalData
+  // going forward — a future specialty does NOT get its own leads columns,
+  // it gets its own specialty module and lives in clinicalData instead.
   hairLossTime: text("hair_loss_time").default(""),
   pattern: text("pattern").default(""),
   previousTreatment: text("previous_treatment").default(""),

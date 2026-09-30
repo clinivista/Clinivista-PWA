@@ -30,6 +30,7 @@ import {
   ensureDefaultClinicalConfiguration,
   getPatientPhotoFile,
   getPhotoStatusesForLead,
+  getRequiredViewKeysForLead,
 } from "../lib/clinical-photos";
 import { privatePhotoStorage } from "../lib/clinical-photo-storage";
 import { isCenterActive } from "../lib/centers";
@@ -274,17 +275,23 @@ function parseCaptureMetadata(value: string | undefined): Record<string, unknown
   }
 }
 
-function updatedStatus(existingStatus: string | null, completedPhotos: number): string {
-  if (completedPhotos < 5) return "incompleto";
+function updatedStatus(existingStatus: string | null, completedPhotos: number, requiredCount: number): string {
+  if (completedPhotos < requiredCount) return "incompleto";
   return existingStatus === "nuevo" || existingStatus === "incompleto" ? "listo" : existingStatus ?? "listo";
 }
 
-const REQUIRED_CAPILLARY_VIEW_KEYS = new Set(["frontal", "vertex", "temporalRight", "temporalLeft", "donor"]);
-
-function completedRequiredViews(photos: Awaited<ReturnType<typeof getPhotoStatusesForLead>>): number {
+// The required view count is per-protocol (see getRequiredViewKeysForLead) —
+// today it's always the 5 capilar views, but this stops assuming that number
+// so a future specialty's protocol, with a different set of required views,
+// is gated correctly without changing this code.
+function completedRequiredViews(
+  photos: Awaited<ReturnType<typeof getPhotoStatusesForLead>>,
+  requiredKeys: string[],
+): number {
+  const required = new Set(requiredKeys);
   return new Set(
     photos
-      .filter((photo) => photo.status === "confirmed" && REQUIRED_CAPILLARY_VIEW_KEYS.has(photo.key))
+      .filter((photo) => photo.status === "confirmed" && required.has(photo.key))
       .map((photo) => photo.key),
   ).size;
 }
@@ -403,13 +410,14 @@ router.put("/patients/:token", async (req, res): Promise<void> => {
     return;
   }
   const clinicalPhotos = await getPhotoStatusesForLead(existing);
-  const completed = completedRequiredViews(clinicalPhotos);
-  if ((req.body as Record<string, unknown>).submit === true && completed < 5) {
+  const requiredKeys = await getRequiredViewKeysForLead(existing);
+  const completed = completedRequiredViews(clinicalPhotos, requiredKeys);
+  if ((req.body as Record<string, unknown>).submit === true && completed < requiredKeys.length) {
     res.status(422).json({ error: "Debes guardar las cinco fotografías obligatorias antes de enviar." });
     return;
   }
   const [updated] = await db.update(leadsTable)
-    .set({ ...data, status: updatedStatus(existing.status, completed), photoCount: String(completed) })
+    .set({ ...data, status: updatedStatus(existing.status, completed, requiredKeys.length), photoCount: String(completed) })
     .where(eq(leadsTable.id, existing.id)).returning();
   res.json({ ok: true, lead: await leadSummary(updated) });
 });
