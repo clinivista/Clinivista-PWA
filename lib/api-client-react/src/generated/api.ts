@@ -22,6 +22,7 @@ import type {
 import type {
   AuthStatus,
   DirectorCenterCreateBody,
+  DirectorCenterCreateUser,
   DirectorCenterPatch,
   DirectorCenterPaymentBody,
   DirectorCenterSummary,
@@ -1204,6 +1205,78 @@ export function useGetDirectorCenterUsers<TData = Awaited<ReturnType<typeof getD
 
 
 
+
+export const getCreateDirectorCenterUserUrl = (id: string,) => {
+
+
+
+
+  return `/api/director/centers/${id}/users`
+}
+
+/**
+ * @summary Create a médico or administrativo account in an existing clinic (director only)
+ */
+export const createDirectorCenterUser = async (id: string,
+    directorCenterCreateUser: DirectorCenterCreateUser, options?: Parameters<typeof customFetch>[1]): Promise<DirectorCenterUser> => {
+
+  return customFetch<DirectorCenterUser>(getCreateDirectorCenterUserUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(directorCenterCreateUser)
+  }
+);}
+
+
+
+
+
+export const getCreateDirectorCenterUserMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDirectorCenterUser>>, TError,{id: string;data: BodyType<DirectorCenterCreateUser>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDirectorCenterUser>>, TError,{id: string;data: BodyType<DirectorCenterCreateUser>}, TContext> => {
+
+const mutationKey = ['createDirectorCenterUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDirectorCenterUser>>, {id: string;data: BodyType<DirectorCenterCreateUser>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createDirectorCenterUser(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDirectorCenterUserMutationResult = NonNullable<Awaited<ReturnType<typeof createDirectorCenterUser>>>
+    export type CreateDirectorCenterUserMutationBody = BodyType<DirectorCenterCreateUser>
+    export type CreateDirectorCenterUserMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Create a médico or administrativo account in an existing clinic (director only)
+ */
+export const useCreateDirectorCenterUser = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDirectorCenterUser>>, TError,{id: string;data: BodyType<DirectorCenterCreateUser>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createDirectorCenterUser>>,
+        TError,
+        {id: string;data: BodyType<DirectorCenterCreateUser>},
+        TContext
+      > => {
+      return useMutation(getCreateDirectorCenterUserMutationOptions(options));
+    }
 
 export const getResetDirectorCenterUserPasswordUrl = (id: string,
     userId: string,) => {

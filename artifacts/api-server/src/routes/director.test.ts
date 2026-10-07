@@ -599,3 +599,51 @@ describe("operating the panel as a supra_admin", () => {
     await request(app).post("/api/invitations").set("Cookie", admin()).send({ name: "X" }).expect(403);
   });
 });
+
+describe("crear usuarios de una clínica existente", () => {
+  const director = () => `clinivista_session=${directorSession()}`;
+  const body = { email: "Nueva@Clinica.cl", name: "Dra. Nueva", password: "password-nueva", role: "medico" };
+
+  it("is director-only", async () => {
+    await seedClinic("clinic-a");
+    await request(app).post("/api/director/centers/clinic-a/users").send(body).expect(401);
+    const admin = createSession({ userId: "sa", centerId: null, role: "supra_admin" });
+    await request(app).post("/api/director/centers/clinic-a/users").set("Cookie", `clinivista_session=${admin}`).send(body).expect(403);
+    const staff = createSession({ userId: "s1", centerId: "clinic-a", role: "administrativo" });
+    await request(app).post("/api/director/centers/clinic-a/users").set("Cookie", `clinivista_session=${staff}`).send(body).expect(403);
+  });
+
+  it("creates a user that logs in scoped to that clinic and shows up in the list and counts", async () => {
+    await seedClinic("clinic-a", { staff: 1 });
+    await seedClinic("clinic-b");
+    const res = await request(app).post("/api/director/centers/clinic-a/users").set("Cookie", director()).send(body).expect(201);
+    expect(res.body).toMatchObject({ email: "Nueva@Clinica.cl", name: "Dra. Nueva", role: "medico", active: true });
+    expect(JSON.stringify(res.body)).not.toMatch(/password|hash/i);
+
+    const login = await request(app).post("/api/auth/login").send({ email: "nueva@clinica.cl", password: "password-nueva" }).expect(200);
+    expect(login.body.user).toMatchObject({ role: "medico", centerId: "clinic-a" });
+
+    const list = await request(app).get("/api/director/centers/clinic-a/users").set("Cookie", director()).expect(200);
+    expect(list.body.users).toHaveLength(2);
+    const centers = await request(app).get("/api/director/centers").set("Cookie", director()).expect(200);
+    const byId = Object.fromEntries(centers.body.centers.map((c: { id: string }) => [c.id, c]));
+    expect(byId["clinic-a"].staffCount).toBe(2);
+    expect(byId["clinic-b"].staffCount).toBe(0);
+  });
+
+  it("works for a clinic that only exists implicitly (via its leads)", async () => {
+    await pglite.exec(`INSERT INTO leads (id, token, name, center_id) VALUES ('l1', 't1', 'X', 'implicit-clinic');`);
+    await request(app).post("/api/director/centers/implicit-clinic/users").set("Cookie", director()).send(body).expect(201);
+  });
+
+  it("404 for an unknown clinic, 409 for a taken email, 400 for invalid data or a non-clinic role", async () => {
+    await seedClinic("clinic-a", { staff: 1 });
+    const post = (id: string, b: unknown) => request(app).post(`/api/director/centers/${id}/users`).set("Cookie", director()).send(b);
+    await post("nope", body).expect(404);
+    await post("clinic-a", { ...body, email: "STAFF0@clinic-a.cl" }).expect(409);
+    await post("clinic-a", { ...body, email: "no-es-correo" }).expect(400);
+    await post("clinic-a", { ...body, password: "corta" }).expect(400);
+    await post("clinic-a", { ...body, role: "director" }).expect(400);
+    await post("clinic-a", { ...body, role: "supra_admin" }).expect(400);
+  });
+});

@@ -4,6 +4,8 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { db, centersTable, leadsTable, usersTable, hashPassword, normalizeEmail } from "@workspace/db";
 import {
   CreateDirectorCenterBody,
+  CreateDirectorCenterUserBody,
+  CreateDirectorCenterUserParams,
   CreateDirectorTeamMemberBody,
   GetDirectorCenterExportParams,
   GetDirectorCenterUsersParams,
@@ -259,6 +261,47 @@ router.get("/director/centers/:id/users", async (req, res): Promise<void> => {
   }).from(usersTable).where(eq(usersTable.centerId, params.data.id));
   users.sort((a, b) => a.name.localeCompare(b.name) || a.email.localeCompare(b.email));
   res.json({ users });
+});
+
+router.post("/director/centers/:id/users", async (req, res): Promise<void> => {
+  const context = requireDirectorAuth(req, res);
+  if (!context) return;
+
+  const params = CreateDirectorCenterUserParams.safeParse(req.params);
+  const body = CreateDirectorCenterUserBody.safeParse(req.body);
+  if (!params.success || !body.success) {
+    res.status(400).json({ error: "Datos inválidos." });
+    return;
+  }
+  const email = body.data.email.trim();
+  const emailNormalized = normalizeEmail(email);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNormalized) || body.data.password.length < 8) {
+    res.status(400).json({ error: "Necesitas un correo válido y una contraseña de al menos 8 caracteres." });
+    return;
+  }
+  if (!(await centerSummaries()).some((center) => center.id === params.data.id)) {
+    res.status(404).json({ error: "Clínica no encontrada." });
+    return;
+  }
+  // An email identifies one account on the whole platform, not per clinic.
+  const [taken] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.emailNormalized, emailNormalized));
+  if (taken) {
+    res.status(409).json({ error: `El correo ${email} ya está en uso.` });
+    return;
+  }
+
+  const id = uid(9);
+  await db.insert(usersTable).values({
+    id,
+    email,
+    emailNormalized,
+    passwordHash: hashPassword(body.data.password),
+    name: clean(body.data.name ?? "", 100),
+    role: body.data.role,
+    centerId: params.data.id,
+  });
+  const [created] = await db.select(TEAM_MEMBER_COLUMNS).from(usersTable).where(eq(usersTable.id, id));
+  res.status(201).json(created);
 });
 
 router.post("/director/centers/:id/users/:userId/reset-password", async (req, res): Promise<void> => {
