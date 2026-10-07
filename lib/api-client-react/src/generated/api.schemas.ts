@@ -34,6 +34,8 @@ export interface AuthUser {
   role: AuthUserRole;
   /** null only for "director" and "supra_admin" accounts, which are not tied to one clinic. */
   centerId: string | null;
+  /** true for a clinic's administrativos and its legal representative (even a médico), who manage the clinic's users. */
+  canManageUsers?: boolean;
 }
 
 export interface AuthStatus {
@@ -89,6 +91,53 @@ export interface DirectorCenterPatch {
   active: boolean;
 }
 
+export type ClinicUserRole = typeof ClinicUserRole[keyof typeof ClinicUserRole];
+
+
+export const ClinicUserRole = {
+  medico: 'medico',
+  administrativo: 'administrativo',
+} as const;
+
+export interface ClinicUser {
+  id: string;
+  email: string;
+  name: string;
+  role: ClinicUserRole;
+  active: boolean;
+  legalRepresentative: boolean;
+  /** true for the signed-in user's own row (it can't be blocked, deleted or reset here). */
+  isSelf: boolean;
+  createdAt: string;
+}
+
+export interface ClinicUserList {
+  users: ClinicUser[];
+}
+
+export type ClinicUserCreateRole = typeof ClinicUserCreateRole[keyof typeof ClinicUserCreateRole];
+
+
+export const ClinicUserCreateRole = {
+  medico: 'medico',
+  administrativo: 'administrativo',
+} as const;
+
+export interface ClinicUserCreate {
+  email: string;
+  name?: string;
+  /** @minLength 8 */
+  password: string;
+  role: ClinicUserCreateRole;
+  legalRepresentative?: boolean;
+}
+
+export interface ClinicUserPatch {
+  /** false blocks the user's access (and closes their open sessions); true restores it. */
+  active?: boolean;
+  legalRepresentative?: boolean;
+}
+
 export type DirectorCenterUserRole = typeof DirectorCenterUserRole[keyof typeof DirectorCenterUserRole];
 
 
@@ -103,6 +152,7 @@ export interface DirectorCenterUser {
   name: string;
   role: DirectorCenterUserRole;
   active: boolean;
+  legalRepresentative?: boolean;
   createdAt: string;
 }
 
@@ -154,6 +204,7 @@ export interface DirectorCenterCreateUser {
   /** At least 8 characters. Never stored in plain text. */
   password: string;
   role: DirectorCenterCreateUserRole;
+  legalRepresentative?: boolean;
 }
 
 export interface DirectorCenterCreateBody {

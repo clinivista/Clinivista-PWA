@@ -981,6 +981,201 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /clinic/users:
+    get:
+      operationId: getClinicUsers
+      tags: [clinic-users]
+      summary: Users of the signed-in clinic (administrativos and the legal representative only)
+      responses:
+        "200":
+          description: The clinic's users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicUserList"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not allowed to manage users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createClinicUser
+      tags: [clinic-users]
+      summary: Create a médico or administrativo in the signed-in clinic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClinicUserCreate"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicUser"
+        "400":
+          description: Invalid data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not allowed to manage users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clinic/users/{userId}:
+    patch:
+      operationId: patchClinicUser
+      tags: [clinic-users]
+      summary: Block/unblock a user or set the legal representative
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClinicUserPatch"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicUser"
+        "400":
+          description: Invalid or not allowed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not allowed to manage users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found in this clinic
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteClinicUser
+      tags: [clinic-users]
+      summary: Permanently delete a user of the signed-in clinic
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "400":
+          description: Not allowed (yourself or the last administrator)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not allowed to manage users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found in this clinic
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clinic/users/{userId}/reset-password:
+    post:
+      operationId: resetClinicUserPassword
+      tags: [clinic-users]
+      summary: Generate a temporary password for a user of the signed-in clinic
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Temporary password, shown once
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DirectorPasswordReset"
+        "400":
+          description: Not allowed (yourself)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not allowed to manage users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found in this clinic
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /clinic/me:
     get:
       operationId: getMyClinic
@@ -1455,6 +1650,9 @@ components:
           type: string
           nullable: true
           description: null only for "director" and "supra_admin" accounts, which are not tied to one clinic.
+        canManageUsers:
+          type: boolean
+          description: true for a clinic's administrativos and its legal representative (even a médico), who manage the clinic's users.
 
     DirectorCenterSummary:
       type: object
@@ -1532,6 +1730,65 @@ components:
         active:
           type: boolean
 
+    ClinicUser:
+      type: object
+      required: [id, email, name, role, active, legalRepresentative, isSelf, createdAt]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [medico, administrativo]
+        active:
+          type: boolean
+        legalRepresentative:
+          type: boolean
+        isSelf:
+          type: boolean
+          description: true for the signed-in user's own row (it can't be blocked, deleted or reset here).
+        createdAt:
+          type: string
+          format: date-time
+
+    ClinicUserList:
+      type: object
+      required: [users]
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClinicUser"
+
+    ClinicUserCreate:
+      type: object
+      required: [email, password, role]
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        password:
+          type: string
+          minLength: 8
+        role:
+          type: string
+          enum: [medico, administrativo]
+        legalRepresentative:
+          type: boolean
+
+    ClinicUserPatch:
+      type: object
+      properties:
+        active:
+          type: boolean
+          description: false blocks the user's access (and closes their open sessions); true restores it.
+        legalRepresentative:
+          type: boolean
+
     DirectorCenterUser:
       type: object
       required: [id, email, name, role, active, createdAt]
@@ -1546,6 +1803,8 @@ components:
           type: string
           enum: [medico, administrativo]
         active:
+          type: boolean
+        legalRepresentative:
           type: boolean
         createdAt:
           type: string
@@ -1631,6 +1890,8 @@ components:
         role:
           type: string
           enum: [medico, administrativo]
+        legalRepresentative:
+          type: boolean
 
     DirectorCenterPaymentBody:
       type: object

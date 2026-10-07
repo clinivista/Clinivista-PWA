@@ -5,6 +5,7 @@ import leadsRouter from "./leads";
 import patientsRouter from "./patients";
 import invitationsRouter from "./invitations";
 import directorRouter from "./director";
+import clinicUsersRouter from "./clinic-users";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(leadsRouter);
 router.use(patientsRouter);
 router.use(invitationsRouter);
 router.use(directorRouter);
+router.use(clinicUsersRouter);
 
 export default router;

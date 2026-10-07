@@ -5,13 +5,13 @@
  * Estecapelli API — Preevaluación capilar
  * OpenAPI spec version: 0.1.0
  */
-import type { DirectorCenterCreateUserRole } from './directorCenterCreateUserRole';
+import type { ClinicUserCreateRole } from './clinicUserCreateRole';
 
-export interface DirectorCenterCreateUser {
+export interface ClinicUserCreate {
   email: string;
   name?: string;
-  /** At least 8 characters. Never stored in plain text. */
+  /** @minLength 8 */
   password: string;
-  role: DirectorCenterCreateUserRole;
+  role: ClinicUserCreateRole;
   legalRepresentative?: boolean;
 }

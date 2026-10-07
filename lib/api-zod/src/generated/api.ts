@@ -26,7 +26,8 @@ export const GetAuthMeResponse = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "role": zod.enum(['medico', 'administrativo', 'director', 'supra_admin']),
-  "centerId": zod.string().nullable().describe('null only for \"director\" and \"supra_admin\" accounts, which are not tied to one clinic.')
+  "centerId": zod.string().nullable().describe('null only for \"director\" and \"supra_admin\" accounts, which are not tied to one clinic.'),
+  "canManageUsers": zod.boolean().optional().describe('true for a clinic\'s administrativos and its legal representative (even a médico), who manage the clinic\'s users.')
 }).optional()
 })
 
@@ -46,7 +47,8 @@ export const AdminLoginResponse = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "role": zod.enum(['medico', 'administrativo', 'director', 'supra_admin']),
-  "centerId": zod.string().nullable().describe('null only for \"director\" and \"supra_admin\" accounts, which are not tied to one clinic.')
+  "centerId": zod.string().nullable().describe('null only for \"director\" and \"supra_admin\" accounts, which are not tied to one clinic.'),
+  "canManageUsers": zod.boolean().optional().describe('true for a clinic\'s administrativos and its legal representative (even a médico), who manage the clinic\'s users.')
 })
 })
 
@@ -297,7 +299,8 @@ export const CreateDirectorCenterBody = zod.object({
   "email": zod.string(),
   "name": zod.string().optional(),
   "password": zod.string().describe('At least 8 characters. Never stored in plain text.'),
-  "role": zod.enum(['medico', 'administrativo'])
+  "role": zod.enum(['medico', 'administrativo']),
+  "legalRepresentative": zod.boolean().optional()
 })).optional().describe('Initial staff accounts for the clinic (up to 5).'),
   "withSamplePatients": zod.boolean().optional().describe('Also load a few fictitious demo patients (no photos).')
 })
@@ -355,6 +358,7 @@ export const GetDirectorCenterUsersResponse = zod.object({
   "name": zod.string(),
   "role": zod.enum(['medico', 'administrativo']),
   "active": zod.boolean(),
+  "legalRepresentative": zod.boolean().optional(),
   "createdAt": zod.coerce.date()
 }))
 })
@@ -371,7 +375,8 @@ export const CreateDirectorCenterUserBody = zod.object({
   "email": zod.string(),
   "name": zod.string().optional(),
   "password": zod.string().describe('At least 8 characters. Never stored in plain text.'),
-  "role": zod.enum(['medico', 'administrativo'])
+  "role": zod.enum(['medico', 'administrativo']),
+  "legalRepresentative": zod.boolean().optional()
 })
 
 export const CreateDirectorCenterUserResponse = zod.object({
@@ -380,6 +385,7 @@ export const CreateDirectorCenterUserResponse = zod.object({
   "name": zod.string(),
   "role": zod.enum(['medico', 'administrativo']),
   "active": zod.boolean(),
+  "legalRepresentative": zod.boolean().optional(),
   "createdAt": zod.coerce.date()
 })
 
@@ -415,6 +421,7 @@ export const PatchDirectorCenterUserResponse = zod.object({
   "name": zod.string(),
   "role": zod.enum(['medico', 'administrativo']),
   "active": zod.boolean(),
+  "legalRepresentative": zod.boolean().optional(),
   "createdAt": zod.coerce.date()
 })
 
@@ -656,6 +663,96 @@ export const CreateClinicPatientResponse = zod.object({
   "appointmentAt": zod.string().nullish(),
   "isDemo": zod.boolean().nullish()
 })
+})
+
+
+/**
+ * @summary Users of the signed-in clinic (administrativos and the legal representative only)
+ */
+export const GetClinicUsersResponse = zod.object({
+  "users": zod.array(zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['medico', 'administrativo']),
+  "active": zod.boolean(),
+  "legalRepresentative": zod.boolean(),
+  "isSelf": zod.boolean().describe('true for the signed-in user\'s own row (it can\'t be blocked, deleted or reset here).'),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Create a médico or administrativo in the signed-in clinic
+ */
+export const createClinicUserBodyPasswordMin = 8;
+
+
+
+export const CreateClinicUserBody = zod.object({
+  "email": zod.string(),
+  "name": zod.string().optional(),
+  "password": zod.string().min(createClinicUserBodyPasswordMin),
+  "role": zod.enum(['medico', 'administrativo']),
+  "legalRepresentative": zod.boolean().optional()
+})
+
+export const CreateClinicUserResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['medico', 'administrativo']),
+  "active": zod.boolean(),
+  "legalRepresentative": zod.boolean(),
+  "isSelf": zod.boolean().describe('true for the signed-in user\'s own row (it can\'t be blocked, deleted or reset here).'),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Block/unblock a user or set the legal representative
+ */
+export const PatchClinicUserParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const PatchClinicUserBody = zod.object({
+  "active": zod.boolean().optional().describe('false blocks the user\'s access (and closes their open sessions); true restores it.'),
+  "legalRepresentative": zod.boolean().optional()
+})
+
+export const PatchClinicUserResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['medico', 'administrativo']),
+  "active": zod.boolean(),
+  "legalRepresentative": zod.boolean(),
+  "isSelf": zod.boolean().describe('true for the signed-in user\'s own row (it can\'t be blocked, deleted or reset here).'),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Permanently delete a user of the signed-in clinic
+ */
+export const DeleteClinicUserParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const DeleteClinicUserResponse = zod.void()
+
+
+/**
+ * @summary Generate a temporary password for a user of the signed-in clinic
+ */
+export const ResetClinicUserPasswordParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const ResetClinicUserPasswordResponse = zod.object({
+  "temporaryPassword": zod.string().describe('Generated password, shown only once. The user\'s open sessions are closed.')
 })
 
 

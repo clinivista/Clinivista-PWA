@@ -1,5 +1,4 @@
 import { Router, type IRouter } from "express";
-import crypto from "crypto";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db, centersTable, leadsTable, usersTable, hashPassword, normalizeEmail } from "@workspace/db";
 import {
@@ -28,6 +27,7 @@ import { seedSamplePatients } from "../lib/demo-patients";
 import { InvalidLogoError, SLUG_PATTERN, normalizeLogoDataUrl } from "../lib/clinic-identity";
 import { clean, uid } from "../lib/helpers";
 import { destroySessionsForUser } from "../lib/sessions";
+import { resetToTemporaryPassword } from "../lib/user-management";
 
 const router: IRouter = Router();
 
@@ -207,26 +207,6 @@ router.patch("/director/centers/:id", async (req, res): Promise<void> => {
   res.json(updated);
 });
 
-// Sin caracteres ambiguos (0/O, 1/l/I) para que se pueda dictar o leer sin errores.
-const TEMP_PASSWORD_ALPHABET = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const TEMP_PASSWORD_LENGTH = 12;
-
-function generateTemporaryPassword(): string {
-  return Array.from({ length: TEMP_PASSWORD_LENGTH }, () =>
-    TEMP_PASSWORD_ALPHABET[crypto.randomInt(TEMP_PASSWORD_ALPHABET.length)],
-  ).join("");
-}
-
-/** Sets a fresh temporary password, closes the user's sessions and returns it (shown once, never stored). */
-async function resetToTemporaryPassword(userId: string): Promise<string> {
-  const temporaryPassword = generateTemporaryPassword();
-  await db.update(usersTable)
-    .set({ passwordHash: hashPassword(temporaryPassword), updatedAt: new Date() })
-    .where(eq(usersTable.id, userId));
-  destroySessionsForUser(userId);
-  return temporaryPassword;
-}
-
 /** Blocks (active=false) or unblocks a user; blocking also closes their open sessions right away. */
 async function setUserActive(userId: string, active: boolean) {
   await db.update(usersTable).set({ active, updatedAt: new Date() }).where(eq(usersTable.id, userId));
@@ -260,6 +240,7 @@ router.get("/director/centers/:id/users", async (req, res): Promise<void> => {
     name: usersTable.name,
     role: usersTable.role,
     active: usersTable.active,
+    legalRepresentative: usersTable.legalRepresentative,
     createdAt: usersTable.createdAt,
   }).from(usersTable).where(eq(usersTable.centerId, params.data.id));
   users.sort((a, b) => a.name.localeCompare(b.name) || a.email.localeCompare(b.email));
@@ -302,6 +283,7 @@ router.post("/director/centers/:id/users", async (req, res): Promise<void> => {
     name: clean(body.data.name ?? "", 100),
     role: body.data.role,
     centerId: params.data.id,
+    legalRepresentative: body.data.legalRepresentative === true,
   });
   const [created] = await db.select(TEAM_MEMBER_COLUMNS).from(usersTable).where(eq(usersTable.id, id));
   res.status(201).json(created);
@@ -370,6 +352,7 @@ const TEAM_MEMBER_COLUMNS = {
   name: usersTable.name,
   role: usersTable.role,
   active: usersTable.active,
+  legalRepresentative: usersTable.legalRepresentative,
   createdAt: usersTable.createdAt,
 };
 

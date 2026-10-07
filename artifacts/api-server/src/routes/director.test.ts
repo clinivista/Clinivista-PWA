@@ -90,6 +90,7 @@ beforeAll(async () => {
       role text NOT NULL,
       center_id text,
       active boolean NOT NULL DEFAULT true,
+      legal_representative boolean NOT NULL DEFAULT false,
       created_at timestamptz NOT NULL DEFAULT now(),
       updated_at timestamptz NOT NULL DEFAULT now()
     );
@@ -745,5 +746,20 @@ describe("identidad de la clínica (nombre y logo para sus pacientes)", () => {
     await pglite.exec(`INSERT INTO leads (id, token, name, center_id) VALUES ('l1', 't1', 'X', 'implicit-clinic');`);
     const res = await put("implicit-clinic", { name: "Clínica Implícita", logoDataUrl: await pngDataUrl(100, 100) }, director()).expect(200);
     expect(res.body).toMatchObject({ id: "implicit-clinic", name: "Clínica Implícita" });
+  });
+});
+
+describe("representante legal en usuarios de clínica (supra-control)", () => {
+  it("lets the director create a user as legal representative and shows the flag in the list", async () => {
+    await seedClinic("clinic-a");
+    const cookie = `clinivista_session=${directorSession()}`;
+    const created = await request(app).post("/api/director/centers/clinic-a/users").set("Cookie", cookie)
+      .send({ email: "rep@clinic-a.cl", name: "Rep", password: "password123", role: "medico", legalRepresentative: true }).expect(201);
+    expect(created.body.legalRepresentative).toBe(true);
+    await request(app).post("/api/director/centers/clinic-a/users").set("Cookie", cookie)
+      .send({ email: "doc@clinic-a.cl", password: "password123", role: "medico" }).expect(201);
+    const list = await request(app).get("/api/director/centers/clinic-a/users").set("Cookie", cookie).expect(200);
+    const flags = Object.fromEntries(list.body.users.map((u: { email: string; legalRepresentative: boolean }) => [u.email, u.legalRepresentative]));
+    expect(flags).toEqual({ "rep@clinic-a.cl": true, "doc@clinic-a.cl": false });
   });
 });

@@ -187,6 +187,7 @@ export type AppTranslations = {
   // ── Admin ──
   adminSection: string;
   adminPatients: string;
+  adminUsers: string;
   adminMenuOpen: string;
   adminMenuClose: string;
   adminDashTitle: string;
@@ -361,7 +362,7 @@ const T: Record<LangCode, AppTranslations> = {
     loginBrandTitle: "Plataforma de Gestión Clínica",
     loginBrandSub: "Acceso exclusivo para el equipo médico. Revisa preevaluaciones, asigna estados y contacta a tus pacientes con seguridad.",
 
-    adminSection: "Gestión Clínica", adminMenuOpen: "Abrir menú", adminMenuClose: "Cerrar menú", adminPatients: "Pacientes",
+    adminSection: "Gestión Clínica", adminMenuOpen: "Abrir menú", adminMenuClose: "Cerrar menú", adminPatients: "Pacientes", adminUsers: "Usuarios",
     adminDashTitle: "Dashboard Pacientes", adminDashSub: "Gestión de preevaluaciones y seguimiento",
     adminNewLink: "Nuevo Enlace", adminTotal: "Total Pacientes", adminNew: "Nuevos", adminReady: "Listos / Agenda", adminPending: "Por completar",
     adminSearchPlaceholder: "Buscar por nombre o teléfono...", adminAllStatuses: "Todos los estados",
@@ -496,7 +497,7 @@ const T: Record<LangCode, AppTranslations> = {
     loginBrandTitle: "Clinical Management Platform",
     loginBrandSub: "Exclusive access for the medical team. Review pre-evaluations, assign statuses and contact your patients securely.",
 
-    adminSection: "Clinical Management", adminMenuOpen: "Open menu", adminMenuClose: "Close menu", adminPatients: "Patients",
+    adminSection: "Clinical Management", adminMenuOpen: "Open menu", adminMenuClose: "Close menu", adminPatients: "Patients", adminUsers: "Users",
     adminDashTitle: "Patient Dashboard", adminDashSub: "Pre-evaluation management and follow-up",
     adminNewLink: "New Link", adminTotal: "Total Patients", adminNew: "New", adminReady: "Ready / Scheduled", adminPending: "To complete",
     adminSearchPlaceholder: "Search by name or phone...", adminAllStatuses: "All statuses",
@@ -618,7 +619,7 @@ const T: Record<LangCode, AppTranslations> = {
     loginLabel: "Senha", loginPlaceholder: "••••••••", loginCTA: "Entrar no Painel", loginVerifying: "Verificando...",
     loginDenied: "Acesso negado", loginWrongPwd: "E-mail ou senha incorretos.",
     loginBrandTitle: "Plataforma de Gestão Clínica", loginBrandSub: "Acesso exclusivo para a equipe médica.",
-    adminSection: "Gestão Clínica", adminMenuOpen: "Abrir menu", adminMenuClose: "Fechar menu", adminPatients: "Pacientes", adminDashTitle: "Painel de Pacientes", adminDashSub: "Gestão de pré-avaliações e acompanhamento",
+    adminSection: "Gestão Clínica", adminMenuOpen: "Abrir menu", adminMenuClose: "Fechar menu", adminPatients: "Pacientes", adminUsers: "Usuários", adminDashTitle: "Painel de Pacientes", adminDashSub: "Gestão de pré-avaliações e acompanhamento",
     adminNewLink: "Novo Link", adminTotal: "Total Pacientes", adminNew: "Novos", adminReady: "Prontos / Agenda", adminPending: "A completar",
     adminSearchPlaceholder: "Buscar por nome ou telefone...", adminAllStatuses: "Todos os status",
     adminColPatient: "Paciente", adminColStatus: "Status", adminColPhotos: "Fotos", adminColDate: "Data de Admissão", adminColAction: "Ação",
@@ -735,7 +736,7 @@ const T: Record<LangCode, AppTranslations> = {
     loginLabel: "Mot de passe", loginPlaceholder: "••••••••", loginCTA: "Accéder au panneau", loginVerifying: "Vérification...",
     loginDenied: "Accès refusé", loginWrongPwd: "E-mail ou mot de passe incorrect.",
     loginBrandTitle: "Plateforme de Gestion Clinique", loginBrandSub: "Accès exclusif pour l'équipe médicale.",
-    adminSection: "Gestion Clinique", adminMenuOpen: "Ouvrir le menu", adminMenuClose: "Fermer le menu", adminPatients: "Patients", adminDashTitle: "Tableau de bord Patients", adminDashSub: "Gestion des pré-évaluations et suivi",
+    adminSection: "Gestion Clinique", adminMenuOpen: "Ouvrir le menu", adminMenuClose: "Fermer le menu", adminPatients: "Patients", adminUsers: "Utilisateurs", adminDashTitle: "Tableau de bord Patients", adminDashSub: "Gestion des pré-évaluations et suivi",
     adminNewLink: "Nouveau lien", adminTotal: "Total patients", adminNew: "Nouveaux", adminReady: "Prêts / Agenda", adminPending: "À compléter",
     adminSearchPlaceholder: "Rechercher par nom ou téléphone...", adminAllStatuses: "Tous les statuts",
     adminColPatient: "Patient", adminColStatus: "Statut", adminColPhotos: "Photos", adminColDate: "Date d'admission", adminColAction: "Action",
@@ -852,7 +853,7 @@ const T: Record<LangCode, AppTranslations> = {
     loginLabel: "Passwort", loginPlaceholder: "••••••••", loginCTA: "Panel betreten", loginVerifying: "Überprüfung...",
     loginDenied: "Zugang verweigert", loginWrongPwd: "E-Mail oder Passwort falsch.",
     loginBrandTitle: "Klinische Verwaltungsplattform", loginBrandSub: "Exklusiver Zugang für das medizinische Team.",
-    adminSection: "Klinisches Management", adminMenuOpen: "Menü öffnen", adminMenuClose: "Menü schließen", adminPatients: "Patienten", adminDashTitle: "Patienten-Dashboard", adminDashSub: "Vorbewertungsmanagement und Nachsorge",
+    adminSection: "Klinisches Management", adminMenuOpen: "Menü öffnen", adminMenuClose: "Menü schließen", adminPatients: "Patienten", adminUsers: "Benutzer", adminDashTitle: "Patienten-Dashboard", adminDashSub: "Vorbewertungsmanagement und Nachsorge",
     adminNewLink: "Neuer Link", adminTotal: "Patienten gesamt", adminNew: "Neu", adminReady: "Bereit / Geplant", adminPending: "Zu ergänzen",
     adminSearchPlaceholder: "Nach Name oder Telefon suchen...", adminAllStatuses: "Alle Status",
     adminColPatient: "Patient", adminColStatus: "Status", adminColPhotos: "Fotos", adminColDate: "Aufnahmedatum", adminColAction: "Aktion",
@@ -969,7 +970,7 @@ const T: Record<LangCode, AppTranslations> = {
     loginLabel: "Password", loginPlaceholder: "••••••••", loginCTA: "Accedi al Pannello", loginVerifying: "Verifica...",
     loginDenied: "Accesso negato", loginWrongPwd: "Email o password errati.",
     loginBrandTitle: "Piattaforma di Gestione Clinica", loginBrandSub: "Accesso esclusivo per il team medico.",
-    adminSection: "Gestione Clinica", adminMenuOpen: "Apri menu", adminMenuClose: "Chiudi menu", adminPatients: "Pazienti", adminDashTitle: "Dashboard Pazienti", adminDashSub: "Gestione pre-valutazioni e follow-up",
+    adminSection: "Gestione Clinica", adminMenuOpen: "Apri menu", adminMenuClose: "Chiudi menu", adminPatients: "Pazienti", adminUsers: "Utenti", adminDashTitle: "Dashboard Pazienti", adminDashSub: "Gestione pre-valutazioni e follow-up",
     adminNewLink: "Nuovo Link", adminTotal: "Pazienti totali", adminNew: "Nuovi", adminReady: "Pronti / Agenda", adminPending: "Da completare",
     adminSearchPlaceholder: "Cerca per nome o telefono...", adminAllStatuses: "Tutti gli stati",
     adminColPatient: "Paziente", adminColStatus: "Stato", adminColPhotos: "Foto", adminColDate: "Data di ammissione", adminColAction: "Azione",
@@ -1086,7 +1087,7 @@ const T: Record<LangCode, AppTranslations> = {
     loginLabel: "Şifre", loginPlaceholder: "••••••••", loginCTA: "Panele Gir", loginVerifying: "Doğrulanıyor...",
     loginDenied: "Erişim reddedildi", loginWrongPwd: "E-posta veya şifre yanlış.",
     loginBrandTitle: "Klinik Yönetim Platformu", loginBrandSub: "Tıp ekibi için özel erişim.",
-    adminSection: "Klinik Yönetim", adminMenuOpen: "Menüyü aç", adminMenuClose: "Menüyü kapat", adminPatients: "Hastalar", adminDashTitle: "Hasta Panosu", adminDashSub: "Ön değerlendirme yönetimi ve takip",
+    adminSection: "Klinik Yönetim", adminMenuOpen: "Menüyü aç", adminMenuClose: "Menüyü kapat", adminPatients: "Hastalar", adminUsers: "Kullanıcılar", adminDashTitle: "Hasta Panosu", adminDashSub: "Ön değerlendirme yönetimi ve takip",
     adminNewLink: "Yeni Bağlantı", adminTotal: "Toplam Hasta", adminNew: "Yeni", adminReady: "Hazır / Planlandı", adminPending: "Tamamlanacak",
     adminSearchPlaceholder: "Ad veya telefona göre ara...", adminAllStatuses: "Tüm durumlar",
     adminColPatient: "Hasta", adminColStatus: "Durum", adminColPhotos: "Fotoğraflar", adminColDate: "Giriş Tarihi", adminColAction: "İşlem",
@@ -1203,7 +1204,7 @@ const T: Record<LangCode, AppTranslations> = {
     loginLabel: "كلمة المرور", loginPlaceholder: "••••••••", loginCTA: "الدخول إلى اللوحة", loginVerifying: "جارٍ التحقق...",
     loginDenied: "رفض الوصول", loginWrongPwd: "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
     loginBrandTitle: "منصة الإدارة السريرية", loginBrandSub: "وصول حصري للفريق الطبي.",
-    adminSection: "الإدارة السريرية", adminMenuOpen: "فتح القائمة", adminMenuClose: "إغلاق القائمة", adminPatients: "المرضى", adminDashTitle: "لوحة المرضى", adminDashSub: "إدارة التقييمات المسبقة والمتابعة",
+    adminSection: "الإدارة السريرية", adminMenuOpen: "فتح القائمة", adminMenuClose: "إغلاق القائمة", adminPatients: "المرضى", adminUsers: "المستخدمون", adminDashTitle: "لوحة المرضى", adminDashSub: "إدارة التقييمات المسبقة والمتابعة",
     adminNewLink: "رابط جديد", adminTotal: "إجمالي المرضى", adminNew: "جدد", adminReady: "جاهزون / مجدولون", adminPending: "للإكمال",
     adminSearchPlaceholder: "ابحث بالاسم أو الهاتف...", adminAllStatuses: "جميع الحالات",
     adminColPatient: "المريض", adminColStatus: "الحالة", adminColPhotos: "الصور", adminColDate: "تاريخ القبول", adminColAction: "إجراء",
@@ -1320,7 +1321,7 @@ const T: Record<LangCode, AppTranslations> = {
     loginLabel: "密码", loginPlaceholder: "••••••••", loginCTA: "进入面板", loginVerifying: "验证中...",
     loginDenied: "访问被拒绝", loginWrongPwd: "邮箱或密码不正确。",
     loginBrandTitle: "临床管理平台", loginBrandSub: "医疗团队专属访问权限。",
-    adminSection: "临床管理", adminMenuOpen: "打开菜单", adminMenuClose: "关闭菜单", adminPatients: "患者", adminDashTitle: "患者仪表板", adminDashSub: "预评估管理与随访",
+    adminSection: "临床管理", adminMenuOpen: "打开菜单", adminMenuClose: "关闭菜单", adminPatients: "患者", adminUsers: "用户", adminDashTitle: "患者仪表板", adminDashSub: "预评估管理与随访",
     adminNewLink: "新建链接", adminTotal: "患者总数", adminNew: "新患者", adminReady: "就绪/已安排", adminPending: "待完成",
     adminSearchPlaceholder: "按姓名或电话搜索...", adminAllStatuses: "所有状态",
     adminColPatient: "患者", adminColStatus: "状态", adminColPhotos: "照片", adminColDate: "入院日期", adminColAction: "操作",

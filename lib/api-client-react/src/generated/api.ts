@@ -21,6 +21,10 @@ import type {
 
 import type {
   AuthStatus,
+  ClinicUser,
+  ClinicUserCreate,
+  ClinicUserList,
+  ClinicUserPatch,
   DirectorCenterCreateBody,
   DirectorCenterCreateUser,
   DirectorCenterIdentityBody,
@@ -2159,6 +2163,368 @@ export const useCreateClinicPatient = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getCreateClinicPatientMutationOptions(options));
+    }
+
+export const getGetClinicUsersUrl = () => {
+
+
+
+
+  return `/api/clinic/users`
+}
+
+/**
+ * @summary Users of the signed-in clinic (administrativos and the legal representative only)
+ */
+export const getClinicUsers = async ( options?: Parameters<typeof customFetch>[1]): Promise<ClinicUserList> => {
+
+  return customFetch<ClinicUserList>(getGetClinicUsersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetClinicUsersQueryKey = () => {
+    return [
+    `/api/clinic/users`
+    ] as const;
+    }
+
+
+export const getGetClinicUsersQueryOptions = <TData = Awaited<ReturnType<typeof getClinicUsers>>, TError = ErrorType<ErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClinicUsers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetClinicUsersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getClinicUsers>>> = ({ signal }) => getClinicUsers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getClinicUsers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetClinicUsersQueryResult = NonNullable<Awaited<ReturnType<typeof getClinicUsers>>>
+export type GetClinicUsersQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Users of the signed-in clinic (administrativos and the legal representative only)
+ */
+
+export function useGetClinicUsers<TData = Awaited<ReturnType<typeof getClinicUsers>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClinicUsers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetClinicUsersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateClinicUserUrl = () => {
+
+
+
+
+  return `/api/clinic/users`
+}
+
+/**
+ * @summary Create a médico or administrativo in the signed-in clinic
+ */
+export const createClinicUser = async (clinicUserCreate: ClinicUserCreate, options?: Parameters<typeof customFetch>[1]): Promise<ClinicUser> => {
+
+  return customFetch<ClinicUser>(getCreateClinicUserUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(clinicUserCreate)
+  }
+);}
+
+
+
+
+
+export const getCreateClinicUserMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createClinicUser>>, TError,{data: BodyType<ClinicUserCreate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createClinicUser>>, TError,{data: BodyType<ClinicUserCreate>}, TContext> => {
+
+const mutationKey = ['createClinicUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createClinicUser>>, {data: BodyType<ClinicUserCreate>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createClinicUser(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateClinicUserMutationResult = NonNullable<Awaited<ReturnType<typeof createClinicUser>>>
+    export type CreateClinicUserMutationBody = BodyType<ClinicUserCreate>
+    export type CreateClinicUserMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Create a médico or administrativo in the signed-in clinic
+ */
+export const useCreateClinicUser = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createClinicUser>>, TError,{data: BodyType<ClinicUserCreate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createClinicUser>>,
+        TError,
+        {data: BodyType<ClinicUserCreate>},
+        TContext
+      > => {
+      return useMutation(getCreateClinicUserMutationOptions(options));
+    }
+
+export const getPatchClinicUserUrl = (userId: string,) => {
+
+
+
+
+  return `/api/clinic/users/${userId}`
+}
+
+/**
+ * @summary Block/unblock a user or set the legal representative
+ */
+export const patchClinicUser = async (userId: string,
+    clinicUserPatch: ClinicUserPatch, options?: Parameters<typeof customFetch>[1]): Promise<ClinicUser> => {
+
+  return customFetch<ClinicUser>(getPatchClinicUserUrl(userId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(clinicUserPatch)
+  }
+);}
+
+
+
+
+
+export const getPatchClinicUserMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchClinicUser>>, TError,{userId: string;data: BodyType<ClinicUserPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof patchClinicUser>>, TError,{userId: string;data: BodyType<ClinicUserPatch>}, TContext> => {
+
+const mutationKey = ['patchClinicUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof patchClinicUser>>, {userId: string;data: BodyType<ClinicUserPatch>}> = (props) => {
+          const {userId,data} = props ?? {};
+
+          return  patchClinicUser(userId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PatchClinicUserMutationResult = NonNullable<Awaited<ReturnType<typeof patchClinicUser>>>
+    export type PatchClinicUserMutationBody = BodyType<ClinicUserPatch>
+    export type PatchClinicUserMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Block/unblock a user or set the legal representative
+ */
+export const usePatchClinicUser = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchClinicUser>>, TError,{userId: string;data: BodyType<ClinicUserPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof patchClinicUser>>,
+        TError,
+        {userId: string;data: BodyType<ClinicUserPatch>},
+        TContext
+      > => {
+      return useMutation(getPatchClinicUserMutationOptions(options));
+    }
+
+export const getDeleteClinicUserUrl = (userId: string,) => {
+
+
+
+
+  return `/api/clinic/users/${userId}`
+}
+
+/**
+ * @summary Permanently delete a user of the signed-in clinic
+ */
+export const deleteClinicUser = async (userId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteClinicUserUrl(userId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteClinicUserMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteClinicUser>>, TError,{userId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteClinicUser>>, TError,{userId: string}, TContext> => {
+
+const mutationKey = ['deleteClinicUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteClinicUser>>, {userId: string}> = (props) => {
+          const {userId} = props ?? {};
+
+          return  deleteClinicUser(userId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteClinicUserMutationResult = NonNullable<Awaited<ReturnType<typeof deleteClinicUser>>>
+
+    export type DeleteClinicUserMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Permanently delete a user of the signed-in clinic
+ */
+export const useDeleteClinicUser = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteClinicUser>>, TError,{userId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteClinicUser>>,
+        TError,
+        {userId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteClinicUserMutationOptions(options));
+    }
+
+export const getResetClinicUserPasswordUrl = (userId: string,) => {
+
+
+
+
+  return `/api/clinic/users/${userId}/reset-password`
+}
+
+/**
+ * @summary Generate a temporary password for a user of the signed-in clinic
+ */
+export const resetClinicUserPassword = async (userId: string, options?: Parameters<typeof customFetch>[1]): Promise<DirectorPasswordReset> => {
+
+  return customFetch<DirectorPasswordReset>(getResetClinicUserPasswordUrl(userId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getResetClinicUserPasswordMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetClinicUserPassword>>, TError,{userId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resetClinicUserPassword>>, TError,{userId: string}, TContext> => {
+
+const mutationKey = ['resetClinicUserPassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resetClinicUserPassword>>, {userId: string}> = (props) => {
+          const {userId} = props ?? {};
+
+          return  resetClinicUserPassword(userId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResetClinicUserPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof resetClinicUserPassword>>>
+
+    export type ResetClinicUserPasswordMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Generate a temporary password for a user of the signed-in clinic
+ */
+export const useResetClinicUserPassword = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetClinicUserPassword>>, TError,{userId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof resetClinicUserPassword>>,
+        TError,
+        {userId: string},
+        TContext
+      > => {
+      return useMutation(getResetClinicUserPasswordMutationOptions(options));
     }
 
 export const getGetMyClinicUrl = () => {
