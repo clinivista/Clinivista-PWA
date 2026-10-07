@@ -17,6 +17,8 @@ vi.mock("@workspace/db", async () => {
 import * as mockedDb from "@workspace/db";
 import directorRouter from "./director";
 import authRouter from "./auth";
+import leadsRouter from "./leads";
+import invitationsRouter from "./invitations";
 import { createSession } from "../lib/sessions";
 import { hashPassword } from "@workspace/db";
 
@@ -26,6 +28,8 @@ const app = express();
 app.use(express.json());
 app.use("/api", directorRouter);
 app.use("/api", authRouter);
+app.use("/api", leadsRouter);
+app.use("/api", invitationsRouter);
 
 beforeAll(async () => {
   await pglite.exec(`
@@ -438,5 +442,160 @@ describe("usuarios de una clínica y reseteo de contraseña", () => {
       VALUES ('dir-1', 'd@x.cl', 'd@x.cl', 'x:y', 'director', 'clinic-a');`);
     await request(app).post("/api/director/centers/clinic-a/users/dir-1/reset-password").set("Cookie", director()).expect(404);
     await request(app).post("/api/director/centers/clinic-a/users/missing/reset-password").set("Cookie", director()).expect(404);
+  });
+});
+
+describe("bloqueo de usuarios de clínica", () => {
+  const director = () => `clinivista_session=${directorSession()}`;
+
+  it("blocks and unblocks one user independently of the others", async () => {
+    await seedClinic("clinic-a", { staff: 2 });
+
+    const blocked = await request(app).patch("/api/director/centers/clinic-a/users/clinic-a-staff-0")
+      .set("Cookie", director()).send({ active: false }).expect(200);
+    expect(blocked.body).toMatchObject({ id: "clinic-a-staff-0", active: false });
+    expect(JSON.stringify(blocked.body)).not.toMatch(/password|hash/i);
+
+    await request(app).post("/api/auth/login").send({ email: "staff0@clinic-a.cl", password: "password123" }).expect(401);
+    await request(app).post("/api/auth/login").send({ email: "staff1@clinic-a.cl", password: "password123" }).expect(200);
+
+    await request(app).patch("/api/director/centers/clinic-a/users/clinic-a-staff-0")
+      .set("Cookie", director()).send({ active: true }).expect(200);
+    await request(app).post("/api/auth/login").send({ email: "staff0@clinic-a.cl", password: "password123" }).expect(200);
+  });
+
+  it("closes the blocked user's open session immediately", async () => {
+    await seedClinic("clinic-a", { staff: 1 });
+    const session = createSession({ userId: "clinic-a-staff-0", centerId: "clinic-a", role: "administrativo" });
+    await request(app).patch("/api/director/centers/clinic-a/users/clinic-a-staff-0")
+      .set("Cookie", director()).send({ active: false }).expect(200);
+    await request(app).get("/api/auth/me").set("Cookie", `clinivista_session=${session}`).expect(200)
+      .then((r) => expect(r.body.authenticated).toBe(false));
+  });
+
+  it("is director-only and scoped to the clinic in the URL", async () => {
+    await seedClinic("clinic-a", { staff: 1 });
+    await seedClinic("clinic-b", { staff: 1 });
+    const patch = (url: string, cookie?: string) => {
+      const r = request(app).patch(url).send({ active: false });
+      return cookie ? r.set("Cookie", cookie) : r;
+    };
+    await patch("/api/director/centers/clinic-a/users/clinic-a-staff-0").expect(401);
+    const admin = createSession({ userId: "sa", centerId: null, role: "supra_admin" });
+    await patch("/api/director/centers/clinic-a/users/clinic-a-staff-0", `clinivista_session=${admin}`).expect(403);
+    await patch("/api/director/centers/clinic-a/users/clinic-b-staff-0", director()).expect(404);
+    await request(app).patch("/api/director/centers/clinic-a/users/clinic-a-staff-0").set("Cookie", director()).send({}).expect(400);
+  });
+});
+
+describe("equipo del panel de supra-control", () => {
+  const director = () => `clinivista_session=${directorSession()}`;
+  const newAdmin = { email: "Ana@Clinivista.cl", name: "Ana Soporte", password: "password-ana" };
+
+  async function seedDirector() {
+    await pglite.exec(`INSERT INTO users (id, email, email_normalized, password_hash, name, role, center_id)
+      VALUES ('director-1', 'jose@clinivista.cl', 'jose@clinivista.cl', '${hashPassword("director-pass")}', 'Jose', 'director', NULL);`);
+  }
+
+  it("only directors can see or manage the team", async () => {
+    const admin = createSession({ userId: "sa", centerId: null, role: "supra_admin" });
+    const staff = createSession({ userId: "s1", centerId: "clinic-a", role: "medico" });
+    for (const cookie of [undefined, `clinivista_session=${admin}`, `clinivista_session=${staff}`]) {
+      const status = cookie ? undefined : 401;
+      const get = request(app).get("/api/director/team");
+      const post = request(app).post("/api/director/team").send(newAdmin);
+      for (const r of [get, post]) {
+        const res = cookie ? await r.set("Cookie", cookie) : await r;
+        expect(res.status).toBe(status ?? 403);
+      }
+    }
+  });
+
+  it("creates a supra_admin who can log in, is not tied to a clinic and never exposes hashes", async () => {
+    const res = await request(app).post("/api/director/team").set("Cookie", director()).send(newAdmin).expect(201);
+    expect(res.body).toMatchObject({ email: "Ana@Clinivista.cl", name: "Ana Soporte", role: "supra_admin", active: true });
+    expect(JSON.stringify(res.body)).not.toMatch(/password|hash/i);
+
+    const login = await request(app).post("/api/auth/login").send({ email: "ana@clinivista.cl", password: "password-ana" }).expect(200);
+    expect(login.body.user).toMatchObject({ role: "supra_admin", centerId: null });
+  });
+
+  it("lists directors first and administrators after, with their roles", async () => {
+    await seedDirector();
+    await request(app).post("/api/director/team").set("Cookie", director()).send(newAdmin).expect(201);
+    const res = await request(app).get("/api/director/team").set("Cookie", director()).expect(200);
+    expect(res.body.users.map((u: { role: string }) => u.role)).toEqual(["director", "supra_admin"]);
+  });
+
+  it("validates the new administrator and rejects duplicate emails", async () => {
+    const post = (body: unknown) => request(app).post("/api/director/team").set("Cookie", director()).send(body);
+    await post({ email: "no-es-correo", password: "password-ana" }).expect(400);
+    await post({ email: "a@b.cl", password: "corta" }).expect(400);
+    await post(newAdmin).expect(201);
+    await post({ ...newAdmin, email: "ANA@clinivista.cl" }).expect(409);
+    await seedClinic("clinic-a", { staff: 1 });
+    await post({ ...newAdmin, email: "staff0@clinic-a.cl" }).expect(409);
+  });
+
+  it("blocks and unblocks an administrator, closing their session", async () => {
+    const created = await request(app).post("/api/director/team").set("Cookie", director()).send(newAdmin).expect(201);
+    const id = created.body.id;
+    const session = createSession({ userId: id, centerId: null, role: "supra_admin" });
+
+    await request(app).patch(`/api/director/team/${id}`).set("Cookie", director()).send({ active: false }).expect(200)
+      .then((r) => expect(r.body.active).toBe(false));
+    await request(app).get("/api/auth/me").set("Cookie", `clinivista_session=${session}`).expect(200)
+      .then((r) => expect(r.body.authenticated).toBe(false));
+    await request(app).post("/api/auth/login").send({ email: "ana@clinivista.cl", password: "password-ana" }).expect(401);
+
+    await request(app).patch(`/api/director/team/${id}`).set("Cookie", director()).send({ active: true }).expect(200);
+    await request(app).post("/api/auth/login").send({ email: "ana@clinivista.cl", password: "password-ana" }).expect(200);
+  });
+
+  it("resets an administrator's password to a one-time generated one", async () => {
+    const created = await request(app).post("/api/director/team").set("Cookie", director()).send(newAdmin).expect(201);
+    const res = await request(app).post(`/api/director/team/${created.body.id}/reset-password`).set("Cookie", director()).expect(200);
+    expect(res.headers["cache-control"]).toBe("no-store");
+    expect(res.body.temporaryPassword).toMatch(/^[A-Za-z0-9]{12}$/);
+    await request(app).post("/api/auth/login").send({ email: "ana@clinivista.cl", password: "password-ana" }).expect(401);
+    await request(app).post("/api/auth/login").send({ email: "ana@clinivista.cl", password: res.body.temporaryPassword }).expect(200);
+  });
+
+  it("never lets directors or clinic users be touched through the team endpoints", async () => {
+    await seedDirector();
+    await seedClinic("clinic-a", { staff: 1 });
+    for (const id of ["director-1", "clinic-a-staff-0", "missing"]) {
+      await request(app).patch(`/api/director/team/${id}`).set("Cookie", director()).send({ active: false }).expect(404);
+      await request(app).post(`/api/director/team/${id}/reset-password`).set("Cookie", director()).expect(404);
+    }
+    // The director is untouched and can still log in.
+    await request(app).post("/api/auth/login").send({ email: "jose@clinivista.cl", password: "director-pass" }).expect(200);
+  });
+});
+
+describe("operating the panel as a supra_admin", () => {
+  const admin = () => `clinivista_session=${createSession({ userId: "sa", centerId: null, role: "supra_admin" })}`;
+
+  it("can list, suspend, record payments, export and create clinics", async () => {
+    await seedClinic("clinic-a", { patients: 1, staff: 1 });
+    await request(app).get("/api/director/centers").set("Cookie", admin()).expect(200);
+    await request(app).patch("/api/director/centers/clinic-a").set("Cookie", admin()).send({ active: false }).expect(200);
+    await request(app).post("/api/director/centers/clinic-a/payments").set("Cookie", admin())
+      .send({ paidUntil: new Date(Date.now() + 86_400_000).toISOString() }).expect(200);
+    await request(app).get("/api/director/centers/clinic-a/export").set("Cookie", admin()).expect(200);
+    await request(app).post("/api/director/centers").set("Cookie", admin()).send({ name: "Clínica Nueva" }).expect(201);
+  });
+
+  it("cannot see users, block them, or reset passwords", async () => {
+    await seedClinic("clinic-a", { staff: 1 });
+    const cookie = admin();
+    await request(app).get("/api/director/centers/clinic-a/users").set("Cookie", cookie).expect(403);
+    await request(app).patch("/api/director/centers/clinic-a/users/clinic-a-staff-0").set("Cookie", cookie).send({ active: false }).expect(403);
+    await request(app).post("/api/director/centers/clinic-a/users/clinic-a-staff-0/reset-password").set("Cookie", cookie).expect(403);
+  });
+
+  it("is not a clinic account: clinic-scoped routes stay closed", async () => {
+    await request(app).get("/api/leads").set("Cookie", admin()).expect(403);
+    await request(app).post("/api/invitations").set("Cookie", admin()).send({ name: "X" }).expect(403);
   });
 });

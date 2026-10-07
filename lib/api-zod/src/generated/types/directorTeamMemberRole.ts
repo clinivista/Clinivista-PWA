@@ -6,12 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type AuthUserRole = typeof AuthUserRole[keyof typeof AuthUserRole];
+export type DirectorTeamMemberRole = typeof DirectorTeamMemberRole[keyof typeof DirectorTeamMemberRole];
 
 
-export const AuthUserRole = {
-  medico: 'medico',
-  administrativo: 'administrativo',
+export const DirectorTeamMemberRole = {
   director: 'director',
   supra_admin: 'supra_admin',
 } as const;

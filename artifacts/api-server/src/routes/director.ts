@@ -1,18 +1,24 @@
 import { Router, type IRouter } from "express";
 import crypto from "crypto";
-import { and, eq, ne, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db, centersTable, leadsTable, usersTable, hashPassword, normalizeEmail } from "@workspace/db";
 import {
   CreateDirectorCenterBody,
+  CreateDirectorTeamMemberBody,
   GetDirectorCenterExportParams,
   GetDirectorCenterUsersParams,
   PatchDirectorCenterBody,
   PatchDirectorCenterParams,
+  PatchDirectorCenterUserBody,
+  PatchDirectorCenterUserParams,
+  PatchDirectorTeamMemberBody,
+  PatchDirectorTeamMemberParams,
   RecordDirectorCenterPaymentBody,
   RecordDirectorCenterPaymentParams,
   ResetDirectorCenterUserPasswordParams,
+  ResetDirectorTeamMemberPasswordParams,
 } from "@workspace/api-zod";
-import { requireDirectorAuth } from "./auth";
+import { requireDirectorAuth, requireSupraAuth } from "./auth";
 import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
 import { seedSamplePatients } from "../lib/demo-patients";
 import { clean, uid } from "../lib/helpers";
@@ -68,7 +74,7 @@ async function centerSummaries() {
 }
 
 router.get("/director/centers", async (req, res): Promise<void> => {
-  const context = requireDirectorAuth(req, res);
+  const context = requireSupraAuth(req, res);
   if (!context) return;
   res.json({ centers: await centerSummaries() });
 });
@@ -89,7 +95,7 @@ function slugFromName(name: string): string {
 }
 
 router.post("/director/centers", async (req, res): Promise<void> => {
-  const context = requireDirectorAuth(req, res);
+  const context = requireSupraAuth(req, res);
   if (!context) return;
 
   const body = CreateDirectorCenterBody.safeParse(req.body);
@@ -163,7 +169,7 @@ router.post("/director/centers", async (req, res): Promise<void> => {
 });
 
 router.patch("/director/centers/:id", async (req, res): Promise<void> => {
-  const context = requireDirectorAuth(req, res);
+  const context = requireSupraAuth(req, res);
   if (!context) return;
 
   const params = PatchDirectorCenterParams.safeParse(req.params);
@@ -205,6 +211,28 @@ function generateTemporaryPassword(): string {
     TEMP_PASSWORD_ALPHABET[crypto.randomInt(TEMP_PASSWORD_ALPHABET.length)],
   ).join("");
 }
+
+/** Sets a fresh temporary password, closes the user's sessions and returns it (shown once, never stored). */
+async function resetToTemporaryPassword(userId: string): Promise<string> {
+  const temporaryPassword = generateTemporaryPassword();
+  await db.update(usersTable)
+    .set({ passwordHash: hashPassword(temporaryPassword), updatedAt: new Date() })
+    .where(eq(usersTable.id, userId));
+  destroySessionsForUser(userId);
+  return temporaryPassword;
+}
+
+/** Blocks (active=false) or unblocks a user; blocking also closes their open sessions right away. */
+async function setUserActive(userId: string, active: boolean) {
+  await db.update(usersTable).set({ active, updatedAt: new Date() }).where(eq(usersTable.id, userId));
+  if (!active) destroySessionsForUser(userId);
+  const [user] = await db.select(TEAM_MEMBER_COLUMNS).from(usersTable).where(eq(usersTable.id, userId));
+  return user;
+}
+
+// Clinic staff only: never a director or supra_admin, even if one were ever
+// (wrongly) given a centerId.
+const CLINIC_ROLES = ["medico", "administrativo"] as const;
 
 router.get("/director/centers/:id/users", async (req, res): Promise<void> => {
   const context = requireDirectorAuth(req, res);
@@ -248,26 +276,149 @@ router.post("/director/centers/:id/users/:userId/reset-password", async (req, re
   const [user] = await db.select({ id: usersTable.id }).from(usersTable).where(and(
     eq(usersTable.id, params.data.userId),
     eq(usersTable.centerId, params.data.id),
-    ne(usersTable.role, "director"),
+    inArray(usersTable.role, [...CLINIC_ROLES]),
   ));
   if (!user) {
     res.status(404).json({ error: "Usuario no encontrado en esta clínica." });
     return;
   }
 
-  const temporaryPassword = generateTemporaryPassword();
-  await db.update(usersTable)
-    .set({ passwordHash: hashPassword(temporaryPassword), updatedAt: new Date() })
-    .where(eq(usersTable.id, user.id));
-  destroySessionsForUser(user.id);
-
-  // The temporary password is returned exactly once and must never be cached.
   res.setHeader("Cache-Control", "no-store");
-  res.json({ temporaryPassword });
+  res.json({ temporaryPassword: await resetToTemporaryPassword(user.id) });
+});
+
+router.patch("/director/centers/:id/users/:userId", async (req, res): Promise<void> => {
+  const context = requireDirectorAuth(req, res);
+  if (!context) return;
+
+  const params = PatchDirectorCenterUserParams.safeParse(req.params);
+  const body = PatchDirectorCenterUserBody.safeParse(req.body);
+  if (!params.success || !body.success) {
+    res.status(400).json({ error: "Datos inválidos." });
+    return;
+  }
+
+  // Same scoping as the reset: a user of this clinic, never a director/admin.
+  const [user] = await db.select({ id: usersTable.id }).from(usersTable).where(and(
+    eq(usersTable.id, params.data.userId),
+    eq(usersTable.centerId, params.data.id),
+    inArray(usersTable.role, [...CLINIC_ROLES]),
+  ));
+  if (!user) {
+    res.status(404).json({ error: "Usuario no encontrado en esta clínica." });
+    return;
+  }
+  res.json(await setUserActive(user.id, body.data.active));
+});
+
+// ── Equipo del panel de supra-control ────────────────────────────────────
+// Directors manage the platform team: they see every director and
+// supra_admin, and can create, block/unblock and reset the password of
+// supra_admin accounts. Directors themselves are listed but never touched
+// here, so nobody can lock the platform out of its own directors by mistake.
+
+const TEAM_ROLES = ["director", "supra_admin"] as const;
+const TEAM_MEMBER_COLUMNS = {
+  id: usersTable.id,
+  email: usersTable.email,
+  name: usersTable.name,
+  role: usersTable.role,
+  active: usersTable.active,
+  createdAt: usersTable.createdAt,
+};
+
+router.get("/director/team", async (req, res): Promise<void> => {
+  const context = requireDirectorAuth(req, res);
+  if (!context) return;
+
+  const users = await db.select(TEAM_MEMBER_COLUMNS).from(usersTable).where(inArray(usersTable.role, [...TEAM_ROLES]));
+  // Directors first, then administrators; alphabetical inside each group.
+  users.sort((a, b) =>
+    Number(b.role === "director") - Number(a.role === "director")
+    || a.name.localeCompare(b.name)
+    || a.email.localeCompare(b.email));
+  res.json({ users });
+});
+
+router.post("/director/team", async (req, res): Promise<void> => {
+  const context = requireDirectorAuth(req, res);
+  if (!context) return;
+
+  const body = CreateDirectorTeamMemberBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: "Datos inválidos." });
+    return;
+  }
+  const email = body.data.email.trim();
+  const emailNormalized = normalizeEmail(email);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNormalized) || body.data.password.length < 8) {
+    res.status(400).json({ error: "Necesitas un correo válido y una contraseña de al menos 8 caracteres." });
+    return;
+  }
+  const [taken] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.emailNormalized, emailNormalized));
+  if (taken) {
+    res.status(409).json({ error: `El correo ${email} ya está en uso.` });
+    return;
+  }
+
+  const id = uid(9);
+  await db.insert(usersTable).values({
+    id,
+    email,
+    emailNormalized,
+    passwordHash: hashPassword(body.data.password),
+    name: clean(body.data.name ?? "", 100),
+    role: "supra_admin",
+    centerId: null,
+  });
+  const [created] = await db.select(TEAM_MEMBER_COLUMNS).from(usersTable).where(eq(usersTable.id, id));
+  res.status(201).json(created);
+});
+
+router.patch("/director/team/:userId", async (req, res): Promise<void> => {
+  const context = requireDirectorAuth(req, res);
+  if (!context) return;
+
+  const params = PatchDirectorTeamMemberParams.safeParse(req.params);
+  const body = PatchDirectorTeamMemberBody.safeParse(req.body);
+  if (!params.success || !body.success) {
+    res.status(400).json({ error: "Datos inválidos." });
+    return;
+  }
+  const [member] = await db.select({ id: usersTable.id }).from(usersTable).where(and(
+    eq(usersTable.id, params.data.userId),
+    eq(usersTable.role, "supra_admin"),
+  ));
+  if (!member) {
+    res.status(404).json({ error: "Administrador no encontrado." });
+    return;
+  }
+  res.json(await setUserActive(member.id, body.data.active));
+});
+
+router.post("/director/team/:userId/reset-password", async (req, res): Promise<void> => {
+  const context = requireDirectorAuth(req, res);
+  if (!context) return;
+
+  const params = ResetDirectorTeamMemberPasswordParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Solicitud inválida." });
+    return;
+  }
+  const [member] = await db.select({ id: usersTable.id }).from(usersTable).where(and(
+    eq(usersTable.id, params.data.userId),
+    eq(usersTable.role, "supra_admin"),
+  ));
+  if (!member) {
+    res.status(404).json({ error: "Administrador no encontrado." });
+    return;
+  }
+  res.setHeader("Cache-Control", "no-store");
+  res.json({ temporaryPassword: await resetToTemporaryPassword(member.id) });
 });
 
 router.post("/director/centers/:id/payments", async (req, res): Promise<void> => {
-  const context = requireDirectorAuth(req, res);
+  const context = requireSupraAuth(req, res);
   if (!context) return;
 
   const params = RecordDirectorCenterPaymentParams.safeParse(req.params);
@@ -305,7 +456,7 @@ router.post("/director/centers/:id/payments", async (req, res): Promise<void> =>
 });
 
 router.get("/director/centers/:id/export", async (req, res): Promise<void> => {
-  const context = requireDirectorAuth(req, res);
+  const context = requireSupraAuth(req, res);
   if (!context) return;
 
   const params = GetDirectorCenterExportParams.safeParse(req.params);

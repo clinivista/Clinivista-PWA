@@ -98,9 +98,10 @@ export default function Admin() {
 
   if (isAuthLoading || !authStatus?.authenticated) return <div className="min-h-[100dvh] bg-[#F5F2EE]" />;
 
-  if (authStatus.user?.role === "director") {
+  if (authStatus.user?.role === "director" || authStatus.user?.role === "supra_admin") {
     return (
       <DirectorPanel
+        canManageUsers={authStatus.user.role === "director"}
         onLogout={() => {
           logoutMutation.mutate(undefined, {
             onSuccess: () => { queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() }); setLocation("/"); }

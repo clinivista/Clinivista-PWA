@@ -25,10 +25,15 @@ import type {
   DirectorCenterPatch,
   DirectorCenterPaymentBody,
   DirectorCenterSummary,
+  DirectorCenterUser,
   DirectorPasswordReset,
+  DirectorTeamCreateBody,
+  DirectorTeamMember,
+  DirectorUserPatch,
   ErrorResponse,
   GetDirectorCenterUsers200,
   GetDirectorCenters200,
+  GetDirectorTeam200,
   GetLeads200,
   GetLeadsParams,
   HealthStatus,
@@ -1271,6 +1276,371 @@ export const useResetDirectorCenterUserPassword = <TError = ErrorType<ErrorRespo
         TContext
       > => {
       return useMutation(getResetDirectorCenterUserPasswordMutationOptions(options));
+    }
+
+export const getPatchDirectorCenterUserUrl = (id: string,
+    userId: string,) => {
+
+
+
+
+  return `/api/director/centers/${id}/users/${userId}`
+}
+
+/**
+ * @summary Block or unblock one clinic user's access (director only)
+ */
+export const patchDirectorCenterUser = async (id: string,
+    userId: string,
+    directorUserPatch: DirectorUserPatch, options?: Parameters<typeof customFetch>[1]): Promise<DirectorCenterUser> => {
+
+  return customFetch<DirectorCenterUser>(getPatchDirectorCenterUserUrl(id,userId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(directorUserPatch)
+  }
+);}
+
+
+
+
+
+export const getPatchDirectorCenterUserMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchDirectorCenterUser>>, TError,{id: string;userId: string;data: BodyType<DirectorUserPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof patchDirectorCenterUser>>, TError,{id: string;userId: string;data: BodyType<DirectorUserPatch>}, TContext> => {
+
+const mutationKey = ['patchDirectorCenterUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof patchDirectorCenterUser>>, {id: string;userId: string;data: BodyType<DirectorUserPatch>}> = (props) => {
+          const {id,userId,data} = props ?? {};
+
+          return  patchDirectorCenterUser(id,userId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PatchDirectorCenterUserMutationResult = NonNullable<Awaited<ReturnType<typeof patchDirectorCenterUser>>>
+    export type PatchDirectorCenterUserMutationBody = BodyType<DirectorUserPatch>
+    export type PatchDirectorCenterUserMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Block or unblock one clinic user's access (director only)
+ */
+export const usePatchDirectorCenterUser = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchDirectorCenterUser>>, TError,{id: string;userId: string;data: BodyType<DirectorUserPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof patchDirectorCenterUser>>,
+        TError,
+        {id: string;userId: string;data: BodyType<DirectorUserPatch>},
+        TContext
+      > => {
+      return useMutation(getPatchDirectorCenterUserMutationOptions(options));
+    }
+
+export const getGetDirectorTeamUrl = () => {
+
+
+
+
+  return `/api/director/team`
+}
+
+/**
+ * @summary List the supra-control team - directors and administrators (director only)
+ */
+export const getDirectorTeam = async ( options?: Parameters<typeof customFetch>[1]): Promise<GetDirectorTeam200> => {
+
+  return customFetch<GetDirectorTeam200>(getGetDirectorTeamUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDirectorTeamQueryKey = () => {
+    return [
+    `/api/director/team`
+    ] as const;
+    }
+
+
+export const getGetDirectorTeamQueryOptions = <TData = Awaited<ReturnType<typeof getDirectorTeam>>, TError = ErrorType<ErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDirectorTeam>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDirectorTeamQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDirectorTeam>>> = ({ signal }) => getDirectorTeam({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDirectorTeam>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDirectorTeamQueryResult = NonNullable<Awaited<ReturnType<typeof getDirectorTeam>>>
+export type GetDirectorTeamQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary List the supra-control team - directors and administrators (director only)
+ */
+
+export function useGetDirectorTeam<TData = Awaited<ReturnType<typeof getDirectorTeam>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDirectorTeam>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDirectorTeamQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateDirectorTeamMemberUrl = () => {
+
+
+
+
+  return `/api/director/team`
+}
+
+/**
+ * @summary Create a supra-control administrator (director only)
+ */
+export const createDirectorTeamMember = async (directorTeamCreateBody: DirectorTeamCreateBody, options?: Parameters<typeof customFetch>[1]): Promise<DirectorTeamMember> => {
+
+  return customFetch<DirectorTeamMember>(getCreateDirectorTeamMemberUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(directorTeamCreateBody)
+  }
+);}
+
+
+
+
+
+export const getCreateDirectorTeamMemberMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDirectorTeamMember>>, TError,{data: BodyType<DirectorTeamCreateBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDirectorTeamMember>>, TError,{data: BodyType<DirectorTeamCreateBody>}, TContext> => {
+
+const mutationKey = ['createDirectorTeamMember'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDirectorTeamMember>>, {data: BodyType<DirectorTeamCreateBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createDirectorTeamMember(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDirectorTeamMemberMutationResult = NonNullable<Awaited<ReturnType<typeof createDirectorTeamMember>>>
+    export type CreateDirectorTeamMemberMutationBody = BodyType<DirectorTeamCreateBody>
+    export type CreateDirectorTeamMemberMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Create a supra-control administrator (director only)
+ */
+export const useCreateDirectorTeamMember = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDirectorTeamMember>>, TError,{data: BodyType<DirectorTeamCreateBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createDirectorTeamMember>>,
+        TError,
+        {data: BodyType<DirectorTeamCreateBody>},
+        TContext
+      > => {
+      return useMutation(getCreateDirectorTeamMemberMutationOptions(options));
+    }
+
+export const getPatchDirectorTeamMemberUrl = (userId: string,) => {
+
+
+
+
+  return `/api/director/team/${userId}`
+}
+
+/**
+ * @summary Block or unblock a supra-control administrator (director only)
+ */
+export const patchDirectorTeamMember = async (userId: string,
+    directorUserPatch: DirectorUserPatch, options?: Parameters<typeof customFetch>[1]): Promise<DirectorTeamMember> => {
+
+  return customFetch<DirectorTeamMember>(getPatchDirectorTeamMemberUrl(userId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(directorUserPatch)
+  }
+);}
+
+
+
+
+
+export const getPatchDirectorTeamMemberMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchDirectorTeamMember>>, TError,{userId: string;data: BodyType<DirectorUserPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof patchDirectorTeamMember>>, TError,{userId: string;data: BodyType<DirectorUserPatch>}, TContext> => {
+
+const mutationKey = ['patchDirectorTeamMember'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof patchDirectorTeamMember>>, {userId: string;data: BodyType<DirectorUserPatch>}> = (props) => {
+          const {userId,data} = props ?? {};
+
+          return  patchDirectorTeamMember(userId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PatchDirectorTeamMemberMutationResult = NonNullable<Awaited<ReturnType<typeof patchDirectorTeamMember>>>
+    export type PatchDirectorTeamMemberMutationBody = BodyType<DirectorUserPatch>
+    export type PatchDirectorTeamMemberMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Block or unblock a supra-control administrator (director only)
+ */
+export const usePatchDirectorTeamMember = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchDirectorTeamMember>>, TError,{userId: string;data: BodyType<DirectorUserPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof patchDirectorTeamMember>>,
+        TError,
+        {userId: string;data: BodyType<DirectorUserPatch>},
+        TContext
+      > => {
+      return useMutation(getPatchDirectorTeamMemberMutationOptions(options));
+    }
+
+export const getResetDirectorTeamMemberPasswordUrl = (userId: string,) => {
+
+
+
+
+  return `/api/director/team/${userId}/reset-password`
+}
+
+/**
+ * @summary Reset a supra-control administrator's password to a generated temporary one, shown once (director only)
+ */
+export const resetDirectorTeamMemberPassword = async (userId: string, options?: Parameters<typeof customFetch>[1]): Promise<DirectorPasswordReset> => {
+
+  return customFetch<DirectorPasswordReset>(getResetDirectorTeamMemberPasswordUrl(userId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getResetDirectorTeamMemberPasswordMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetDirectorTeamMemberPassword>>, TError,{userId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resetDirectorTeamMemberPassword>>, TError,{userId: string}, TContext> => {
+
+const mutationKey = ['resetDirectorTeamMemberPassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resetDirectorTeamMemberPassword>>, {userId: string}> = (props) => {
+          const {userId} = props ?? {};
+
+          return  resetDirectorTeamMemberPassword(userId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResetDirectorTeamMemberPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof resetDirectorTeamMemberPassword>>>
+
+    export type ResetDirectorTeamMemberPasswordMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Reset a supra-control administrator's password to a generated temporary one, shown once (director only)
+ */
+export const useResetDirectorTeamMemberPassword = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetDirectorTeamMemberPassword>>, TError,{userId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof resetDirectorTeamMemberPassword>>,
+        TError,
+        {userId: string},
+        TContext
+      > => {
+      return useMutation(getResetDirectorTeamMemberPasswordMutationOptions(options));
     }
 
 export const getRecordDirectorCenterPaymentUrl = (id: string,) => {

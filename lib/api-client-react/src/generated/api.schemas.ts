@@ -24,6 +24,7 @@ export const AuthUserRole = {
   medico: 'medico',
   administrativo: 'administrativo',
   director: 'director',
+  supra_admin: 'supra_admin',
 } as const;
 
 export interface AuthUser {
@@ -31,7 +32,7 @@ export interface AuthUser {
   email: string;
   name: string;
   role: AuthUserRole;
-  /** null only for "director" accounts, which see every clinic. */
+  /** null only for "director" and "supra_admin" accounts, which are not tied to one clinic. */
   centerId: string | null;
 }
 
@@ -81,6 +82,35 @@ export interface DirectorCenterUser {
   role: DirectorCenterUserRole;
   active: boolean;
   createdAt: string;
+}
+
+export interface DirectorUserPatch {
+  /** false blocks the user's access (and closes their open sessions); true restores it. */
+  active: boolean;
+}
+
+export type DirectorTeamMemberRole = typeof DirectorTeamMemberRole[keyof typeof DirectorTeamMemberRole];
+
+
+export const DirectorTeamMemberRole = {
+  director: 'director',
+  supra_admin: 'supra_admin',
+} as const;
+
+export interface DirectorTeamMember {
+  id: string;
+  email: string;
+  name: string;
+  role: DirectorTeamMemberRole;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface DirectorTeamCreateBody {
+  email: string;
+  name?: string;
+  /** At least 8 characters. Never stored in plain text. */
+  password: string;
 }
 
 export interface DirectorPasswordReset {
@@ -325,5 +355,9 @@ export type GetDirectorCenters200 = {
 
 export type GetDirectorCenterUsers200 = {
   users: DirectorCenterUser[];
+};
+
+export type GetDirectorTeam200 = {
+  users: DirectorTeamMember[];
 };
 

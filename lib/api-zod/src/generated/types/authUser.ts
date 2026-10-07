@@ -12,6 +12,6 @@ export interface AuthUser {
   email: string;
   name: string;
   role: AuthUserRole;
-  /** null only for "director" accounts, which see every clinic. */
+  /** null only for "director" and "supra_admin" accounts, which are not tied to one clinic. */
   centerId: string | null;
 }

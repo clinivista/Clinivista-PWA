@@ -25,8 +25,8 @@ export const GetAuthMeResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string(),
-  "role": zod.enum(['medico', 'administrativo', 'director']),
-  "centerId": zod.string().nullable().describe('null only for \"director\" accounts, which see every clinic.')
+  "role": zod.enum(['medico', 'administrativo', 'director', 'supra_admin']),
+  "centerId": zod.string().nullable().describe('null only for \"director\" and \"supra_admin\" accounts, which are not tied to one clinic.')
 }).optional()
 })
 
@@ -45,8 +45,8 @@ export const AdminLoginResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string(),
-  "role": zod.enum(['medico', 'administrativo', 'director']),
-  "centerId": zod.string().nullable().describe('null only for \"director\" accounts, which see every clinic.')
+  "role": zod.enum(['medico', 'administrativo', 'director', 'supra_admin']),
+  "centerId": zod.string().nullable().describe('null only for \"director\" and \"supra_admin\" accounts, which are not tied to one clinic.')
 })
 })
 
@@ -364,6 +364,95 @@ export const ResetDirectorCenterUserPasswordParams = zod.object({
 })
 
 export const ResetDirectorCenterUserPasswordResponse = zod.object({
+  "temporaryPassword": zod.string().describe('Generated password, shown only once. The user\'s open sessions are closed.')
+})
+
+
+/**
+ * @summary Block or unblock one clinic user's access (director only)
+ */
+export const PatchDirectorCenterUserParams = zod.object({
+  "id": zod.coerce.string(),
+  "userId": zod.coerce.string()
+})
+
+export const PatchDirectorCenterUserBody = zod.object({
+  "active": zod.boolean().describe('false blocks the user\'s access (and closes their open sessions); true restores it.')
+})
+
+export const PatchDirectorCenterUserResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['medico', 'administrativo']),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List the supra-control team - directors and administrators (director only)
+ */
+export const GetDirectorTeamResponse = zod.object({
+  "users": zod.array(zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['director', 'supra_admin']),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Create a supra-control administrator (director only)
+ */
+export const CreateDirectorTeamMemberBody = zod.object({
+  "email": zod.string(),
+  "name": zod.string().optional(),
+  "password": zod.string().describe('At least 8 characters. Never stored in plain text.')
+})
+
+export const CreateDirectorTeamMemberResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['director', 'supra_admin']),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Block or unblock a supra-control administrator (director only)
+ */
+export const PatchDirectorTeamMemberParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const PatchDirectorTeamMemberBody = zod.object({
+  "active": zod.boolean().describe('false blocks the user\'s access (and closes their open sessions); true restores it.')
+})
+
+export const PatchDirectorTeamMemberResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['director', 'supra_admin']),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Reset a supra-control administrator's password to a generated temporary one, shown once (director only)
+ */
+export const ResetDirectorTeamMemberPasswordParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const ResetDirectorTeamMemberPasswordResponse = zod.object({
   "temporaryPassword": zod.string().describe('Generated password, shown only once. The user\'s open sessions are closed.')
 })
 
