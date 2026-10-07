@@ -13,5 +13,6 @@ export interface DirectorCenterUser {
   name: string;
   role: DirectorCenterUserRole;
   active: boolean;
+  legalRepresentative?: boolean;
   createdAt: Date;
 }

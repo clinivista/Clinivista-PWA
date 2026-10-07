@@ -10,11 +10,12 @@ import {
   useResetDirectorCenterUserPassword,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { UserRow } from "./user-row";
 
-const EMPTY_DRAFT = { name: "", email: "", password: "", role: "medico" as "medico" | "administrativo" };
+const EMPTY_DRAFT = { name: "", email: "", password: "", role: "medico" as "medico" | "administrativo", legalRepresentative: false };
 
 // Se monta solo cuando el director despliega "Usuarios", así la lista se pide
 // al servidor únicamente cuando hace falta.
@@ -32,7 +33,7 @@ export function CenterUsers({ centerId }: { centerId: string }) {
   const handleCreate = (event: React.FormEvent) => {
     event.preventDefault();
     createUser.mutate(
-      { id: centerId, data: { email: draft.email.trim(), name: draft.name.trim() || undefined, password: draft.password, role: draft.role } },
+      { id: centerId, data: { email: draft.email.trim(), name: draft.name.trim() || undefined, password: draft.password, role: draft.role, legalRepresentative: draft.legalRepresentative } },
       {
         onSuccess: async (created) => {
           await queryClient.invalidateQueries({ queryKey: getGetDirectorCenterUsersQueryKey(centerId) });
@@ -96,6 +97,16 @@ export function CenterUsers({ centerId }: { centerId: string }) {
               <option value="medico">Médico</option>
               <option value="administrativo">Administrativo</option>
             </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`new-legal-${centerId}`}
+              checked={draft.legalRepresentative}
+              onCheckedChange={(checked) => setDraft((prev) => ({ ...prev, legalRepresentative: checked === true }))}
+            />
+            <label htmlFor={`new-legal-${centerId}`} className="text-sm font-semibold text-foreground">
+              Representante legal (gestiona los usuarios de la clínica)
+            </label>
           </div>
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
             <Button type="button" variant="outline" className="rounded-full h-10 font-semibold" onClick={() => setAdding(false)}>

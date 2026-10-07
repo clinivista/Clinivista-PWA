@@ -78,8 +78,16 @@ export function requireDirectorAuth(req: Request, res: Response): { userId: stri
   return { userId: session.userId };
 }
 
+/** Who can manage a clinic's users from its panel: administrativos and the legal representative (even a médico). */
+export function canManageClinicUsers(user: Pick<typeof usersTable.$inferSelect, "role" | "legalRepresentative" | "centerId" | "active">): boolean {
+  return Boolean(user.centerId) && user.active && (user.role === "administrativo" || user.legalRepresentative);
+}
+
 function authUser(user: typeof usersTable.$inferSelect) {
-  return { id: user.id, email: user.email, name: user.name, role: user.role, centerId: user.centerId };
+  return {
+    id: user.id, email: user.email, name: user.name, role: user.role, centerId: user.centerId,
+    canManageUsers: canManageClinicUsers(user),
+  };
 }
 
 /** Directors have no single clinic (centerId is null) and are never blocked here. */

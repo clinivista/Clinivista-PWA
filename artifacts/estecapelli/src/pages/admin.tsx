@@ -3,7 +3,7 @@ import { useLocation, Link } from "wouter";
 import { format, parseISO } from "date-fns";
 import { es as dateFnsEs } from "date-fns/locale";
 import {
-  Users, LogOut,
+  Users, UserCog, LogOut,
   Search, ChevronRight, X, Phone, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu, Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import { useLanguage, LANGS, type LangCode } from "@/lib/language";
 import { BrandLogo } from "@/components/brand-logo";
 import { buildPublicPatientLink, copyToClipboard } from "@/lib/clipboard";
 import { DirectorPanel } from "./director-panel";
+import { ClinicUsersPanel } from "./clinic-users-panel";
 
 const STATUS_COLORS: Record<string, string> = {
   nuevo: "bg-blue-100 text-blue-700",
@@ -44,6 +45,7 @@ export default function Admin() {
   const { t, lang, setLang } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [view, setView] = useState<"patients" | "users">("patients");
   const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
 
   const STATUS_LABELS: Record<string, string> = {
@@ -112,6 +114,9 @@ export default function Admin() {
       />
     );
   }
+
+  // Administrativos y representante legal (aunque sea médico) gestionan los usuarios de la clínica.
+  const canManageUsers = authStatus.user?.canManageUsers === true;
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
@@ -199,10 +204,24 @@ export default function Admin() {
         <div className="p-6 flex-1">
           <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">{t.adminSection}</p>
           <nav className="space-y-2">
-            <Button variant="ghost" className="w-full justify-start text-white bg-white/10 hover:bg-white/20 hover:text-white font-medium rounded-2xl h-12">
+            <Button
+              variant="ghost"
+              onClick={() => { setView("patients"); setMobileNavOpen(false); }}
+              className={`w-full justify-start text-white hover:bg-white/20 hover:text-white font-medium rounded-2xl h-12 ${view === "patients" ? "bg-white/10" : "bg-transparent"}`}
+            >
               <Users className="w-5 h-5 mr-3" />
               {t.adminPatients}
             </Button>
+            {canManageUsers && (
+              <Button
+                variant="ghost"
+                onClick={() => { setView("users"); setMobileNavOpen(false); }}
+                className={`w-full justify-start text-white hover:bg-white/20 hover:text-white font-medium rounded-2xl h-12 ${view === "users" ? "bg-white/10" : "bg-transparent"}`}
+              >
+                <UserCog className="w-5 h-5 mr-3" />
+                {t.adminUsers}
+              </Button>
+            )}
           </nav>
 
           {/* Language selector */}
@@ -243,6 +262,8 @@ export default function Admin() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-h-0 md:h-[100dvh] overflow-hidden relative">
+        {view === "users" && canManageUsers ? <ClinicUsersPanel /> : (
+          <>
         {/* Mobile: whole content scrolls; desktop: only the patient list scrolls */}
         <div className="flex-1 min-h-0 flex flex-col overflow-y-auto md:overflow-hidden">
         {/* Topbar */}
@@ -603,6 +624,8 @@ export default function Admin() {
                 </div>
               )}
             </div>
+          </>
+        )}
           </>
         )}
       </main>

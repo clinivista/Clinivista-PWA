@@ -22,6 +22,9 @@ export const usersTable = pgTable("users", {
   // null only for "director" and "supra_admin" — every clinic-scoped role must have one.
   centerId: text("center_id"),
   active: boolean("active").notNull().default(true),
+  // "Representante legal" of a clinic: may be a médico, and (like every
+  // administrativo) can manage the clinic's users from its own panel.
+  legalRepresentative: boolean("legal_representative").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [

@@ -14,4 +14,6 @@ export interface AuthUser {
   role: AuthUserRole;
   /** null only for "director" and "supra_admin" accounts, which are not tied to one clinic. */
   centerId: string | null;
+  /** true for a clinic's administrativos and its legal representative (even a médico), who manage the clinic's users. */
+  canManageUsers?: boolean;
 }
