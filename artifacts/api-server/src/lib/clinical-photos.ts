@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import sharp from "sharp";
-import { and, eq, inArray, ne } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, ne, or } from "drizzle-orm";
 import {
   centersTable,
   clinicalPhotosTable,
@@ -8,6 +8,7 @@ import {
   evaluationsTable,
   leadsTable,
   photoAuditEventsTable,
+  protocolPhasesTable,
   protocolsTable,
   protocolViewsTable,
   type ClinicalPhoto,
@@ -15,7 +16,7 @@ import {
 } from "@workspace/db";
 import { uid } from "./helpers";
 import { createObjectKey, privatePhotoStorage } from "./clinical-photo-storage";
-import { SPECIALTY_ID, PROTOCOL_VIEWS, clinicalDataFromLead } from "./specialties/capilar";
+import { SPECIALTY_ID, PROTOCOL_VIEWS, DEFAULT_PHASES, clinicalDataFromLead } from "./specialties/capilar";
 
 export const DEFAULT_CENTER_ID = process.env.DEFAULT_CENTER_ID ?? "default-center";
 export const DEFAULT_PROTOCOL_ID = process.env.DEFAULT_PROTOCOL_ID
@@ -99,6 +100,11 @@ export async function ensureClinicalConfiguration(
     version: "1",
     specialty: SPECIALTY_ID,
   }).onConflictDoNothing();
+  // Once a protocol has phases the clinic owns its photo list: never re-insert
+  // the starting views (they would bring back what the clinic removed).
+  const [configured] = await db.select({ id: protocolPhasesTable.id }).from(protocolPhasesTable)
+    .where(eq(protocolPhasesTable.protocolId, protocolId)).limit(1);
+  if (configured) return;
   await db.insert(protocolViewsTable).values(
     PROTOCOL_VIEWS.map(({ key, label, required }, position) => ({
       id: `${protocolId}-${key}`,
@@ -112,16 +118,70 @@ export async function ensureClinicalConfiguration(
       },
     })),
   ).onConflictDoNothing();
+  await ensureDefaultPhases(protocolId);
 }
 
-/** How many of a protocol's views are mandatory before an evaluation can be
- * submitted — sourced from the protocol's own views instead of a hardcoded
- * number, so a future specialty's protocol (with a different view count)
- * is gated correctly without touching this code. */
+/**
+ * First use of a protocol: loads the clinic's six starting phases
+ * (pre-evaluación … control médico 2), each with the same five views, and
+ * attaches the views that existed before phases to the first one. Once a
+ * protocol has phases the clinic's legal representative owns the structure
+ * and this never touches it again. A cheap "any phase?" check keeps it free
+ * on the hot path.
+ */
+async function ensureDefaultPhases(protocolId: string): Promise<void> {
+  const phases = DEFAULT_PHASES.map(({ key, name }, position) => ({
+    id: `${protocolId}-phase-${key}`,
+    protocolId,
+    key,
+    name,
+    position,
+  }));
+  await db.insert(protocolPhasesTable).values(phases).onConflictDoNothing();
+  await db.update(protocolViewsTable)
+    .set({ phaseId: phases[0].id })
+    .where(and(eq(protocolViewsTable.protocolId, protocolId), isNull(protocolViewsTable.phaseId)));
+  await db.insert(protocolViewsTable).values(
+    phases.slice(1).flatMap((phase) =>
+      PROTOCOL_VIEWS.map(({ key, label, required }, position) => ({
+        id: `${protocolId}-${phase.key}-${key}`,
+        protocolId,
+        phaseId: phase.id,
+        key: `${phase.key}-${key}`,
+        label,
+        position,
+        requirements: { required },
+      })),
+    ),
+  ).onConflictDoNothing();
+}
+
+/**
+ * The views the patient captures: those of the protocol's first (active)
+ * phase, the pre-evaluación. Later phases are captured by the clinic's staff,
+ * so they never count toward the patient's submission nor accept uploads
+ * from a patient token.
+ */
+export async function getPatientPhaseViews(protocolId: string) {
+  const [firstPhase] = await db.select().from(protocolPhasesTable)
+    .where(and(eq(protocolPhasesTable.protocolId, protocolId), eq(protocolPhasesTable.active, true)))
+    .orderBy(asc(protocolPhasesTable.position)).limit(1);
+  const views = await db.select().from(protocolViewsTable).where(and(
+    eq(protocolViewsTable.protocolId, protocolId),
+    eq(protocolViewsTable.active, true),
+    firstPhase
+      ? or(eq(protocolViewsTable.phaseId, firstPhase.id), isNull(protocolViewsTable.phaseId))
+      : isNull(protocolViewsTable.phaseId),
+  ));
+  views.sort((a, b) => a.position - b.position);
+  return { phase: firstPhase ?? null, views };
+}
+
+/** How many of the patient's views are mandatory before an evaluation can be
+ * submitted — sourced from the protocol's own first phase instead of a
+ * hardcoded number, so each clinic's configuration gates its own patients. */
 export async function getRequiredViewKeys(protocolId: string): Promise<string[]> {
-  const views = await db.select({ key: protocolViewsTable.key, requirements: protocolViewsTable.requirements })
-    .from(protocolViewsTable)
-    .where(and(eq(protocolViewsTable.protocolId, protocolId), eq(protocolViewsTable.active, true)));
+  const { views } = await getPatientPhaseViews(protocolId);
   return views
     .filter((view) => (view.requirements as Record<string, unknown> | null)?.required !== false)
     .map((view) => view.key);
@@ -311,11 +371,9 @@ export async function createClinicalPhoto(input: {
   captureMetadata?: Record<string, unknown>;
 }): Promise<PhotoStatus> {
   const evaluation = await ensureEvaluationForLead(input.lead);
-  const [view] = await db.select().from(protocolViewsTable).where(and(
-    eq(protocolViewsTable.protocolId, evaluation.protocolId),
-    eq(protocolViewsTable.key, input.key),
-    eq(protocolViewsTable.active, true),
-  ));
+  // A patient token only captures the pre-evaluación; later phases are the staff's.
+  const { views: patientViews } = await getPatientPhaseViews(evaluation.protocolId);
+  const view = patientViews.find((candidate) => candidate.key === input.key);
   if (!view) throw new Error("Unsupported protocol photo view.");
 
   const hash = crypto.createHash("sha256").update(input.bytes).digest("hex");

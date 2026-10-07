@@ -36,9 +36,27 @@ export const protocolsTable = pgTable("clinical_protocols", {
   uniqueIndex("clinical_protocols_center_slug_unique").on(table.centerId, table.id),
 ]);
 
+// Fases de un protocolo (p. ej. pre-evaluación, diagnóstico, pre-operatorio…).
+// Cada clínica define cuántas son, cómo se llaman y qué fotos lleva cada una
+// (sus vistas). La primera la hace el paciente desde la URL de la clínica; las
+// demás las sube el personal. Una fase con fotos guardadas nunca se borra:
+// se desactiva (active = false) y deja de mostrarse.
+export const protocolPhasesTable = pgTable("clinical_protocol_phases", {
+  id: text("id").primaryKey(),
+  protocolId: text("protocol_id").notNull(),
+  key: text("key").notNull(),
+  name: text("name").notNull(),
+  position: integer("position").notNull().default(0),
+  active: boolean("active").notNull().default(true),
+}, (table) => [
+  uniqueIndex("clinical_protocol_phases_protocol_key_unique").on(table.protocolId, table.key),
+]);
+
 export const protocolViewsTable = pgTable("clinical_protocol_views", {
   id: text("id").primaryKey(),
   protocolId: text("protocol_id").notNull(),
+  // null = vista anterior a las fases (se trata como parte de la primera fase).
+  phaseId: text("phase_id"),
   key: text("key").notNull(),
   label: text("label").notNull(),
   position: integer("position").notNull().default(0),

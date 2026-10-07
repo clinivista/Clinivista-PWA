@@ -26,12 +26,12 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
 import {
-  useGetPatient, getGetPatientQueryKey, useGetPatientClinic, getGetPatientClinicQueryKey, useCreatePatient, useGetClinic, getGetClinicQueryKey, useCreateClinicPatient, useUpdatePatient, useDiscardPatientPhotos,
+  useGetPatient, getGetPatientQueryKey, useGetPatientClinic, getGetPatientClinicQueryKey, useCreatePatient, useGetClinic, getGetClinicQueryKey, useCreateClinicPatient, useUpdatePatient, useDiscardPatientPhotos, useGetPatientProtocol, getGetPatientProtocolQueryKey,
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
 import { formatRut, validateRut } from "@/lib/rut";
-import { getCapillaryPhotoProtocol, type PhotoProtocolView } from "@/lib/photo-protocol";
+import { getConfiguredPhotoProtocol, type PhotoProtocolView } from "@/lib/photo-protocol";
 import { formatBytes, reviewPhotoTechnicalQuality, type TechnicalPhotoReview } from "@/lib/photo-quality";
 import { BrandLogo } from "@/components/brand-logo";
 import { ClinicBadge } from "@/components/clinic-badge";
@@ -169,7 +169,7 @@ function ActivePhotoCard({
         {/* Colored accent bar */}
         <div className="h-1" style={{ background: `linear-gradient(to right, ${color}, ${color}40)` }} />
 
-        {/* Foto X de 5 */}
+        {/* Foto X de N */}
         <div className="px-6 pt-4 flex items-center justify-between">
           <span className="text-xs font-black uppercase tracking-widest text-primary">{photoOfLabel}</span>
           <span className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full ${hasAccepted && !hasPending ? "text-primary bg-primary/10" : hasPending ? "text-amber-800 bg-amber-50" : "text-muted-foreground bg-muted"}`}>
@@ -392,7 +392,13 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
   const [langOpen, setLangOpen] = useState(false);
   const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
 
-  const PHOTO_REQUIREMENTS = getCapillaryPhotoProtocol(t);
+  // Las fotos de la pre-evaluación las define cada clínica; mientras llegan
+  // (o sin token todavía) se usan las cinco vistas iniciales.
+  const { data: protocolConfig } = useGetPatientProtocol(token || "", {
+    query: { enabled: !!token, queryKey: getGetPatientProtocolQueryKey(token || ""), retry: false, staleTime: 60_000 },
+  });
+  const PHOTO_REQUIREMENTS = getConfiguredPhotoProtocol(t, protocolConfig?.views);
+  const photoTotal = PHOTO_REQUIREMENTS.length;
 
   const [step, setStep] = useState<"intro" | "data" | "photos" | "success">("intro");
   const [photos, setPhotos] = useState<Record<string, string>>({});
@@ -1049,7 +1055,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
                 <div className="flex-1">
                   <h3 className="font-extrabold text-foreground text-lg mb-1">{t.pResumeTitle}</h3>
                   <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                    {t.pResumeDesc} ({completedPhotos}/5)
+                    {t.pResumeDesc} ({completedPhotos}/{photoTotal})
                   </p>
                   <div className="flex gap-2.5 flex-wrap">
                     <Button onClick={handleResume} className="rounded-full font-bold bg-primary hover:bg-primary/90 text-white px-5">
@@ -1405,9 +1411,9 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
             <div className="mb-6 bg-white rounded-[1.75rem] p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-bold text-foreground">
-                  {t.pPhotoOf.replace("{n}", String(currentPhotoIndex + 1)).replace("{total}", "5")}
+                  {t.pPhotoOf.replace("{n}", String(currentPhotoIndex + 1)).replace("{total}", String(photoTotal))}
                 </span>
-                <span className={`text-sm font-bold px-3 py-1 rounded-full ${completedPhotos === 5 ? "bg-primary/10 text-primary" : "bg-[#F5F2EE] text-muted-foreground"}`}>{completedPhotos}/5</span>
+                <span className={`text-sm font-bold px-3 py-1 rounded-full ${completedPhotos === photoTotal ? "bg-primary/10 text-primary" : "bg-[#F5F2EE] text-muted-foreground"}`}>{completedPhotos}/{photoTotal}</span>
               </div>
               <div className="flex gap-2">
                 {PHOTO_REQUIREMENTS.map((req, i) => (
@@ -1420,7 +1426,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
                   />
                 ))}
               </div>
-              {completedPhotos === 5 && (
+              {completedPhotos === photoTotal && (
                 <div className="mt-3 flex items-center gap-2 text-primary text-xs font-bold">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>¡Todas las fotografías completadas!</span>
@@ -1445,7 +1451,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
               onRetake={clearPendingPreview}
               onEdit={openTechnicalEditor}
               isProcessing={processingPhoto === activeReq.key}
-              photoOfLabel={t.pPhotoOf.replace("{n}", String(currentPhotoIndex + 1)).replace("{total}", "5")}
+              photoOfLabel={t.pPhotoOf.replace("{n}", String(currentPhotoIndex + 1)).replace("{total}", String(photoTotal))}
             />
 
             {/* Accepted photo thumbnails */}
@@ -1489,17 +1495,17 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
               <Button
                 onClick={submitFullForm}
                 disabled={isPending || completedPhotos < PHOTO_REQUIREMENTS.filter(photo => photo.required).length}
-                className={`w-full h-16 text-lg font-bold rounded-full shadow-xl group transition-all ${completedPhotos === 5 ? "bg-primary hover:bg-primary/90 text-white shadow-primary/25" : "bg-primary/80 hover:bg-primary/70 text-white"}`}
+                className={`w-full h-16 text-lg font-bold rounded-full shadow-xl group transition-all ${completedPhotos === photoTotal ? "bg-primary hover:bg-primary/90 text-white shadow-primary/25" : "bg-primary/80 hover:bg-primary/70 text-white"}`}
               >
                 {isPending ? (
                   <><RefreshCw className="w-5 h-5 mr-3 animate-spin" />{t.pSending}</>
                 ) : (
-                  <><CheckCircle2 className="w-5 h-5 mr-3" />{t.pSubmitCTA} ({completedPhotos}/5)</>
+                  <><CheckCircle2 className="w-5 h-5 mr-3" />{t.pSubmitCTA} ({completedPhotos}/{photoTotal})</>
                 )}
               </Button>
               {completedPhotos < PHOTO_REQUIREMENTS.filter(photo => photo.required).length && !isPending && (
                 <p className="text-center text-xs text-muted-foreground mt-3 font-medium">
-                  {completedPhotos}/5 {t.pCompleted.toLowerCase()}
+                  {completedPhotos}/{photoTotal} {t.pCompleted.toLowerCase()}
                 </p>
               )}
             </div>

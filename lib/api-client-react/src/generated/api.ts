@@ -21,6 +21,8 @@ import type {
 
 import type {
   AuthStatus,
+  ClinicProtocol,
+  ClinicProtocolUpdate,
   ClinicUser,
   ClinicUserCreate,
   ClinicUserList,
@@ -56,6 +58,7 @@ import type {
   PatientInput,
   PatientPhotoStatus,
   PatientPhotoStatusResult,
+  PatientProtocol,
   PatientResult,
   PhotoConfirmation,
   SimpleOk
@@ -2593,6 +2596,231 @@ export function useGetMyClinic<TData = Awaited<ReturnType<typeof getMyClinic>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetMyClinicQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetClinicProtocolUrl = () => {
+
+
+
+
+  return `/api/clinic/protocol`
+}
+
+/**
+ * @summary Phases and photos configured for the signed-in clinic
+ */
+export const getClinicProtocol = async ( options?: Parameters<typeof customFetch>[1]): Promise<ClinicProtocol> => {
+
+  return customFetch<ClinicProtocol>(getGetClinicProtocolUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetClinicProtocolQueryKey = () => {
+    return [
+    `/api/clinic/protocol`
+    ] as const;
+    }
+
+
+export const getGetClinicProtocolQueryOptions = <TData = Awaited<ReturnType<typeof getClinicProtocol>>, TError = ErrorType<ErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClinicProtocol>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetClinicProtocolQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getClinicProtocol>>> = ({ signal }) => getClinicProtocol({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getClinicProtocol>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetClinicProtocolQueryResult = NonNullable<Awaited<ReturnType<typeof getClinicProtocol>>>
+export type GetClinicProtocolQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Phases and photos configured for the signed-in clinic
+ */
+
+export function useGetClinicProtocol<TData = Awaited<ReturnType<typeof getClinicProtocol>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClinicProtocol>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetClinicProtocolQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateClinicProtocolUrl = () => {
+
+
+
+
+  return `/api/clinic/protocol`
+}
+
+/**
+ * @summary Replace the clinic's phases and photos (legal representative only)
+ */
+export const updateClinicProtocol = async (clinicProtocolUpdate: ClinicProtocolUpdate, options?: Parameters<typeof customFetch>[1]): Promise<ClinicProtocol> => {
+
+  return customFetch<ClinicProtocol>(getUpdateClinicProtocolUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(clinicProtocolUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateClinicProtocolMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateClinicProtocol>>, TError,{data: BodyType<ClinicProtocolUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateClinicProtocol>>, TError,{data: BodyType<ClinicProtocolUpdate>}, TContext> => {
+
+const mutationKey = ['updateClinicProtocol'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateClinicProtocol>>, {data: BodyType<ClinicProtocolUpdate>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateClinicProtocol(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateClinicProtocolMutationResult = NonNullable<Awaited<ReturnType<typeof updateClinicProtocol>>>
+    export type UpdateClinicProtocolMutationBody = BodyType<ClinicProtocolUpdate>
+    export type UpdateClinicProtocolMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Replace the clinic's phases and photos (legal representative only)
+ */
+export const useUpdateClinicProtocol = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateClinicProtocol>>, TError,{data: BodyType<ClinicProtocolUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateClinicProtocol>>,
+        TError,
+        {data: BodyType<ClinicProtocolUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateClinicProtocolMutationOptions(options));
+    }
+
+export const getGetPatientProtocolUrl = (token: string,) => {
+
+
+
+
+  return `/api/patients/${token}/protocol`
+}
+
+/**
+ * @summary Photos the patient must take in the pre-evaluation (public, by token)
+ */
+export const getPatientProtocol = async (token: string, options?: Parameters<typeof customFetch>[1]): Promise<PatientProtocol> => {
+
+  return customFetch<PatientProtocol>(getGetPatientProtocolUrl(token),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPatientProtocolQueryKey = (token: string,) => {
+    return [
+    `/api/patients/${token}/protocol`
+    ] as const;
+    }
+
+
+export const getGetPatientProtocolQueryOptions = <TData = Awaited<ReturnType<typeof getPatientProtocol>>, TError = ErrorType<ErrorResponse>>(token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPatientProtocol>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPatientProtocolQueryKey(token);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPatientProtocol>>> = ({ signal }) => getPatientProtocol(token, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: token !== null && token !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPatientProtocol>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPatientProtocolQueryResult = NonNullable<Awaited<ReturnType<typeof getPatientProtocol>>>
+export type GetPatientProtocolQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Photos the patient must take in the pre-evaluation (public, by token)
+ */
+
+export function useGetPatientProtocol<TData = Awaited<ReturnType<typeof getPatientProtocol>>, TError = ErrorType<ErrorResponse>>(
+ token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPatientProtocol>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPatientProtocolQueryOptions(token,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

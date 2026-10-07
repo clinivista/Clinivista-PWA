@@ -58,3 +58,60 @@ export function getCapillaryPhotoProtocol(t: AppTranslations): PhotoProtocolView
     { ...common, key: "donor", title: t.photoDonorTitle, description: t.photoDonorDesc, tip: t.photoDonorTip, color: "#10B981", orientation: "posterior", aspectRatio: "4:3", minimumWidth: 1600, minimumHeight: 1200, distance: t.photoDistanceBack ?? defaults.distance, referenceVisual: <Reference kind="back" /> },
   ];
 }
+
+const CUSTOM_COLORS = ["#00A9A5", "#4F9CF9", "#A78BFA", "#F59E0B", "#10B981", "#EC4899"];
+
+/** Spanish labels of the starting views; a clinic that renamed one sees its own name. */
+const STARTING_LABELS: Record<string, string> = {
+  frontal: "Vista frontal",
+  vertex: "Vista superior / vértex",
+  temporalRight: "Temporal derecha",
+  temporalLeft: "Temporal izquierda",
+  donor: "Zona donante",
+};
+
+function GenericReference() {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full" aria-hidden="true">
+      <rect x="10" y="18" width="44" height="32" rx="6" fill="#e8d5c4" stroke="#a87c5a" strokeWidth="1.5" />
+      <circle cx="32" cy="34" r="9" fill="#fff" stroke="#a87c5a" strokeWidth="1.5" />
+      <circle cx="32" cy="34" r="4" fill="#4a90d9" />
+      <rect x="22" y="12" width="12" height="7" rx="2" fill="#4a90d9" />
+    </svg>
+  );
+}
+
+export type ConfiguredPhotoView = { key: string; label: string; required: boolean };
+
+/**
+ * The patient's photo list as the clinic configured it. Starting views keep
+ * their translated guidance (unless the clinic renamed them); photos the
+ * clinic added get neutral, clearly worded guidance.
+ */
+export function getConfiguredPhotoProtocol(t: AppTranslations, views: ConfiguredPhotoView[] | undefined): PhotoProtocolView[] {
+  const base = getCapillaryPhotoProtocol(t);
+  if (!views || views.length === 0) return base;
+  return views.map((view, index) => {
+    const known = base.find((item) => item.key === view.key);
+    if (known) {
+      const renamed = view.label !== STARTING_LABELS[view.key];
+      return { ...known, title: renamed ? view.label : known.title, required: view.required };
+    }
+    return {
+      key: view.key,
+      title: view.label,
+      description: t.photoCustomDesc ?? "Toma la fotografía con buena luz y la zona completa visible.",
+      tip: t.photoCustomTip ?? "Evita sombras y mantén el teléfono firme para que la imagen salga enfocada.",
+      color: CUSTOM_COLORS[index % CUSTOM_COLORS.length],
+      required: view.required,
+      orientation: "landscape",
+      aspectRatio: "4:3",
+      minimumWidth: 1200,
+      minimumHeight: 900,
+      light: t.photoLightEven ?? defaults.light,
+      distance: defaults.distance,
+      background: t.photoBackgroundPlain ?? defaults.background,
+      referenceVisual: <GenericReference />,
+    };
+  });
+}

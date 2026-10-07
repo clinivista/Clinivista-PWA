@@ -94,7 +94,12 @@ beforeAll(async () => {
      CREATE TABLE IF NOT EXISTS clinical_protocol_views (
        id text PRIMARY KEY, protocol_id text NOT NULL, key text NOT NULL, label text NOT NULL,
        position integer NOT NULL DEFAULT 0, requirements jsonb NOT NULL DEFAULT '{}',
-       active boolean NOT NULL DEFAULT true,
+       active boolean NOT NULL DEFAULT true, phase_id text,
+       UNIQUE (protocol_id, key)
+     );
+     CREATE TABLE IF NOT EXISTS clinical_protocol_phases (
+       id text PRIMARY KEY, protocol_id text NOT NULL, key text NOT NULL, name text NOT NULL,
+       position integer NOT NULL DEFAULT 0, active boolean NOT NULL DEFAULT true,
        UNIQUE (protocol_id, key)
      );
      CREATE TABLE IF NOT EXISTS clinical_evaluations (
@@ -124,6 +129,7 @@ beforeEach(async () => {
     DELETE FROM clinical_photo_audit_events;
     DELETE FROM clinical_photos;
     DELETE FROM clinical_evaluations;
+    DELETE FROM clinical_protocol_phases;
     DELETE FROM clinical_protocol_views;
     DELETE FROM clinical_protocols;
     DELETE FROM clinical_centers;

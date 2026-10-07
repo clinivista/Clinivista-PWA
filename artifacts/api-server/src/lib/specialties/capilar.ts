@@ -28,6 +28,18 @@ export const PROTOCOL_VIEWS: ReadonlyArray<{ key: string; label: string; require
   { key: "donor", label: "Zona donante", required: true },
 ];
 
+/** Plantilla inicial de fases para una clínica capilar: cada clínica la ajusta
+ * después (nombres, cantidad de fotos y nombre de cada foto). Cada fase parte
+ * con las mismas cinco vistas de PROTOCOL_VIEWS. */
+export const DEFAULT_PHASES: ReadonlyArray<{ key: string; name: string }> = [
+  { key: "preevaluacion", name: "Pre-evaluación" },
+  { key: "diagnostico", name: "Diagnóstico" },
+  { key: "preoperatorio", name: "Pre-operatorio" },
+  { key: "postoperatorio", name: "Post-operatorio" },
+  { key: "control-1", name: "Control médico 1" },
+  { key: "control-2", name: "Control médico 2" },
+];
+
 /** The six `leads` columns that are specific to this specialty (as opposed
  * to generic identity/contact/consent fields like name, phone or city). */
 export const CLINICAL_DATA_FIELDS = [

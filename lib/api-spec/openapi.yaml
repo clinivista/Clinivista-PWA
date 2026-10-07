@@ -1201,6 +1201,85 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /clinic/protocol:
+    get:
+      operationId: getClinicProtocol
+      tags: [clinic-protocol]
+      summary: Phases and photos configured for the signed-in clinic
+      responses:
+        "200":
+          description: The clinic's phase structure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicProtocol"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateClinicProtocol
+      tags: [clinic-protocol]
+      summary: Replace the clinic's phases and photos (legal representative only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClinicProtocolUpdate"
+      responses:
+        "200":
+          description: The saved structure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicProtocol"
+        "400":
+          description: Invalid structure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Only the legal representative can edit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /patients/{token}/protocol:
+    get:
+      operationId: getPatientProtocol
+      tags: [patients]
+      summary: Photos the patient must take in the pre-evaluation (public, by token)
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pre-evaluation photo list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientProtocol"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /patients/{token}/clinic:
     get:
       operationId: getPatientClinic
@@ -1712,6 +1791,85 @@ components:
         logoDataUrl:
           type: string
           nullable: true
+
+    ClinicProtocolView:
+      type: object
+      required: [id, key, label, position, hasPhotos]
+      properties:
+        id: {type: string}
+        key: {type: string}
+        label: {type: string}
+        position: {type: number}
+        hasPhotos: {type: boolean}
+
+    ClinicProtocolPhase:
+      type: object
+      required: [id, key, name, position, patientCaptured, views]
+      properties:
+        id: {type: string}
+        key: {type: string}
+        name: {type: string}
+        position: {type: number}
+        patientCaptured: {type: boolean}
+        views:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClinicProtocolView"
+
+    ClinicProtocol:
+      type: object
+      required: [canEdit, phases]
+      properties:
+        canEdit: {type: boolean}
+        phases:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClinicProtocolPhase"
+
+    ClinicProtocolViewInput:
+      type: object
+      required: [label]
+      properties:
+        id: {type: string}
+        label: {type: string}
+
+    ClinicProtocolPhaseInput:
+      type: object
+      required: [name, views]
+      properties:
+        id: {type: string}
+        name: {type: string}
+        views:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClinicProtocolViewInput"
+
+    ClinicProtocolUpdate:
+      type: object
+      required: [phases]
+      properties:
+        phases:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClinicProtocolPhaseInput"
+
+    PatientProtocolView:
+      type: object
+      required: [key, label, required]
+      properties:
+        key: {type: string}
+        label: {type: string}
+        required: {type: boolean}
+
+    PatientProtocol:
+      type: object
+      required: [phaseName, views]
+      properties:
+        phaseName: {type: string}
+        views:
+          type: array
+          items:
+            $ref: "#/components/schemas/PatientProtocolView"
 
     PatientClinic:
       type: object
