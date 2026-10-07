@@ -356,6 +356,30 @@ export const GetDirectorCenterUsersResponse = zod.object({
 
 
 /**
+ * @summary Create a médico or administrativo account in an existing clinic (director only)
+ */
+export const CreateDirectorCenterUserParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const CreateDirectorCenterUserBody = zod.object({
+  "email": zod.string(),
+  "name": zod.string().optional(),
+  "password": zod.string().describe('At least 8 characters. Never stored in plain text.'),
+  "role": zod.enum(['medico', 'administrativo'])
+})
+
+export const CreateDirectorCenterUserResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['medico', 'administrativo']),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Reset a clinic user's password to a generated temporary one, shown once (director only)
  */
 export const ResetDirectorCenterUserPasswordParams = zod.object({

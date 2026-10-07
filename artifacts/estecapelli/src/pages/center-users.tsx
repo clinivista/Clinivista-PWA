@@ -1,24 +1,114 @@
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import {
+  getGetDirectorCentersQueryKey,
   getGetDirectorCenterUsersQueryKey,
+  useCreateDirectorCenterUser,
   useGetDirectorCenterUsers,
   usePatchDirectorCenterUser,
   useResetDirectorCenterUserPassword,
 } from "@workspace/api-client-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import { UserRow } from "./user-row";
+
+const EMPTY_DRAFT = { name: "", email: "", password: "", role: "medico" as "medico" | "administrativo" };
 
 // Se monta solo cuando el director despliega "Usuarios", así la lista se pide
 // al servidor únicamente cuando hace falta.
 export function CenterUsers({ centerId }: { centerId: string }) {
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data, isLoading, isError } = useGetDirectorCenterUsers(centerId);
+  const createUser = useCreateDirectorCenterUser();
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState(EMPTY_DRAFT);
   const patchUser = usePatchDirectorCenterUser();
   const resetPassword = useResetDirectorCenterUserPassword();
   const users = data?.users ?? [];
 
+  const handleCreate = (event: React.FormEvent) => {
+    event.preventDefault();
+    createUser.mutate(
+      { id: centerId, data: { email: draft.email.trim(), name: draft.name.trim() || undefined, password: draft.password, role: draft.role } },
+      {
+        onSuccess: async (created) => {
+          await queryClient.invalidateQueries({ queryKey: getGetDirectorCenterUsersQueryKey(centerId) });
+          // El contador "N personal" de la tarjeta vive en la lista de clínicas.
+          await queryClient.invalidateQueries({ queryKey: getGetDirectorCentersQueryKey() });
+          setDraft(EMPTY_DRAFT);
+          setAdding(false);
+          toast({ title: "Usuario creado", description: `${created.email} ya puede iniciar sesión en esta clínica.` });
+        },
+        onError: (error) => {
+          const detail = (error as { data?: { error?: string } | null }).data?.error;
+          toast({ variant: "destructive", title: "No pudimos crear el usuario", description: detail ?? "Inténtalo de nuevo." });
+        },
+      },
+    );
+  };
+
   return (
     <div className="flex flex-col gap-3 pt-4 border-t border-[#E8E4DE]">
+      {!adding ? (
+        <Button className="rounded-full h-10 font-semibold self-start" onClick={() => setAdding(true)}>
+          <Plus className="w-4 h-4 mr-2" /> Agregar usuario
+        </Button>
+      ) : (
+        <form onSubmit={handleCreate} className="flex flex-col gap-3 rounded-2xl bg-[#F5F2EE] p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Input
+              placeholder="Nombre"
+              aria-label="Nombre"
+              className="h-10 rounded-full bg-white"
+              value={draft.name}
+              onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))}
+            />
+            <Input
+              type="email"
+              required
+              autoComplete="off"
+              placeholder="Correo"
+              aria-label="Correo"
+              className="h-10 rounded-full bg-white"
+              value={draft.email}
+              onChange={(event) => setDraft((prev) => ({ ...prev, email: event.target.value }))}
+            />
+            <Input
+              type="password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              placeholder="Contraseña (mín. 8)"
+              aria-label="Contraseña"
+              className="h-10 rounded-full bg-white"
+              value={draft.password}
+              onChange={(event) => setDraft((prev) => ({ ...prev, password: event.target.value }))}
+            />
+            <select
+              aria-label="Rol"
+              className="h-10 rounded-full border border-input bg-white px-4 text-sm"
+              value={draft.role}
+              onChange={(event) => setDraft((prev) => ({ ...prev, role: event.target.value as typeof draft.role }))}
+            >
+              <option value="medico">Médico</option>
+              <option value="administrativo">Administrativo</option>
+            </select>
+          </div>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <Button type="button" variant="outline" className="rounded-full h-10 font-semibold" onClick={() => setAdding(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" className="rounded-full h-10 font-semibold" disabled={createUser.isPending}>
+              {createUser.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              Crear usuario
+            </Button>
+          </div>
+        </form>
+      )}
+
       {isLoading && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="w-4 h-4 animate-spin" /> Cargando usuarios…
