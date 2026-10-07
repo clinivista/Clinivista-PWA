@@ -23,8 +23,9 @@ const protocol = (canEdit: boolean) => ({
   canEdit,
   phases: [
     { id: "p1", key: "pre", name: "Pre-evaluación", position: 0, patientCaptured: true, views: [view("v1", "Frontal"), view("v2", "Vértex", true, 1)] },
-    { id: "p2", key: "dx", name: "Diagnóstico", position: 1, patientCaptured: false, views: [view("v3", "Frontal")] },
-    { id: "p3", key: "po", name: "Post-operatorio", position: 2, patientCaptured: false, views: [view("v4", "Frontal")] },
+    { id: "p2", key: "dx", name: "Diagnóstico", position: 1, kind: "diagnosis", patientCaptured: false, views: [] },
+    { id: "p3", key: "po", name: "Post-operatorio", position: 2, kind: "capture", patientCaptured: false, views: [view("v4", "Frontal")] },
+    { id: "p4", key: "c1", name: "Control médico 1", position: 3, kind: "capture", patientCaptured: false, views: [view("v5", "Frontal")] },
   ],
 });
 
@@ -52,19 +53,27 @@ describe("PhasesPanel", () => {
     expect(screen.queryByRole("button", { name: "Guardar fases" })).not.toBeInTheDocument();
   });
 
+  it("the diagnosis phase is the doctor's: no photo list and it cannot be removed", () => {
+    render(<PhasesPanel />);
+    const diagnosis = screen.getByRole("region", { name: "Fase 2" });
+    expect(within(diagnosis).getByText(/El médico anota las fotografías del paciente/)).toBeInTheDocument();
+    expect(within(diagnosis).queryByRole("button", { name: /Eliminar fase/ })).not.toBeInTheDocument();
+    expect(within(diagnosis).queryByRole("button", { name: "Agregar fotografía" })).not.toBeInTheDocument();
+  });
+
   it("sends renamed, added and removed phases and photos on save", async () => {
     const user = userEvent.setup();
     render(<PhasesPanel />);
     const save = screen.getByRole("button", { name: "Guardar fases" });
     expect(save).toBeDisabled();
 
-    await user.clear(screen.getByLabelText("Nombre de la fase 2"));
-    await user.type(screen.getByLabelText("Nombre de la fase 2"), "Diagnóstico y plan");
-    await user.click(within(screen.getByRole("region", { name: "Fase 2" })).getByRole("button", { name: "Agregar fotografía" }));
-    await user.type(screen.getByLabelText("Fotografía 2 de Diagnóstico y plan"), "Zona receptora");
-    await user.click(screen.getByRole("button", { name: /Eliminar fase Post-operatorio/ }));
+    await user.clear(screen.getByLabelText("Nombre de la fase 3"));
+    await user.type(screen.getByLabelText("Nombre de la fase 3"), "Post-op y plan");
+    await user.click(within(screen.getByRole("region", { name: "Fase 3" })).getByRole("button", { name: "Agregar fotografía" }));
+    await user.type(screen.getByLabelText("Fotografía 2 de Post-op y plan"), "Zona receptora");
+    await user.click(screen.getByRole("button", { name: /Eliminar fase Control médico 1/ }));
     await user.click(screen.getByRole("button", { name: /Agregar fase/ }));
-    await user.type(screen.getByLabelText("Nombre de la fase 3"), "Control 12 meses");
+    await user.type(screen.getByLabelText("Nombre de la fase 4"), "Control 12 meses");
     await user.type(screen.getByLabelText("Fotografía 1 de Control 12 meses"), "Frontal");
 
     await user.click(save);
@@ -73,7 +82,8 @@ describe("PhasesPanel", () => {
       data: {
         phases: [
           { id: "p1", name: "Pre-evaluación", views: [{ id: "v1", label: "Frontal" }, { id: "v2", label: "Vértex" }] },
-          { id: "p2", name: "Diagnóstico y plan", views: [{ id: "v3", label: "Frontal" }, { label: "Zona receptora" }] },
+          { id: "p2", name: "Diagnóstico", views: [] },
+          { id: "p3", name: "Post-op y plan", views: [{ id: "v4", label: "Frontal" }, { label: "Zona receptora" }] },
           { name: "Control 12 meses", views: [{ label: "Frontal" }] },
         ],
       },
@@ -87,7 +97,7 @@ describe("PhasesPanel", () => {
     await user.click(screen.getByRole("button", { name: "Quitar fotografía Vértex" }));
     expect(confirm).toHaveBeenCalled();
     expect(screen.getByLabelText("Fotografía 2 de Pre-evaluación")).toBeInTheDocument();
-    expect(within(screen.getByRole("region", { name: "Fase 2" })).getByRole("button", { name: "Quitar fotografía Frontal" })).toBeDisabled();
+    expect(within(screen.getByRole("region", { name: "Fase 3" })).getByRole("button", { name: "Quitar fotografía Frontal" })).toBeDisabled();
     confirm.mockRestore();
   });
 });

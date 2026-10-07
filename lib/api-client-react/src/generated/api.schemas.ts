@@ -90,11 +90,20 @@ export interface ClinicProtocolView {
   hasPhotos: boolean;
 }
 
+export type ClinicProtocolPhaseKind = typeof ClinicProtocolPhaseKind[keyof typeof ClinicProtocolPhaseKind];
+
+
+export const ClinicProtocolPhaseKind = {
+  capture: 'capture',
+  diagnosis: 'diagnosis',
+} as const;
+
 export interface ClinicProtocolPhase {
   id: string;
   key: string;
   name: string;
   position: number;
+  kind: ClinicProtocolPhaseKind;
   patientCaptured: boolean;
   views: ClinicProtocolView[];
 }
@@ -339,6 +348,125 @@ export interface PatientPhotoStatus {
      */
   note?: string | null;
   editParams?: unknown;
+}
+
+export type DiagnosisStrokeType = typeof DiagnosisStrokeType[keyof typeof DiagnosisStrokeType];
+
+
+export const DiagnosisStrokeType = {
+  pen: 'pen',
+  line: 'line',
+  arrow: 'arrow',
+  ellipse: 'ellipse',
+  text: 'text',
+} as const;
+
+export interface DiagnosisStroke {
+  type: DiagnosisStrokeType;
+  color: string;
+  width: number;
+  points: number[][];
+  text?: string;
+}
+
+export interface DiagnosisText {
+  responseText: string;
+}
+
+export interface DiagnosisClose {
+  responseText?: string;
+}
+
+export interface PhotoMarkup {
+  /** The marked-up photo as a data URL (JPEG, PNG or WebP) */
+  image: string;
+  strokes: DiagnosisStroke[];
+}
+
+export interface DiagnosisPhoto {
+  photoId: string;
+  viewKey: string;
+  label: string;
+  /** @nullable */
+  note?: string | null;
+  /** @nullable */
+  width?: number | null;
+  /** @nullable */
+  height?: number | null;
+  hasAnnotation: boolean;
+  /** @nullable */
+  annotationUpdatedAt?: string | null;
+  strokes: DiagnosisStroke[];
+}
+
+export type DiagnosisEventAction = typeof DiagnosisEventAction[keyof typeof DiagnosisEventAction];
+
+
+export const DiagnosisEventAction = {
+  saved: 'saved',
+  closed: 'closed',
+  reopened: 'reopened',
+} as const;
+
+export interface DiagnosisEvent {
+  action: DiagnosisEventAction;
+  /** @nullable */
+  actorName?: string | null;
+  createdAt: string;
+}
+
+export type DiagnosisStateStatus = typeof DiagnosisStateStatus[keyof typeof DiagnosisStateStatus];
+
+
+export const DiagnosisStateStatus = {
+  draft: 'draft',
+  closed: 'closed',
+} as const;
+
+export interface DiagnosisState {
+  /** @nullable */
+  phaseId?: string | null;
+  status: DiagnosisStateStatus;
+  responseText: string;
+  /** @nullable */
+  closedAt?: string | null;
+  /** @nullable */
+  closedByName?: string | null;
+  readyToDiagnose: boolean;
+  canEdit: boolean;
+  photos: DiagnosisPhoto[];
+  events: DiagnosisEvent[];
+}
+
+export interface LeadPhaseView {
+  id: string;
+  key: string;
+  label: string;
+  required: boolean;
+  photo: PatientPhotoStatus | null;
+}
+
+export type LeadPhaseKind = typeof LeadPhaseKind[keyof typeof LeadPhaseKind];
+
+
+export const LeadPhaseKind = {
+  capture: 'capture',
+  diagnosis: 'diagnosis',
+} as const;
+
+export interface LeadPhase {
+  id: string;
+  name: string;
+  position: number;
+  kind: LeadPhaseKind;
+  patientCaptured: boolean;
+  enabled: boolean;
+  complete: boolean;
+  views: LeadPhaseView[];
+}
+
+export interface LeadPhaseList {
+  phases: LeadPhase[];
 }
 
 export interface PhotoConfirmation {

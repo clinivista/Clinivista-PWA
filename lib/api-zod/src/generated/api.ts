@@ -224,6 +224,293 @@ export const PatchLeadResponse = zod.object({
 
 
 /**
+ * @summary The patient's process phase by phase, with the photo of each view (staff)
+ */
+export const GetLeadPhasesParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetLeadPhasesResponse = zod.object({
+  "phases": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "position": zod.number(),
+  "kind": zod.enum(['capture', 'diagnosis']),
+  "patientCaptured": zod.boolean(),
+  "enabled": zod.boolean(),
+  "complete": zod.boolean(),
+  "views": zod.array(zod.object({
+  "id": zod.string(),
+  "key": zod.string(),
+  "label": zod.string(),
+  "required": zod.boolean(),
+  "photo": zod.union([zod.object({
+  "id": zod.string(),
+  "key": zod.string(),
+  "label": zod.string(),
+  "status": zod.enum(['draft', 'confirmed', 'superseded', 'discarded']),
+  "source": zod.enum(['camera', 'upload']),
+  "mimeType": zod.string(),
+  "sizeBytes": zod.number(),
+  "sha256": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "confirmedAt": zod.coerce.date().nullish(),
+  "hasOriginal": zod.boolean(),
+  "hasAdjusted": zod.boolean(),
+  "width": zod.number().nullish(),
+  "height": zod.number().nullish(),
+  "captureMetadata": zod.unknown().optional(),
+  "note": zod.string().nullish().describe('Optional description the patient wrote for this photo'),
+  "editParams": zod.unknown().optional()
+}),zod.null()])
+}))
+}))
+})
+
+
+/**
+ * @summary Remove a photo the staff took in a phase after the pre-evaluación
+ */
+export const DeleteLeadPhasePhotoParams = zod.object({
+  "id": zod.coerce.string(),
+  "photoId": zod.coerce.string()
+})
+
+export const DeleteLeadPhasePhotoResponse = zod.void()
+
+
+/**
+ * @summary The diagnosis phase of a patient (staff)
+ */
+export const GetLeadDiagnosisParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetLeadDiagnosisResponse = zod.object({
+  "phaseId": zod.string().nullish(),
+  "status": zod.enum(['draft', 'closed']),
+  "responseText": zod.string(),
+  "closedAt": zod.coerce.date().nullish(),
+  "closedByName": zod.string().nullish(),
+  "readyToDiagnose": zod.boolean(),
+  "canEdit": zod.boolean(),
+  "photos": zod.array(zod.object({
+  "photoId": zod.string(),
+  "viewKey": zod.string(),
+  "label": zod.string(),
+  "note": zod.string().nullish(),
+  "width": zod.number().nullish(),
+  "height": zod.number().nullish(),
+  "hasAnnotation": zod.boolean(),
+  "annotationUpdatedAt": zod.coerce.date().nullish(),
+  "strokes": zod.array(zod.object({
+  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text']),
+  "color": zod.string(),
+  "width": zod.number(),
+  "points": zod.array(zod.array(zod.number())),
+  "text": zod.string().optional()
+}))
+})),
+  "events": zod.array(zod.object({
+  "action": zod.enum(['saved', 'closed', 'reopened']),
+  "actorName": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Save the médico's written answer (draft)
+ */
+export const SaveLeadDiagnosisParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const SaveLeadDiagnosisBody = zod.object({
+  "responseText": zod.string()
+})
+
+export const SaveLeadDiagnosisResponse = zod.object({
+  "phaseId": zod.string().nullish(),
+  "status": zod.enum(['draft', 'closed']),
+  "responseText": zod.string(),
+  "closedAt": zod.coerce.date().nullish(),
+  "closedByName": zod.string().nullish(),
+  "readyToDiagnose": zod.boolean(),
+  "canEdit": zod.boolean(),
+  "photos": zod.array(zod.object({
+  "photoId": zod.string(),
+  "viewKey": zod.string(),
+  "label": zod.string(),
+  "note": zod.string().nullish(),
+  "width": zod.number().nullish(),
+  "height": zod.number().nullish(),
+  "hasAnnotation": zod.boolean(),
+  "annotationUpdatedAt": zod.coerce.date().nullish(),
+  "strokes": zod.array(zod.object({
+  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text']),
+  "color": zod.string(),
+  "width": zod.number(),
+  "points": zod.array(zod.array(zod.number())),
+  "text": zod.string().optional()
+}))
+})),
+  "events": zod.array(zod.object({
+  "action": zod.enum(['saved', 'closed', 'reopened']),
+  "actorName": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Close the diagnosis (read-only); opens the next phase
+ */
+export const CloseLeadDiagnosisParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const CloseLeadDiagnosisBody = zod.object({
+  "responseText": zod.string().optional()
+})
+
+export const CloseLeadDiagnosisResponse = zod.object({
+  "phaseId": zod.string().nullish(),
+  "status": zod.enum(['draft', 'closed']),
+  "responseText": zod.string(),
+  "closedAt": zod.coerce.date().nullish(),
+  "closedByName": zod.string().nullish(),
+  "readyToDiagnose": zod.boolean(),
+  "canEdit": zod.boolean(),
+  "photos": zod.array(zod.object({
+  "photoId": zod.string(),
+  "viewKey": zod.string(),
+  "label": zod.string(),
+  "note": zod.string().nullish(),
+  "width": zod.number().nullish(),
+  "height": zod.number().nullish(),
+  "hasAnnotation": zod.boolean(),
+  "annotationUpdatedAt": zod.coerce.date().nullish(),
+  "strokes": zod.array(zod.object({
+  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text']),
+  "color": zod.string(),
+  "width": zod.number(),
+  "points": zod.array(zod.array(zod.number())),
+  "text": zod.string().optional()
+}))
+})),
+  "events": zod.array(zod.object({
+  "action": zod.enum(['saved', 'closed', 'reopened']),
+  "actorName": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Reopen a closed diagnosis (recorded)
+ */
+export const ReopenLeadDiagnosisParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ReopenLeadDiagnosisResponse = zod.object({
+  "phaseId": zod.string().nullish(),
+  "status": zod.enum(['draft', 'closed']),
+  "responseText": zod.string(),
+  "closedAt": zod.coerce.date().nullish(),
+  "closedByName": zod.string().nullish(),
+  "readyToDiagnose": zod.boolean(),
+  "canEdit": zod.boolean(),
+  "photos": zod.array(zod.object({
+  "photoId": zod.string(),
+  "viewKey": zod.string(),
+  "label": zod.string(),
+  "note": zod.string().nullish(),
+  "width": zod.number().nullish(),
+  "height": zod.number().nullish(),
+  "hasAnnotation": zod.boolean(),
+  "annotationUpdatedAt": zod.coerce.date().nullish(),
+  "strokes": zod.array(zod.object({
+  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text']),
+  "color": zod.string(),
+  "width": zod.number(),
+  "points": zod.array(zod.array(zod.number())),
+  "text": zod.string().optional()
+}))
+})),
+  "events": zod.array(zod.object({
+  "action": zod.enum(['saved', 'closed', 'reopened']),
+  "actorName": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Save the médico's drawing over a patient photo
+ */
+export const SaveLeadPhotoAnnotationParams = zod.object({
+  "id": zod.coerce.string(),
+  "photoId": zod.coerce.string()
+})
+
+export const SaveLeadPhotoAnnotationBody = zod.object({
+  "image": zod.string().describe('The marked-up photo as a data URL (JPEG, PNG or WebP)'),
+  "strokes": zod.array(zod.object({
+  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text']),
+  "color": zod.string(),
+  "width": zod.number(),
+  "points": zod.array(zod.array(zod.number())),
+  "text": zod.string().optional()
+}))
+})
+
+export const SaveLeadPhotoAnnotationResponse = zod.object({
+  "phaseId": zod.string().nullish(),
+  "status": zod.enum(['draft', 'closed']),
+  "responseText": zod.string(),
+  "closedAt": zod.coerce.date().nullish(),
+  "closedByName": zod.string().nullish(),
+  "readyToDiagnose": zod.boolean(),
+  "canEdit": zod.boolean(),
+  "photos": zod.array(zod.object({
+  "photoId": zod.string(),
+  "viewKey": zod.string(),
+  "label": zod.string(),
+  "note": zod.string().nullish(),
+  "width": zod.number().nullish(),
+  "height": zod.number().nullish(),
+  "hasAnnotation": zod.boolean(),
+  "annotationUpdatedAt": zod.coerce.date().nullish(),
+  "strokes": zod.array(zod.object({
+  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text']),
+  "color": zod.string(),
+  "width": zod.number(),
+  "points": zod.array(zod.array(zod.number())),
+  "text": zod.string().optional()
+}))
+})),
+  "events": zod.array(zod.object({
+  "action": zod.enum(['saved', 'closed', 'reopened']),
+  "actorName": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Remove the drawing over a patient photo
+ */
+export const DeleteLeadPhotoAnnotationParams = zod.object({
+  "id": zod.coerce.string(),
+  "photoId": zod.coerce.string()
+})
+
+export const DeleteLeadPhotoAnnotationResponse = zod.void()
+
+
+/**
  * @summary Stream a clinical photo to an authorized staff session
  */
 export const GetLeadPhotoFileParams = zod.object({
@@ -777,6 +1064,7 @@ export const GetClinicProtocolResponse = zod.object({
   "key": zod.string(),
   "name": zod.string(),
   "position": zod.number(),
+  "kind": zod.enum(['capture', 'diagnosis']),
   "patientCaptured": zod.boolean(),
   "views": zod.array(zod.object({
   "id": zod.string(),
@@ -810,6 +1098,7 @@ export const UpdateClinicProtocolResponse = zod.object({
   "key": zod.string(),
   "name": zod.string(),
   "position": zod.number(),
+  "kind": zod.enum(['capture', 'diagnosis']),
   "patientCaptured": zod.boolean(),
   "views": zod.array(zod.object({
   "id": zod.string(),

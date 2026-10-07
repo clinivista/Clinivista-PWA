@@ -52,7 +52,7 @@ beforeAll(async () => {
     );
     CREATE TABLE IF NOT EXISTS clinical_protocol_phases (
       id text PRIMARY KEY, protocol_id text NOT NULL, key text NOT NULL, name text NOT NULL,
-      position integer NOT NULL DEFAULT 0, active boolean NOT NULL DEFAULT true,
+      position integer NOT NULL DEFAULT 0, active boolean NOT NULL DEFAULT true, kind text NOT NULL DEFAULT 'capture',
       UNIQUE (protocol_id, key)
     );
     CREATE TABLE IF NOT EXISTS clinical_photos (
@@ -90,8 +90,9 @@ describe("fases de la clínica", () => {
     const { phases, canEdit } = await read(as("rep", "medico", "clinic-a"));
     expect(canEdit).toBe(true);
     expect(phases.map((p) => p.name)).toEqual(["Pre-evaluación", "Diagnóstico", "Pre-operatorio", "Post-operatorio", "Control médico 1", "Control médico 2"]);
-    for (const phase of phases) expect(phase.views).toHaveLength(5);
-    expect(phases[0].views.map((v) => v.label).length).toBe(5);
+    expect(phases.map((p) => p.views.length)).toEqual([5, 0, 5, 5, 5, 5]);
+    // The diagnosis is the doctor's: it marks up the patient's photos instead of having its own.
+    expect(phases.map((p) => p.kind)).toEqual(["capture", "diagnosis", "capture", "capture", "capture", "capture"]);
   });
 
   it("seeds the default (Estecapelli) clinic too, and does not duplicate on repeated reads", async () => {
@@ -99,7 +100,7 @@ describe("fases de la clínica", () => {
     await read(as("adm", "administrativo", "default-center"));
     const { phases } = await read(as("adm", "administrativo", "default-center"));
     expect(phases).toHaveLength(6);
-    expect(phases.flatMap((p) => p.views)).toHaveLength(30);
+    expect(phases.flatMap((p) => p.views)).toHaveLength(25);
   });
 
   it("only the legal representative can edit; others read it", async () => {
@@ -119,14 +120,16 @@ describe("fases de la clínica", () => {
     const cookie = as("rep", "medico", "clinic-a");
     const { phases } = await read(cookie);
     const next = toInput(phases);
-    next[1].name = "Diagnóstico y plan";
-    next[1].views = [...next[1].views.slice(0, 2), { label: "Zona receptora" } as never];
+    next[1].name = "Diagnóstico y respuesta";
+    next[2].name = "Pre-operatorio y plan";
+    next[2].views = [...next[2].views.slice(0, 2), { label: "Zona receptora" } as never];
     next.splice(5, 1); // drop Control médico 2
     next.push({ name: "Control 12 meses", views: [{ label: "Frontal" }] } as never);
     const res = await request(app).put("/api/clinic/protocol").set("Cookie", cookie).send({ phases: next }).expect(200);
     const saved = res.body.phases as Phase[];
-    expect(saved.map((p) => p.name)).toEqual(["Pre-evaluación", "Diagnóstico y plan", "Pre-operatorio", "Post-operatorio", "Control médico 1", "Control 12 meses"]);
-    expect(saved[1].views.map((v) => v.label)).toEqual([phases[1].views[0].label, phases[1].views[1].label, "Zona receptora"]);
+    expect(saved.map((p) => p.name)).toEqual(["Pre-evaluación", "Diagnóstico y respuesta", "Pre-operatorio y plan", "Post-operatorio", "Control médico 1", "Control 12 meses"]);
+    expect(saved[2].views.map((v) => v.label)).toEqual([phases[2].views[0].label, phases[2].views[1].label, "Zona receptora"]);
+    expect(saved[1].views).toHaveLength(0);
     expect(saved[5].views).toHaveLength(1);
   });
 
@@ -159,22 +162,24 @@ describe("fases de la clínica", () => {
     await put({ phases: [] }).expect(400);
     await put({ phases: [{ ...toInput(phases)[0], name: "x" }] }).expect(400);
     const dupPhase = toInput(phases);
-    dupPhase[2].name = dupPhase[1].name;
+    dupPhase[3].name = dupPhase[2].name;
     await put({ phases: dupPhase }).expect(400);
     const dupView = toInput(phases);
-    dupView[1].views[1].label = dupView[1].views[0].label;
+    dupView[2].views[1].label = dupView[2].views[0].label;
     await put({ phases: dupView }).expect(400);
     const noViews = toInput(phases);
-    noViews[1].views = [];
+    noViews[2].views = [];
     await put({ phases: noViews }).expect(400);
     const moved = toInput(phases);
     [moved[0], moved[1]] = [moved[1], moved[0]];
     await put({ phases: moved }).expect(400);
     const foreign = toInput(phases);
-    foreign[1].views[0].id = phases[2].views[0].id;
+    foreign[2].views[0].id = phases[3].views[0].id;
     await put({ phases: foreign }).expect(400);
     const tooMany = [toInput(phases)[0], ...Array.from({ length: 12 }, (_, i) => ({ name: `Fase ${i}`, views: [{ label: "Foto" }] }))];
     await put({ phases: tooMany }).expect(400);
+    // The doctor's diagnosis phase cannot be removed.
+    await put({ phases: toInput(phases).filter((_, index) => index !== 1) }).expect(400);
     await put({ nothing: true }).expect(400);
   });
 

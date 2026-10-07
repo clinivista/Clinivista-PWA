@@ -5,6 +5,7 @@
  * Estecapelli API — Preevaluación capilar
  * OpenAPI spec version: 0.1.0
  */
+import type { ClinicProtocolPhaseKind } from './clinicProtocolPhaseKind';
 import type { ClinicProtocolView } from './clinicProtocolView';
 
 export interface ClinicProtocolPhase {
@@ -12,6 +13,7 @@ export interface ClinicProtocolPhase {
   key: string;
   name: string;
   position: number;
+  kind: ClinicProtocolPhaseKind;
   patientCaptured: boolean;
   views: ClinicProtocolView[];
 }

@@ -17,6 +17,8 @@ export type ProtocolPhaseDto = {
   position: number;
   /** The first phase is the patient's own pre-evaluación; the rest are captured by staff. */
   patientCaptured: boolean;
+  /** "diagnosis": the doctor marks up the patient's photos; it has no photo list of its own. */
+  kind: "capture" | "diagnosis";
   views: Array<{ id: string; key: string; label: string; position: number; hasPhotos: boolean }>;
 };
 
@@ -42,6 +44,7 @@ export async function getProtocolStructure(centerId: string): Promise<{ protocol
       name: phase.name,
       position: index,
       patientCaptured: index === 0,
+      kind: phase.kind === "diagnosis" && index > 0 ? "diagnosis" : "capture",
       views: views
         .filter((view) => view.phaseId === phase.id || (index === 0 && view.phaseId === null))
         .sort((a, b) => a.position - b.position)
@@ -73,6 +76,8 @@ export async function replaceProtocolStructure(centerId: string, input: PhaseInp
   if (input.length < 1 || input.length > MAX_PHASES) {
     throw new ProtocolConfigError(`Debe haber entre 1 y ${MAX_PHASES} fases.`);
   }
+  const currentKind = new Map(current.phases.map((phase) => [phase.id, phase.kind]));
+  const isDiagnosis = (phase: PhaseInput) => Boolean(phase.id && currentKind.get(phase.id) === "diagnosis");
   const phaseNames = new Set<string>();
   for (const phase of input) {
     const name = normalize(phase.name);
@@ -81,6 +86,7 @@ export async function replaceProtocolStructure(centerId: string, input: PhaseInp
     }
     if (phaseNames.has(name.toLowerCase())) throw new ProtocolConfigError(`Hay dos fases llamadas “${name}”.`);
     phaseNames.add(name.toLowerCase());
+    if (isDiagnosis(phase)) continue; // its photos are the patient's; nothing to configure
     if (phase.views.length < 1 || phase.views.length > MAX_VIEWS_PER_PHASE) {
       throw new ProtocolConfigError(`Cada fase necesita entre 1 y ${MAX_VIEWS_PER_PHASE} fotografías (“${name}”).`);
     }
@@ -109,6 +115,11 @@ export async function replaceProtocolStructure(centerId: string, input: PhaseInp
   }
   const seenPhaseIds = input.flatMap((phase) => (phase.id ? [phase.id] : []));
   if (new Set(seenPhaseIds).size !== seenPhaseIds.length) throw new ProtocolConfigError("Una fase está repetida.");
+  for (const phase of current.phases) {
+    if (phase.kind === "diagnosis" && !seenPhaseIds.includes(phase.id)) {
+      throw new ProtocolConfigError(`La fase “${phase.name}” es el diagnóstico del médico y no se puede eliminar.`);
+    }
+  }
 
   await db.transaction(async (tx) => {
     const keptViewIds = new Set<string>();
@@ -122,6 +133,7 @@ export async function replaceProtocolStructure(centerId: string, input: PhaseInp
         phaseId = `${protocolId}-phase-${key}`;
         await tx.insert(protocolPhasesTable).values({ id: phaseId, protocolId, key, name, position: phaseIndex });
       }
+      if (isDiagnosis(phase)) continue;
       for (const [viewIndex, view] of phase.views.entries()) {
         const label = normalize(view.label);
         if (view.id) {

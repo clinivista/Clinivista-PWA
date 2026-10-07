@@ -20,6 +20,8 @@ import { eq } from "drizzle-orm";
 import * as mockedDb from "@workspace/db";
 import patientsRouter from "./patients";
 import leadsRouter from "./leads";
+import leadPhasesRouter from "./lead-phases";
+import diagnosisRouter from "./diagnosis";
 import { createSession } from "../lib/sessions";
 import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
 
@@ -35,6 +37,8 @@ const app = express();
 app.use(express.json({ limit: "20mb" }));
 app.use("/api", patientsRouter);
 app.use("/api", leadsRouter);
+app.use("/api", leadPhasesRouter);
+app.use("/api", diagnosisRouter);
 
 // Fixture data only — not a real person.
 const VALID_BODY = {
@@ -99,7 +103,7 @@ beforeAll(async () => {
      );
      CREATE TABLE IF NOT EXISTS clinical_protocol_phases (
        id text PRIMARY KEY, protocol_id text NOT NULL, key text NOT NULL, name text NOT NULL,
-       position integer NOT NULL DEFAULT 0, active boolean NOT NULL DEFAULT true,
+       position integer NOT NULL DEFAULT 0, active boolean NOT NULL DEFAULT true, kind text NOT NULL DEFAULT 'capture',
        UNIQUE (protocol_id, key)
      );
      CREATE TABLE IF NOT EXISTS clinical_evaluations (
@@ -116,6 +120,26 @@ beforeAll(async () => {
        edit_params jsonb, note text, created_at timestamptz NOT NULL DEFAULT now(), confirmed_at timestamptz,
        discarded_at timestamptz
      );
+     CREATE TABLE IF NOT EXISTS clinical_diagnoses (
+       id text PRIMARY KEY, evaluation_id text NOT NULL UNIQUE, response_text text NOT NULL DEFAULT '',
+       status text NOT NULL DEFAULT 'draft', closed_at timestamptz, closed_by_user_id text, closed_by_name text,
+       created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
+     );
+     CREATE TABLE IF NOT EXISTS clinical_diagnosis_events (
+       id text PRIMARY KEY, diagnosis_id text NOT NULL, action text NOT NULL, actor_user_id text, actor_name text,
+       created_at timestamptz NOT NULL DEFAULT now()
+     );
+     CREATE TABLE IF NOT EXISTS clinical_photo_annotations (
+       id text PRIMARY KEY, photo_id text NOT NULL UNIQUE, object_path text NOT NULL, mime_type text NOT NULL,
+       strokes jsonb NOT NULL DEFAULT '[]', updated_by_user_id text, updated_at timestamptz NOT NULL DEFAULT now()
+     );
+     CREATE TABLE IF NOT EXISTS users (
+       id text PRIMARY KEY, email text NOT NULL, email_normalized text NOT NULL,
+       password_hash text NOT NULL, name text NOT NULL DEFAULT '', role text NOT NULL,
+       center_id text, active boolean NOT NULL DEFAULT true,
+       legal_representative boolean NOT NULL DEFAULT false,
+       created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
+     );
      CREATE TABLE IF NOT EXISTS clinical_photo_audit_events (
        id text PRIMARY KEY, photo_id text NOT NULL, evaluation_id text NOT NULL, action text NOT NULL,
        actor_type text NOT NULL, actor_id text, details jsonb NOT NULL DEFAULT '{}',
@@ -127,6 +151,9 @@ beforeAll(async () => {
 beforeEach(async () => {
   await pglite.exec(`
     DELETE FROM clinical_photo_audit_events;
+    DELETE FROM clinical_photo_annotations;
+    DELETE FROM clinical_diagnosis_events;
+    DELETE FROM clinical_diagnoses;
     DELETE FROM clinical_photos;
     DELETE FROM clinical_evaluations;
     DELETE FROM clinical_protocol_phases;
@@ -871,5 +898,258 @@ describe("descripción opcional de cada fotografía", () => {
     await request(app).post(`/api/patients/${lead.token}/photos/${id}/confirm`).send({ note: 42 }).expect(400);
     const ok = await request(app).post(`/api/patients/${lead.token}/photos/${id}/confirm`).send({ note: "x".repeat(500) }).expect(200);
     expect(ok.body.note).toHaveLength(500);
+  });
+});
+
+describe("Fases del proceso: captura del personal después de la pre-evaluación", () => {
+  const JPEG = Buffer.from(
+    "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AVN//2Q==",
+    "base64",
+  );
+  const KEYS = ["frontal", "vertex", "temporalRight", "temporalLeft", "donor"];
+  const staff = (centerId = DEFAULT_CENTER_ID, role: "medico" | "administrativo" = "medico") =>
+    `clinivista_session=${createSession({ userId: "staff-1", centerId, role })}`;
+
+  async function patientWithPreEvaluation(complete = true, overrides: Record<string, unknown> = {}) {
+    const lead = await createPatient(overrides);
+    for (const key of complete ? KEYS : KEYS.slice(0, 2)) {
+      const draft = await request(app).post(`/api/patients/${lead.token}/photos`)
+        .set("Content-Type", "image/jpeg").set("x-photo-key", key).set("x-photo-source", "upload").send(JPEG).expect(201);
+      await request(app).post(`/api/patients/${lead.token}/photos/${draft.body.id}/confirm`).expect(200);
+    }
+    return lead;
+  }
+  type PhaseRow = {
+    id: string; name: string; kind: string; enabled: boolean; complete: boolean; patientCaptured: boolean;
+    views: Array<{ id: string; key: string; required: boolean; photo: { id: string } | null }>;
+  };
+  const phases = async (leadId: string, cookie = staff()) =>
+    (await request(app).get(`/api/leads/${leadId}/phases`).set("Cookie", cookie).expect(200)).body.phases as PhaseRow[];
+  const capture = (leadId: string, viewId: string, cookie = staff()) =>
+    request(app).post(`/api/leads/${leadId}/views/${viewId}/photo`).set("Cookie", cookie).set("Content-Type", "image/jpeg").send(JPEG);
+  const closeDiagnosis = async (leadId: string) => {
+    await request(app).put(`/api/leads/${leadId}/diagnosis`).set("Cookie", staff()).send({ responseText: "Candidato a injerto." }).expect(200);
+    await request(app).post(`/api/leads/${leadId}/diagnosis/close`).set("Cookie", staff()).send({}).expect(200);
+  };
+  /** A patient whose diagnosis is closed, so the clinic's own phases are open. */
+  async function patientReadyForCapture() {
+    const lead = await patientWithPreEvaluation();
+    await closeDiagnosis(lead.id);
+    return lead;
+  }
+
+  it("lists the six phases; each opens only when the previous one is complete", async () => {
+    const lead = await patientWithPreEvaluation(false);
+    let list = await phases(lead.id);
+    expect(list.map((p) => p.name)).toEqual(["Pre-evaluación", "Diagnóstico", "Pre-operatorio", "Post-operatorio", "Control médico 1", "Control médico 2"]);
+    expect(list.map((p) => p.enabled)).toEqual([true, false, false, false, false, false]);
+    expect(list[0].patientCaptured).toBe(true);
+    expect(list[1].kind).toBe("diagnosis");
+    expect((await capture(lead.id, list[2].views[0].id)).status).toBe(409);
+
+    for (const key of KEYS.slice(2)) {
+      const draft = await request(app).post(`/api/patients/${lead.token}/photos`)
+        .set("Content-Type", "image/jpeg").set("x-photo-key", key).set("x-photo-source", "upload").send(JPEG).expect(201);
+      await request(app).post(`/api/patients/${lead.token}/photos/${draft.body.id}/confirm`).expect(200);
+    }
+    list = await phases(lead.id);
+    expect(list[0].complete).toBe(true);
+    expect(list[1].enabled).toBe(true);
+    expect(list[1].complete).toBe(false); // open until the doctor closes it
+    expect(list[2].enabled).toBe(false);
+  });
+
+  it("staff capture a phase in order; completing it opens the next", async () => {
+    const lead = await patientReadyForCapture();
+    let list = await phases(lead.id);
+    expect(list[2].enabled).toBe(true);
+    for (const view of list[2].views.slice(0, 4)) await capture(lead.id, view.id).expect(201);
+    list = await phases(lead.id);
+    expect(list[2].complete).toBe(false);
+    expect(list[3].enabled).toBe(false);
+    const res = await capture(lead.id, list[2].views[4].id).expect(201);
+    expect(res.body).toMatchObject({ status: "confirmed" });
+    list = await phases(lead.id);
+    expect(list[2].complete).toBe(true);
+    expect(list[3].enabled).toBe(true);
+    await capture(lead.id, list[3].views[0].id).expect(201);
+  });
+
+  it("the patient never sees nor counts the clinic's later-phase photos", async () => {
+    const lead = await patientReadyForCapture();
+    const list = await phases(lead.id);
+    const photo = (await capture(lead.id, list[2].views[0].id).expect(201)).body as { id: string };
+    const status = await request(app).get(`/api/patients/${lead.token}/photos`).expect(200);
+    expect(status.body.photos).toHaveLength(5);
+    expect(status.body.photos.map((p: { id: string }) => p.id)).not.toContain(photo.id);
+    await request(app).get(`/api/patients/${lead.token}/photos/${photo.id}/original`).expect(404);
+    await request(app).delete(`/api/patients/${lead.token}/photos/${photo.id}`).expect(404);
+    const detail = await request(app).get(`/api/leads/${lead.id}`).set("Cookie", staff()).expect(200);
+    expect(detail.body.photos).toHaveLength(5);
+    const summary = (await request(app).get("/api/leads").set("Cookie", staff()).expect(200)).body.leads[0];
+    expect(summary.photoCount).toBe(5);
+    // staff can still open the file
+    await request(app).get(`/api/leads/${lead.id}/photos/${photo.id}`).set("Cookie", staff()).expect(200);
+  });
+
+  it("the patient restarting their evaluation keeps the clinic's phases", async () => {
+    const lead = await patientReadyForCapture();
+    const list = await phases(lead.id);
+    await capture(lead.id, list[2].views[0].id).expect(201);
+    await request(app).delete(`/api/patients/${lead.token}/photos`).expect(200);
+    const after = await phases(lead.id);
+    expect(after[0].views.every((v) => v.photo === null)).toBe(true);
+    expect(after[2].views[0].photo).not.toBeNull();
+  });
+
+  it("a new capture replaces the previous one; staff can remove their own photo but not the patient's", async () => {
+    const lead = await patientReadyForCapture();
+    const list = await phases(lead.id);
+    const first = (await capture(lead.id, list[2].views[0].id).expect(201)).body as { id: string };
+    const second = (await capture(lead.id, list[2].views[0].id).expect(201)).body as { id: string };
+    expect((await phases(lead.id))[2].views[0].photo?.id).toBe(second.id);
+    expect(first.id).not.toBe(second.id);
+    await request(app).delete(`/api/leads/${lead.id}/phase-photos/${second.id}`).set("Cookie", staff()).expect(204);
+    expect((await phases(lead.id))[2].views[0].photo).toBeNull();
+    const patientPhoto = list[0].views[0].photo!.id;
+    await request(app).delete(`/api/leads/${lead.id}/phase-photos/${patientPhoto}`).set("Cookie", staff()).expect(400);
+    expect((await capture(lead.id, list[0].views[0].id)).status).toBe(400);
+  });
+
+  it("is limited to the clinic's own staff", async () => {
+    const lead = await patientReadyForCapture();
+    const list = await phases(lead.id);
+    await pglite.exec(`INSERT INTO clinical_centers (id, name, slug) VALUES ('clinic-z', 'Z', 'z');`);
+    const other = staff("clinic-z");
+    await request(app).get(`/api/leads/${lead.id}/phases`).set("Cookie", other).expect(404);
+    await capture(lead.id, list[2].views[0].id, other).expect(404);
+    await request(app).get(`/api/leads/${lead.id}/phases`).expect(401);
+    await request(app).post(`/api/leads/${lead.id}/views/${list[2].views[0].id}/photo`).set("Content-Type", "image/jpeg").send(JPEG).expect(401);
+    await capture(lead.id, "no-existe").expect(404);
+  });
+
+  it("rejects things that are not images", async () => {
+    const lead = await patientReadyForCapture();
+    const list = await phases(lead.id);
+    const res = await request(app).post(`/api/leads/${lead.id}/views/${list[2].views[0].id}/photo`)
+      .set("Cookie", staff()).set("Content-Type", "image/jpeg").send(Buffer.from("no soy una imagen"));
+    expect(res.status).toBe(400);
+  });
+
+  describe("Diagnóstico del médico", () => {
+    const STROKES = [
+      { type: "pen", color: "#ff0000", width: 0.004, points: [[0.1, 0.1], [0.2, 0.25]] },
+      { type: "ellipse", color: "#00a9a5", width: 0.004, points: [[0.3, 0.3], [0.5, 0.45]] },
+      { type: "text", color: "#ffffff", width: 0.03, points: [[0.2, 0.8]], text: "Zona receptora" },
+    ];
+    const dataUrl = (bytes: Buffer = JPEG) => `data:image/jpeg;base64,${bytes.toString("base64")}`;
+    const diagnosis = (leadId: string, cookie = staff()) => request(app).get(`/api/leads/${leadId}/diagnosis`).set("Cookie", cookie);
+    const annotate = (leadId: string, photoId: string, body: unknown, cookie = staff()) =>
+      request(app).put(`/api/leads/${leadId}/photos/${photoId}/annotation`).set("Cookie", cookie).send(body as object);
+
+    it("lists the patient's photos to mark up; everyone in the clinic reads it, only the médico edits", async () => {
+      const lead = await patientWithPreEvaluation();
+      const res = await diagnosis(lead.id, staff(DEFAULT_CENTER_ID, "administrativo")).expect(200);
+      expect(res.body).toMatchObject({ status: "draft", responseText: "", readyToDiagnose: true, canEdit: false });
+      expect(res.body.photos).toHaveLength(5);
+      expect((await diagnosis(lead.id).expect(200)).body.canEdit).toBe(true);
+      const admin = staff(DEFAULT_CENTER_ID, "administrativo");
+      await request(app).put(`/api/leads/${lead.id}/diagnosis`).set("Cookie", admin).send({ responseText: "x" }).expect(403);
+      await request(app).post(`/api/leads/${lead.id}/diagnosis/close`).set("Cookie", admin).send({}).expect(403);
+      await annotate(lead.id, res.body.photos[0].photoId, { image: dataUrl(), strokes: STROKES }, admin).expect(403);
+      await request(app).get(`/api/leads/${lead.id}/diagnosis`).expect(401);
+    });
+
+    it("saves a drawing over a patient photo without touching the original, and can edit it again", async () => {
+      const lead = await patientWithPreEvaluation();
+      const photos = (await diagnosis(lead.id).expect(200)).body.photos as Array<{ photoId: string; strokes: unknown[] }>;
+      const target = photos[0].photoId;
+      const saved = await annotate(lead.id, target, { image: dataUrl(), strokes: STROKES }).expect(200);
+      const marked = saved.body.photos.find((p: { photoId: string }) => p.photoId === target);
+      expect(marked).toMatchObject({ hasAnnotation: true });
+      expect(marked.strokes).toEqual(STROKES);
+      expect(saved.body.photos.filter((p: { hasAnnotation: boolean }) => p.hasAnnotation)).toHaveLength(1);
+      const file = await request(app).get(`/api/leads/${lead.id}/photos/${target}/annotation`).set("Cookie", staff()).expect(200);
+      expect(file.headers["content-type"]).toContain("image/jpeg");
+      // the patient's original is still there, and the patient cannot reach the drawing
+      await request(app).get(`/api/leads/${lead.id}/photos/${target}`).set("Cookie", staff()).expect(200);
+      await request(app).get(`/api/leads/${lead.id}/photos/${target}/annotation`).expect(401);
+      // editing again replaces the drawing
+      const again = await annotate(lead.id, target, { image: dataUrl(), strokes: STROKES.slice(0, 1) }).expect(200);
+      expect(again.body.photos.find((p: { photoId: string }) => p.photoId === target).strokes).toHaveLength(1);
+      await request(app).delete(`/api/leads/${lead.id}/photos/${target}/annotation`).set("Cookie", staff()).expect(204);
+      await request(app).get(`/api/leads/${lead.id}/photos/${target}/annotation`).set("Cookie", staff()).expect(404);
+    });
+
+    it("rejects invalid drawings and photos that are not the patient's", async () => {
+      const lead = await patientReadyForCapture();
+      const list = await phases(lead.id);
+      const photoId = list[0].views[0].photo!.id;
+      await request(app).post(`/api/leads/${lead.id}/diagnosis/reopen`).set("Cookie", staff()).expect(200);
+      const bad = [
+        { image: dataUrl(Buffer.from("no soy imagen")), strokes: STROKES },
+        { image: "data:text/html;base64,PGI+", strokes: STROKES },
+        { image: dataUrl(), strokes: [{ type: "pen", color: "rojo", width: 0.004, points: [[0.1, 0.1]] }] },
+        { image: dataUrl(), strokes: [{ type: "pen", color: "#ff0000", width: 0.004, points: [[1.5, 0.1]] }] },
+        { image: dataUrl(), strokes: [{ type: "text", color: "#ff0000", width: 0.03, points: [[0.1, 0.1]], text: "" }] },
+        { image: dataUrl(), strokes: "nada" },
+        { strokes: STROKES },
+      ];
+      for (const body of bad) await annotate(lead.id, photoId, body).expect(400);
+      await annotate(lead.id, "otra-foto", { image: dataUrl(), strokes: STROKES }).expect(404);
+    });
+
+    it("needs the patient's pre-evaluation and a written answer before closing", async () => {
+      const incomplete = await patientWithPreEvaluation(false, { documentId: "11.111.111-1", phone: "+56933333333", email: "otro@example.com" });
+      await request(app).put(`/api/leads/${incomplete.id}/diagnosis`).set("Cookie", staff()).send({ responseText: "Hola" }).expect(200);
+      await request(app).post(`/api/leads/${incomplete.id}/diagnosis/close`).set("Cookie", staff()).send({}).expect(409);
+      const lead = await patientWithPreEvaluation();
+      const empty = await request(app).post(`/api/leads/${lead.id}/diagnosis/close`).set("Cookie", staff()).send({});
+      expect(empty.status).toBe(400);
+      await request(app).put(`/api/leads/${lead.id}/diagnosis`).set("Cookie", staff()).send({ responseText: "x".repeat(8001) }).expect(400);
+      await request(app).put(`/api/leads/${lead.id}/diagnosis`).set("Cookie", staff()).send({ responseText: 5 }).expect(400);
+    });
+
+    it("closing locks it read-only and opens the next phase; reopening is possible and leaves a record", async () => {
+      const lead = await patientWithPreEvaluation();
+      const photoId = (await diagnosis(lead.id).expect(200)).body.photos[0].photoId as string;
+      await request(app).put(`/api/leads/${lead.id}/diagnosis`).set("Cookie", staff()).send({ responseText: "Borrador" }).expect(200);
+      const closed = await request(app).post(`/api/leads/${lead.id}/diagnosis/close`).set("Cookie", staff())
+        .send({ responseText: "Candidato a injerto capilar, 2500 unidades." }).expect(200);
+      expect(closed.body).toMatchObject({ status: "closed", responseText: "Candidato a injerto capilar, 2500 unidades." });
+      expect(closed.body.closedAt).toBeTruthy();
+      expect((await phases(lead.id))[1].complete).toBe(true);
+      expect((await phases(lead.id))[2].enabled).toBe(true);
+
+      // read-only while closed
+      await request(app).put(`/api/leads/${lead.id}/diagnosis`).set("Cookie", staff()).send({ responseText: "otra" }).expect(409);
+      await annotate(lead.id, photoId, { image: dataUrl(), strokes: STROKES }).expect(409);
+      await request(app).delete(`/api/leads/${lead.id}/photos/${photoId}/annotation`).set("Cookie", staff()).expect(409);
+      await request(app).post(`/api/leads/${lead.id}/diagnosis/close`).set("Cookie", staff()).send({}).expect(409);
+
+      // reopen: editable again, next phase locks again, and it is on the record
+      const reopened = await request(app).post(`/api/leads/${lead.id}/diagnosis/reopen`).set("Cookie", staff()).expect(200);
+      expect(reopened.body.status).toBe("draft");
+      expect(reopened.body.events.map((e: { action: string }) => e.action)).toEqual(["saved", "closed", "reopened"]);
+      expect((await phases(lead.id))[2].enabled).toBe(false);
+      await request(app).put(`/api/leads/${lead.id}/diagnosis`).set("Cookie", staff()).send({ responseText: "Corregido" }).expect(200);
+      await request(app).post(`/api/leads/${lead.id}/diagnosis/reopen`).set("Cookie", staff()).expect(409);
+    });
+
+    it("is limited to the clinic's own médicos", async () => {
+      const lead = await patientWithPreEvaluation();
+      await pglite.exec(`INSERT INTO clinical_centers (id, name, slug) VALUES ('clinic-y', 'Y', 'y');`);
+      await diagnosis(lead.id, staff("clinic-y")).expect(404);
+      await request(app).put(`/api/leads/${lead.id}/diagnosis`).set("Cookie", staff("clinic-y")).send({ responseText: "x" }).expect(404);
+    });
+
+    it("the patient restarting their evaluation also erases the drawings on those photos", async () => {
+      const lead = await patientWithPreEvaluation();
+      const photoId = (await diagnosis(lead.id).expect(200)).body.photos[0].photoId as string;
+      await annotate(lead.id, photoId, { image: dataUrl(), strokes: STROKES }).expect(200);
+      await request(app).delete(`/api/patients/${lead.token}/photos`).expect(200);
+      const rows = (await pglite.exec("SELECT count(*)::int AS n FROM clinical_photo_annotations;")) as Array<{ rows: Array<{ n: number }> }>;
+      expect(rows[0].rows[0].n).toBe(0);
+    });
   });
 });

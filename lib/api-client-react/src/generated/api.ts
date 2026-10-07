@@ -27,6 +27,9 @@ import type {
   ClinicUserCreate,
   ClinicUserList,
   ClinicUserPatch,
+  DiagnosisClose,
+  DiagnosisState,
+  DiagnosisText,
   DirectorCenterCreateBody,
   DirectorCenterCreateUser,
   DirectorCenterIdentityBody,
@@ -50,6 +53,7 @@ import type {
   InvitationResult,
   Lead,
   LeadPatch,
+  LeadPhaseList,
   LeadStats,
   LoginCredentials,
   LoginResult,
@@ -61,6 +65,7 @@ import type {
   PatientProtocol,
   PatientResult,
   PhotoConfirmation,
+  PhotoMarkup,
   SimpleOk
 } from './api.schemas';
 
@@ -766,6 +771,595 @@ export const usePatchLead = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getPatchLeadMutationOptions(options));
+    }
+
+export const getGetLeadPhasesUrl = (id: string,) => {
+
+
+
+
+  return `/api/leads/${id}/phases`
+}
+
+/**
+ * @summary The patient's process phase by phase, with the photo of each view (staff)
+ */
+export const getLeadPhases = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<LeadPhaseList> => {
+
+  return customFetch<LeadPhaseList>(getGetLeadPhasesUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLeadPhasesQueryKey = (id: string,) => {
+    return [
+    `/api/leads/${id}/phases`
+    ] as const;
+    }
+
+
+export const getGetLeadPhasesQueryOptions = <TData = Awaited<ReturnType<typeof getLeadPhases>>, TError = ErrorType<ErrorResponse>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLeadPhases>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLeadPhasesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLeadPhases>>> = ({ signal }) => getLeadPhases(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLeadPhases>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLeadPhasesQueryResult = NonNullable<Awaited<ReturnType<typeof getLeadPhases>>>
+export type GetLeadPhasesQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary The patient's process phase by phase, with the photo of each view (staff)
+ */
+
+export function useGetLeadPhases<TData = Awaited<ReturnType<typeof getLeadPhases>>, TError = ErrorType<ErrorResponse>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLeadPhases>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLeadPhasesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeleteLeadPhasePhotoUrl = (id: string,
+    photoId: string,) => {
+
+
+
+
+  return `/api/leads/${id}/phase-photos/${photoId}`
+}
+
+/**
+ * @summary Remove a photo the staff took in a phase after the pre-evaluación
+ */
+export const deleteLeadPhasePhoto = async (id: string,
+    photoId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteLeadPhasePhotoUrl(id,photoId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteLeadPhasePhotoMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLeadPhasePhoto>>, TError,{id: string;photoId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteLeadPhasePhoto>>, TError,{id: string;photoId: string}, TContext> => {
+
+const mutationKey = ['deleteLeadPhasePhoto'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteLeadPhasePhoto>>, {id: string;photoId: string}> = (props) => {
+          const {id,photoId} = props ?? {};
+
+          return  deleteLeadPhasePhoto(id,photoId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteLeadPhasePhotoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteLeadPhasePhoto>>>
+
+    export type DeleteLeadPhasePhotoMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Remove a photo the staff took in a phase after the pre-evaluación
+ */
+export const useDeleteLeadPhasePhoto = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLeadPhasePhoto>>, TError,{id: string;photoId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteLeadPhasePhoto>>,
+        TError,
+        {id: string;photoId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteLeadPhasePhotoMutationOptions(options));
+    }
+
+export const getGetLeadDiagnosisUrl = (id: string,) => {
+
+
+
+
+  return `/api/leads/${id}/diagnosis`
+}
+
+/**
+ * @summary The diagnosis phase of a patient (staff)
+ */
+export const getLeadDiagnosis = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<DiagnosisState> => {
+
+  return customFetch<DiagnosisState>(getGetLeadDiagnosisUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLeadDiagnosisQueryKey = (id: string,) => {
+    return [
+    `/api/leads/${id}/diagnosis`
+    ] as const;
+    }
+
+
+export const getGetLeadDiagnosisQueryOptions = <TData = Awaited<ReturnType<typeof getLeadDiagnosis>>, TError = ErrorType<ErrorResponse>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLeadDiagnosis>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLeadDiagnosisQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLeadDiagnosis>>> = ({ signal }) => getLeadDiagnosis(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLeadDiagnosis>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLeadDiagnosisQueryResult = NonNullable<Awaited<ReturnType<typeof getLeadDiagnosis>>>
+export type GetLeadDiagnosisQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary The diagnosis phase of a patient (staff)
+ */
+
+export function useGetLeadDiagnosis<TData = Awaited<ReturnType<typeof getLeadDiagnosis>>, TError = ErrorType<ErrorResponse>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLeadDiagnosis>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLeadDiagnosisQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSaveLeadDiagnosisUrl = (id: string,) => {
+
+
+
+
+  return `/api/leads/${id}/diagnosis`
+}
+
+/**
+ * @summary Save the médico's written answer (draft)
+ */
+export const saveLeadDiagnosis = async (id: string,
+    diagnosisText: DiagnosisText, options?: Parameters<typeof customFetch>[1]): Promise<DiagnosisState> => {
+
+  return customFetch<DiagnosisState>(getSaveLeadDiagnosisUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(diagnosisText)
+  }
+);}
+
+
+
+
+
+export const getSaveLeadDiagnosisMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveLeadDiagnosis>>, TError,{id: string;data: BodyType<DiagnosisText>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveLeadDiagnosis>>, TError,{id: string;data: BodyType<DiagnosisText>}, TContext> => {
+
+const mutationKey = ['saveLeadDiagnosis'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveLeadDiagnosis>>, {id: string;data: BodyType<DiagnosisText>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  saveLeadDiagnosis(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveLeadDiagnosisMutationResult = NonNullable<Awaited<ReturnType<typeof saveLeadDiagnosis>>>
+    export type SaveLeadDiagnosisMutationBody = BodyType<DiagnosisText>
+    export type SaveLeadDiagnosisMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Save the médico's written answer (draft)
+ */
+export const useSaveLeadDiagnosis = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveLeadDiagnosis>>, TError,{id: string;data: BodyType<DiagnosisText>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveLeadDiagnosis>>,
+        TError,
+        {id: string;data: BodyType<DiagnosisText>},
+        TContext
+      > => {
+      return useMutation(getSaveLeadDiagnosisMutationOptions(options));
+    }
+
+export const getCloseLeadDiagnosisUrl = (id: string,) => {
+
+
+
+
+  return `/api/leads/${id}/diagnosis/close`
+}
+
+/**
+ * @summary Close the diagnosis (read-only); opens the next phase
+ */
+export const closeLeadDiagnosis = async (id: string,
+    diagnosisClose?: DiagnosisClose, options?: Parameters<typeof customFetch>[1]): Promise<DiagnosisState> => {
+
+  return customFetch<DiagnosisState>(getCloseLeadDiagnosisUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(diagnosisClose)
+  }
+);}
+
+
+
+
+
+export const getCloseLeadDiagnosisMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeLeadDiagnosis>>, TError,{id: string;data?: BodyType<DiagnosisClose>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof closeLeadDiagnosis>>, TError,{id: string;data?: BodyType<DiagnosisClose>}, TContext> => {
+
+const mutationKey = ['closeLeadDiagnosis'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof closeLeadDiagnosis>>, {id: string;data?: BodyType<DiagnosisClose>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  closeLeadDiagnosis(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CloseLeadDiagnosisMutationResult = NonNullable<Awaited<ReturnType<typeof closeLeadDiagnosis>>>
+    export type CloseLeadDiagnosisMutationBody = BodyType<DiagnosisClose> | undefined
+    export type CloseLeadDiagnosisMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Close the diagnosis (read-only); opens the next phase
+ */
+export const useCloseLeadDiagnosis = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeLeadDiagnosis>>, TError,{id: string;data?: BodyType<DiagnosisClose>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof closeLeadDiagnosis>>,
+        TError,
+        {id: string;data?: BodyType<DiagnosisClose>},
+        TContext
+      > => {
+      return useMutation(getCloseLeadDiagnosisMutationOptions(options));
+    }
+
+export const getReopenLeadDiagnosisUrl = (id: string,) => {
+
+
+
+
+  return `/api/leads/${id}/diagnosis/reopen`
+}
+
+/**
+ * @summary Reopen a closed diagnosis (recorded)
+ */
+export const reopenLeadDiagnosis = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<DiagnosisState> => {
+
+  return customFetch<DiagnosisState>(getReopenLeadDiagnosisUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getReopenLeadDiagnosisMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reopenLeadDiagnosis>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reopenLeadDiagnosis>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['reopenLeadDiagnosis'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reopenLeadDiagnosis>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  reopenLeadDiagnosis(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReopenLeadDiagnosisMutationResult = NonNullable<Awaited<ReturnType<typeof reopenLeadDiagnosis>>>
+
+    export type ReopenLeadDiagnosisMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Reopen a closed diagnosis (recorded)
+ */
+export const useReopenLeadDiagnosis = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reopenLeadDiagnosis>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reopenLeadDiagnosis>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getReopenLeadDiagnosisMutationOptions(options));
+    }
+
+export const getSaveLeadPhotoAnnotationUrl = (id: string,
+    photoId: string,) => {
+
+
+
+
+  return `/api/leads/${id}/photos/${photoId}/annotation`
+}
+
+/**
+ * @summary Save the médico's drawing over a patient photo
+ */
+export const saveLeadPhotoAnnotation = async (id: string,
+    photoId: string,
+    photoMarkup: PhotoMarkup, options?: Parameters<typeof customFetch>[1]): Promise<DiagnosisState> => {
+
+  return customFetch<DiagnosisState>(getSaveLeadPhotoAnnotationUrl(id,photoId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(photoMarkup)
+  }
+);}
+
+
+
+
+
+export const getSaveLeadPhotoAnnotationMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveLeadPhotoAnnotation>>, TError,{id: string;photoId: string;data: BodyType<PhotoMarkup>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveLeadPhotoAnnotation>>, TError,{id: string;photoId: string;data: BodyType<PhotoMarkup>}, TContext> => {
+
+const mutationKey = ['saveLeadPhotoAnnotation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveLeadPhotoAnnotation>>, {id: string;photoId: string;data: BodyType<PhotoMarkup>}> = (props) => {
+          const {id,photoId,data} = props ?? {};
+
+          return  saveLeadPhotoAnnotation(id,photoId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveLeadPhotoAnnotationMutationResult = NonNullable<Awaited<ReturnType<typeof saveLeadPhotoAnnotation>>>
+    export type SaveLeadPhotoAnnotationMutationBody = BodyType<PhotoMarkup>
+    export type SaveLeadPhotoAnnotationMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Save the médico's drawing over a patient photo
+ */
+export const useSaveLeadPhotoAnnotation = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveLeadPhotoAnnotation>>, TError,{id: string;photoId: string;data: BodyType<PhotoMarkup>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveLeadPhotoAnnotation>>,
+        TError,
+        {id: string;photoId: string;data: BodyType<PhotoMarkup>},
+        TContext
+      > => {
+      return useMutation(getSaveLeadPhotoAnnotationMutationOptions(options));
+    }
+
+export const getDeleteLeadPhotoAnnotationUrl = (id: string,
+    photoId: string,) => {
+
+
+
+
+  return `/api/leads/${id}/photos/${photoId}/annotation`
+}
+
+/**
+ * @summary Remove the drawing over a patient photo
+ */
+export const deleteLeadPhotoAnnotation = async (id: string,
+    photoId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteLeadPhotoAnnotationUrl(id,photoId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteLeadPhotoAnnotationMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLeadPhotoAnnotation>>, TError,{id: string;photoId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteLeadPhotoAnnotation>>, TError,{id: string;photoId: string}, TContext> => {
+
+const mutationKey = ['deleteLeadPhotoAnnotation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteLeadPhotoAnnotation>>, {id: string;photoId: string}> = (props) => {
+          const {id,photoId} = props ?? {};
+
+          return  deleteLeadPhotoAnnotation(id,photoId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteLeadPhotoAnnotationMutationResult = NonNullable<Awaited<ReturnType<typeof deleteLeadPhotoAnnotation>>>
+
+    export type DeleteLeadPhotoAnnotationMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Remove the drawing over a patient photo
+ */
+export const useDeleteLeadPhotoAnnotation = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLeadPhotoAnnotation>>, TError,{id: string;photoId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteLeadPhotoAnnotation>>,
+        TError,
+        {id: string;photoId: string},
+        TContext
+      > => {
+      return useMutation(getDeleteLeadPhotoAnnotationMutationOptions(options));
     }
 
 export const getGetLeadPhotoFileUrl = (id: string,

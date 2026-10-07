@@ -15,7 +15,7 @@ const MAX_PHASES = 12;
 const MAX_VIEWS = 12;
 
 type DraftView = { uid: string; id?: string; label: string; hasPhotos: boolean };
-type DraftPhase = { uid: string; id?: string; name: string; patientCaptured: boolean; views: DraftView[] };
+type DraftPhase = { uid: string; id?: string; name: string; patientCaptured: boolean; diagnosis?: boolean; views: DraftView[] };
 
 let counter = 0;
 const nextUid = () => `n${++counter}`;
@@ -26,6 +26,7 @@ function toDraft(protocol: ClinicProtocol): DraftPhase[] {
     id: phase.id,
     name: phase.name,
     patientCaptured: phase.patientCaptured,
+    diagnosis: phase.kind === "diagnosis",
     views: phase.views.map((view) => ({ uid: view.id, id: view.id, label: view.label, hasPhotos: view.hasPhotos })),
   }));
 }
@@ -34,7 +35,8 @@ const payload = (phases: DraftPhase[]) =>
   phases.map((phase) => ({
     ...(phase.id ? { id: phase.id } : {}),
     name: phase.name.trim(),
-    views: phase.views.map((view) => ({ ...(view.id ? { id: view.id } : {}), label: view.label.trim() })),
+    // The diagnosis phase has no photo list: the doctor marks up the patient's photos.
+    views: phase.diagnosis ? [] : phase.views.map((view) => ({ ...(view.id ? { id: view.id } : {}), label: view.label.trim() })),
   }));
 
 function move<T>(items: T[], from: number, to: number): T[] {
@@ -151,23 +153,27 @@ export function PhasesPanel() {
                     onClick={() => setDraft((prev) => (prev ? move(prev, phaseIndex, phaseIndex + 1) : prev))}>
                     <ArrowDown className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" aria-label={`Eliminar fase ${phase.name || phaseIndex + 1}`} className="text-destructive"
+                  {!phase.diagnosis && <Button variant="ghost" size="icon" aria-label={`Eliminar fase ${phase.name || phaseIndex + 1}`} className="text-destructive"
                     onClick={() => {
                       const withPhotos = phase.views.some((view) => view.hasPhotos);
                       if (withPhotos && !window.confirm("Esta fase tiene fotografías guardadas. Se ocultará, pero las fotografías no se borran. ¿Continuar?")) return;
                       setDraft((prev) => (prev ? prev.filter((_, i) => i !== phaseIndex) : prev));
                     }}>
                     <Trash2 className="w-4 h-4" />
-                  </Button>
+                  </Button>}
                 </div>
               )}
             </div>
             <p className="text-xs text-muted-foreground -mt-1">
-              {phase.patientCaptured ? "La toma el paciente desde el enlace de la clínica." : "La registra el personal de la clínica."}
-              {" "}{phase.views.length} {phase.views.length === 1 ? "fotografía" : "fotografías"}.
+              {phase.diagnosis
+                ? "El médico anota las fotografías del paciente y escribe la respuesta. No tiene fotografías propias ni se puede eliminar."
+                : <>
+                  {phase.patientCaptured ? "La toma el paciente desde el enlace de la clínica." : "La registra el personal de la clínica."}
+                  {" "}{phase.views.length} {phase.views.length === 1 ? "fotografía" : "fotografías"}.
+                </>}
             </p>
 
-            <ul className="flex flex-col gap-2">
+            {!phase.diagnosis && <ul className="flex flex-col gap-2">
               {phase.views.map((view, viewIndex) => (
                 <li key={view.uid} className="flex items-center gap-2">
                   <span className="shrink-0 w-6 text-xs text-muted-foreground text-right">{viewIndex + 1}</span>
@@ -204,8 +210,8 @@ export function PhasesPanel() {
                   )}
                 </li>
               ))}
-            </ul>
-            {canEdit && phase.views.length < MAX_VIEWS && (
+            </ul>}
+            {canEdit && !phase.diagnosis && phase.views.length < MAX_VIEWS && (
               <Button variant="outline" size="sm" className="self-start rounded-full"
                 onClick={() => updatePhase(phaseIndex, (p) => ({ ...p, views: [...p.views, { uid: nextUid(), label: "", hasPhotos: false }] }))}>
                 <Plus className="w-4 h-4 mr-1.5" /> Agregar fotografía

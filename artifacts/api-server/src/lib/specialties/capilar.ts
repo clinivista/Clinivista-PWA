@@ -31,9 +31,9 @@ export const PROTOCOL_VIEWS: ReadonlyArray<{ key: string; label: string; require
 /** Plantilla inicial de fases para una clínica capilar: cada clínica la ajusta
  * después (nombres, cantidad de fotos y nombre de cada foto). Cada fase parte
  * con las mismas cinco vistas de PROTOCOL_VIEWS. */
-export const DEFAULT_PHASES: ReadonlyArray<{ key: string; name: string }> = [
+export const DEFAULT_PHASES: ReadonlyArray<{ key: string; name: string; kind?: "diagnosis" }> = [
   { key: "preevaluacion", name: "Pre-evaluación" },
-  { key: "diagnostico", name: "Diagnóstico" },
+  { key: "diagnostico", name: "Diagnóstico", kind: "diagnosis" },
   { key: "preoperatorio", name: "Pre-operatorio" },
   { key: "postoperatorio", name: "Post-operatorio" },
   { key: "control-1", name: "Control médico 1" },

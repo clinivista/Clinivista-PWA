@@ -220,6 +220,353 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /leads/{id}/phases:
+    get:
+      operationId: getLeadPhases
+      tags: [leads]
+      summary: The patient's process phase by phase, with the photo of each view (staff)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Phases in order; each opens when the previous one is complete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeadPhaseList"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /leads/{id}/phase-photos/{photoId}:
+    delete:
+      operationId: deleteLeadPhasePhoto
+      tags: [leads]
+      summary: Remove a photo the staff took in a phase after the pre-evaluación
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Removed
+        "400":
+          description: Not allowed (patient photo)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /leads/{id}/diagnosis:
+    get:
+      operationId: getLeadDiagnosis
+      tags: [diagnosis]
+      summary: The diagnosis phase of a patient (staff)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Diagnosis state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosisState"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: saveLeadDiagnosis
+      tags: [diagnosis]
+      summary: Save the médico's written answer (draft)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiagnosisText"
+      responses:
+        "200":
+          description: Diagnosis state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosisState"
+        "400":
+          description: Invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Only a médico can edit the diagnosis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Diagnosis is closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /leads/{id}/diagnosis/close:
+    post:
+      operationId: closeLeadDiagnosis
+      tags: [diagnosis]
+      summary: Close the diagnosis (read-only); opens the next phase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiagnosisClose"
+      responses:
+        "200":
+          description: Diagnosis state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosisState"
+        "400":
+          description: Missing answer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Only a médico can edit the diagnosis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Cannot close now
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /leads/{id}/diagnosis/reopen:
+    post:
+      operationId: reopenLeadDiagnosis
+      tags: [diagnosis]
+      summary: Reopen a closed diagnosis (recorded)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Diagnosis state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosisState"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Only a médico can edit the diagnosis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Not closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /leads/{id}/photos/{photoId}/annotation:
+    put:
+      operationId: saveLeadPhotoAnnotation
+      tags: [diagnosis]
+      summary: Save the médico's drawing over a patient photo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhotoMarkup"
+      responses:
+        "200":
+          description: Diagnosis state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosisState"
+        "400":
+          description: Invalid drawing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Only a médico can edit the diagnosis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Diagnosis is closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteLeadPhotoAnnotation
+      tags: [diagnosis]
+      summary: Remove the drawing over a patient photo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Removed
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Only a médico can edit the diagnosis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Diagnosis is closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /leads/{id}/photos/{photoId}:
     get:
       operationId: getLeadPhotoFile
@@ -1804,12 +2151,15 @@ components:
 
     ClinicProtocolPhase:
       type: object
-      required: [id, key, name, position, patientCaptured, views]
+      required: [id, key, name, position, kind, patientCaptured, views]
       properties:
         id: {type: string}
         key: {type: string}
         name: {type: string}
         position: {type: number}
+        kind:
+          type: string
+          enum: [capture, diagnosis]
         patientCaptured: {type: boolean}
         views:
           type: array
@@ -2144,6 +2494,134 @@ components:
           type: ["string", "null"]
           description: Optional description the patient wrote for this photo
         editParams: {}
+
+    DiagnosisStroke:
+      type: object
+      required: [type, color, width, points]
+      properties:
+        type:
+          type: string
+          enum: [pen, line, arrow, ellipse, text]
+        color: {type: string}
+        width: {type: number}
+        points:
+          type: array
+          items:
+            type: array
+            items: {type: number}
+        text: {type: string}
+
+    DiagnosisText:
+      type: object
+      required: [responseText]
+      properties:
+        responseText: {type: string}
+
+    DiagnosisClose:
+      type: object
+      properties:
+        responseText: {type: string}
+
+    PhotoMarkup:
+      type: object
+      required: [image, strokes]
+      properties:
+        image:
+          type: string
+          description: The marked-up photo as a data URL (JPEG, PNG or WebP)
+        strokes:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiagnosisStroke"
+
+    DiagnosisPhoto:
+      type: object
+      required: [photoId, viewKey, label, hasAnnotation, strokes]
+      properties:
+        photoId: {type: string}
+        viewKey: {type: string}
+        label: {type: string}
+        note: {type: ["string", "null"]}
+        width: {type: ["number", "null"]}
+        height: {type: ["number", "null"]}
+        hasAnnotation: {type: boolean}
+        annotationUpdatedAt: {type: ["string", "null"], format: date-time}
+        strokes:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiagnosisStroke"
+
+    DiagnosisEvent:
+      type: object
+      required: [action, createdAt]
+      properties:
+        action:
+          type: string
+          enum: [saved, closed, reopened]
+        actorName: {type: ["string", "null"]}
+        createdAt: {type: string, format: date-time}
+
+    DiagnosisState:
+      type: object
+      required: [status, responseText, readyToDiagnose, photos, events, canEdit]
+      properties:
+        phaseId: {type: ["string", "null"]}
+        status:
+          type: string
+          enum: [draft, closed]
+        responseText: {type: string}
+        closedAt: {type: ["string", "null"], format: date-time}
+        closedByName: {type: ["string", "null"]}
+        readyToDiagnose: {type: boolean}
+        canEdit: {type: boolean}
+        photos:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiagnosisPhoto"
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiagnosisEvent"
+
+    LeadPhaseView:
+      type: object
+      required: [id, key, label, required, photo]
+      properties:
+        id: {type: string}
+        key: {type: string}
+        label: {type: string}
+        required: {type: boolean}
+        photo:
+          oneOf:
+            - $ref: "#/components/schemas/PatientPhotoStatus"
+            - type: "null"
+
+    LeadPhase:
+      type: object
+      required: [id, name, position, kind, patientCaptured, enabled, complete, views]
+      properties:
+        id: {type: string}
+        name: {type: string}
+        position: {type: number}
+        kind:
+          type: string
+          enum: [capture, diagnosis]
+        patientCaptured: {type: boolean}
+        enabled: {type: boolean}
+        complete: {type: boolean}
+        views:
+          type: array
+          items:
+            $ref: "#/components/schemas/LeadPhaseView"
+
+    LeadPhaseList:
+      type: object
+      required: [phases]
+      properties:
+        phases:
+          type: array
+          items:
+            $ref: "#/components/schemas/LeadPhase"
 
     PhotoConfirmation:
       type: object
