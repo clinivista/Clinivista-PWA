@@ -137,6 +137,7 @@ export const GetLeadByIdResponse = zod.object({
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
   "captureMetadata": zod.unknown().optional(),
+  "note": zod.string().nullish().describe('Optional description the patient wrote for this photo'),
   "editParams": zod.unknown().optional()
 })),
   "hairLossTime": zod.string().nullish(),
@@ -205,6 +206,7 @@ export const PatchLeadResponse = zod.object({
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
   "captureMetadata": zod.unknown().optional(),
+  "note": zod.string().nullish().describe('Optional description the patient wrote for this photo'),
   "editParams": zod.unknown().optional()
 })),
   "hairLossTime": zod.string().nullish(),
@@ -790,6 +792,7 @@ export const GetPatientPhotoStatusResponse = zod.object({
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
   "captureMetadata": zod.unknown().optional(),
+  "note": zod.string().nullish().describe('Optional description the patient wrote for this photo'),
   "editParams": zod.unknown().optional()
 }))
 })
@@ -826,6 +829,7 @@ export const UploadPatientPhotoResponse = zod.object({
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
   "captureMetadata": zod.unknown().optional(),
+  "note": zod.string().nullish().describe('Optional description the patient wrote for this photo'),
   "editParams": zod.unknown().optional()
 })
 
@@ -872,6 +876,14 @@ export const ConfirmPatientPhotoParams = zod.object({
   "photoId": zod.coerce.string()
 })
 
+export const confirmPatientPhotoBodyNoteMax = 500;
+
+
+
+export const ConfirmPatientPhotoBody = zod.object({
+  "note": zod.string().max(confirmPatientPhotoBodyNoteMax).nullish()
+})
+
 export const ConfirmPatientPhotoResponse = zod.object({
   "id": zod.string(),
   "key": zod.string(),
@@ -888,6 +900,7 @@ export const ConfirmPatientPhotoResponse = zod.object({
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
   "captureMetadata": zod.unknown().optional(),
+  "note": zod.string().nullish().describe('Optional description the patient wrote for this photo'),
   "editParams": zod.unknown().optional()
 })
 
@@ -920,6 +933,7 @@ export const CreatePatientAdjustedPhotoResponse = zod.object({
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
   "captureMetadata": zod.unknown().optional(),
+  "note": zod.string().nullish().describe('Optional description the patient wrote for this photo'),
   "editParams": zod.unknown().optional()
 })
 

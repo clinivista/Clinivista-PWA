@@ -328,6 +328,55 @@ describe("Full patient form flow — end to end", () => {
     expect(window.localStorage.getItem(PATIENT_TOKEN_KEY)).toBeNull();
   });
 
+  it("sends the optional description with a photo, and nothing when the patient writes none", async () => {
+    fetchSpy.mockImplementation(async (input, init) => {
+      const url = String(input);
+      const method = init?.method ?? "GET";
+      if (url.endsWith("/api/patients") && method === "POST") return jsonResponse(SUCCESS_BODY, 201);
+      if (url.endsWith("/api/patients/test-token-abc/clinic")) return jsonResponse(CLINIC_BODY, 200);
+      if (url.includes("/api/patients/test-token-abc") && method === "GET") return jsonResponse(SUCCESS_BODY, 200);
+      if (url.includes("/photos/photo-test-1/confirm") && method === "POST") {
+        return jsonResponse({ ...PHOTO_STATUS_BODY, status: "confirmed", confirmedAt: new Date().toISOString() }, 200);
+      }
+      if (url.includes("/photos") && method === "POST") return jsonResponse(PHOTO_STATUS_BODY, 201);
+      if (url.includes("/api/patients/test-token-abc") && method === "PUT") return jsonResponse(SUCCESS_BODY, 200);
+      throw new Error(`Unexpected request: ${method} ${url}`);
+    });
+
+    const user = setupUser();
+    renderFlow();
+    await goToDataStep(user);
+    await fillForm(user);
+    await tickConsent(user);
+    await user.click(screen.getByRole("button", { name: /Continuar a Fotografías/i }));
+
+    const pickPhoto = async (name: string) => {
+      await waitFor(() => expect(document.querySelector('input[type="file"]')).not.toBeNull());
+      await user.upload(
+        document.querySelector('input[type="file"]') as HTMLInputElement,
+        new File(["fake"], name, { type: "image/jpeg" }),
+      );
+    };
+    const confirmCalls = () =>
+      fetchSpy.mock.calls.filter(([url]) => String(url).includes("/photos/photo-test-1/confirm"));
+
+    // First photo: with a description (the field is optional and starts empty).
+    await pickPhoto("a.jpg");
+    const noteField = await screen.findByLabelText(/Descripción de esta foto \(opcional\)/i);
+    expect(noteField).toHaveValue("");
+    await user.type(noteField, "  Me duele esta zona  ");
+    await user.click(await screen.findByRole("button", { name: /Usar esta foto/i }));
+    await waitFor(() => expect(confirmCalls()).toHaveLength(1));
+    const withNote = confirmCalls()[0][1] as RequestInit;
+    expect(JSON.parse(String(withNote.body))).toEqual({ note: "Me duele esta zona" });
+
+    // Second photo: no description → plain confirm without a body.
+    await pickPhoto("b.jpg");
+    await user.click(await screen.findByRole("button", { name: /Usar esta foto/i }));
+    await waitFor(() => expect(confirmCalls()).toHaveLength(2));
+    expect((confirmCalls()[1][1] as RequestInit).body).toBeUndefined();
+  });
+
   it("remembers the new evaluation's token on this device once it is created", async () => {
     fetchSpy.mockImplementation(async (input, init) => {
       const url = String(input);

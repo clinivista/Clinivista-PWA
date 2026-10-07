@@ -80,6 +80,8 @@ export const clinicalPhotosTable = pgTable("clinical_photos", {
   source: text("source").notNull().default("upload"),
   captureMetadata: jsonb("capture_metadata").notNull().default({}),
   editParams: jsonb("edit_params"),
+  // Optional free-text description the patient adds to this photo.
+  note: text("note"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
   discardedAt: timestamp("discarded_at", { withTimezone: true }),

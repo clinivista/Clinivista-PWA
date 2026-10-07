@@ -53,6 +53,7 @@ export type PhotoStatus = {
   width: number | null;
   height: number | null;
   captureMetadata: unknown;
+  note: string | null;
   editParams?: unknown;
 };
 
@@ -73,6 +74,7 @@ function photoStatus(photo: ClinicalPhoto, view: { key: string; label: string })
     width: photo.width,
     height: photo.height,
     captureMetadata: photo.captureMetadata,
+    note: photo.note ?? null,
     ...(photo.editParams ? { editParams: photo.editParams } : {}),
   };
 }
@@ -358,15 +360,15 @@ export async function createClinicalPhoto(input: {
   return photoStatus(photo, view);
 }
 
-export async function confirmClinicalPhoto(lead: Lead, photoId: string): Promise<PhotoStatus | null> {
+export async function confirmClinicalPhoto(lead: Lead, photoId: string, note?: string | null): Promise<PhotoStatus | null> {
   const located = await findOwnedPhoto(lead, photoId);
   if (!located || located.photo.status !== "draft") return null;
   const now = new Date();
   const [photo] = await db.update(clinicalPhotosTable)
-    .set({ status: "confirmed", confirmedAt: now })
+    .set({ status: "confirmed", confirmedAt: now, ...(note !== undefined ? { note } : {}) })
     .where(eq(clinicalPhotosTable.id, photoId))
     .returning();
-  await writeAuditEvent(photo, "confirmed", "patient", lead.id, {});
+  await writeAuditEvent(photo, "confirmed", "patient", lead.id, { hasNote: Boolean(photo.note) });
   return photoStatus(photo, located.view);
 }
 

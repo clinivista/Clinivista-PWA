@@ -497,6 +497,11 @@ export default function Admin() {
                             >
                               <img src={photoUrl} alt={p.label} className="w-full h-40 object-cover" />
                               <div className="p-3 text-xs font-bold text-center text-muted-foreground">{p.label}</div>
+                              {p.note && (
+                                <p className="px-3 pb-3 -mt-1 text-xs text-foreground whitespace-pre-wrap break-words" title={t.adminPhotoNote}>
+                                  <span className="font-bold text-muted-foreground">{t.adminPhotoNote}: </span>{p.note}
+                                </p>
+                              )}
                             </div>
                           ); })}
                         </div>

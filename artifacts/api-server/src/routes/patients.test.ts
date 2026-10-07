@@ -108,7 +108,7 @@ beforeAll(async () => {
        original_object_path text NOT NULL, derivative_object_path text, original_mime_type text NOT NULL,
        original_bytes integer NOT NULL, original_sha256 text NOT NULL, width integer, height integer,
        source text NOT NULL DEFAULT 'upload', capture_metadata jsonb NOT NULL DEFAULT '{}',
-       edit_params jsonb, created_at timestamptz NOT NULL DEFAULT now(), confirmed_at timestamptz,
+       edit_params jsonb, note text, created_at timestamptz NOT NULL DEFAULT now(), confirmed_at timestamptz,
        discarded_at timestamptz
      );
      CREATE TABLE IF NOT EXISTS clinical_photo_audit_events (
@@ -819,5 +819,51 @@ describe("URL propia de cada clínica (/c/:slug)", () => {
     const res = await request(app).get("/api/clinic/me").set("Cookie", `clinivista_session=${staff}`).expect(200);
     expect(res.body.slug).toBe(DEFAULT_CENTER_ID);
     await request(app).get(`/api/clinics/${res.body.slug}`).expect(200);
+  });
+});
+
+describe("descripción opcional de cada fotografía", () => {
+  const image = Buffer.from(
+    "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AVN//2Q==",
+    "base64",
+  );
+  async function draftPhoto(token: string, key = "frontal") {
+    const draft = await request(app).post(`/api/patients/${token}/photos`)
+      .set("Content-Type", "image/jpeg").set("x-photo-key", key).set("x-photo-source", "upload").send(image);
+    return draft.body.id as string;
+  }
+
+  it("stores the note on confirm, trimmed, and returns it to the patient and to staff", async () => {
+    const lead = await createPatient();
+    const id = await draftPhoto(lead.token);
+    const confirmed = await request(app).post(`/api/patients/${lead.token}/photos/${id}/confirm`)
+      .send({ note: "  Me duele al tocar esta zona\u0000  " }).expect(200);
+    expect(confirmed.body.note).toBe("Me duele al tocar esta zona");
+
+    const status = await request(app).get(`/api/patients/${lead.token}/photos`).expect(200);
+    expect(status.body.photos[0].note).toBe("Me duele al tocar esta zona");
+
+    const staff = createSession({ userId: "s1", centerId: DEFAULT_CENTER_ID, role: "medico" });
+    const detail = await request(app).get(`/api/leads/${lead.id}`).set("Cookie", `clinivista_session=${staff}`).expect(200);
+    expect(detail.body.photos.find((p: { id: string }) => p.id === id).note).toBe("Me duele al tocar esta zona");
+  });
+
+  it("keeps the note optional: omitted, empty or whitespace-only means no note", async () => {
+    const lead = await createPatient();
+    const a = await draftPhoto(lead.token, "frontal");
+    const b = await draftPhoto(lead.token, "vertex");
+    const c = await draftPhoto(lead.token, "donor");
+    expect((await request(app).post(`/api/patients/${lead.token}/photos/${a}/confirm`).expect(200)).body.note).toBeNull();
+    expect((await request(app).post(`/api/patients/${lead.token}/photos/${b}/confirm`).send({ note: "" }).expect(200)).body.note).toBeNull();
+    expect((await request(app).post(`/api/patients/${lead.token}/photos/${c}/confirm`).send({ note: "   " }).expect(200)).body.note).toBeNull();
+  });
+
+  it("rejects notes over 500 characters or of the wrong type, leaving the photo as a draft", async () => {
+    const lead = await createPatient();
+    const id = await draftPhoto(lead.token);
+    await request(app).post(`/api/patients/${lead.token}/photos/${id}/confirm`).send({ note: "x".repeat(501) }).expect(400);
+    await request(app).post(`/api/patients/${lead.token}/photos/${id}/confirm`).send({ note: 42 }).expect(400);
+    const ok = await request(app).post(`/api/patients/${lead.token}/photos/${id}/confirm`).send({ note: "x".repeat(500) }).expect(200);
+    expect(ok.body.note).toHaveLength(500);
   });
 });
