@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LogOut, Building2, Users, Download, ShieldOff, ShieldCheck, Loader2, CreditCard } from "lucide-react";
+import { LogOut, Building2, Users, Download, ShieldOff, ShieldCheck, Loader2, CreditCard, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +13,7 @@ import {
   type DirectorCenterSummary,
 } from "@workspace/api-client-react";
 import { BrandLogo } from "@/components/brand-logo";
+import { CreateCenterForm } from "./create-center-form";
 
 // Fase 6 (facturación, alcance manual): no hay pasarela de pago ni cobro
 // automático — el director registra a mano hasta qué fecha una clínica está
@@ -56,6 +57,7 @@ export function DirectorPanel({ onLogout }: { onLogout: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
   const [paymentDraft, setPaymentDraft] = useState<Record<string, string>>({});
   const { data, isLoading, isError } = useGetDirectorCenters();
   const patchCenter = usePatchDirectorCenter();
@@ -126,6 +128,15 @@ export function DirectorPanel({ onLogout }: { onLogout: () => void }) {
       </header>
 
       <main className="flex-1 p-6 md:p-10 max-w-5xl w-full mx-auto">
+        {creating ? (
+          <CreateCenterForm onClose={() => setCreating(false)} />
+        ) : (
+          <div className="flex justify-end mb-4">
+            <Button className="rounded-full h-10 font-semibold" onClick={() => setCreating(true)}>
+              <Plus className="w-4 h-4 mr-2" /> Crear clínica
+            </Button>
+          </div>
+        )}
         {isLoading && (
           <div className="flex items-center gap-2 text-muted-foreground py-10 justify-center">
             <Loader2 className="w-5 h-5 animate-spin" /> Cargando clínicas…

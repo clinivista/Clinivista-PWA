@@ -21,6 +21,7 @@ import type {
 
 import type {
   AuthStatus,
+  DirectorCenterCreateBody,
   DirectorCenterPatch,
   DirectorCenterPaymentBody,
   DirectorCenterSummary,
@@ -976,6 +977,77 @@ export function useGetDirectorCenters<TData = Awaited<ReturnType<typeof getDirec
 
 
 
+
+export const getCreateDirectorCenterUrl = () => {
+
+
+
+
+  return `/api/director/centers`
+}
+
+/**
+ * @summary Create a new clinic with its staff accounts and, optionally, sample patients (director only)
+ */
+export const createDirectorCenter = async (directorCenterCreateBody: DirectorCenterCreateBody, options?: Parameters<typeof customFetch>[1]): Promise<DirectorCenterSummary> => {
+
+  return customFetch<DirectorCenterSummary>(getCreateDirectorCenterUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(directorCenterCreateBody)
+  }
+);}
+
+
+
+
+
+export const getCreateDirectorCenterMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDirectorCenter>>, TError,{data: BodyType<DirectorCenterCreateBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDirectorCenter>>, TError,{data: BodyType<DirectorCenterCreateBody>}, TContext> => {
+
+const mutationKey = ['createDirectorCenter'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDirectorCenter>>, {data: BodyType<DirectorCenterCreateBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createDirectorCenter(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDirectorCenterMutationResult = NonNullable<Awaited<ReturnType<typeof createDirectorCenter>>>
+    export type CreateDirectorCenterMutationBody = BodyType<DirectorCenterCreateBody>
+    export type CreateDirectorCenterMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Create a new clinic with its staff accounts and, optionally, sample patients (director only)
+ */
+export const useCreateDirectorCenter = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDirectorCenter>>, TError,{data: BodyType<DirectorCenterCreateBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createDirectorCenter>>,
+        TError,
+        {data: BodyType<DirectorCenterCreateBody>},
+        TContext
+      > => {
+      return useMutation(getCreateDirectorCenterMutationOptions(options));
+    }
 
 export const getPatchDirectorCenterUrl = (id: string,) => {
 

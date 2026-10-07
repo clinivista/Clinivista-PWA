@@ -319,6 +319,47 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createDirectorCenter
+      tags: [director]
+      summary: Create a new clinic with its staff accounts and, optionally, sample patients (director only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DirectorCenterCreateBody"
+      responses:
+        "201":
+          description: Clinic created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DirectorCenterSummary"
+        "400":
+          description: Invalid data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a director account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: The clinic identifier or one of the emails is already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /director/centers/{id}:
     patch:
@@ -925,6 +966,40 @@ components:
       properties:
         active:
           type: boolean
+
+    DirectorCenterCreateBody:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: Display name of the clinic.
+        slug:
+          type: string
+          description: Optional identifier (lowercase letters, digits and hyphens). Derived from the name when omitted.
+        users:
+          type: array
+          description: Initial staff accounts for the clinic (up to 5).
+          items:
+            $ref: "#/components/schemas/DirectorCenterCreateUser"
+        withSamplePatients:
+          type: boolean
+          description: Also load a few fictitious demo patients (no photos).
+
+    DirectorCenterCreateUser:
+      type: object
+      required: [email, password, role]
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        password:
+          type: string
+          description: At least 8 characters. Never stored in plain text.
+        role:
+          type: string
+          enum: [medico, administrativo]
 
     DirectorCenterPaymentBody:
       type: object

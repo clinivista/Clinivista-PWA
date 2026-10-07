@@ -34,6 +34,18 @@ beforeAll(async () => {
       active boolean NOT NULL DEFAULT true, paid_until timestamptz,
       created_at timestamptz NOT NULL DEFAULT now()
     );
+    CREATE TABLE IF NOT EXISTS clinical_protocols (
+      id text PRIMARY KEY, center_id text NOT NULL DEFAULT 'default-center',
+      name text NOT NULL, version text NOT NULL DEFAULT '1',
+      specialty text NOT NULL DEFAULT 'capilar', active boolean NOT NULL DEFAULT true,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+    CREATE TABLE IF NOT EXISTS clinical_protocol_views (
+      id text PRIMARY KEY, protocol_id text NOT NULL, key text NOT NULL, label text NOT NULL,
+      position integer NOT NULL DEFAULT 0, requirements jsonb NOT NULL DEFAULT '{}',
+      active boolean NOT NULL DEFAULT true,
+      UNIQUE (protocol_id, key)
+    );
     CREATE TABLE IF NOT EXISTS leads (
       id text PRIMARY KEY,
       token text NOT NULL UNIQUE,
@@ -80,7 +92,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await pglite.exec(`
-    TRUNCATE clinical_centers, leads, users;
+    TRUNCATE clinical_centers, clinical_protocols, clinical_protocol_views, leads, users;
   `);
 });
 
@@ -266,5 +278,100 @@ describe("GET /api/director/centers/:id/export", () => {
     expect(res.text).not.toMatch(/"passwordHash"|password_hash/);
     // The patient data itself is still exported.
     expect(payload.patients.map((p: { name: string }) => p.name).sort()).toEqual(["Paciente 0", "Paciente 1"]);
+  });
+});
+
+describe("POST /api/director/centers (crear clínica)", () => {
+  const director = () => `clinivista_session=${directorSession()}`;
+  const demoBody = {
+    name: "Clínica Demo Capilar",
+    withSamplePatients: true,
+    users: [
+      { email: "Medico@Demo.cl", name: "Dra. Demo", password: "password-medico", role: "medico" },
+      { email: "admin@demo.cl", name: "Admin Demo", password: "password-admin", role: "administrativo" },
+    ],
+  };
+
+  it("rejects non-directors", async () => {
+    await request(app).post("/api/director/centers").send(demoBody).expect(401);
+    const staff = createSession({ userId: "s1", centerId: "clinic-a", role: "medico" });
+    await request(app).post("/api/director/centers").set("Cookie", `clinivista_session=${staff}`).send(demoBody).expect(403);
+  });
+
+  it("creates the clinic, its accounts and sample patients, separate from other clinics", async () => {
+    await seedClinic("default-center", { patients: 2, staff: 1 });
+
+    const res = await request(app).post("/api/director/centers").set("Cookie", director()).send(demoBody).expect(201);
+    expect(res.body).toMatchObject({
+      id: "clinica-demo-capilar",
+      name: "Clínica Demo Capilar",
+      active: true,
+      patientCount: 4,
+      staffCount: 2,
+      paymentStatus: "sin_registro",
+    });
+    expect(JSON.stringify(res.body)).not.toMatch(/password|hash/i);
+
+    const list = await request(app).get("/api/director/centers").set("Cookie", director()).expect(200);
+    const byId = Object.fromEntries(list.body.centers.map((c: { id: string }) => [c.id, c]));
+    expect(byId["default-center"]).toMatchObject({ patientCount: 2, staffCount: 1 });
+    expect(byId["clinica-demo-capilar"]).toMatchObject({ patientCount: 4, staffCount: 2 });
+  });
+
+  it("lets the new accounts log in, scoped to the new clinic only", async () => {
+    await request(app).post("/api/director/centers").set("Cookie", director()).send(demoBody).expect(201);
+
+    const login = await request(app).post("/api/auth/login").send({ email: "medico@demo.cl", password: "password-medico" }).expect(200);
+    expect(login.body.user).toMatchObject({ role: "medico", centerId: "clinica-demo-capilar" });
+  });
+
+  it("marks sample patients as demo and gives them no photos", async () => {
+    await request(app).post("/api/director/centers").set("Cookie", director()).send(demoBody).expect(201);
+    const rows = (await pglite.exec(
+      "SELECT is_demo, photo_count, center_id, token FROM leads WHERE center_id = 'clinica-demo-capilar';",
+    )) as Array<{ rows: Array<{ is_demo: boolean; photo_count: string; token: string }> }>;
+    expect(rows[0].rows).toHaveLength(4);
+    expect(rows[0].rows.every((row) => row.is_demo === true && row.photo_count === "0")).toBe(true);
+    expect(new Set(rows[0].rows.map((row) => row.token)).size).toBe(4);
+  });
+
+  it("creates an empty clinic when no accounts or sample patients are requested", async () => {
+    const res = await request(app).post("/api/director/centers").set("Cookie", director()).send({ name: "Clínica Vacía" }).expect(201);
+    expect(res.body).toMatchObject({ id: "clinica-vacia", patientCount: 0, staffCount: 0 });
+  });
+
+  it("rejects a duplicate clinic identifier, including an implicit one", async () => {
+    await seedClinic("clinica-demo-capilar");
+    await request(app).post("/api/director/centers").set("Cookie", director()).send(demoBody).expect(409);
+
+    await pglite.exec(`INSERT INTO leads (id, token, name, center_id) VALUES ('l1', 't1', 'X', 'implicit-clinic');`);
+    await request(app).post("/api/director/centers").set("Cookie", director()).send({ name: "Otra", slug: "implicit-clinic" }).expect(409);
+  });
+
+  it("rejects an email that already has an account, creating nothing", async () => {
+    await seedClinic("clinic-a", { staff: 1 });
+    await request(app)
+      .post("/api/director/centers")
+      .set("Cookie", director())
+      .send({ name: "Clínica Nueva", users: [{ email: "STAFF0@clinic-a.cl", password: "password-123", role: "medico" }] })
+      .expect(409);
+    const list = await request(app).get("/api/director/centers").set("Cookie", director()).expect(200);
+    expect(list.body.centers.map((c: { id: string }) => c.id)).toEqual(["clinic-a"]);
+  });
+
+  it("validates name, slug, emails and passwords", async () => {
+    const post = (body: unknown) => request(app).post("/api/director/centers").set("Cookie", director()).send(body);
+    await post({ name: "ab" }).expect(400);
+    await post({ name: "Clínica Buena", slug: "Mal Slug!" }).expect(400);
+    await post({ name: "Clínica Buena", users: [{ email: "no-es-correo", password: "password-123", role: "medico" }] }).expect(400);
+    await post({ name: "Clínica Buena", users: [{ email: "a@b.cl", password: "corta", role: "medico" }] }).expect(400);
+    await post({ name: "Clínica Buena", users: [{ email: "a@b.cl", password: "password-123", role: "director" }] }).expect(400);
+    await post({
+      name: "Clínica Buena",
+      users: [
+        { email: "a@b.cl", password: "password-123", role: "medico" },
+        { email: "A@B.cl", password: "password-123", role: "administrativo" },
+      ],
+    }).expect(400);
   });
 });

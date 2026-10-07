@@ -66,6 +66,33 @@ export interface DirectorCenterPatch {
   active: boolean;
 }
 
+export type DirectorCenterCreateUserRole = typeof DirectorCenterCreateUserRole[keyof typeof DirectorCenterCreateUserRole];
+
+
+export const DirectorCenterCreateUserRole = {
+  medico: 'medico',
+  administrativo: 'administrativo',
+} as const;
+
+export interface DirectorCenterCreateUser {
+  email: string;
+  name?: string;
+  /** At least 8 characters. Never stored in plain text. */
+  password: string;
+  role: DirectorCenterCreateUserRole;
+}
+
+export interface DirectorCenterCreateBody {
+  /** Display name of the clinic. */
+  name: string;
+  /** Optional identifier (lowercase letters, digits and hyphens). Derived from the name when omitted. */
+  slug?: string;
+  /** Initial staff accounts for the clinic (up to 5). */
+  users?: DirectorCenterCreateUser[];
+  /** Also load a few fictitious demo patients (no photos). */
+  withSamplePatients?: boolean;
+}
+
 export interface DirectorCenterPaymentBody {
   /** The clinic is considered paid through this date. */
   paidUntil: string;
