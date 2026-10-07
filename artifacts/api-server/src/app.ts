@@ -3,6 +3,7 @@ import path from "node:path";
 import express, { type Express } from "express";
 import cors from "cors";
 import router from "./routes";
+import { getAuthContext } from "./routes/auth";
 import { logger } from "./lib/logger";
 import { createHttpLogger } from "./lib/http-logger";
 
@@ -11,7 +12,15 @@ const app: Express = express();
 app.use(createHttpLogger(logger));
 app.use(cors());
 // Clinical image bytes use explicit binary routes and private storage, never JSON.
-app.use(express.json({ limit: "1mb" }));
+// The doctor's annotation arrives as JSON (vector strokes + the composed image
+// in base64), so that one route needs more room than the 1 MB default.
+const smallJson = express.json({ limit: "1mb" });
+const annotationJson = express.json({ limit: "14mb" });
+// Only a signed-in clinic session gets the larger limit.
+app.use((req, res, next) => {
+  const large = /\/leads\/[^/]+\/photos\/[^/]+\/annotation$/.test(req.path) && getAuthContext(req) !== undefined;
+  (large ? annotationJson : smallJson)(req, res, next);
+});
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 app.use("/api", router);

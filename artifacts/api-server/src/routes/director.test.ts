@@ -54,7 +54,7 @@ beforeAll(async () => {
     );
     CREATE TABLE IF NOT EXISTS clinical_protocol_phases (
       id text PRIMARY KEY, protocol_id text NOT NULL, key text NOT NULL, name text NOT NULL,
-      position integer NOT NULL DEFAULT 0, active boolean NOT NULL DEFAULT true,
+      position integer NOT NULL DEFAULT 0, active boolean NOT NULL DEFAULT true, kind text NOT NULL DEFAULT 'capture',
       UNIQUE (protocol_id, key)
     );
     CREATE TABLE IF NOT EXISTS leads (

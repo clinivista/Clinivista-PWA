@@ -27,6 +27,7 @@ import { buildPublicPatientLink, copyToClipboard } from "@/lib/clipboard";
 import { DirectorPanel } from "./director-panel";
 import { ClinicUsersPanel } from "./clinic-users-panel";
 import { PhasesPanel } from "./phases-panel";
+import { LeadPhases } from "@/components/lead-phases";
 
 const STATUS_COLORS: Record<string, string> = {
   nuevo: "bg-blue-100 text-blue-700",
@@ -551,6 +552,8 @@ export default function Admin() {
                         </div>
                       )}
                     </div>
+
+                    <LeadPhases leadId={fullLead.id} onExpand={setExpandedPhoto} />
 
                     {/* Patient history */}
                     <div className="bg-white p-6 md:p-8 rounded-[1.75rem] shadow-sm">

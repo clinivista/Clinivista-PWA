@@ -7,6 +7,8 @@ import invitationsRouter from "./invitations";
 import directorRouter from "./director";
 import clinicUsersRouter from "./clinic-users";
 import clinicProtocolRouter from "./clinic-protocol";
+import leadPhasesRouter from "./lead-phases";
+import diagnosisRouter from "./diagnosis";
 
 const router: IRouter = Router();
 
@@ -18,5 +20,7 @@ router.use(invitationsRouter);
 router.use(directorRouter);
 router.use(clinicUsersRouter);
 router.use(clinicProtocolRouter);
+router.use(leadPhasesRouter);
+router.use(diagnosisRouter);
 
 export default router;

@@ -48,6 +48,9 @@ export const protocolPhasesTable = pgTable("clinical_protocol_phases", {
   name: text("name").notNull(),
   position: integer("position").notNull().default(0),
   active: boolean("active").notNull().default(true),
+  // "capture": se registra con fotografías. "diagnosis": el médico anota las
+  // fotos del paciente y escribe la respuesta; no tiene vistas propias.
+  kind: text("kind").notNull().default("capture"),
 }, (table) => [
   uniqueIndex("clinical_protocol_phases_protocol_key_unique").on(table.protocolId, table.key),
 ]);
@@ -130,3 +133,38 @@ export type Evaluation = typeof evaluationsTable.$inferSelect;
 export type ClinicalPhoto = typeof clinicalPhotosTable.$inferSelect;
 export type PhotoAuditEvent = typeof photoAuditEventsTable.$inferSelect;
 export type InsertClinicalPhoto = z.infer<typeof insertClinicalPhotoSchema>;
+// Diagnóstico de una evaluación: la respuesta del médico (texto libre) y su
+// estado. "closed" lo deja en solo lectura; reabrirlo queda en el registro de eventos.
+export const diagnosesTable = pgTable("clinical_diagnoses", {
+  id: text("id").primaryKey(),
+  evaluationId: text("evaluation_id").notNull().unique(),
+  responseText: text("response_text").notNull().default(""),
+  status: text("status").notNull().default("draft"),
+  closedAt: timestamp("closed_at", { withTimezone: true }),
+  closedByUserId: text("closed_by_user_id"),
+  closedByName: text("closed_by_name"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const diagnosisEventsTable = pgTable("clinical_diagnosis_events", {
+  id: text("id").primaryKey(),
+  diagnosisId: text("diagnosis_id").notNull(),
+  action: text("action").notNull(),
+  actorUserId: text("actor_user_id"),
+  actorName: text("actor_name"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Dibujo del médico sobre la foto de un paciente: los trazos en vectores
+// (para poder seguir editando) y la imagen ya compuesta. La foto original
+// nunca se modifica.
+export const photoAnnotationsTable = pgTable("clinical_photo_annotations", {
+  id: text("id").primaryKey(),
+  photoId: text("photo_id").notNull().unique(),
+  objectPath: text("object_path").notNull(),
+  mimeType: text("mime_type").notNull(),
+  strokes: jsonb("strokes").notNull().default([]),
+  updatedByUserId: text("updated_by_user_id"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});

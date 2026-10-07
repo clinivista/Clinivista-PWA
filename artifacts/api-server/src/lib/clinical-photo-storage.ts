@@ -199,7 +199,7 @@ function extensionForContentType(contentType: string): string {
 export function createObjectKey(input: {
   centerId: string;
   evaluationId: string;
-  kind: "original" | "adjusted" | "legacy-quarantine";
+  kind: "original" | "adjusted" | "annotation" | "legacy-quarantine";
   contentType: string;
 }): string {
   const ext = extensionForContentType(input.contentType);

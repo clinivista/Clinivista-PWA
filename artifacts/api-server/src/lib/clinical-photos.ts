@@ -7,6 +7,9 @@ import {
   db,
   evaluationsTable,
   leadsTable,
+  diagnosesTable,
+  diagnosisEventsTable,
+  photoAnnotationsTable,
   photoAuditEventsTable,
   protocolPhasesTable,
   protocolsTable,
@@ -130,19 +133,21 @@ export async function ensureClinicalConfiguration(
  * on the hot path.
  */
 async function ensureDefaultPhases(protocolId: string): Promise<void> {
-  const phases = DEFAULT_PHASES.map(({ key, name }, position) => ({
+  const phases = DEFAULT_PHASES.map(({ key, name, kind }, position) => ({
     id: `${protocolId}-phase-${key}`,
     protocolId,
     key,
     name,
     position,
+    kind: kind ?? "capture",
   }));
   await db.insert(protocolPhasesTable).values(phases).onConflictDoNothing();
   await db.update(protocolViewsTable)
     .set({ phaseId: phases[0].id })
     .where(and(eq(protocolViewsTable.protocolId, protocolId), isNull(protocolViewsTable.phaseId)));
   await db.insert(protocolViewsTable).values(
-    phases.slice(1).flatMap((phase) =>
+    // The diagnosis phase has no photo list of its own: the doctor marks up the patient's.
+    phases.slice(1).filter((phase) => phase.kind === "capture").flatMap((phase) =>
       PROTOCOL_VIEWS.map(({ key, label, required }, position) => ({
         id: `${protocolId}-${phase.key}-${key}`,
         protocolId,
@@ -175,6 +180,19 @@ export async function getPatientPhaseViews(protocolId: string) {
   ));
   views.sort((a, b) => a.position - b.position);
   return { phase: firstPhase ?? null, views };
+}
+
+/** Every view that belongs to the patient's pre-evaluación — including the ones the
+ * clinic has since hidden — so photos already taken keep showing up. */
+async function patientPhaseViewIds(protocolId: string): Promise<Set<string>> {
+  const [firstPhase] = await db.select().from(protocolPhasesTable)
+    .where(and(eq(protocolPhasesTable.protocolId, protocolId), eq(protocolPhasesTable.active, true)))
+    .orderBy(asc(protocolPhasesTable.position)).limit(1);
+  const views = await db.select({ id: protocolViewsTable.id, phaseId: protocolViewsTable.phaseId })
+    .from(protocolViewsTable).where(eq(protocolViewsTable.protocolId, protocolId));
+  return new Set(
+    views.filter((view) => view.phaseId === null || view.phaseId === firstPhase?.id).map((view) => view.id),
+  );
 }
 
 /** How many of the patient's views are mandatory before an evaluation can be
@@ -242,7 +260,10 @@ export async function getPhotoStatusesForLead(lead: Lead): Promise<PhotoStatus[]
       eq(clinicalPhotosTable.evaluationId, evaluation.id),
       ne(clinicalPhotosTable.status, "discarded"),
     ));
-  const viewsById = new Map(views.map((view) => [view.id, view]));
+  // The patient's pre-evaluación only: photos the staff take in later phases
+  // are read through getLeadPhases, never through the patient-facing status.
+  const inPreEvaluation = await patientPhaseViewIds(evaluation.protocolId);
+  const viewsById = new Map(views.filter((view) => inPreEvaluation.has(view.id)).map((view) => [view.id, view]));
   return photos
     .map((photo) => {
       const view = viewsById.get(photo.viewId);
@@ -419,7 +440,7 @@ export async function createClinicalPhoto(input: {
 }
 
 export async function confirmClinicalPhoto(lead: Lead, photoId: string, note?: string | null): Promise<PhotoStatus | null> {
-  const located = await findOwnedPhoto(lead, photoId);
+  const located = await findOwnedPatientPhoto(lead, photoId);
   if (!located || located.photo.status !== "draft") return null;
   const now = new Date();
   const [photo] = await db.update(clinicalPhotosTable)
@@ -436,7 +457,7 @@ export async function createAdjustedPhoto(input: {
   editParams: Record<string, unknown>;
 }): Promise<PhotoStatus | null> {
   return serializePhotoMutation(input.photoId, async () => {
-    const located = await findOwnedPhoto(input.lead, input.photoId);
+    const located = await findOwnedPatientPhoto(input.lead, input.photoId);
     if (!located || located.photo.status !== "confirmed") return null;
 
     const rendered = await renderTrustedTechnicalDerivative(located.photo, input.editParams);
@@ -500,7 +521,7 @@ export async function createAdjustedPhoto(input: {
 
 export async function discardAdjustedPhoto(lead: Lead, photoId: string): Promise<boolean> {
   return serializePhotoMutation(photoId, async () => {
-    const located = await findOwnedPhoto(lead, photoId);
+    const located = await findOwnedPatientPhoto(lead, photoId);
     if (!located || located.photo.status !== "confirmed" || !located.photo.derivativeObjectPath) return false;
     const derivativePath = located.photo.derivativeObjectPath;
     const [photo] = await db.transaction(async (tx) => {
@@ -564,7 +585,7 @@ export async function getPatientPhotoFile(
   photoId: string,
   rendition: "original" | "adjusted",
 ): Promise<{ objectPath: string; mimeType: string } | null> {
-  const located = await findOwnedPhoto(lead, photoId);
+  const located = await findOwnedPatientPhoto(lead, photoId);
   if (!located || located.photo.status !== "confirmed") return null;
   const objectPath = rendition === "original"
     ? located.photo.originalObjectPath
@@ -582,7 +603,7 @@ export async function getPatientPhotoFile(
 }
 
 export async function discardClinicalPhoto(lead: Lead, photoId: string): Promise<boolean> {
-  const located = await findOwnedPhoto(lead, photoId);
+  const located = await findOwnedPatientPhoto(lead, photoId);
   if (!located || located.photo.status !== "draft") return false;
   await privatePhotoStorage.remove(located.photo.derivativeObjectPath ?? located.photo.originalObjectPath);
   if (located.photo.derivativeObjectPath) await privatePhotoStorage.remove(located.photo.originalObjectPath);
@@ -598,15 +619,24 @@ export async function discardClinicalPhoto(lead: Lead, photoId: string): Promise
  * and its database/audit references, including already confirmed drafts. */
 export async function discardAllPatientCapturePhotos(lead: Lead): Promise<void> {
   const evaluation = await ensureEvaluationForLead(lead);
-  const photos = await db.select().from(clinicalPhotosTable)
-    .where(eq(clinicalPhotosTable.evaluationId, evaluation.id));
+  // Restarting wipes what the patient captured — never the clinic's own later phases.
+  const inPreEvaluation = await patientPhaseViewIds(evaluation.protocolId);
+  const photos = (await db.select().from(clinicalPhotosTable)
+    .where(eq(clinicalPhotosTable.evaluationId, evaluation.id)))
+    .filter((photo) => inPreEvaluation.has(photo.viewId));
   for (const photo of photos) {
     await privatePhotoStorage.remove(photo.derivativeObjectPath ?? photo.originalObjectPath);
     if (photo.derivativeObjectPath) await privatePhotoStorage.remove(photo.originalObjectPath);
   }
   const ids = photos.map((photo) => photo.id);
+  // The doctor's drawings belong to the photos they were drawn on.
+  if (ids.length) {
+    const annotations = await db.select().from(photoAnnotationsTable).where(inArray(photoAnnotationsTable.photoId, ids));
+    for (const annotation of annotations) await privatePhotoStorage.remove(annotation.objectPath);
+  }
   await db.transaction(async (tx) => {
     if (ids.length) {
+      await tx.delete(photoAnnotationsTable).where(inArray(photoAnnotationsTable.photoId, ids));
       await tx.delete(photoAuditEventsTable).where(inArray(photoAuditEventsTable.photoId, ids));
       await tx.delete(clinicalPhotosTable).where(inArray(clinicalPhotosTable.id, ids));
     }
@@ -634,14 +664,196 @@ export async function deleteClinicalDataForLead(lead: Lead): Promise<void> {
     await privatePhotoStorage.remove(photo.originalObjectPath);
     if (photo.derivativeObjectPath) await privatePhotoStorage.remove(photo.derivativeObjectPath);
   }
+  const annotations = photos.length
+    ? await db.select().from(photoAnnotationsTable).where(inArray(photoAnnotationsTable.photoId, photos.map((photo) => photo.id)))
+    : [];
+  for (const annotation of annotations) await privatePhotoStorage.remove(annotation.objectPath);
+  const [diagnosis] = await db.select().from(diagnosesTable).where(eq(diagnosesTable.evaluationId, evaluation.id));
   await db.transaction(async (tx) => {
     if (photos.length) {
+      await tx.delete(photoAnnotationsTable)
+        .where(inArray(photoAnnotationsTable.photoId, photos.map((photo) => photo.id)));
       await tx.delete(photoAuditEventsTable)
         .where(inArray(photoAuditEventsTable.photoId, photos.map((photo) => photo.id)));
+    }
+    if (diagnosis) {
+      await tx.delete(diagnosisEventsTable).where(eq(diagnosisEventsTable.diagnosisId, diagnosis.id));
+      await tx.delete(diagnosesTable).where(eq(diagnosesTable.id, diagnosis.id));
     }
     await tx.delete(clinicalPhotosTable).where(eq(clinicalPhotosTable.evaluationId, evaluation.id));
     await tx.delete(evaluationsTable).where(eq(evaluationsTable.id, evaluation.id));
   });
+}
+
+export type LeadPhaseView = {
+  id: string;
+  key: string;
+  label: string;
+  required: boolean;
+  photo: PhotoStatus | null;
+};
+
+export type LeadPhase = {
+  id: string;
+  name: string;
+  position: number;
+  /** "diagnosis": the doctor marks up the patient's photos and writes the answer. */
+  kind: "capture" | "diagnosis";
+  patientCaptured: boolean;
+  /** Phases open in order: a phase is enabled once the previous one is complete. */
+  enabled: boolean;
+  complete: boolean;
+  views: LeadPhaseView[];
+};
+
+const isVisible = (status: string) => status === "draft" || status === "confirmed";
+
+/** The patient's whole process phase by phase, with the photo of each view. */
+export async function getLeadPhases(lead: Lead): Promise<LeadPhase[]> {
+  const evaluation = await ensureEvaluationForLead(lead);
+  const phases = await db.select().from(protocolPhasesTable)
+    .where(and(eq(protocolPhasesTable.protocolId, evaluation.protocolId), eq(protocolPhasesTable.active, true)))
+    .orderBy(asc(protocolPhasesTable.position));
+  const views = await db.select().from(protocolViewsTable)
+    .where(and(eq(protocolViewsTable.protocolId, evaluation.protocolId), eq(protocolViewsTable.active, true)));
+  const photos = await db.select().from(clinicalPhotosTable)
+    .where(eq(clinicalPhotosTable.evaluationId, evaluation.id));
+  const latest = new Map<string, ClinicalPhoto>();
+  for (const photo of photos.filter((candidate) => isVisible(candidate.status))) {
+    const previous = latest.get(photo.viewId);
+    if (!previous || previous.createdAt < photo.createdAt) latest.set(photo.viewId, photo);
+  }
+
+  const [diagnosis] = await db.select().from(diagnosesTable).where(eq(diagnosesTable.evaluationId, evaluation.id));
+
+  let previousComplete = true;
+  return phases.map((phase, index) => {
+    const phaseViews = views
+      .filter((view) => view.phaseId === phase.id || (index === 0 && view.phaseId === null))
+      .sort((a, b) => a.position - b.position)
+      .map((view): LeadPhaseView => {
+        const photo = latest.get(view.id);
+        return {
+          id: view.id,
+          key: view.key,
+          label: view.label,
+          required: (view.requirements as Record<string, unknown> | null)?.required !== false,
+          photo: photo ? photoStatus(photo, view) : null,
+        };
+      });
+    const isDiagnosis = phase.kind === "diagnosis" && index > 0;
+    // A diagnosis phase is complete once the doctor has closed the diagnosis.
+    const complete = isDiagnosis
+      ? diagnosis?.status === "closed"
+      : phaseViews.length > 0 && phaseViews.filter((view) => view.required).every((view) => view.photo !== null);
+    const result: LeadPhase = {
+      id: phase.id,
+      name: phase.name,
+      position: index,
+      kind: isDiagnosis ? "diagnosis" : "capture",
+      patientCaptured: index === 0,
+      enabled: index === 0 || previousComplete,
+      complete,
+      views: phaseViews,
+    };
+    previousComplete = complete;
+    return result;
+  });
+}
+
+export class PhaseCaptureError extends Error {
+  constructor(message: string, readonly status: 400 | 404 | 409 = 400) {
+    super(message);
+  }
+}
+
+/** A clinic's staff member photographs a view of a later phase. Phases open in
+ * order, and the pre-evaluación stays the patient's. A new capture supersedes
+ * the previous one for that view; the earlier file is kept (superseded). */
+export async function createStaffPhasePhoto(input: {
+  lead: Lead;
+  viewId: string;
+  staffUserId: string;
+  source: "camera" | "upload";
+  contentType: string;
+  bytes: Buffer;
+  width: number;
+  height: number;
+}): Promise<PhotoStatus> {
+  const evaluation = await ensureEvaluationForLead(input.lead);
+  const phases = await getLeadPhases(input.lead);
+  const phase = phases.find((candidate) => candidate.views.some((view) => view.id === input.viewId));
+  const view = phase?.views.find((candidate) => candidate.id === input.viewId);
+  if (!phase || !view) throw new PhaseCaptureError("Esa fotografía no existe en este proceso.", 404);
+  if (phase.patientCaptured) throw new PhaseCaptureError("La pre-evaluación la toma el paciente desde su enlace.");
+  if (!phase.enabled) throw new PhaseCaptureError("Completa la fase anterior antes de registrar esta.", 409);
+
+  const hash = crypto.createHash("sha256").update(input.bytes).digest("hex");
+  const stored = await privatePhotoStorage.put({
+    key: createObjectKey({
+      centerId: evaluation.centerId,
+      evaluationId: evaluation.id,
+      kind: "original",
+      contentType: input.contentType,
+    }),
+    bytes: input.bytes,
+    contentType: input.contentType,
+  });
+  await db.update(clinicalPhotosTable)
+    .set({ status: "superseded" })
+    .where(and(
+      eq(clinicalPhotosTable.evaluationId, evaluation.id),
+      eq(clinicalPhotosTable.viewId, input.viewId),
+      inArray(clinicalPhotosTable.status, ["draft", "confirmed"]),
+    ));
+  const now = new Date();
+  const [photo] = await db.insert(clinicalPhotosTable).values({
+    id: uid(18),
+    evaluationId: evaluation.id,
+    viewId: input.viewId,
+    status: "confirmed",
+    originalObjectPath: stored.objectPath,
+    originalMimeType: input.contentType,
+    originalBytes: input.bytes.length,
+    originalSha256: hash,
+    width: input.width,
+    height: input.height,
+    source: input.source,
+    captureMetadata: { storage: privatePhotoStorage.mode, capturedBy: "staff" },
+    createdAt: now,
+    confirmedAt: now,
+  }).returning();
+  await writeAuditEvent(photo, "uploaded", "staff", input.staffUserId, { view: view.key, phase: phase.name });
+  const [viewRow] = await db.select().from(protocolViewsTable).where(eq(protocolViewsTable.id, input.viewId));
+  return photoStatus(photo, viewRow);
+}
+
+/** Staff remove a photo they took in a later phase (never the patient's own). */
+export async function discardStaffPhasePhoto(lead: Lead, photoId: string, staffUserId: string): Promise<boolean> {
+  const located = await findOwnedPhoto(lead, photoId);
+  if (!located || !isVisible(located.photo.status)) return false;
+  const evaluation = await ensureEvaluationForLead(lead);
+  const inPreEvaluation = await patientPhaseViewIds(evaluation.protocolId);
+  if (inPreEvaluation.has(located.photo.viewId)) {
+    throw new PhaseCaptureError("Las fotografías de la pre-evaluación son del paciente.");
+  }
+  await privatePhotoStorage.remove(located.photo.originalObjectPath);
+  if (located.photo.derivativeObjectPath) await privatePhotoStorage.remove(located.photo.derivativeObjectPath);
+  const [photo] = await db.update(clinicalPhotosTable)
+    .set({ status: "discarded", discardedAt: new Date(), derivativeObjectPath: null })
+    .where(eq(clinicalPhotosTable.id, photoId))
+    .returning();
+  await writeAuditEvent(photo, "discarded", "staff", staffUserId, {});
+  return true;
+}
+
+/** A photo the patient may touch: only the pre-evaluación's, never the clinic's later phases. */
+async function findOwnedPatientPhoto(lead: Lead, photoId: string) {
+  const located = await findOwnedPhoto(lead, photoId);
+  if (!located) return null;
+  const evaluation = await ensureEvaluationForLead(lead);
+  const inPreEvaluation = await patientPhaseViewIds(evaluation.protocolId);
+  return inPreEvaluation.has(located.photo.viewId) ? located : null;
 }
 
 async function findOwnedPhoto(lead: Lead, photoId: string) {
