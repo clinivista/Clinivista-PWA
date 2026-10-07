@@ -9,6 +9,7 @@ import { LanguageProvider } from '@/lib/language';
 
 import Home from '@/pages/home';
 import Patient from '@/pages/patient';
+import ClinicPatient from '@/pages/clinic-patient';
 import Admin from '@/pages/admin';
 import Login from '@/pages/login';
 
@@ -33,7 +34,8 @@ function Router() {
     <RoutedErrorBoundary>
       <Switch>
         <Route path="/" component={HomeWithTokenRedirect} />
-        <Route path="/patient" component={Patient} />
+        <Route path="/patient">{() => <Patient />}</Route>
+        <Route path="/c/:slug" component={ClinicPatient} />
         <Route path="/admin" component={Admin} />
         <Route path="/admin/login" component={Login} />
         <Route component={NotFound} />

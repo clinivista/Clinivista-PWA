@@ -913,6 +913,99 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /clinics/{slug}:
+    get:
+      operationId: getClinic
+      tags: [patients]
+      summary: Name and logo of a clinic, by its public address (public)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Clinic identity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientClinic"
+        "404":
+          description: No clinic with that address
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clinics/{slug}/patients:
+    post:
+      operationId: createClinicPatient
+      tags: [patients]
+      summary: Create a patient pre-evaluation in the clinic with this public address (public)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientResult"
+        "403":
+          description: The clinic is not accepting new evaluations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: No clinic with that address
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clinic/me:
+    get:
+      operationId: getMyClinic
+      tags: [leads]
+      summary: The signed-in staff member's own clinic, with the address patients use to register
+      responses:
+        "200":
+          description: The clinic
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MyClinic"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a clinic account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /patients/{token}/clinic:
     get:
       operationId: getPatientClinic
@@ -1396,10 +1489,25 @@ components:
         name:
           type: string
           description: Name patients see (3 to 80 characters).
+        slug:
+          type: string
+          description: Public address of the clinic, app.../c/{slug} (lowercase letters, digits and hyphens, 3 to 40 characters). Omit to keep the current one. Changing it breaks links already shared.
         logoDataUrl:
           type: string
           nullable: true
           description: A PNG, JPEG or WebP data URL (up to about 300 KB). Omit to keep the current logo; null removes it. The server re-encodes it to a PNG of at most 256 px.
+
+    MyClinic:
+      type: object
+      required: [name, slug, logoDataUrl]
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        logoDataUrl:
+          type: string
+          nullable: true
 
     PatientClinic:
       type: object

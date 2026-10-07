@@ -728,3 +728,96 @@ describe("GET /api/patients/:token/clinic (identidad de la clínica para el paci
     await request(app).get("/api/patients/nope-nope-nope/clinic").expect(404);
   });
 });
+
+describe("URL propia de cada clínica (/c/:slug)", () => {
+  async function seedClinic(id: string, slug: string, name: string, active = true) {
+    await pglite.exec(`INSERT INTO clinical_centers (id, name, slug, active) VALUES ('${id}', '${name}', '${slug}', ${active});`);
+  }
+  const register = (slug: string, overrides: Record<string, unknown> = {}) =>
+    request(app).post(`/api/clinics/${slug}/patients`).send({ ...VALID_BODY, ...overrides });
+  const centerOf = async (leadId: string) => {
+    const rows = (await pglite.exec(`SELECT center_id, protocol_id FROM leads WHERE id = '${leadId}';`)) as Array<{ rows: Array<{ center_id: string; protocol_id: string }> }>;
+    return rows[0].rows[0];
+  };
+
+  it("registers the patient in the clinic that owns the address, not the main one", async () => {
+    await seedClinic("clinic-b", "clinica-demo", "Clínica Demo");
+    const res = await register("clinica-demo").expect(201);
+    expect(await centerOf(res.body.lead.id)).toEqual({ center_id: "clinic-b", protocol_id: "clinic-b-capillary-initial" });
+
+    const identity = await request(app).get(`/api/patients/${res.body.lead.token}/clinic`).expect(200);
+    expect(identity.body.name).toBe("Clínica Demo");
+  });
+
+  it("lets one person be evaluated at several clinics, each through its own address", async () => {
+    await seedClinic("clinic-a", "estecapelli", "Estecapelli");
+    await seedClinic("clinic-b", "clinica-demo", "Clínica Demo");
+    const first = await register("estecapelli").expect(201);
+    const second = await register("clinica-demo").expect(201);
+    expect(first.body.lead.id).not.toBe(second.body.lead.id);
+    expect(first.body.lead.token).not.toBe(second.body.lead.token);
+    expect((await centerOf(first.body.lead.id)).center_id).toBe("clinic-a");
+    expect((await centerOf(second.body.lead.id)).center_id).toBe("clinic-b");
+
+    // Repeating at the SAME clinic is still a duplicate.
+    await register("estecapelli").expect(409);
+    await register("clinica-demo").expect(409);
+  });
+
+  it("keeps each clinic's patients private to that clinic's staff", async () => {
+    await seedClinic("clinic-a", "estecapelli", "Estecapelli");
+    await seedClinic("clinic-b", "clinica-demo", "Clínica Demo");
+    await register("estecapelli").expect(201);
+    const staffA = createSession({ userId: "a", centerId: "clinic-a", role: "administrativo" });
+    const staffB = createSession({ userId: "b", centerId: "clinic-b", role: "administrativo" });
+    const seenBy = async (session: string) =>
+      (await request(app).get("/api/leads").set("Cookie", `clinivista_session=${session}`).expect(200)).body.leads.length;
+    expect(await seenBy(staffA)).toBe(1);
+    expect(await seenBy(staffB)).toBe(0);
+  });
+
+  it("refuses new patients at a suspended clinic, creating nothing", async () => {
+    await seedClinic("clinic-b", "clinica-demo", "Clínica Demo", false);
+    await register("clinica-demo").expect(403);
+    expect(await countLeads()).toBe(0);
+  });
+
+  it("404s for an unknown address, and matches the address case-insensitively", async () => {
+    await seedClinic("clinic-a", "estecapelli", "Estecapelli");
+    await request(app).get("/api/clinics/no-existe").expect(404);
+    await register("no-existe").expect(404);
+    expect(await countLeads()).toBe(0);
+    const res = await request(app).get("/api/clinics/Estecapelli").expect(200);
+    expect(res.body.name).toBe("Estecapelli");
+    await register("ESTECAPELLI").expect(201);
+  });
+
+  it("validates the registration the same way as the generic form", async () => {
+    await seedClinic("clinic-a", "estecapelli", "Estecapelli");
+    await register("estecapelli", { documentId: "12.345.678-9" }).expect(400);
+    await register("estecapelli", { consent: false }).expect(422);
+    expect(await countLeads()).toBe(0);
+  });
+
+  it("keeps the legacy /patient registration working for the main clinic", async () => {
+    const res = await request(app).post("/api/patients").send(VALID_BODY).expect(201);
+    expect((await centerOf(res.body.lead.id)).center_id).toBe(DEFAULT_CENTER_ID);
+  });
+
+  it("tells staff their own clinic's address", async () => {
+    await seedClinic("clinic-b", "clinica-demo", "Clínica Demo");
+    const staffB = createSession({ userId: "b", centerId: "clinic-b", role: "medico" });
+    const res = await request(app).get("/api/clinic/me").set("Cookie", `clinivista_session=${staffB}`).expect(200);
+    expect(res.body).toMatchObject({ name: "Clínica Demo", slug: "clinica-demo", logoDataUrl: null });
+    await request(app).get("/api/clinic/me").expect(401);
+    const director = createSession({ userId: "d", centerId: null, role: "director" });
+    await request(app).get("/api/clinic/me").set("Cookie", `clinivista_session=${director}`).expect(403);
+  });
+
+  it("gives a clinic with no row yet an address on first ask", async () => {
+    const staff = createSession({ userId: "a", centerId: DEFAULT_CENTER_ID, role: "administrativo" });
+    const res = await request(app).get("/api/clinic/me").set("Cookie", `clinivista_session=${staff}`).expect(200);
+    expect(res.body.slug).toBe(DEFAULT_CENTER_ID);
+    await request(app).get(`/api/clinics/${res.body.slug}`).expect(200);
+  });
+});

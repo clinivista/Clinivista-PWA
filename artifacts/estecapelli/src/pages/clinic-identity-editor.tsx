@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ImagePlus, Loader2, Trash2 } from "lucide-react";
+import { Copy, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import {
   getGetDirectorCentersQueryKey,
   useUpdateDirectorCenterIdentity,
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { ClinicBadge } from "@/components/clinic-badge";
+import { buildPublicPatientLink, copyToClipboard } from "@/lib/clipboard";
 
 const MAX_SIDE = 256;
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -36,6 +37,10 @@ export function ClinicIdentityEditor({ center, onClose }: { center: DirectorCent
   const update = useUpdateDirectorCenterIdentity();
   const fileInput = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(center.name);
+  const [slug, setSlug] = useState(center.slug);
+  const cleanSlug = slug.trim().toLowerCase();
+  const slugChanged = cleanSlug !== center.slug;
+  const slugValid = /^[a-z0-9][a-z0-9-]{2,39}$/.test(cleanSlug);
   // undefined = dejar el logo actual, null = quitarlo, string = reemplazarlo.
   const [logo, setLogo] = useState<string | null | undefined>(undefined);
   const shownLogo = logo === undefined ? center.logoDataUrl : logo;
@@ -56,7 +61,7 @@ export function ClinicIdentityEditor({ center, onClose }: { center: DirectorCent
   const handleSave = (event: React.FormEvent) => {
     event.preventDefault();
     update.mutate(
-      { id: center.id, data: { name: name.trim(), ...(logo !== undefined ? { logoDataUrl: logo } : {}) } },
+      { id: center.id, data: { name: name.trim(), ...(slugChanged ? { slug: cleanSlug } : {}), ...(logo !== undefined ? { logoDataUrl: logo } : {}) } },
       {
         onSuccess: async () => {
           await queryClient.invalidateQueries({ queryKey: getGetDirectorCentersQueryKey() });
@@ -86,6 +91,43 @@ export function ClinicIdentityEditor({ center, onClose }: { center: DirectorCent
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={`identity-slug-${center.id}`} className="text-sm font-semibold text-muted-foreground">
+          Dirección para pacientes
+        </label>
+        <Input
+          id={`identity-slug-${center.id}`}
+          autoCapitalize="none"
+          autoCorrect="off"
+          maxLength={40}
+          className="h-10 rounded-full"
+          value={slug}
+          onChange={(event) => setSlug(event.target.value)}
+        />
+        {!slugValid ? (
+          <p className="text-xs font-medium text-red-600">Usa 3 a 40 letras minúsculas, números o guiones.</p>
+        ) : (
+          <div className="flex items-center gap-2 min-w-0">
+            <code className="flex-1 min-w-0 break-all text-xs bg-[#F5F2EE] rounded-lg px-3 py-2">{buildPublicPatientLink(cleanSlug)}</code>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-full shrink-0"
+              onClick={async () => {
+                const ok = await copyToClipboard(buildPublicPatientLink(cleanSlug));
+                toast(ok ? { title: "Enlace copiado" } : { variant: "destructive", title: "No se pudo copiar" });
+              }}
+            >
+              <Copy className="w-4 h-4 mr-2" /> Copiar
+            </Button>
+          </div>
+        )}
+        {slugChanged && (
+          <p className="text-xs text-amber-700">Al cambiarla, el enlace anterior dejará de funcionar: vuelve a compartir el nuevo.</p>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -122,7 +164,7 @@ export function ClinicIdentityEditor({ center, onClose }: { center: DirectorCent
         <Button type="button" variant="outline" className="rounded-full h-10 font-semibold" onClick={onClose}>
           Cancelar
         </Button>
-        <Button type="submit" className="rounded-full h-10 font-semibold" disabled={update.isPending || name.trim().length < 3}>
+        <Button type="submit" className="rounded-full h-10 font-semibold" disabled={update.isPending || name.trim().length < 3 || !slugValid}>
           {update.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
           Guardar identidad
         </Button>

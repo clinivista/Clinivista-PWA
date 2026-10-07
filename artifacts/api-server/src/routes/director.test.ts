@@ -19,6 +19,7 @@ import directorRouter from "./director";
 import authRouter from "./auth";
 import leadsRouter from "./leads";
 import invitationsRouter from "./invitations";
+import patientsRouter from "./patients";
 import { createSession } from "../lib/sessions";
 import { hashPassword } from "@workspace/db";
 
@@ -30,6 +31,7 @@ app.use("/api", directorRouter);
 app.use("/api", authRouter);
 app.use("/api", leadsRouter);
 app.use("/api", invitationsRouter);
+app.use("/api", patientsRouter);
 
 beforeAll(async () => {
   await pglite.exec(`
@@ -707,6 +709,35 @@ describe("identidad de la clínica (nombre y logo para sus pacientes)", () => {
 
     const list = await request(app).get("/api/director/centers").set("Cookie", director()).expect(200);
     expect(list.body.centers.find((c: { id: string }) => c.id === "clinic-a")).toMatchObject({ name: "Clínica clinic-a", logoDataUrl: null });
+  });
+
+  it("lets the public address (slug) be edited: normalized, unique, validated, kept when omitted", async () => {
+    await seedClinic("clinic-a");
+    await seedClinic("clinic-b");
+    await put("clinic-a", { name: "Clínica A" }, director()).expect(200);
+    const resolve = (slug: string) => request(app).get(`/api/clinics/${slug}`);
+    await resolve("clinic-a").expect(200); // omitted: keeps the current slug
+
+    await put("clinic-a", { name: "Clínica A", slug: "  EsteCapelli " }, director()).expect(200);
+    await resolve("estecapelli").expect(200);
+    await resolve("clinic-a").expect(404);
+
+    await put("clinic-b", { name: "Clínica B", slug: "estecapelli" }, director()).expect(409);
+    await put("clinic-b", { name: "Clínica B", slug: "Mala URL!" }, director()).expect(400);
+    await put("clinic-b", { name: "Clínica B", slug: "ab" }, director()).expect(400);
+    await resolve("clinic-b").expect(200); // unchanged after the rejections
+
+    // Re-sending its own slug is not a conflict.
+    await put("clinic-a", { name: "Clínica A", slug: "estecapelli" }, director()).expect(200);
+    await put("clinic-a", { name: "Clínica A" }, director()).expect(200);
+    await resolve("estecapelli").expect(200);
+  });
+
+  it("gives an implicit clinic the requested slug", async () => {
+    await pglite.exec(`INSERT INTO leads (id, token, name, center_id) VALUES ('l9', 't9', 'X', 'default-center');`);
+    await put("default-center", { name: "Estecapelli", slug: "estecapelli" }, director()).expect(200);
+    const res = await request(app).get("/api/clinics/estecapelli").expect(200);
+    expect(res.body.name).toBe("Estecapelli");
   });
 
   it("404 for an unknown clinic, and creates the row for an implicit one", async () => {

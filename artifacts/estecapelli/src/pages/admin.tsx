@@ -16,6 +16,7 @@ import {
   useAdminLogout,
   useGetLeadStats, getGetLeadStatsQueryKey,
   useGetLeads, getGetLeadsQueryKey,
+  useGetMyClinic, getGetMyClinicQueryKey,
   useGetLeadById, getGetLeadByIdQueryKey,
   usePatchLead, useDeleteLead,
 } from "@workspace/api-client-react";
@@ -65,6 +66,7 @@ export default function Admin() {
   const logoutMutation = useAdminLogout();
   const deleteMutation = useDeleteLead();
 
+  const { data: myClinic } = useGetMyClinic({ query: { enabled: authStatus?.authenticated, queryKey: getGetMyClinicQueryKey(), staleTime: 5 * 60_000 }});
   const { data: stats } = useGetLeadStats({ query: { enabled: authStatus?.authenticated, queryKey: getGetLeadStatsQueryKey() }});
 
   const leadsParams = { search: search || undefined, status: statusFilter === "all" ? undefined : statusFilter };
@@ -141,7 +143,7 @@ export default function Admin() {
   };
 
   const handleCopyGenericLink = async () => {
-    if (await copyToClipboard(buildPublicPatientLink())) {
+    if (await copyToClipboard(buildPublicPatientLink(myClinic?.slug))) {
       setLinkCopied(true);
       toast({ title: t.adminInviteLinkCopied, description: t.adminInviteLinkCopiedDesc });
     } else {

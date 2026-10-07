@@ -3,6 +3,9 @@ import { db, centersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { DEFAULT_CENTER_ID } from "./clinical-photos";
 
+/** Public address of a clinic: app.../c/{slug}. */
+export const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{2,39}$/;
+
 const MAX_LOGO_INPUT_BYTES = 300 * 1024;
 const MAX_LOGO_SIDE = 256;
 const DATA_URL = /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/]+={0,2})$/;
@@ -44,4 +47,10 @@ export async function clinicIdentity(centerId: string | null | undefined): Promi
     name: center?.name ?? (id === DEFAULT_CENTER_ID ? "Centro principal" : id),
     logoDataUrl: center?.logoDataUrl ?? null,
   };
+}
+
+/** The clinic that owns this public address, or undefined. Only clinics with a row can be reached by URL. */
+export async function findCenterBySlug(slug: string) {
+  const [center] = await db.select().from(centersTable).where(eq(centersTable.slug, slug.trim().toLowerCase()));
+  return center;
 }

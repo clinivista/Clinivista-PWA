@@ -25,7 +25,7 @@ import {
 import { requireDirectorAuth, requireSupraAuth } from "./auth";
 import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
 import { seedSamplePatients } from "../lib/demo-patients";
-import { InvalidLogoError, normalizeLogoDataUrl } from "../lib/clinic-identity";
+import { InvalidLogoError, SLUG_PATTERN, normalizeLogoDataUrl } from "../lib/clinic-identity";
 import { clean, uid } from "../lib/helpers";
 import { destroySessionsForUser } from "../lib/sessions";
 
@@ -85,7 +85,6 @@ router.get("/director/centers", async (req, res): Promise<void> => {
   res.json({ centers: await centerSummaries() });
 });
 
-const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{2,39}$/;
 const MAX_NEW_CLINIC_USERS = 5;
 
 /** "Clínica Demo Capilar" -> "clinica-demo-capilar" */
@@ -479,9 +478,25 @@ router.put("/director/centers/:id/identity", async (req, res): Promise<void> => 
     res.status(400).json({ error: "El nombre de la clínica debe tener al menos 3 caracteres." });
     return;
   }
-  if (!(await centerSummaries()).some((center) => center.id === params.data.id)) {
+  const summaries = await centerSummaries();
+  const current = summaries.find((center) => center.id === params.data.id);
+  if (!current) {
     res.status(404).json({ error: "Clínica no encontrada." });
     return;
+  }
+
+  // The public address (app.../c/{slug}). Omitted = keep it. Two clinics can
+  // never share one, since the address is how a patient reaches the right one.
+  const requestedSlug = body.data.slug?.trim().toLowerCase();
+  if (requestedSlug !== undefined && requestedSlug !== current.slug) {
+    if (!SLUG_PATTERN.test(requestedSlug)) {
+      res.status(400).json({ error: "La dirección debe tener entre 3 y 40 caracteres: minúsculas, números y guiones." });
+      return;
+    }
+    if (summaries.some((center) => center.id !== current.id && center.slug === requestedSlug)) {
+      res.status(409).json({ error: "Otra clínica ya usa esa dirección." });
+      return;
+    }
   }
 
   // undefined = keep the current logo, null = remove it, string = replace it.
@@ -503,7 +518,11 @@ router.put("/director/centers/:id/identity", async (req, res): Promise<void> => 
   const [existing] = await db.select({ id: centersTable.id }).from(centersTable).where(eq(centersTable.id, params.data.id));
   if (existing) {
     await db.update(centersTable)
-      .set({ name, ...(logoDataUrl !== undefined ? { logoDataUrl } : {}) })
+      .set({
+        name,
+        ...(requestedSlug !== undefined ? { slug: requestedSlug } : {}),
+        ...(logoDataUrl !== undefined ? { logoDataUrl } : {}),
+      })
       .where(eq(centersTable.id, params.data.id));
   } else {
     // A clinic that only exists implicitly (via leads/users) gets its row
@@ -511,7 +530,7 @@ router.put("/director/centers/:id/identity", async (req, res): Promise<void> => 
     await db.insert(centersTable).values({
       id: params.data.id,
       name,
-      slug: params.data.id,
+      slug: requestedSlug ?? params.data.id,
       logoDataUrl: logoDataUrl ?? null,
     }).onConflictDoNothing();
   }

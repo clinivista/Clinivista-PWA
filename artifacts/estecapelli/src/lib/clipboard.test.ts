@@ -67,5 +67,6 @@ describe("copyToClipboard", () => {
 describe("buildPublicPatientLink", () => {
   it("is the token-less self-registration URL on the admin panel's origin", () => {
     expect(buildPublicPatientLink()).toBe(`${window.location.origin}/patient`);
+    expect(buildPublicPatientLink("estecapelli")).toBe(`${window.location.origin}/c/estecapelli`);
   });
 });

@@ -9,6 +9,8 @@
 export interface DirectorCenterIdentityBody {
   /** Name patients see (3 to 80 characters). */
   name: string;
+  /** Public address of the clinic, app.../c/{slug} (lowercase letters, digits and hyphens, 3 to 40 characters). Omit to keep the current one. Changing it breaks links already shared. */
+  slug?: string;
   /** A PNG, JPEG or WebP data URL (up to about 300 KB). Omit to keep the current logo; null removes it. The server re-encodes it to a PNG of at most 256 px. */
   logoDataUrl?: string | null;
 }
