@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LogOut, Building2, Users, Download, ShieldOff, ShieldCheck, Loader2, CreditCard, Plus, ChevronDown } from "lucide-react";
+import { LogOut, Building2, Users, Download, ShieldOff, ShieldCheck, Loader2, CreditCard, Plus, ChevronDown, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +16,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { CreateCenterForm } from "./create-center-form";
 import { CenterUsers } from "./center-users";
 import { SupraTeam } from "./supra-team";
+import { ClinicIdentityEditor } from "./clinic-identity-editor";
 
 // Fase 6 (facturación, alcance manual): no hay pasarela de pago ni cobro
 // automático — el director registra a mano hasta qué fecha una clínica está
@@ -63,6 +64,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [usersOpenId, setUsersOpenId] = useState<string | null>(null);
+  const [identityOpenId, setIdentityOpenId] = useState<string | null>(null);
   const [paymentDraft, setPaymentDraft] = useState<Record<string, string>>({});
   const { data, isLoading, isError } = useGetDirectorCenters();
   const patchCenter = usePatchDirectorCenter();
@@ -168,6 +170,9 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
               <div className="flex flex-col md:flex-row md:items-center gap-5">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
+                    {center.logoDataUrl && (
+                      <img src={center.logoDataUrl} alt="" className="h-8 w-8 rounded-lg object-contain bg-white border border-[#E8E4DE]" />
+                    )}
                     <h2 className="text-lg font-bold text-foreground truncate">{center.name}</h2>
                     <span
                       className={`text-xs font-bold px-2.5 py-1 rounded-full ${
@@ -205,6 +210,14 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                   >
                     <Download className="w-4 h-4" /> Exportar datos
                   </a>
+                  <Button
+                    variant="outline"
+                    className="rounded-full h-10 font-semibold"
+                    aria-expanded={identityOpenId === center.id}
+                    onClick={() => setIdentityOpenId(identityOpenId === center.id ? null : center.id)}
+                  >
+                    <Palette className="w-4 h-4 mr-2" /> Identidad
+                  </Button>
                   {canManageUsers && (
                   <Button
                     variant="outline"
@@ -258,6 +271,9 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                 </div>
               </div>
 
+              {identityOpenId === center.id && (
+                <ClinicIdentityEditor center={center} onClose={() => setIdentityOpenId(null)} />
+              )}
               {canManageUsers && usersOpenId === center.id && <CenterUsers centerId={center.id} />}
             </div>
           ))}

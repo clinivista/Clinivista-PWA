@@ -279,7 +279,8 @@ export const GetDirectorCentersResponse = zod.object({
   "patientCount": zod.number(),
   "staffCount": zod.number(),
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
-  "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro'])
+  "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
+  "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.')
 }))
 })
 
@@ -308,7 +309,8 @@ export const CreateDirectorCenterResponse = zod.object({
   "patientCount": zod.number(),
   "staffCount": zod.number(),
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
-  "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro'])
+  "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
+  "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.')
 })
 
 
@@ -332,7 +334,8 @@ export const PatchDirectorCenterResponse = zod.object({
   "patientCount": zod.number(),
   "staffCount": zod.number(),
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
-  "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro'])
+  "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
+  "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.')
 })
 
 
@@ -482,6 +485,32 @@ export const ResetDirectorTeamMemberPasswordResponse = zod.object({
 
 
 /**
+ * @summary Set the name and logo patients see for a clinic (director or supra-control administrator)
+ */
+export const UpdateDirectorCenterIdentityParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateDirectorCenterIdentityBody = zod.object({
+  "name": zod.string().describe('Name patients see (3 to 80 characters).'),
+  "logoDataUrl": zod.string().nullish().describe('A PNG, JPEG or WebP data URL (up to about 300 KB). Omit to keep the current logo; null removes it. The server re-encodes it to a PNG of at most 256 px.')
+})
+
+export const UpdateDirectorCenterIdentityResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "patientCount": zod.number(),
+  "staffCount": zod.number(),
+  "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
+  "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
+  "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.')
+})
+
+
+/**
  * @summary Manually record that a clinic has paid through a given date (director only)
  */
 export const RecordDirectorCenterPaymentParams = zod.object({
@@ -501,7 +530,8 @@ export const RecordDirectorCenterPaymentResponse = zod.object({
   "patientCount": zod.number(),
   "staffCount": zod.number(),
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
-  "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro'])
+  "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
+  "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.')
 })
 
 
@@ -559,6 +589,19 @@ export const CreatePatientResponse = zod.object({
   "appointmentAt": zod.string().nullish(),
   "isDemo": zod.boolean().nullish()
 })
+})
+
+
+/**
+ * @summary Name and logo of the clinic that invited this patient (public, by token)
+ */
+export const GetPatientClinicParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const GetPatientClinicResponse = zod.object({
+  "name": zod.string(),
+  "logoDataUrl": zod.string().nullable()
 })
 
 

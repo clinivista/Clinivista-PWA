@@ -12,7 +12,7 @@
  *   B. Duplicate: submit → API returns 409 → duplicate warning card is shown.
  */
 import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from "vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LanguageProvider } from "@/lib/language";
@@ -157,6 +157,9 @@ async function uploadAndAcceptRequiredPhotos(user: ReturnType<typeof setupUser>)
 // ---------------------------------------------------------------------------
 // Fake API responses
 // ---------------------------------------------------------------------------
+// Identidad de la clínica que ve el paciente (GET /api/patients/:token/clinic).
+const CLINIC_BODY = { name: "Clínica de Prueba", logoDataUrl: null };
+
 const SUCCESS_BODY = {
   ok: true,
   lead: {
@@ -270,6 +273,7 @@ describe("Full patient form flow — end to end", () => {
       const url = String(input);
       const method = init?.method ?? "GET";
       if (url.endsWith("/api/patients") && method === "POST") return jsonResponse(SUCCESS_BODY, 201);
+      if (url.endsWith("/api/patients/test-token-abc/clinic")) return jsonResponse(CLINIC_BODY, 200);
       if (url.includes("/api/patients/test-token-abc") && method === "GET") return jsonResponse(SUCCESS_BODY, 200);
       if (url.includes("/photos/photo-test-1/confirm") && method === "POST") {
         return jsonResponse({ ...PHOTO_STATUS_BODY, status: "confirmed", confirmedAt: new Date().toISOString() }, 200);
@@ -329,6 +333,7 @@ describe("Full patient form flow — end to end", () => {
       const url = String(input);
       const method = init?.method ?? "GET";
       if (url.endsWith("/api/patients") && method === "POST") return jsonResponse(SUCCESS_BODY, 201);
+      if (url.endsWith("/api/patients/test-token-abc/clinic")) return jsonResponse(CLINIC_BODY, 200);
       if (url.includes("/api/patients/test-token-abc")) return jsonResponse(SUCCESS_BODY, 200);
       throw new Error(`Unexpected request: ${method} ${url}`);
     });
@@ -584,5 +589,40 @@ describe("Full patient form flow — end to end", () => {
     expect(fetchSpy.mock.calls.some(([input, init]) => (
       String(input).endsWith(`/api/patients/${RESUME_TOKEN}/photos/photo-adjusted-1`) && init?.method === "DELETE"
     ))).toBe(false);
+  });
+});
+
+describe("Identidad de la clínica en la vista del paciente", () => {
+  it("shows the clinic's own name in the header (no platform brand) once the token is known", async () => {
+    window.history.replaceState({}, "", "/patient?token=test-token-abc");
+    fetchSpy.mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.endsWith("/api/patients/test-token-abc/clinic")) return jsonResponse(CLINIC_BODY, 200);
+      if (url.includes("/api/patients/test-token-abc")) return jsonResponse(SUCCESS_BODY, 200);
+      throw new Error(`Unexpected request: ${url}`);
+    });
+
+    renderFlow();
+
+    expect(await screen.findByText("Clínica de Prueba")).toBeInTheDocument();
+    expect(screen.queryByAltText("Clinivista")).not.toBeInTheDocument();
+  });
+
+  it("does not crash, and shows no brand, if the clinic response has no usable name", async () => {
+    window.history.replaceState({}, "", "/patient?token=test-token-abc");
+    fetchSpy.mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.endsWith("/api/patients/test-token-abc/clinic")) return jsonResponse({}, 200);
+      if (url.includes("/api/patients/test-token-abc")) return jsonResponse(SUCCESS_BODY, 200);
+      throw new Error(`Unexpected request: ${url}`);
+    });
+
+    renderFlow();
+
+    await waitFor(() => expect(fetchSpy.mock.calls.some(([input]) => String(input).endsWith("/clinic"))).toBe(true));
+    // Let the clinic response land and render before checking the header survived it.
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+    expect(document.querySelector("header")).not.toBeNull();
+    expect(screen.queryByAltText("Clinivista")).not.toBeInTheDocument();
   });
 });

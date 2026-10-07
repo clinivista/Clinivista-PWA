@@ -23,6 +23,7 @@ import type {
   AuthStatus,
   DirectorCenterCreateBody,
   DirectorCenterCreateUser,
+  DirectorCenterIdentityBody,
   DirectorCenterPatch,
   DirectorCenterPaymentBody,
   DirectorCenterSummary,
@@ -45,6 +46,7 @@ import type {
   LeadStats,
   LoginCredentials,
   LoginResult,
+  PatientClinic,
   PatientInput,
   PatientPhotoStatus,
   PatientPhotoStatusResult,
@@ -1716,6 +1718,78 @@ export const useResetDirectorTeamMemberPassword = <TError = ErrorType<ErrorRespo
       return useMutation(getResetDirectorTeamMemberPasswordMutationOptions(options));
     }
 
+export const getUpdateDirectorCenterIdentityUrl = (id: string,) => {
+
+
+
+
+  return `/api/director/centers/${id}/identity`
+}
+
+/**
+ * @summary Set the name and logo patients see for a clinic (director or supra-control administrator)
+ */
+export const updateDirectorCenterIdentity = async (id: string,
+    directorCenterIdentityBody: DirectorCenterIdentityBody, options?: Parameters<typeof customFetch>[1]): Promise<DirectorCenterSummary> => {
+
+  return customFetch<DirectorCenterSummary>(getUpdateDirectorCenterIdentityUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(directorCenterIdentityBody)
+  }
+);}
+
+
+
+
+
+export const getUpdateDirectorCenterIdentityMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDirectorCenterIdentity>>, TError,{id: string;data: BodyType<DirectorCenterIdentityBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateDirectorCenterIdentity>>, TError,{id: string;data: BodyType<DirectorCenterIdentityBody>}, TContext> => {
+
+const mutationKey = ['updateDirectorCenterIdentity'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateDirectorCenterIdentity>>, {id: string;data: BodyType<DirectorCenterIdentityBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateDirectorCenterIdentity(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateDirectorCenterIdentityMutationResult = NonNullable<Awaited<ReturnType<typeof updateDirectorCenterIdentity>>>
+    export type UpdateDirectorCenterIdentityMutationBody = BodyType<DirectorCenterIdentityBody>
+    export type UpdateDirectorCenterIdentityMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Set the name and logo patients see for a clinic (director or supra-control administrator)
+ */
+export const useUpdateDirectorCenterIdentity = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDirectorCenterIdentity>>, TError,{id: string;data: BodyType<DirectorCenterIdentityBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateDirectorCenterIdentity>>,
+        TError,
+        {id: string;data: BodyType<DirectorCenterIdentityBody>},
+        TContext
+      > => {
+      return useMutation(getUpdateDirectorCenterIdentityMutationOptions(options));
+    }
+
 export const getRecordDirectorCenterPaymentUrl = (id: string,) => {
 
 
@@ -1935,6 +2009,83 @@ export const useCreatePatient = <TError = ErrorType<ErrorResponse>,
       > => {
       return useMutation(getCreatePatientMutationOptions(options));
     }
+
+export const getGetPatientClinicUrl = (token: string,) => {
+
+
+
+
+  return `/api/patients/${token}/clinic`
+}
+
+/**
+ * @summary Name and logo of the clinic that invited this patient (public, by token)
+ */
+export const getPatientClinic = async (token: string, options?: Parameters<typeof customFetch>[1]): Promise<PatientClinic> => {
+
+  return customFetch<PatientClinic>(getGetPatientClinicUrl(token),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPatientClinicQueryKey = (token: string,) => {
+    return [
+    `/api/patients/${token}/clinic`
+    ] as const;
+    }
+
+
+export const getGetPatientClinicQueryOptions = <TData = Awaited<ReturnType<typeof getPatientClinic>>, TError = ErrorType<ErrorResponse>>(token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPatientClinic>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPatientClinicQueryKey(token);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPatientClinic>>> = ({ signal }) => getPatientClinic(token, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: token !== null && token !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPatientClinic>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPatientClinicQueryResult = NonNullable<Awaited<ReturnType<typeof getPatientClinic>>>
+export type GetPatientClinicQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Name and logo of the clinic that invited this patient (public, by token)
+ */
+
+export function useGetPatientClinic<TData = Awaited<ReturnType<typeof getPatientClinic>>, TError = ErrorType<ErrorResponse>>(
+ token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPatientClinic>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPatientClinicQueryOptions(token,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetPatientUrl = (token: string,) => {
 

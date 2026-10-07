@@ -25,7 +25,7 @@ import { hashPassword } from "@workspace/db";
 const pglite = (mockedDb as unknown as { __pglite: { exec(sql: string): Promise<unknown> } }).__pglite;
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "1mb" })); // same limit as the real app
 app.use("/api", directorRouter);
 app.use("/api", authRouter);
 app.use("/api", leadsRouter);
@@ -35,7 +35,7 @@ beforeAll(async () => {
   await pglite.exec(`
     CREATE TABLE IF NOT EXISTS clinical_centers (
       id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
-      active boolean NOT NULL DEFAULT true, paid_until timestamptz,
+      active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text,
       created_at timestamptz NOT NULL DEFAULT now()
     );
     CREATE TABLE IF NOT EXISTS clinical_protocols (
@@ -645,5 +645,74 @@ describe("crear usuarios de una clínica existente", () => {
     await post("clinic-a", { ...body, password: "corta" }).expect(400);
     await post("clinic-a", { ...body, role: "director" }).expect(400);
     await post("clinic-a", { ...body, role: "supra_admin" }).expect(400);
+  });
+});
+
+describe("identidad de la clínica (nombre y logo para sus pacientes)", () => {
+  const director = () => `clinivista_session=${directorSession()}`;
+  const admin = () => `clinivista_session=${createSession({ userId: "sa", centerId: null, role: "supra_admin" })}`;
+
+  async function pngDataUrl(width = 600, height = 300) {
+    const sharp = (await import("sharp")).default;
+    const bytes = await sharp({ create: { width, height, channels: 3, background: "#336699" } }).png().toBuffer();
+    return `data:image/png;base64,${bytes.toString("base64")}`;
+  }
+  const put = (id: string, body: unknown, cookie: string) =>
+    request(app).put(`/api/director/centers/${id}/identity`).set("Cookie", cookie).send(body);
+
+  it("lets directors and supra admins set it; clinic staff and anonymous cannot", async () => {
+    await seedClinic("clinic-a");
+    await request(app).put("/api/director/centers/clinic-a/identity").send({ name: "Nombre Nuevo" }).expect(401);
+    const staff = createSession({ userId: "s1", centerId: "clinic-a", role: "medico" });
+    await put("clinic-a", { name: "Nombre Nuevo" }, `clinivista_session=${staff}`).expect(403);
+    await put("clinic-a", { name: "Nombre Nuevo" }, director()).expect(200);
+    await put("clinic-a", { name: "Otro Nombre" }, admin()).expect(200);
+  });
+
+  it("renames the clinic and stores a logo re-encoded to a PNG of at most 256 px", async () => {
+    await seedClinic("clinic-a");
+    const res = await put("clinic-a", { name: "  Estecapelli  ", logoDataUrl: await pngDataUrl() }, director()).expect(200);
+    expect(res.body.name).toBe("Estecapelli");
+    expect(res.body.logoDataUrl).toMatch(/^data:image\/png;base64,/);
+
+    const sharp = (await import("sharp")).default;
+    const meta = await sharp(Buffer.from(res.body.logoDataUrl.split(",")[1], "base64")).metadata();
+    expect(meta.format).toBe("png");
+    expect(Math.max(meta.width ?? 0, meta.height ?? 0)).toBeLessThanOrEqual(256);
+    expect(meta.width).toBe(256); // 600x300 -> 256x128, aspect kept
+    expect(meta.height).toBe(128);
+
+    const list = await request(app).get("/api/director/centers").set("Cookie", director()).expect(200);
+    expect(list.body.centers.find((c: { id: string }) => c.id === "clinic-a")).toMatchObject({ name: "Estecapelli" });
+  });
+
+  it("keeps the logo when omitted and removes it when null", async () => {
+    await seedClinic("clinic-a");
+    await put("clinic-a", { name: "Clínica A", logoDataUrl: await pngDataUrl() }, director()).expect(200);
+    const kept = await put("clinic-a", { name: "Clínica A2" }, director()).expect(200);
+    expect(kept.body.logoDataUrl).toMatch(/^data:image\/png/);
+    const removed = await put("clinic-a", { name: "Clínica A2", logoDataUrl: null }, director()).expect(200);
+    expect(removed.body.logoDataUrl).toBeNull();
+  });
+
+  it("rejects bad names, non-images, SVG, oversized and corrupt logos, without changing anything", async () => {
+    await seedClinic("clinic-a");
+    await put("clinic-a", { name: "ab" }, director()).expect(400);
+    await put("clinic-a", { name: "Clínica A", logoDataUrl: "no es una imagen" }, director()).expect(400);
+    const svg = `data:image/svg+xml;base64,${Buffer.from("<svg xmlns='http://www.w3.org/2000/svg'><script>alert(1)</script></svg>").toString("base64")}`;
+    await put("clinic-a", { name: "Clínica A", logoDataUrl: svg }, director()).expect(400);
+    await put("clinic-a", { name: "Clínica A", logoDataUrl: `data:image/png;base64,${Buffer.from("esto no es un png").toString("base64")}` }, director()).expect(400);
+    const huge = `data:image/png;base64,${Buffer.alloc(400 * 1024, 1).toString("base64")}`;
+    await put("clinic-a", { name: "Clínica A", logoDataUrl: huge }, director()).expect(400);
+
+    const list = await request(app).get("/api/director/centers").set("Cookie", director()).expect(200);
+    expect(list.body.centers.find((c: { id: string }) => c.id === "clinic-a")).toMatchObject({ name: "Clínica clinic-a", logoDataUrl: null });
+  });
+
+  it("404 for an unknown clinic, and creates the row for an implicit one", async () => {
+    await put("nope", { name: "Nombre Nuevo" }, director()).expect(404);
+    await pglite.exec(`INSERT INTO leads (id, token, name, center_id) VALUES ('l1', 't1', 'X', 'implicit-clinic');`);
+    const res = await put("implicit-clinic", { name: "Clínica Implícita", logoDataUrl: await pngDataUrl(100, 100) }, director()).expect(200);
+    expect(res.body).toMatchObject({ id: "implicit-clinic", name: "Clínica Implícita" });
   });
 });
