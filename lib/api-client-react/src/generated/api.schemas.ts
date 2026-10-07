@@ -156,6 +156,13 @@ export interface DirectorCenterUser {
   createdAt: string;
 }
 
+export interface DirectorCenterUserPatch {
+  /** false blocks the user's access (and closes their open sessions); true restores it. */
+  active?: boolean;
+  /** Marks or unmarks the clinic's legal representative (who may manage the clinic's users). */
+  legalRepresentative?: boolean;
+}
+
 export interface DirectorUserPatch {
   /** false blocks the user's access (and closes their open sessions); true restores it. */
   active: boolean;

@@ -321,7 +321,7 @@ router.patch("/director/centers/:id/users/:userId", async (req, res): Promise<vo
 
   const params = PatchDirectorCenterUserParams.safeParse(req.params);
   const body = PatchDirectorCenterUserBody.safeParse(req.body);
-  if (!params.success || !body.success) {
+  if (!params.success || !body.success || (body.data.active === undefined && body.data.legalRepresentative === undefined)) {
     res.status(400).json({ error: "Datos inválidos." });
     return;
   }
@@ -336,7 +336,17 @@ router.patch("/director/centers/:id/users/:userId", async (req, res): Promise<vo
     res.status(404).json({ error: "Usuario no encontrado en esta clínica." });
     return;
   }
-  res.json(await setUserActive(user.id, body.data.active));
+  if (body.data.legalRepresentative !== undefined) {
+    await db.update(usersTable)
+      .set({ legalRepresentative: body.data.legalRepresentative, updatedAt: new Date() })
+      .where(eq(usersTable.id, user.id));
+  }
+  if (body.data.active !== undefined) {
+    res.json(await setUserActive(user.id, body.data.active));
+    return;
+  }
+  const [updated] = await db.select(TEAM_MEMBER_COLUMNS).from(usersTable).where(eq(usersTable.id, user.id));
+  res.json(updated);
 });
 
 // ── Equipo del panel de supra-control ────────────────────────────────────

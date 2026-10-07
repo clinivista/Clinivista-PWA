@@ -412,7 +412,8 @@ export const PatchDirectorCenterUserParams = zod.object({
 })
 
 export const PatchDirectorCenterUserBody = zod.object({
-  "active": zod.boolean().describe('false blocks the user\'s access (and closes their open sessions); true restores it.')
+  "active": zod.boolean().optional().describe('false blocks the user\'s access (and closes their open sessions); true restores it.'),
+  "legalRepresentative": zod.boolean().optional().describe('Marks or unmarks the clinic\'s legal representative (who may manage the clinic\'s users).')
 })
 
 export const PatchDirectorCenterUserResponse = zod.object({

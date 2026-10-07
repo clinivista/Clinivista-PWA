@@ -763,3 +763,26 @@ describe("representante legal en usuarios de clínica (supra-control)", () => {
     expect(flags).toEqual({ "rep@clinic-a.cl": true, "doc@clinic-a.cl": false });
   });
 });
+
+describe("marcar representante legal desde supra-control", () => {
+  it("sets and clears the flag on an existing clinic user, independently of blocking", async () => {
+    await seedClinic("clinic-a", { staff: 1 });
+    const cookie = `clinivista_session=${directorSession()}`;
+    const url = "/api/director/centers/clinic-a/users/clinic-a-staff-0";
+    const on = await request(app).patch(url).set("Cookie", cookie).send({ legalRepresentative: true }).expect(200);
+    expect(on.body).toMatchObject({ legalRepresentative: true, active: true });
+    const blocked = await request(app).patch(url).set("Cookie", cookie).send({ active: false }).expect(200);
+    expect(blocked.body).toMatchObject({ legalRepresentative: true, active: false }); // flag untouched by blocking
+    const both = await request(app).patch(url).set("Cookie", cookie).send({ active: true, legalRepresentative: false }).expect(200);
+    expect(both.body).toMatchObject({ legalRepresentative: false, active: true });
+    await request(app).patch(url).set("Cookie", cookie).send({}).expect(400);
+  });
+
+  it("is not available to a supra administrator (people management is director-only) nor across clinics", async () => {
+    await seedClinic("clinic-a", { staff: 1 });
+    await seedClinic("clinic-b");
+    const admin = `clinivista_session=${createSession({ userId: "sa", centerId: null, role: "supra_admin" })}`;
+    await request(app).patch("/api/director/centers/clinic-a/users/clinic-a-staff-0").set("Cookie", admin).send({ legalRepresentative: true }).expect(403);
+    await request(app).patch("/api/director/centers/clinic-b/users/clinic-a-staff-0").set("Cookie", `clinivista_session=${directorSession()}`).send({ legalRepresentative: true }).expect(404);
+  });
+});
