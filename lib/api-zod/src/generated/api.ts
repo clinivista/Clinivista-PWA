@@ -768,6 +768,78 @@ export const GetMyClinicResponse = zod.object({
 
 
 /**
+ * @summary Phases and photos configured for the signed-in clinic
+ */
+export const GetClinicProtocolResponse = zod.object({
+  "canEdit": zod.boolean(),
+  "phases": zod.array(zod.object({
+  "id": zod.string(),
+  "key": zod.string(),
+  "name": zod.string(),
+  "position": zod.number(),
+  "patientCaptured": zod.boolean(),
+  "views": zod.array(zod.object({
+  "id": zod.string(),
+  "key": zod.string(),
+  "label": zod.string(),
+  "position": zod.number(),
+  "hasPhotos": zod.boolean()
+}))
+}))
+})
+
+
+/**
+ * @summary Replace the clinic's phases and photos (legal representative only)
+ */
+export const UpdateClinicProtocolBody = zod.object({
+  "phases": zod.array(zod.object({
+  "id": zod.string().optional(),
+  "name": zod.string(),
+  "views": zod.array(zod.object({
+  "id": zod.string().optional(),
+  "label": zod.string()
+}))
+}))
+})
+
+export const UpdateClinicProtocolResponse = zod.object({
+  "canEdit": zod.boolean(),
+  "phases": zod.array(zod.object({
+  "id": zod.string(),
+  "key": zod.string(),
+  "name": zod.string(),
+  "position": zod.number(),
+  "patientCaptured": zod.boolean(),
+  "views": zod.array(zod.object({
+  "id": zod.string(),
+  "key": zod.string(),
+  "label": zod.string(),
+  "position": zod.number(),
+  "hasPhotos": zod.boolean()
+}))
+}))
+})
+
+
+/**
+ * @summary Photos the patient must take in the pre-evaluation (public, by token)
+ */
+export const GetPatientProtocolParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const GetPatientProtocolResponse = zod.object({
+  "phaseName": zod.string(),
+  "views": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "required": zod.boolean()
+}))
+})
+
+
+/**
  * @summary Name and logo of the clinic that invited this patient (public, by token)
  */
 export const GetPatientClinicParams = zod.object({

@@ -82,6 +82,54 @@ export interface MyClinic {
   logoDataUrl: string | null;
 }
 
+export interface ClinicProtocolView {
+  id: string;
+  key: string;
+  label: string;
+  position: number;
+  hasPhotos: boolean;
+}
+
+export interface ClinicProtocolPhase {
+  id: string;
+  key: string;
+  name: string;
+  position: number;
+  patientCaptured: boolean;
+  views: ClinicProtocolView[];
+}
+
+export interface ClinicProtocol {
+  canEdit: boolean;
+  phases: ClinicProtocolPhase[];
+}
+
+export interface ClinicProtocolViewInput {
+  id?: string;
+  label: string;
+}
+
+export interface ClinicProtocolPhaseInput {
+  id?: string;
+  name: string;
+  views: ClinicProtocolViewInput[];
+}
+
+export interface ClinicProtocolUpdate {
+  phases: ClinicProtocolPhaseInput[];
+}
+
+export interface PatientProtocolView {
+  key: string;
+  label: string;
+  required: boolean;
+}
+
+export interface PatientProtocol {
+  phaseName: string;
+  views: PatientProtocolView[];
+}
+
 export interface PatientClinic {
   name: string;
   logoDataUrl: string | null;

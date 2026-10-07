@@ -480,7 +480,7 @@ describe("Full patient form flow — end to end", () => {
 
   it("drops a remembered token the server no longer knows and starts a fresh evaluation", async () => {
     window.localStorage.setItem(PATIENT_TOKEN_KEY, "stale-token");
-    fetchSpy.mockResolvedValue(jsonResponse({ error: "Este enlace ya no está disponible." }, 404));
+    fetchSpy.mockImplementation(async () => jsonResponse({ error: "Este enlace ya no está disponible." }, 404));
 
     const user = setupUser();
     renderFlow();

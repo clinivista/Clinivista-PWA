@@ -6,6 +6,7 @@ import patientsRouter from "./patients";
 import invitationsRouter from "./invitations";
 import directorRouter from "./director";
 import clinicUsersRouter from "./clinic-users";
+import clinicProtocolRouter from "./clinic-protocol";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(patientsRouter);
 router.use(invitationsRouter);
 router.use(directorRouter);
 router.use(clinicUsersRouter);
+router.use(clinicProtocolRouter);
 
 export default router;

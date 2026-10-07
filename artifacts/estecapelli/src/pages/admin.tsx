@@ -3,7 +3,7 @@ import { useLocation, Link } from "wouter";
 import { format, parseISO } from "date-fns";
 import { es as dateFnsEs } from "date-fns/locale";
 import {
-  Users, UserCog, LogOut,
+  Users, UserCog, Layers, LogOut,
   Search, ChevronRight, X, Phone, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu, Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import {
   useGetLeads, getGetLeadsQueryKey,
   useGetMyClinic, getGetMyClinicQueryKey,
   useGetLeadById, getGetLeadByIdQueryKey,
-  usePatchLead, useDeleteLead,
+  usePatchLead, useDeleteLead, useGetClinicProtocol, getGetClinicProtocolQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
@@ -26,6 +26,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { buildPublicPatientLink, copyToClipboard } from "@/lib/clipboard";
 import { DirectorPanel } from "./director-panel";
 import { ClinicUsersPanel } from "./clinic-users-panel";
+import { PhasesPanel } from "./phases-panel";
 
 const STATUS_COLORS: Record<string, string> = {
   nuevo: "bg-blue-100 text-blue-700",
@@ -45,7 +46,7 @@ export default function Admin() {
   const { t, lang, setLang } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [view, setView] = useState<"patients" | "users">("patients");
+  const [view, setView] = useState<"patients" | "users" | "phases">("patients");
   const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
 
   const STATUS_LABELS: Record<string, string> = {
@@ -70,6 +71,13 @@ export default function Admin() {
 
   const { data: myClinic } = useGetMyClinic({ query: { enabled: authStatus?.authenticated, queryKey: getGetMyClinicQueryKey(), staleTime: 5 * 60_000 }});
   const { data: stats } = useGetLeadStats({ query: { enabled: authStatus?.authenticated, queryKey: getGetLeadStatsQueryKey() }});
+
+  // Cuántas fotografías pide la pre-evaluación de esta clínica (por defecto 5) y si
+  // quien mira es su representante legal (ve la pantalla "Fases").
+  const isClinicStaff = authStatus?.authenticated === true && (authStatus.user?.role === "medico" || authStatus.user?.role === "administrativo");
+  const { data: protocol } = useGetClinicProtocol({ query: { enabled: isClinicStaff, queryKey: getGetClinicProtocolQueryKey(), staleTime: 60_000 } });
+  const photoTotal = protocol?.phases[0]?.views.length ?? 5;
+  const canEditPhases = protocol?.canEdit === true;
 
   const leadsParams = { search: search || undefined, status: statusFilter === "all" ? undefined : statusFilter };
   const { data: leadsData, isLoading: leadsLoading } = useGetLeads(leadsParams, {
@@ -222,6 +230,16 @@ export default function Admin() {
                 {t.adminUsers}
               </Button>
             )}
+            {canEditPhases && (
+              <Button
+                variant="ghost"
+                onClick={() => { setView("phases"); setMobileNavOpen(false); }}
+                className={`w-full justify-start text-white hover:bg-white/20 hover:text-white font-medium rounded-2xl h-12 ${view === "phases" ? "bg-white/10" : "bg-transparent"}`}
+              >
+                <Layers className="w-5 h-5 mr-3" />
+                {t.adminPhases}
+              </Button>
+            )}
           </nav>
 
           {/* Language selector */}
@@ -262,7 +280,7 @@ export default function Admin() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-h-0 md:h-[100dvh] overflow-hidden relative">
-        {view === "users" && canManageUsers ? <ClinicUsersPanel /> : (
+        {view === "users" && canManageUsers ? <ClinicUsersPanel /> : view === "phases" && canEditPhases ? <PhasesPanel /> : (
           <>
         {/* Mobile: whole content scrolls; desktop: only the patient list scrolls */}
         <div className="flex-1 min-h-0 flex flex-col overflow-y-auto md:overflow-hidden">
@@ -362,9 +380,9 @@ export default function Admin() {
                           </span>
                         </div>
                         <div className="mt-2 flex items-center gap-4 text-sm">
-                          <span className={`flex items-center gap-1.5 font-bold ${lead.photoCount === 5 ? 'text-primary' : 'text-muted-foreground'}`}>
+                          <span className={`flex items-center gap-1.5 font-bold ${lead.photoCount >= photoTotal ? 'text-primary' : 'text-muted-foreground'}`}>
                             <Camera className="w-4 h-4" />
-                            {lead.photoCount}/5
+                            {lead.photoCount}/{photoTotal}
                           </span>
                           <span className="text-muted-foreground font-medium">
                             {format(parseISO(lead.createdAt), "d MMM, yyyy", { locale: dateFnsEs })}
@@ -405,9 +423,9 @@ export default function Admin() {
                         </span>
                       </td>
                       <td className="px-6 py-5">
-                        <div className={`flex items-center gap-2 font-bold ${lead.photoCount === 5 ? 'text-primary' : 'text-muted-foreground'}`}>
+                        <div className={`flex items-center gap-2 font-bold ${lead.photoCount >= photoTotal ? 'text-primary' : 'text-muted-foreground'}`}>
                           <Camera className="w-4 h-4" />
-                          <span>{lead.photoCount}/5</span>
+                          <span>{lead.photoCount}/{photoTotal}</span>
                         </div>
                       </td>
                       <td className="px-6 py-5 text-muted-foreground font-medium">
@@ -505,7 +523,7 @@ export default function Admin() {
 
                     {/* Photos */}
                     <div className="bg-white p-6 rounded-[1.75rem] shadow-sm">
-                      <h3 className="text-lg font-extrabold text-foreground mb-5">{t.adminPhotoReg} ({fullLead.photos?.length || 0}/5)</h3>
+                      <h3 className="text-lg font-extrabold text-foreground mb-5">{t.adminPhotoReg} ({fullLead.photos?.length || 0}/{photoTotal})</h3>
                       {fullLead.photos && fullLead.photos.length > 0 ? (
                         <div className="grid grid-cols-2 gap-3">
                           {fullLead.photos.map(p => {

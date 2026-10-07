@@ -30,6 +30,7 @@ import {
   discardClinicalPhoto,
   defaultProtocolIdForCenter,
   ensureClinicalConfiguration,
+  getPatientPhaseViews,
   getPatientPhotoFile,
   getPhotoStatusesForLead,
   getRequiredViewKeysForLead,
@@ -410,6 +411,32 @@ router.get("/patients/:token/clinic", async (req, res): Promise<void> => {
     return;
   }
   res.json(await clinicIdentity(lead.centerId));
+});
+
+// The photos this patient must take (the clinic's configured pre-evaluación).
+router.get("/patients/:token/protocol", async (req, res): Promise<void> => {
+  const params = GetPatientParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Token inválido." });
+    return;
+  }
+  const lead = await findLeadByToken(params.data.token);
+  if (!lead) {
+    res.status(404).json({ error: "Este enlace ya no está disponible." });
+    return;
+  }
+  const centerId = lead.centerId || DEFAULT_CENTER_ID;
+  const protocolId = lead.protocolId || defaultProtocolIdForCenter(centerId);
+  await ensureClinicalConfiguration(centerId, protocolId);
+  const { phase, views } = await getPatientPhaseViews(protocolId);
+  res.json({
+    phaseName: phase?.name ?? "Pre-evaluación",
+    views: views.map((view) => ({
+      key: view.key,
+      label: view.label,
+      required: (view.requirements as Record<string, unknown> | null)?.required !== false,
+    })),
+  });
 });
 
 router.get("/patients/:token", async (req, res): Promise<void> => {
