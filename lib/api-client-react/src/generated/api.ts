@@ -25,7 +25,9 @@ import type {
   DirectorCenterPatch,
   DirectorCenterPaymentBody,
   DirectorCenterSummary,
+  DirectorPasswordReset,
   ErrorResponse,
+  GetDirectorCenterUsers200,
   GetDirectorCenters200,
   GetLeads200,
   GetLeadsParams,
@@ -1119,6 +1121,156 @@ export const usePatchDirectorCenter = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getPatchDirectorCenterMutationOptions(options));
+    }
+
+export const getGetDirectorCenterUsersUrl = (id: string,) => {
+
+
+
+
+  return `/api/director/centers/${id}/users`
+}
+
+/**
+ * @summary List the staff accounts of a clinic (director only)
+ */
+export const getDirectorCenterUsers = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<GetDirectorCenterUsers200> => {
+
+  return customFetch<GetDirectorCenterUsers200>(getGetDirectorCenterUsersUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDirectorCenterUsersQueryKey = (id: string,) => {
+    return [
+    `/api/director/centers/${id}/users`
+    ] as const;
+    }
+
+
+export const getGetDirectorCenterUsersQueryOptions = <TData = Awaited<ReturnType<typeof getDirectorCenterUsers>>, TError = ErrorType<ErrorResponse>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDirectorCenterUsers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDirectorCenterUsersQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDirectorCenterUsers>>> = ({ signal }) => getDirectorCenterUsers(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDirectorCenterUsers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDirectorCenterUsersQueryResult = NonNullable<Awaited<ReturnType<typeof getDirectorCenterUsers>>>
+export type GetDirectorCenterUsersQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary List the staff accounts of a clinic (director only)
+ */
+
+export function useGetDirectorCenterUsers<TData = Awaited<ReturnType<typeof getDirectorCenterUsers>>, TError = ErrorType<ErrorResponse>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDirectorCenterUsers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDirectorCenterUsersQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getResetDirectorCenterUserPasswordUrl = (id: string,
+    userId: string,) => {
+
+
+
+
+  return `/api/director/centers/${id}/users/${userId}/reset-password`
+}
+
+/**
+ * @summary Reset a clinic user's password to a generated temporary one, shown once (director only)
+ */
+export const resetDirectorCenterUserPassword = async (id: string,
+    userId: string, options?: Parameters<typeof customFetch>[1]): Promise<DirectorPasswordReset> => {
+
+  return customFetch<DirectorPasswordReset>(getResetDirectorCenterUserPasswordUrl(id,userId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getResetDirectorCenterUserPasswordMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetDirectorCenterUserPassword>>, TError,{id: string;userId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resetDirectorCenterUserPassword>>, TError,{id: string;userId: string}, TContext> => {
+
+const mutationKey = ['resetDirectorCenterUserPassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resetDirectorCenterUserPassword>>, {id: string;userId: string}> = (props) => {
+          const {id,userId} = props ?? {};
+
+          return  resetDirectorCenterUserPassword(id,userId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResetDirectorCenterUserPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof resetDirectorCenterUserPassword>>>
+
+    export type ResetDirectorCenterUserPasswordMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Reset a clinic user's password to a generated temporary one, shown once (director only)
+ */
+export const useResetDirectorCenterUserPassword = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resetDirectorCenterUserPassword>>, TError,{id: string;userId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof resetDirectorCenterUserPassword>>,
+        TError,
+        {id: string;userId: string},
+        TContext
+      > => {
+      return useMutation(getResetDirectorCenterUserPasswordMutationOptions(options));
     }
 
 export const getRecordDirectorCenterPaymentUrl = (id: string,) => {

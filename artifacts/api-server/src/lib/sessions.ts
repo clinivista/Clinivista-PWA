@@ -37,3 +37,10 @@ export function isValidSession(token: string | undefined): boolean {
 export function destroySession(token: string | undefined): void {
   if (token) sessions.delete(token);
 }
+
+/** Closes every open session of one user (e.g. after a password reset). */
+export function destroySessionsForUser(userId: string): void {
+  for (const [token, session] of sessions) {
+    if (session.userId === userId) sessions.delete(token);
+  }
+}

@@ -375,3 +375,68 @@ describe("POST /api/director/centers (crear clínica)", () => {
     }).expect(400);
   });
 });
+
+describe("usuarios de una clínica y reseteo de contraseña", () => {
+  const director = () => `clinivista_session=${directorSession()}`;
+
+  it("rejects non-directors on both endpoints", async () => {
+    await seedClinic("clinic-a", { staff: 1 });
+    await request(app).get("/api/director/centers/clinic-a/users").expect(401);
+    await request(app).post("/api/director/centers/clinic-a/users/clinic-a-staff-0/reset-password").expect(401);
+    const staff = createSession({ userId: "s1", centerId: "clinic-a", role: "medico" });
+    await request(app).get("/api/director/centers/clinic-a/users").set("Cookie", `clinivista_session=${staff}`).expect(403);
+    await request(app).post("/api/director/centers/clinic-a/users/clinic-a-staff-0/reset-password").set("Cookie", `clinivista_session=${staff}`).expect(403);
+  });
+
+  it("lists only that clinic's users, never exposing password hashes", async () => {
+    await seedClinic("clinic-a", { staff: 2 });
+    await seedClinic("clinic-b", { staff: 1 });
+
+    const res = await request(app).get("/api/director/centers/clinic-a/users").set("Cookie", director()).expect(200);
+    expect(res.body.users.map((u: { email: string }) => u.email).sort()).toEqual(["staff0@clinic-a.cl", "staff1@clinic-a.cl"]);
+    expect(res.body.users[0]).toMatchObject({ role: "administrativo", active: true });
+    expect(JSON.stringify(res.body)).not.toMatch(/password|hash|:[0-9a-f]{40}/i);
+  });
+
+  it("returns 404 for an unknown clinic", async () => {
+    await request(app).get("/api/director/centers/nope/users").set("Cookie", director()).expect(404);
+  });
+
+  it("resets to a generated password: old one stops working, new one works, sessions close", async () => {
+    await seedClinic("clinic-a", { staff: 1 });
+    const userSession = createSession({ userId: "clinic-a-staff-0", centerId: "clinic-a", role: "administrativo" });
+    await request(app).get("/api/auth/me").set("Cookie", `clinivista_session=${userSession}`).expect(200)
+      .then((r) => expect(r.body.authenticated).toBe(true));
+
+    const res = await request(app)
+      .post("/api/director/centers/clinic-a/users/clinic-a-staff-0/reset-password")
+      .set("Cookie", director())
+      .expect(200);
+    expect(res.headers["cache-control"]).toBe("no-store");
+    const { temporaryPassword } = res.body;
+    expect(temporaryPassword).toMatch(/^[A-Za-z0-9]{12}$/);
+
+    await request(app).post("/api/auth/login").send({ email: "staff0@clinic-a.cl", password: "password123" }).expect(401);
+    await request(app).post("/api/auth/login").send({ email: "staff0@clinic-a.cl", password: temporaryPassword }).expect(200);
+    await request(app).get("/api/auth/me").set("Cookie", `clinivista_session=${userSession}`).expect(200)
+      .then((r) => expect(r.body.authenticated).toBe(false));
+  });
+
+  it("generates a different password each time", async () => {
+    await seedClinic("clinic-a", { staff: 1 });
+    const reset = () => request(app).post("/api/director/centers/clinic-a/users/clinic-a-staff-0/reset-password").set("Cookie", director()).expect(200);
+    const [a, b] = [(await reset()).body.temporaryPassword, (await reset()).body.temporaryPassword];
+    expect(a).not.toBe(b);
+  });
+
+  it("refuses a user that belongs to another clinic, and directors", async () => {
+    await seedClinic("clinic-a", { staff: 1 });
+    await seedClinic("clinic-b", { staff: 1 });
+    await request(app).post("/api/director/centers/clinic-a/users/clinic-b-staff-0/reset-password").set("Cookie", director()).expect(404);
+
+    await pglite.exec(`INSERT INTO users (id, email, email_normalized, password_hash, role, center_id)
+      VALUES ('dir-1', 'd@x.cl', 'd@x.cl', 'x:y', 'director', 'clinic-a');`);
+    await request(app).post("/api/director/centers/clinic-a/users/dir-1/reset-password").set("Cookie", director()).expect(404);
+    await request(app).post("/api/director/centers/clinic-a/users/missing/reset-password").set("Cookie", director()).expect(404);
+  });
+});

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LogOut, Building2, Users, Download, ShieldOff, ShieldCheck, Loader2, CreditCard, Plus } from "lucide-react";
+import { LogOut, Building2, Users, Download, ShieldOff, ShieldCheck, Loader2, CreditCard, Plus, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,7 @@ import {
 } from "@workspace/api-client-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { CreateCenterForm } from "./create-center-form";
+import { CenterUsers } from "./center-users";
 
 // Fase 6 (facturación, alcance manual): no hay pasarela de pago ni cobro
 // automático — el director registra a mano hasta qué fecha una clínica está
@@ -58,6 +59,7 @@ export function DirectorPanel({ onLogout }: { onLogout: () => void }) {
   const queryClient = useQueryClient();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [usersOpenId, setUsersOpenId] = useState<string | null>(null);
   const [paymentDraft, setPaymentDraft] = useState<Record<string, string>>({});
   const { data, isLoading, isError } = useGetDirectorCenters();
   const patchCenter = usePatchDirectorCenter();
@@ -192,13 +194,22 @@ export function DirectorPanel({ onLogout }: { onLogout: () => void }) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex flex-wrap items-center gap-2 md:shrink-0">
                   <a
                     href={getGetDirectorCenterExportUrl(center.id)}
                     className="inline-flex items-center gap-2 h-10 px-4 rounded-full border border-[#E8E4DE] text-sm font-semibold text-foreground hover:bg-[#F5F2EE] transition-colors"
                   >
                     <Download className="w-4 h-4" /> Exportar datos
                   </a>
+                  <Button
+                    variant="outline"
+                    className="rounded-full h-10 font-semibold"
+                    aria-expanded={usersOpenId === center.id}
+                    onClick={() => setUsersOpenId(usersOpenId === center.id ? null : center.id)}
+                  >
+                    <Users className="w-4 h-4 mr-2" /> Usuarios
+                    <ChevronDown className={`w-4 h-4 ml-1 transition-transform ${usersOpenId === center.id ? "rotate-180" : ""}`} />
+                  </Button>
                   <Button
                     variant={center.active ? "outline" : "default"}
                     className="rounded-full h-10 font-semibold"
@@ -240,6 +251,8 @@ export function DirectorPanel({ onLogout }: { onLogout: () => void }) {
                   </Button>
                 </div>
               </div>
+
+              {usersOpenId === center.id && <CenterUsers centerId={center.id} />}
             </div>
           ))}
         </div>

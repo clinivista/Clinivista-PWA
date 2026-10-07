@@ -66,6 +66,28 @@ export interface DirectorCenterPatch {
   active: boolean;
 }
 
+export type DirectorCenterUserRole = typeof DirectorCenterUserRole[keyof typeof DirectorCenterUserRole];
+
+
+export const DirectorCenterUserRole = {
+  medico: 'medico',
+  administrativo: 'administrativo',
+} as const;
+
+export interface DirectorCenterUser {
+  id: string;
+  email: string;
+  name: string;
+  role: DirectorCenterUserRole;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface DirectorPasswordReset {
+  /** Generated password, shown only once. The user's open sessions are closed. */
+  temporaryPassword: string;
+}
+
 export type DirectorCenterCreateUserRole = typeof DirectorCenterCreateUserRole[keyof typeof DirectorCenterCreateUserRole];
 
 
@@ -299,5 +321,9 @@ export type GetLeads200 = {
 
 export type GetDirectorCenters200 = {
   centers: DirectorCenterSummary[];
+};
+
+export type GetDirectorCenterUsers200 = {
+  users: DirectorCenterUser[];
 };
 
