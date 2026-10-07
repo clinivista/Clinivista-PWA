@@ -52,6 +52,7 @@ import type {
   PatientPhotoStatus,
   PatientPhotoStatusResult,
   PatientResult,
+  PhotoConfirmation,
   SimpleOk
 } from './api.schemas';
 
@@ -2696,14 +2697,15 @@ export const getConfirmPatientPhotoUrl = (token: string,
  * @summary Confirm a draft clinical photo for the token holder
  */
 export const confirmPatientPhoto = async (token: string,
-    photoId: string, options?: Parameters<typeof customFetch>[1]): Promise<PatientPhotoStatus> => {
+    photoId: string,
+    photoConfirmation?: PhotoConfirmation, options?: Parameters<typeof customFetch>[1]): Promise<PatientPhotoStatus> => {
 
   return customFetch<PatientPhotoStatus>(getConfirmPatientPhotoUrl(token,photoId),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(photoConfirmation)
   }
 );}
 
@@ -2712,8 +2714,8 @@ export const confirmPatientPhoto = async (token: string,
 
 
 export const getConfirmPatientPhotoMutationOptions = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmPatientPhoto>>, TError,{token: string;photoId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof confirmPatientPhoto>>, TError,{token: string;photoId: string}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmPatientPhoto>>, TError,{token: string;photoId: string;data?: BodyType<PhotoConfirmation>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmPatientPhoto>>, TError,{token: string;photoId: string;data?: BodyType<PhotoConfirmation>}, TContext> => {
 
 const mutationKey = ['confirmPatientPhoto'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -2725,10 +2727,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmPatientPhoto>>, {token: string;photoId: string}> = (props) => {
-          const {token,photoId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmPatientPhoto>>, {token: string;photoId: string;data?: BodyType<PhotoConfirmation>}> = (props) => {
+          const {token,photoId,data} = props ?? {};
 
-          return  confirmPatientPhoto(token,photoId,requestOptions)
+          return  confirmPatientPhoto(token,photoId,data,requestOptions)
         }
 
 
@@ -2739,18 +2741,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type ConfirmPatientPhotoMutationResult = NonNullable<Awaited<ReturnType<typeof confirmPatientPhoto>>>
-
+    export type ConfirmPatientPhotoMutationBody = BodyType<PhotoConfirmation> | undefined
     export type ConfirmPatientPhotoMutationError = ErrorType<ErrorResponse>
 
     /**
  * @summary Confirm a draft clinical photo for the token holder
  */
 export const useConfirmPatientPhoto = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmPatientPhoto>>, TError,{token: string;photoId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmPatientPhoto>>, TError,{token: string;photoId: string;data?: BodyType<PhotoConfirmation>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof confirmPatientPhoto>>,
         TError,
-        {token: string;photoId: string},
+        {token: string;photoId: string;data?: BodyType<PhotoConfirmation>},
         TContext
       > => {
       return useMutation(getConfirmPatientPhotoMutationOptions(options));

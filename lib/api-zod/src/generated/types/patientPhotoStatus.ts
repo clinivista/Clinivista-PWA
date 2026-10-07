@@ -27,5 +27,10 @@ export interface PatientPhotoStatus {
   /** @nullable */
   height?: number | null;
   captureMetadata?: unknown;
+  /**
+     * Optional description the patient wrote for this photo
+     * @nullable
+     */
+  note?: string | null;
   editParams?: unknown;
 }

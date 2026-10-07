@@ -104,6 +104,8 @@ const patientSchema = z.object({
 
 type PatientFormValues = z.infer<typeof patientSchema>;
 
+const PHOTO_NOTE_MAX = 500;
+
 // ---------- Active photo card (wizard) ----------
 interface ActivePhotoCardProps {
   view: PhotoProtocolView;
@@ -116,7 +118,7 @@ interface ActivePhotoCardProps {
   serverState?: ServerPhotoState;
   onFileSelected: (key: string, file: File) => Promise<void>;
   onCameraCaptured: (key: string, dataUrl: string) => Promise<void>;
-  onAccept: (key: string) => void;
+  onAccept: (key: string, note: string) => void;
   onRetake: () => void;
   onEdit: (key: string) => void;
   isProcessing: boolean;
@@ -133,6 +135,7 @@ function ActivePhotoCard({
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [guideOpen, setGuideOpen] = useState(true);
+  const [note, setNote] = useState(serverState?.note ?? "");
   const { t } = useLanguage();
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -237,10 +240,23 @@ function ActivePhotoCard({
                   )}
                 </div>
               )}
+              <div className="space-y-1.5">
+                <label htmlFor={`photo-note-${photoKey}`} className="block text-sm font-semibold text-foreground">{t.pPhotoNoteLabel}</label>
+                <Textarea
+                  id={`photo-note-${photoKey}`}
+                  value={note}
+                  maxLength={PHOTO_NOTE_MAX}
+                  onChange={(event) => setNote(event.target.value)}
+                  placeholder={t.pPhotoNotePlaceholder}
+                  disabled={isProcessing}
+                  className="rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base min-h-[80px] resize-none"
+                />
+                <p className="text-xs text-muted-foreground text-right">{note.length}/{PHOTO_NOTE_MAX}</p>
+              </div>
               <div className="flex gap-2.5 flex-wrap">
                 <button
                   type="button"
-                  onClick={() => onAccept(photoKey)}
+                  onClick={() => { onAccept(photoKey, note); }}
                   disabled={isProcessing}
                   className="inline-flex items-center gap-2 text-sm font-bold px-5 py-3 rounded-full bg-primary text-white hover:bg-primary/90 shadow-sm shadow-primary/20 transition-all disabled:opacity-50"
                 >
@@ -278,6 +294,12 @@ function ActivePhotoCard({
                 <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-[#F5F2EE]/60 flex flex-col items-center justify-center py-10 text-gray-300">
                   <Camera className="w-10 h-10 mb-2" />
                   <span className="text-[11px] uppercase font-black tracking-widest">{index + 1} / {total}</span>
+                </div>
+              )}
+              {hasAccepted && serverState?.note && (
+                <div className="rounded-2xl bg-[#F5F2EE] border border-[#E8E4DE] px-4 py-3 text-sm">
+                  <span className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">{t.adminPhotoNote}</span>
+                  <p className="whitespace-pre-wrap break-words text-foreground">{serverState.note}</p>
                 </div>
               )}
               <div className="flex gap-2.5 flex-wrap">
@@ -333,6 +355,7 @@ type ServerPhotoState = {
   mimeType?: string;
   sizeBytes?: number;
   editParams?: unknown;
+  note?: string | null;
 };
 
 // ---------- Resume token (this device only) ----------
@@ -571,7 +594,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
   };
 
   // "Usar esta foto": accept the pending capture, auto-save, and advance to the next missing photo
-  const handleAcceptPhoto = async (key: string) => {
+  const handleAcceptPhoto = async (key: string, note: string) => {
     if (!pendingPhoto || !pendingPhotoFile || !patientToken) return;
     setProcessingPhoto(key);
     let confirmedPhoto: ServerPhotoState | null = null;
@@ -598,8 +621,10 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
       });
       if (!upload.ok) throw new Error("Upload failed");
       const uploaded = await upload.json() as { id: string; key: string };
+      const trimmedNote = note.trim();
       const confirmation = await fetch(`/api/patients/${encodeURIComponent(patientToken)}/photos/${encodeURIComponent(uploaded.id)}/confirm`, {
         method: "POST",
+        ...(trimmedNote ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify({ note: trimmedNote }) } : {}),
       });
       if (!confirmation.ok) throw new Error("Confirmation failed");
       confirmedPhoto = await confirmation.json() as ServerPhotoState;

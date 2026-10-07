@@ -49,5 +49,6 @@ export * from './patientPhotoStatusResult';
 export * from './patientPhotoStatusSource';
 export * from './patientPhotoStatusStatus';
 export * from './patientResult';
+export * from './photoConfirmation';
 export * from './photoEntry';
 export * from './simpleOk';

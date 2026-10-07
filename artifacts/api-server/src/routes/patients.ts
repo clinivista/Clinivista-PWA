@@ -517,14 +517,23 @@ router.post("/patients/:token/photos", express.raw({ type: ["image/jpeg", "image
   }
 });
 
+const MAX_PHOTO_NOTE_LENGTH = 500;
+
 router.post("/patients/:token/photos/:photoId/confirm", async (req, res): Promise<void> => {
   const params = ConfirmPatientPhotoParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: "Solicitud inválida." });
     return;
   }
+  // Optional description the patient adds to the photo (plain text, trimmed).
+  const rawNote = (req.body as { note?: unknown } | undefined)?.note;
+  if (rawNote !== undefined && rawNote !== null && (typeof rawNote !== "string" || rawNote.length > MAX_PHOTO_NOTE_LENGTH)) {
+    res.status(400).json({ error: `La descripción no puede superar ${MAX_PHOTO_NOTE_LENGTH} caracteres.` });
+    return;
+  }
+  const note = typeof rawNote === "string" ? rawNote.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").trim() || null : undefined;
   const lead = await findLeadByToken(params.data.token);
-  const photo = lead ? await confirmClinicalPhoto(lead, params.data.photoId) : null;
+  const photo = lead ? await confirmClinicalPhoto(lead, params.data.photoId, note) : null;
   if (!photo) {
     res.status(404).json({ error: "Borrador no encontrado." });
     return;
