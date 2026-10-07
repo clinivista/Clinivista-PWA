@@ -5,7 +5,10 @@ import { z } from "zod/v4";
 // "medico" and "administrativo" belong to one clinic (`centerId` set).
 // "director" is Jose/Juan Alberto's own supra-control role: it sees across
 // every clinic, so it deliberately has no `centerId` (see routes/auth.ts).
-export const USER_ROLES = ["medico", "administrativo", "director"] as const;
+// "supra_admin" is a platform-side operator created by a director: it works
+// the supra-control panel (clinics, payments, suspensions, exports) but cannot
+// manage users — only directors do that. Also no `centerId`.
+export const USER_ROLES = ["medico", "administrativo", "director", "supra_admin"] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 export const usersTable = pgTable("users", {
@@ -16,7 +19,7 @@ export const usersTable = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   name: text("name").notNull().default(""),
   role: text("role", { enum: USER_ROLES }).notNull(),
-  // null only for "director" — every clinic-scoped role must have one.
+  // null only for "director" and "supra_admin" — every clinic-scoped role must have one.
   centerId: text("center_id"),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

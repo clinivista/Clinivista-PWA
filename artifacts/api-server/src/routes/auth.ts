@@ -40,14 +40,31 @@ export function requireStaffAuth(req: Request, res: Response): StaffAuthContext 
     res.status(401).json({ error: "Sesión requerida." });
     return undefined;
   }
-  if (session.role === "director" || !session.centerId) {
+  if ((session.role !== "medico" && session.role !== "administrativo") || !session.centerId) {
     res.status(403).json({ error: "Esta acción requiere una cuenta de clínica (médico o administrativo)." });
     return undefined;
   }
   return { userId: session.userId, centerId: session.centerId, role: session.role };
 }
 
-/** director only — the supra-control panel that sees every clinic. */
+/**
+ * The supra-control panel's operating surface (clinics, payments,
+ * suspensions, exports): a director or a supra-control administrator.
+ */
+export function requireSupraAuth(req: Request, res: Response): { userId: string; role: "director" | "supra_admin" } | undefined {
+  const session = getSession(getToken(req));
+  if (!session) {
+    res.status(401).json({ error: "Sesión requerida." });
+    return undefined;
+  }
+  if (session.role !== "director" && session.role !== "supra_admin") {
+    res.status(403).json({ error: "Esta acción requiere una cuenta del panel de supra-control." });
+    return undefined;
+  }
+  return { userId: session.userId, role: session.role };
+}
+
+/** director only — managing people (clinic users, the supra-control team). */
 export function requireDirectorAuth(req: Request, res: Response): { userId: string } | undefined {
   const session = getSession(getToken(req));
   if (!session) {

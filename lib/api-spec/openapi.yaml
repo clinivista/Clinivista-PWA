@@ -489,6 +489,218 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /director/centers/{id}/users/{userId}:
+    patch:
+      operationId: patchDirectorCenterUser
+      tags: [director]
+      summary: Block or unblock one clinic user's access (director only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DirectorUserPatch"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DirectorCenterUser"
+        "400":
+          description: Invalid data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a director account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found in that clinic
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /director/team:
+    get:
+      operationId: getDirectorTeam
+      tags: [director]
+      summary: List the supra-control team - directors and administrators (director only)
+      responses:
+        "200":
+          description: Supra-control team
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [users]
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DirectorTeamMember"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a director account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createDirectorTeamMember
+      tags: [director]
+      summary: Create a supra-control administrator (director only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DirectorTeamCreateBody"
+      responses:
+        "201":
+          description: Administrator created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DirectorTeamMember"
+        "400":
+          description: Invalid data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a director account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /director/team/{userId}:
+    patch:
+      operationId: patchDirectorTeamMember
+      tags: [director]
+      summary: Block or unblock a supra-control administrator (director only)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DirectorUserPatch"
+      responses:
+        "200":
+          description: Updated administrator
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DirectorTeamMember"
+        "400":
+          description: Invalid data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a director account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Administrator not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /director/team/{userId}/reset-password:
+    post:
+      operationId: resetDirectorTeamMemberPassword
+      tags: [director]
+      summary: Reset a supra-control administrator's password to a generated temporary one, shown once (director only)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Password reset; the temporary password is returned only in this response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DirectorPasswordReset"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a director account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Administrator not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /director/centers/{id}/payments:
     post:
       operationId: recordDirectorCenterPayment
@@ -1011,11 +1223,11 @@ components:
           type: string
         role:
           type: string
-          enum: [medico, administrativo, director]
+          enum: [medico, administrativo, director, supra_admin]
         centerId:
           type: string
           nullable: true
-          description: null only for "director" accounts, which see every clinic.
+          description: null only for "director" and "supra_admin" accounts, which are not tied to one clinic.
 
     DirectorCenterSummary:
       type: object
@@ -1070,6 +1282,45 @@ components:
         createdAt:
           type: string
           format: date-time
+
+    DirectorUserPatch:
+      type: object
+      required: [active]
+      properties:
+        active:
+          type: boolean
+          description: false blocks the user's access (and closes their open sessions); true restores it.
+
+    DirectorTeamMember:
+      type: object
+      required: [id, email, name, role, active, createdAt]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [director, supra_admin]
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    DirectorTeamCreateBody:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        password:
+          type: string
+          description: At least 8 characters. Never stored in plain text.
 
     DirectorPasswordReset:
       type: object

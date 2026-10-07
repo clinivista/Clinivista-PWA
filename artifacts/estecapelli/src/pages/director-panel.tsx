@@ -15,6 +15,7 @@ import {
 import { BrandLogo } from "@/components/brand-logo";
 import { CreateCenterForm } from "./create-center-form";
 import { CenterUsers } from "./center-users";
+import { SupraTeam } from "./supra-team";
 
 // Fase 6 (facturación, alcance manual): no hay pasarela de pago ni cobro
 // automático — el director registra a mano hasta qué fecha una clínica está
@@ -54,7 +55,9 @@ function chileEndOfDayIso(dateValue: string): string {
   return new Date(reference.getTime() + utcOffsetMs(reference, CLINIC_TIME_ZONE)).toISOString();
 }
 
-export function DirectorPanel({ onLogout }: { onLogout: () => void }) {
+// Un director gestiona además a las personas (usuarios de clínica y equipo de
+// supra-control); un administrativo de supra-control solo opera el panel.
+export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: () => void; canManageUsers?: boolean }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -130,6 +133,7 @@ export function DirectorPanel({ onLogout }: { onLogout: () => void }) {
       </header>
 
       <main className="flex-1 p-6 md:p-10 max-w-5xl w-full mx-auto">
+        {canManageUsers && <SupraTeam />}
         {creating ? (
           <CreateCenterForm onClose={() => setCreating(false)} />
         ) : (
@@ -201,6 +205,7 @@ export function DirectorPanel({ onLogout }: { onLogout: () => void }) {
                   >
                     <Download className="w-4 h-4" /> Exportar datos
                   </a>
+                  {canManageUsers && (
                   <Button
                     variant="outline"
                     className="rounded-full h-10 font-semibold"
@@ -210,6 +215,7 @@ export function DirectorPanel({ onLogout }: { onLogout: () => void }) {
                     <Users className="w-4 h-4 mr-2" /> Usuarios
                     <ChevronDown className={`w-4 h-4 ml-1 transition-transform ${usersOpenId === center.id ? "rotate-180" : ""}`} />
                   </Button>
+                  )}
                   <Button
                     variant={center.active ? "outline" : "default"}
                     className="rounded-full h-10 font-semibold"
@@ -252,7 +258,7 @@ export function DirectorPanel({ onLogout }: { onLogout: () => void }) {
                 </div>
               </div>
 
-              {usersOpenId === center.id && <CenterUsers centerId={center.id} />}
+              {canManageUsers && usersOpenId === center.id && <CenterUsers centerId={center.id} />}
             </div>
           ))}
         </div>
