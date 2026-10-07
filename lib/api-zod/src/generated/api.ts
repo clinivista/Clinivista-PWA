@@ -337,6 +337,38 @@ export const PatchDirectorCenterResponse = zod.object({
 
 
 /**
+ * @summary List the staff accounts of a clinic (director only)
+ */
+export const GetDirectorCenterUsersParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetDirectorCenterUsersResponse = zod.object({
+  "users": zod.array(zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['medico', 'administrativo']),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Reset a clinic user's password to a generated temporary one, shown once (director only)
+ */
+export const ResetDirectorCenterUserPasswordParams = zod.object({
+  "id": zod.coerce.string(),
+  "userId": zod.coerce.string()
+})
+
+export const ResetDirectorCenterUserPasswordResponse = zod.object({
+  "temporaryPassword": zod.string().describe('Generated password, shown only once. The user\'s open sessions are closed.')
+})
+
+
+/**
  * @summary Manually record that a clinic has paid through a given date (director only)
  */
 export const RecordDirectorCenterPaymentParams = zod.object({

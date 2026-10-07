@@ -1,18 +1,22 @@
 import { Router, type IRouter } from "express";
-import { eq, sql } from "drizzle-orm";
+import crypto from "crypto";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { db, centersTable, leadsTable, usersTable, hashPassword, normalizeEmail } from "@workspace/db";
 import {
   CreateDirectorCenterBody,
   GetDirectorCenterExportParams,
+  GetDirectorCenterUsersParams,
   PatchDirectorCenterBody,
   PatchDirectorCenterParams,
   RecordDirectorCenterPaymentBody,
   RecordDirectorCenterPaymentParams,
+  ResetDirectorCenterUserPasswordParams,
 } from "@workspace/api-zod";
 import { requireDirectorAuth } from "./auth";
 import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
 import { seedSamplePatients } from "../lib/demo-patients";
 import { clean, uid } from "../lib/helpers";
+import { destroySessionsForUser } from "../lib/sessions";
 
 const router: IRouter = Router();
 
@@ -190,6 +194,76 @@ router.patch("/director/centers/:id", async (req, res): Promise<void> => {
     return;
   }
   res.json(updated);
+});
+
+// Sin caracteres ambiguos (0/O, 1/l/I) para que se pueda dictar o leer sin errores.
+const TEMP_PASSWORD_ALPHABET = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const TEMP_PASSWORD_LENGTH = 12;
+
+function generateTemporaryPassword(): string {
+  return Array.from({ length: TEMP_PASSWORD_LENGTH }, () =>
+    TEMP_PASSWORD_ALPHABET[crypto.randomInt(TEMP_PASSWORD_ALPHABET.length)],
+  ).join("");
+}
+
+router.get("/director/centers/:id/users", async (req, res): Promise<void> => {
+  const context = requireDirectorAuth(req, res);
+  if (!context) return;
+
+  const params = GetDirectorCenterUsersParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Solicitud inválida." });
+    return;
+  }
+  if (!(await centerSummaries()).some((center) => center.id === params.data.id)) {
+    res.status(404).json({ error: "Clínica no encontrada." });
+    return;
+  }
+
+  // Never select passwordHash: this list is for display only.
+  const users = await db.select({
+    id: usersTable.id,
+    email: usersTable.email,
+    name: usersTable.name,
+    role: usersTable.role,
+    active: usersTable.active,
+    createdAt: usersTable.createdAt,
+  }).from(usersTable).where(eq(usersTable.centerId, params.data.id));
+  users.sort((a, b) => a.name.localeCompare(b.name) || a.email.localeCompare(b.email));
+  res.json({ users });
+});
+
+router.post("/director/centers/:id/users/:userId/reset-password", async (req, res): Promise<void> => {
+  const context = requireDirectorAuth(req, res);
+  if (!context) return;
+
+  const params = ResetDirectorCenterUserPasswordParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Solicitud inválida." });
+    return;
+  }
+
+  // The user must belong to the clinic in the URL (and never be a director),
+  // so one clinic's panel row can't be used to reset another clinic's account.
+  const [user] = await db.select({ id: usersTable.id }).from(usersTable).where(and(
+    eq(usersTable.id, params.data.userId),
+    eq(usersTable.centerId, params.data.id),
+    ne(usersTable.role, "director"),
+  ));
+  if (!user) {
+    res.status(404).json({ error: "Usuario no encontrado en esta clínica." });
+    return;
+  }
+
+  const temporaryPassword = generateTemporaryPassword();
+  await db.update(usersTable)
+    .set({ passwordHash: hashPassword(temporaryPassword), updatedAt: new Date() })
+    .where(eq(usersTable.id, user.id));
+  destroySessionsForUser(user.id);
+
+  // The temporary password is returned exactly once and must never be cached.
+  res.setHeader("Cache-Control", "no-store");
+  res.json({ temporaryPassword });
 });
 
 router.post("/director/centers/:id/payments", async (req, res): Promise<void> => {

@@ -404,6 +404,91 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /director/centers/{id}/users:
+    get:
+      operationId: getDirectorCenterUsers
+      tags: [director]
+      summary: List the staff accounts of a clinic (director only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Staff accounts of the clinic
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [users]
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DirectorCenterUser"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a director account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Clinic not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /director/centers/{id}/users/{userId}/reset-password:
+    post:
+      operationId: resetDirectorCenterUserPassword
+      tags: [director]
+      summary: Reset a clinic user's password to a generated temporary one, shown once (director only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Password reset; the temporary password is returned only in this response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DirectorPasswordReset"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a director account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found in that clinic
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /director/centers/{id}/payments:
     post:
       operationId: recordDirectorCenterPayment
@@ -966,6 +1051,33 @@ components:
       properties:
         active:
           type: boolean
+
+    DirectorCenterUser:
+      type: object
+      required: [id, email, name, role, active, createdAt]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [medico, administrativo]
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    DirectorPasswordReset:
+      type: object
+      required: [temporaryPassword]
+      properties:
+        temporaryPassword:
+          type: string
+          description: Generated password, shown only once. The user's open sessions are closed.
 
     DirectorCenterCreateBody:
       type: object
