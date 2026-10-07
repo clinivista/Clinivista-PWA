@@ -8,6 +8,8 @@ import { LanguageProvider } from "@/lib/language";
 vi.mock("@workspace/api-client-react", () => ({
   useGetPatient: () => ({ data: undefined, isLoading: false, isError: false }),
   getGetPatientQueryKey: (token: string) => ["/api/patients", token],
+  useGetPatientClinic: () => ({ data: undefined }),
+  getGetPatientClinicQueryKey: (token: string) => ["/api/patients", token, "clinic"],
   useCreatePatient: () => ({ mutate: vi.fn(), isPending: false }),
   useUpdatePatient: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
   useDiscardPatientPhotos: () => ({ mutateAsync: vi.fn(), isPending: false }),

@@ -926,7 +926,7 @@ export default function PatientFlow() {
       {/* Header */}
       <header className="bg-white px-5 py-4 shadow-sm border-b border-[#E8E4DE] flex items-center justify-between sticky top-0 z-40">
         {token ? (
-          clinic ? (
+          clinic?.name ? (
             <ClinicBadge name={clinic.name} logoDataUrl={clinic.logoDataUrl} />
           ) : (
             // Mientras carga (o si falla) no se muestra ninguna marca ajena.
