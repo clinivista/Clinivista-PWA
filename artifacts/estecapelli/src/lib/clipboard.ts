@@ -10,13 +10,13 @@ export function buildPatientLink(token: string): string {
 }
 
 /**
- * Permanent, token-less self-registration link. /patient without a token
- * creates the patient's own evaluation on submit, so one link works for
- * every patient and never expires.
+ * Permanent, token-less self-registration link of a clinic (/c/<slug>). One
+ * link per clinic: it registers the patient in that clinic and never expires.
+ * Without a slug it falls back to the generic /patient link (main clinic).
  */
-export function buildPublicPatientLink(): string {
+export function buildPublicPatientLink(slug?: string | null): string {
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-  return `${window.location.origin}${base}/patient`;
+  return `${window.location.origin}${base}${slug ? `/c/${encodeURIComponent(slug)}` : "/patient"}`;
 }
 
 /**

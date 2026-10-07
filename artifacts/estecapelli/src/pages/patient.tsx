@@ -26,7 +26,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
 import {
-  useGetPatient, getGetPatientQueryKey, useGetPatientClinic, getGetPatientClinicQueryKey, useCreatePatient, useUpdatePatient, useDiscardPatientPhotos,
+  useGetPatient, getGetPatientQueryKey, useGetPatientClinic, getGetPatientClinicQueryKey, useCreatePatient, useGetClinic, getGetClinicQueryKey, useCreateClinicPatient, useUpdatePatient, useDiscardPatientPhotos,
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
@@ -339,24 +339,30 @@ type ServerPhotoState = {
 // The token is the bearer credential for the patient's own evaluation. Keeping
 // it on the device that created it lets the patient resume after leaving,
 // without the server ever handing it out for a phone/email/RUT match.
+// Each clinic address (/c/<slug>) keeps its own token, so a patient evaluated
+// at two clinics never mixes them up. The generic /patient keeps the legacy key.
 const PATIENT_TOKEN_KEY = "estecapelli.patient-token";
 
-function readStoredPatientToken(): string | null {
-  try { return localStorage.getItem(PATIENT_TOKEN_KEY); } catch { return null; }
+function tokenStorageKey(clinicSlug?: string): string {
+  return clinicSlug ? `${PATIENT_TOKEN_KEY}.${clinicSlug}` : PATIENT_TOKEN_KEY;
 }
-function storePatientToken(token: string) {
-  try { localStorage.setItem(PATIENT_TOKEN_KEY, token); } catch { /* storage unavailable: resume only via URL */ }
+function readStoredPatientToken(clinicSlug?: string): string | null {
+  try { return localStorage.getItem(tokenStorageKey(clinicSlug)); } catch { return null; }
 }
-function clearStoredPatientToken() {
-  try { localStorage.removeItem(PATIENT_TOKEN_KEY); } catch { /* ignore */ }
+function storePatientToken(token: string, clinicSlug?: string) {
+  try { localStorage.setItem(tokenStorageKey(clinicSlug), token); } catch { /* storage unavailable: resume only via URL */ }
+}
+function clearStoredPatientToken(clinicSlug?: string) {
+  try { localStorage.removeItem(tokenStorageKey(clinicSlug)); } catch { /* ignore */ }
 }
 
 // ---------- Main component ----------
-export default function PatientFlow() {
+export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}) {
+  const basePath = clinicSlug ? `/c/${clinicSlug}` : "/patient";
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
   const urlToken = params.get("token");
-  const [storedToken, setStoredToken] = useState<string | null>(() => urlToken ? null : readStoredPatientToken());
+  const [storedToken, setStoredToken] = useState<string | null>(() => urlToken ? null : readStoredPatientToken(clinicSlug));
   const token = urlToken ?? storedToken;
   const [patientToken, setPatientToken] = useState<string | null>(token);
   const { t, lang, setLang } = useLanguage();
@@ -395,9 +401,14 @@ export default function PatientFlow() {
   // La vista del paciente muestra a la clínica que hace la captura (su nombre y
   // logo), no la marca de la plataforma. Sin token todavía no hay clínica
   // conocida, así que ahí se mantiene la marca genérica.
-  const { data: clinic } = useGetPatientClinic(token || "", {
+  const { data: tokenClinic } = useGetPatientClinic(token || "", {
     query: { enabled: !!token, queryKey: getGetPatientClinicQueryKey(token || ""), retry: false, staleTime: 5 * 60_000 },
   });
+  // En /c/<slug> la clínica se conoce desde el primer momento, aun sin token.
+  const { data: slugClinic } = useGetClinic(clinicSlug ?? "", {
+    query: { enabled: !!clinicSlug, queryKey: getGetClinicQueryKey(clinicSlug ?? ""), retry: false, staleTime: 5 * 60_000 },
+  });
+  const clinic = tokenClinic ?? slugClinic;
   useEffect(() => {
     if (!clinic?.name) return;
     const previousTitle = document.title;
@@ -407,8 +418,8 @@ export default function PatientFlow() {
 
   // Remember a working token on this device (covers invitation links too).
   useEffect(() => {
-    if (token && existingData?.lead) storePatientToken(token);
-  }, [token, existingData]);
+    if (token && existingData?.lead) storePatientToken(token, clinicSlug);
+  }, [token, existingData, clinicSlug]);
 
   // A remembered token the server no longer knows is dropped silently so the
   // patient gets a fresh form instead of an "invalid link" screen. Network
@@ -416,7 +427,7 @@ export default function PatientFlow() {
   useEffect(() => {
     if (urlToken || !storedToken || !isTokenError) return;
     if ((tokenError as { status?: number } | null)?.status !== 404) return;
-    clearStoredPatientToken();
+    clearStoredPatientToken(clinicSlug);
     setStoredToken(null);
     setPatientToken(null);
   }, [urlToken, storedToken, isTokenError, tokenError]);
@@ -479,7 +490,15 @@ export default function PatientFlow() {
     return () => { alive = false; };
   }, [token]);
 
-  const createMutation = useCreatePatient();
+  const createLegacyMutation = useCreatePatient();
+  const createClinicMutation = useCreateClinicPatient();
+  const createMutation = clinicSlug ? createClinicMutation : createLegacyMutation;
+  type CreateOptions = Parameters<typeof createLegacyMutation.mutate>[1];
+  // /c/<slug> registra en esa clínica; /patient (legado) en la clínica principal.
+  const createPatient = (data: PatientFormValues, options: CreateOptions) =>
+    clinicSlug
+      ? createClinicMutation.mutate({ slug: clinicSlug, data }, options)
+      : createLegacyMutation.mutate({ data }, options);
   const updateMutation = useUpdatePatient();
   const discardMutation = useDiscardPatientPhotos();
 
@@ -722,12 +741,12 @@ export default function PatientFlow() {
       return;
     }
     setDuplicateError(null);
-    createMutation.mutate({ data }, {
+    createPatient(data, {
       onSuccess: (result) => {
         const newToken = result.lead.token;
         setPatientToken(newToken);
-        storePatientToken(newToken);
-        window.history.replaceState({}, "", `/patient?token=${encodeURIComponent(newToken)}`);
+        storePatientToken(newToken, clinicSlug);
+        window.history.replaceState({}, "", `${basePath}?token=${encodeURIComponent(newToken)}`);
         setStep("photos");
         setCurrentPhotoIndex(0);
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -772,11 +791,18 @@ export default function PatientFlow() {
     return () => window.removeEventListener("popstate", onPop);
   }, [step]);
 
+  // Salir devuelve a la portada; dentro de una clínica se recarga su propia
+  // dirección para volver a un formulario limpio (el mismo ruteo no reinicia el estado).
+  const leaveFlow = () => {
+    if (clinicSlug) window.location.assign(`${import.meta.env.BASE_URL.replace(/\/$/, "")}${basePath}`);
+    else navigate("/");
+  };
+
   const handleExitKeepProgress = () => {
     setExitDialog("closed");
     if (patientToken && dirty) saveDraft();
     setDirty(false);
-    navigate("/");
+    leaveFlow();
   };
 
   const clearLocalDraft = () => {
@@ -816,9 +842,9 @@ export default function PatientFlow() {
     if (!ok) return; // keep the dialog open so the patient can retry
     setExitDialog("closed");
     clearLocalDraft();
-    clearStoredPatientToken();
+    clearStoredPatientToken(clinicSlug);
     form.reset();
-    navigate("/");
+    leaveFlow();
   };
 
   // "Empezar desde el principio": also resets the server draft photos so the
@@ -846,14 +872,14 @@ export default function PatientFlow() {
             toast({ variant: "destructive", title: "Faltan fotografías", description: "Guarda las cinco vistas obligatorias antes de enviar." });
             return;
           }
-          clearStoredPatientToken();
+          clearStoredPatientToken(clinicSlug);
           setStep("success"); window.scrollTo({ top: 0, behavior: "smooth" });
         },
         onError: () => toast({ variant: "destructive", title: "Error", description: t.pSaveError }),
       });
     } else {
       setDuplicateError(null);
-      createMutation.mutate({ data: formData }, {
+      createPatient(formData, {
         onSuccess: () => { setStep("success"); window.scrollTo({ top: 0, behavior: "smooth" }); },
         onError: (error: unknown) => {
           const kind = duplicateKind(error);
@@ -909,7 +935,7 @@ export default function PatientFlow() {
               Escríbenos por WhatsApp o responde al mensaje donde recibiste este enlace y te enviaremos uno nuevo.
             </p>
             <div className="space-y-3">
-              <Link href="/">
+              <Link href={clinicSlug ? basePath : "/"}>
                 <span className="w-full h-14 inline-flex items-center justify-center text-base font-semibold rounded-full bg-[#F5F2EE] border border-[#E8E4DE] text-foreground hover:bg-[#EDE9E4] transition-colors cursor-pointer">
                   Ir al inicio
                 </span>
@@ -925,7 +951,7 @@ export default function PatientFlow() {
     <div className="min-h-[100dvh] bg-[#F5F2EE] flex flex-col font-sans" dir={lang === "ar" ? "rtl" : "ltr"}>
       {/* Header */}
       <header className="bg-white px-5 py-4 shadow-sm border-b border-[#E8E4DE] flex items-center justify-between sticky top-0 z-40">
-        {token ? (
+        {token || clinicSlug ? (
           clinic?.name ? (
             <ClinicBadge name={clinic.name} logoDataUrl={clinic.logoDataUrl} />
           ) : (
@@ -933,7 +959,7 @@ export default function PatientFlow() {
             <div className="h-12 w-12 rounded-xl bg-[#F5F2EE] animate-pulse" aria-hidden="true" />
           )
         ) : (
-          <Link href="/">
+          <Link href={clinicSlug ? basePath : "/"}>
             <div className="flex items-center cursor-pointer group">
               <BrandLogo className="h-12 w-12 rounded-xl group-hover:scale-105 transition-transform" />
             </div>
@@ -1482,7 +1508,7 @@ export default function PatientFlow() {
                 </div>
               </div>
 
-              <Link href="/">
+              <Link href={clinicSlug ? basePath : "/"}>
                 <Button variant="outline" className="w-full h-12 rounded-full font-semibold border-[#E8E4DE] hover:bg-[#F5F2EE] bg-white">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   {t.pGoHome}

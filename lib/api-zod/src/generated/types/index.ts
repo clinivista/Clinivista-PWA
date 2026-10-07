@@ -41,6 +41,7 @@ export * from './leadStatus';
 export * from './leadSummary';
 export * from './loginCredentials';
 export * from './loginResult';
+export * from './myClinic';
 export * from './patientClinic';
 export * from './patientInput';
 export * from './patientPhotoStatus';

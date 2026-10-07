@@ -4,11 +4,13 @@ import { and, eq, or } from "drizzle-orm";
 import { db, leadsTable } from "@workspace/db";
 import {
   ConfirmPatientPhotoParams,
+  CreateClinicPatientParams,
   CreatePatientBody,
   CreatePatientAdjustedPhotoHeader,
   CreatePatientAdjustedPhotoParams,
   DiscardPatientPhotoParams,
   DiscardPatientPhotosParams,
+  GetClinicParams,
   GetPatientParams,
   GetPatientPhotoStatusParams,
   UpdatePatientBody,
@@ -20,21 +22,21 @@ import { uid, clean, cleanPhone } from "../lib/helpers";
 import { validateRut, normalizeRut, formatRut } from "../lib/rut";
 import {
   DEFAULT_CENTER_ID,
-  DEFAULT_PROTOCOL_ID,
   confirmClinicalPhoto,
   createAdjustedPhoto,
   createClinicalPhoto,
   discardAdjustedPhoto,
   discardAllPatientCapturePhotos,
   discardClinicalPhoto,
-  ensureDefaultClinicalConfiguration,
+  defaultProtocolIdForCenter,
+  ensureClinicalConfiguration,
   getPatientPhotoFile,
   getPhotoStatusesForLead,
   getRequiredViewKeysForLead,
 } from "../lib/clinical-photos";
 import { privatePhotoStorage } from "../lib/clinical-photo-storage";
 import { isCenterActive } from "../lib/centers";
-import { clinicIdentity } from "../lib/clinic-identity";
+import { clinicIdentity, findCenterBySlug } from "../lib/clinic-identity";
 
 const router: IRouter = Router();
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -292,11 +294,11 @@ function completedRequiredViews(
   ).size;
 }
 
-router.post("/patients", async (req, res): Promise<void> => {
+async function createPatientInCenter(req: express.Request, res: express.Response, centerId: string): Promise<void> {
   // A suspended clinic stops taking new patients too, not just staff logins —
   // otherwise "suspend" would only block the people reviewing evaluations,
   // not the public form still collecting them.
-  if (!(await isCenterActive(DEFAULT_CENTER_ID))) {
+  if (!(await isCenterActive(centerId))) {
     res.status(403).json({ error: "Esta clínica no está aceptando nuevas evaluaciones en este momento." });
     return;
   }
@@ -322,10 +324,11 @@ router.post("/patients", async (req, res): Promise<void> => {
   // Duplicates never return the existing token: phone, email and RUT are not
   // secrets. `resumable` only tells the client that the evaluation is still in
   // progress, so it can point the patient back to the device that holds it.
-  // Scoped to this clinic (DEFAULT_CENTER_ID, the center new patients join
-  // here): the same RUT/phone/email at a different clinic is not a duplicate.
+  // Scoped to this clinic: the same RUT/phone/email at a different clinic is
+  // not a duplicate (a patient can be evaluated at several clinics, each one
+  // through that clinic's own address).
   const [rutDuplicate] = await db.select({ id: leadsTable.id, status: leadsTable.status }).from(leadsTable)
-    .where(and(eq(leadsTable.documentNormalized, data.documentNormalized), eq(leadsTable.centerId, DEFAULT_CENTER_ID)))
+    .where(and(eq(leadsTable.documentNormalized, data.documentNormalized), eq(leadsTable.centerId, centerId)))
     .limit(1);
   if (rutDuplicate) {
     res.status(409).json({ error: "Ya existe una evaluación registrada con este RUT.", duplicate: true, resumable: rutDuplicate.status === "incompleto" });
@@ -334,14 +337,15 @@ router.post("/patients", async (req, res): Promise<void> => {
   const contactConditions = [eq(leadsTable.phone, data.phone)];
   if (data.email) contactConditions.push(eq(leadsTable.email, data.email));
   const [duplicate] = await db.select({ id: leadsTable.id, status: leadsTable.status }).from(leadsTable)
-    .where(and(or(...contactConditions), eq(leadsTable.centerId, DEFAULT_CENTER_ID)))
+    .where(and(or(...contactConditions), eq(leadsTable.centerId, centerId)))
     .limit(1);
   if (duplicate) {
     res.status(409).json({ error: "Ya existe una evaluación con este teléfono o correo.", duplicate: true, resumable: duplicate.status === "incompleto" });
     return;
   }
 
-  await ensureDefaultClinicalConfiguration();
+  const protocolId = defaultProtocolIdForCenter(centerId);
+  await ensureClinicalConfiguration(centerId, protocolId);
   const newLead = {
     id: uid(),
     token: uid(24),
@@ -352,13 +356,43 @@ router.post("/patients", async (req, res): Promise<void> => {
     isDemo: false,
     photos: [],
     photoCount: "0",
-    centerId: DEFAULT_CENTER_ID,
-    protocolId: DEFAULT_PROTOCOL_ID,
+    centerId,
+    protocolId,
     ...data,
   };
   await db.insert(leadsTable).values(newLead);
   const [inserted] = await db.select().from(leadsTable).where(eq(leadsTable.id, newLead.id));
   res.status(201).json({ ok: true, lead: await leadSummary(inserted) });
+}
+
+
+// Legacy generic address (/patient): always the main clinic. Kept so links
+// already out in the world keep working.
+router.post("/patients", async (req, res): Promise<void> => {
+  await createPatientInCenter(req, res, DEFAULT_CENTER_ID);
+});
+
+// A clinic's own address (app.../c/{slug}): the patient registers at that
+// clinic and no other. To be evaluated at another clinic, the patient repeats
+// the process through that clinic's address.
+router.get("/clinics/:slug", async (req, res): Promise<void> => {
+  const params = GetClinicParams.safeParse(req.params);
+  const center = params.success ? await findCenterBySlug(params.data.slug) : undefined;
+  if (!center) {
+    res.status(404).json({ error: "Esta clínica no existe." });
+    return;
+  }
+  res.json(await clinicIdentity(center.id));
+});
+
+router.post("/clinics/:slug/patients", async (req, res): Promise<void> => {
+  const params = CreateClinicPatientParams.safeParse(req.params);
+  const center = params.success ? await findCenterBySlug(params.data.slug) : undefined;
+  if (!center) {
+    res.status(404).json({ error: "Esta clínica no existe." });
+    return;
+  }
+  await createPatientInCenter(req, res, center.id);
 });
 
 // Who is taking these photos? The patient view shows the clinic's own name and

@@ -493,6 +493,7 @@ export const UpdateDirectorCenterIdentityParams = zod.object({
 
 export const UpdateDirectorCenterIdentityBody = zod.object({
   "name": zod.string().describe('Name patients see (3 to 80 characters).'),
+  "slug": zod.string().optional().describe('Public address of the clinic, app...\/c\/{slug} (lowercase letters, digits and hyphens, 3 to 40 characters). Omit to keep the current one. Changing it breaks links already shared.'),
   "logoDataUrl": zod.string().nullish().describe('A PNG, JPEG or WebP data URL (up to about 300 KB). Omit to keep the current logo; null removes it. The server re-encodes it to a PNG of at most 256 px.')
 })
 
@@ -589,6 +590,80 @@ export const CreatePatientResponse = zod.object({
   "appointmentAt": zod.string().nullish(),
   "isDemo": zod.boolean().nullish()
 })
+})
+
+
+/**
+ * @summary Name and logo of a clinic, by its public address (public)
+ */
+export const GetClinicParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const GetClinicResponse = zod.object({
+  "name": zod.string(),
+  "logoDataUrl": zod.string().nullable()
+})
+
+
+/**
+ * @summary Create a patient pre-evaluation in the clinic with this public address (public)
+ */
+export const CreateClinicPatientParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const CreateClinicPatientBody = zod.object({
+  "name": zod.string(),
+  "phone": zod.string(),
+  "documentId": zod.string().optional(),
+  "email": zod.string().optional(),
+  "age": zod.string().optional(),
+  "city": zod.string().optional(),
+  "hairLossTime": zod.string().optional(),
+  "pattern": zod.string().optional(),
+  "previousTreatment": zod.string().optional(),
+  "symptoms": zod.string().optional(),
+  "surgeryHistory": zod.string().optional(),
+  "consent": zod.boolean(),
+  "marketingConsent": zod.boolean().optional(),
+  "submit": zod.boolean().optional()
+})
+
+export const CreateClinicPatientResponse = zod.object({
+  "ok": zod.boolean(),
+  "lead": zod.object({
+  "id": zod.string(),
+  "token": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string(),
+  "name": zod.string(),
+  "phone": zod.string(),
+  "documentId": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "age": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "status": zod.enum(['nuevo', 'incompleto', 'listo', 'contactar', 'agendado', 'cerrado']),
+  "consent": zod.boolean().optional(),
+  "photoCount": zod.number(),
+  "photoKeys": zod.array(zod.string()).optional(),
+  "hairLossTime": zod.string().nullish(),
+  "pattern": zod.string().nullish(),
+  "previousTreatment": zod.string().nullish(),
+  "norwood": zod.string().nullish(),
+  "appointmentAt": zod.string().nullish(),
+  "isDemo": zod.boolean().nullish()
+})
+})
+
+
+/**
+ * @summary The signed-in staff member's own clinic, with the address patients use to register
+ */
+export const GetMyClinicResponse = zod.object({
+  "name": zod.string(),
+  "slug": zod.string(),
+  "logoDataUrl": zod.string().nullable()
 })
 
 

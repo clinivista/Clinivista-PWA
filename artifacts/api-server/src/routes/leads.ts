@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, sql } from "drizzle-orm";
-import { db, leadsTable } from "@workspace/db";
+import { db, leadsTable, centersTable } from "@workspace/db";
 import {
   GetLeadPhotoFileParams,
   GetLeadsQueryParams,
@@ -10,8 +10,9 @@ import {
 } from "@workspace/api-zod";
 import { requireStaffAuth } from "./auth";
 import { clean } from "../lib/helpers";
-import { DEFAULT_CENTER_ID, deleteClinicalDataForLead, getPhotoForStaff, getPhotoStatusesForLead } from "../lib/clinical-photos";
+import { DEFAULT_CENTER_ID, deleteClinicalDataForLead, ensureClinicalConfiguration, getPhotoForStaff, getPhotoStatusesForLead } from "../lib/clinical-photos";
 import { privatePhotoStorage } from "../lib/clinical-photo-storage";
+import { clinicIdentity } from "../lib/clinic-identity";
 
 const router: IRouter = Router();
 
@@ -40,6 +41,18 @@ async function leadFull(lead: typeof leadsTable.$inferSelect) {
     photos,
   };
 }
+
+// The signed-in staff member's own clinic, with the address patients use to
+// register (app.../c/{slug}). Replaces the old generic /patient link, which
+// always dropped patients into the main clinic whoever shared it.
+router.get("/clinic/me", async (req, res): Promise<void> => {
+  const context = requireStaffAuth(req, res);
+  if (!context) return;
+  // Only clinics with a row can be reached by address; make sure there is one.
+  await ensureClinicalConfiguration(context.centerId);
+  const [center] = await db.select({ slug: centersTable.slug }).from(centersTable).where(eq(centersTable.id, context.centerId));
+  res.json({ ...(await clinicIdentity(context.centerId)), slug: center.slug });
+});
 
 router.get("/leads", async (req, res): Promise<void> => {
   const context = requireStaffAuth(req, res);
