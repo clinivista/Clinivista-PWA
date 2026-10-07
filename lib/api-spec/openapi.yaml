@@ -564,7 +564,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DirectorUserPatch"
+              $ref: "#/components/schemas/DirectorCenterUserPatch"
       responses:
         "200":
           description: Updated user
@@ -1809,6 +1809,16 @@ components:
         createdAt:
           type: string
           format: date-time
+
+    DirectorCenterUserPatch:
+      type: object
+      properties:
+        active:
+          type: boolean
+          description: false blocks the user's access (and closes their open sessions); true restores it.
+        legalRepresentative:
+          type: boolean
+          description: Marks or unmarks the clinic's legal representative (who may manage the clinic's users).
 
     DirectorUserPatch:
       type: object

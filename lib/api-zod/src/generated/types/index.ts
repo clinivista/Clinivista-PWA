@@ -24,6 +24,7 @@ export * from './directorCenterPaymentBody';
 export * from './directorCenterSummary';
 export * from './directorCenterSummaryPaymentStatus';
 export * from './directorCenterUser';
+export * from './directorCenterUserPatch';
 export * from './directorCenterUserRole';
 export * from './directorPasswordReset';
 export * from './directorTeamCreateBody';

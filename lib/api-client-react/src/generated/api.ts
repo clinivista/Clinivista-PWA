@@ -32,6 +32,7 @@ import type {
   DirectorCenterPaymentBody,
   DirectorCenterSummary,
   DirectorCenterUser,
+  DirectorCenterUserPatch,
   DirectorPasswordReset,
   DirectorTeamCreateBody,
   DirectorTeamMember,
@@ -1373,14 +1374,14 @@ export const getPatchDirectorCenterUserUrl = (id: string,
  */
 export const patchDirectorCenterUser = async (id: string,
     userId: string,
-    directorUserPatch: DirectorUserPatch, options?: Parameters<typeof customFetch>[1]): Promise<DirectorCenterUser> => {
+    directorCenterUserPatch: DirectorCenterUserPatch, options?: Parameters<typeof customFetch>[1]): Promise<DirectorCenterUser> => {
 
   return customFetch<DirectorCenterUser>(getPatchDirectorCenterUserUrl(id,userId),
   {
     ...options,
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(directorUserPatch)
+    body: JSON.stringify(directorCenterUserPatch)
   }
 );}
 
@@ -1389,8 +1390,8 @@ export const patchDirectorCenterUser = async (id: string,
 
 
 export const getPatchDirectorCenterUserMutationOptions = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchDirectorCenterUser>>, TError,{id: string;userId: string;data: BodyType<DirectorUserPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof patchDirectorCenterUser>>, TError,{id: string;userId: string;data: BodyType<DirectorUserPatch>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchDirectorCenterUser>>, TError,{id: string;userId: string;data: BodyType<DirectorCenterUserPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof patchDirectorCenterUser>>, TError,{id: string;userId: string;data: BodyType<DirectorCenterUserPatch>}, TContext> => {
 
 const mutationKey = ['patchDirectorCenterUser'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -1402,7 +1403,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof patchDirectorCenterUser>>, {id: string;userId: string;data: BodyType<DirectorUserPatch>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof patchDirectorCenterUser>>, {id: string;userId: string;data: BodyType<DirectorCenterUserPatch>}> = (props) => {
           const {id,userId,data} = props ?? {};
 
           return  patchDirectorCenterUser(id,userId,data,requestOptions)
@@ -1416,18 +1417,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PatchDirectorCenterUserMutationResult = NonNullable<Awaited<ReturnType<typeof patchDirectorCenterUser>>>
-    export type PatchDirectorCenterUserMutationBody = BodyType<DirectorUserPatch>
+    export type PatchDirectorCenterUserMutationBody = BodyType<DirectorCenterUserPatch>
     export type PatchDirectorCenterUserMutationError = ErrorType<ErrorResponse>
 
     /**
  * @summary Block or unblock one clinic user's access (director only)
  */
 export const usePatchDirectorCenterUser = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchDirectorCenterUser>>, TError,{id: string;userId: string;data: BodyType<DirectorUserPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchDirectorCenterUser>>, TError,{id: string;userId: string;data: BodyType<DirectorCenterUserPatch>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof patchDirectorCenterUser>>,
         TError,
-        {id: string;userId: string;data: BodyType<DirectorUserPatch>},
+        {id: string;userId: string;data: BodyType<DirectorCenterUserPatch>},
         TContext
       > => {
       return useMutation(getPatchDirectorCenterUserMutationOptions(options));

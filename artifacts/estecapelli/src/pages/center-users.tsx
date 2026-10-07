@@ -138,6 +138,10 @@ export function CenterUsers({ centerId }: { centerId: string }) {
             await patchUser.mutateAsync({ id: centerId, userId: user.id, data: { active } });
             await queryClient.invalidateQueries({ queryKey: getGetDirectorCenterUsersQueryKey(centerId) });
           }}
+          setLegalRepresentative={async (legalRepresentative) => {
+            await patchUser.mutateAsync({ id: centerId, userId: user.id, data: { legalRepresentative } });
+            await queryClient.invalidateQueries({ queryKey: getGetDirectorCenterUsersQueryKey(centerId) });
+          }}
           resetPassword={async () => (await resetPassword.mutateAsync({ id: centerId, userId: user.id })).temporaryPassword}
         />
       ))}
