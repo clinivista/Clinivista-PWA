@@ -34,6 +34,7 @@ import {
 } from "../lib/clinical-photos";
 import { privatePhotoStorage } from "../lib/clinical-photo-storage";
 import { isCenterActive } from "../lib/centers";
+import { clinicIdentity } from "../lib/clinic-identity";
 
 const router: IRouter = Router();
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -358,6 +359,23 @@ router.post("/patients", async (req, res): Promise<void> => {
   await db.insert(leadsTable).values(newLead);
   const [inserted] = await db.select().from(leadsTable).where(eq(leadsTable.id, newLead.id));
   res.status(201).json({ ok: true, lead: await leadSummary(inserted) });
+});
+
+// Who is taking these photos? The patient view shows the clinic's own name and
+// logo (not the platform's), resolved from the invitation token. GetPatientParams
+// is the same { token } shape, so it's reused.
+router.get("/patients/:token/clinic", async (req, res): Promise<void> => {
+  const params = GetPatientParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Token inválido." });
+    return;
+  }
+  const lead = await findLeadByToken(params.data.token);
+  if (!lead) {
+    res.status(404).json({ error: "Este enlace ya no está disponible." });
+    return;
+  }
+  res.json(await clinicIdentity(lead.centerId));
 });
 
 router.get("/patients/:token", async (req, res): Promise<void> => {

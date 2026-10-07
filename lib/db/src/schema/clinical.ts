@@ -13,6 +13,10 @@ export const centersTable = pgTable("clinical_centers", {
   // suspends the clinic automatically when it lapses; the director sees it
   // marked "atrasada" and decides.
   paidUntil: timestamp("paid_until", { withTimezone: true }),
+  // Identidad visible para los pacientes: su logo, ya normalizado por el
+  // servidor (PNG de hasta 256 px) y guardado como data URL. Es chico, no hay
+  // que servirlo aparte ni abrir un bucket público.
+  logoDataUrl: text("logo_data_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

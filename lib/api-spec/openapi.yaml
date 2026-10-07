@@ -755,6 +755,55 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /director/centers/{id}/identity:
+    put:
+      operationId: updateDirectorCenterIdentity
+      tags: [director]
+      summary: Set the name and logo patients see for a clinic (director or supra-control administrator)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DirectorCenterIdentityBody"
+      responses:
+        "200":
+          description: Updated clinic
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DirectorCenterSummary"
+        "400":
+          description: Invalid name or logo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a supra-control account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Clinic not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /director/centers/{id}/payments:
     post:
       operationId: recordDirectorCenterPayment
@@ -859,6 +908,31 @@ paths:
                 $ref: "#/components/schemas/PatientResult"
         "422":
           description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /patients/{token}/clinic:
+    get:
+      operationId: getPatientClinic
+      tags: [patients]
+      summary: Name and logo of the clinic that invited this patient (public, by token)
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Clinic identity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientClinic"
+        "404":
+          description: Not found
           content:
             application/json:
               schema:
@@ -1285,7 +1359,7 @@ components:
 
     DirectorCenterSummary:
       type: object
-      required: [id, name, slug, active, createdAt, patientCount, staffCount, paidUntil, paymentStatus]
+      required: [id, name, slug, active, createdAt, patientCount, staffCount, paidUntil, paymentStatus, logoDataUrl]
       properties:
         id:
           type: string
@@ -1310,6 +1384,32 @@ components:
         paymentStatus:
           type: string
           enum: [al_dia, atrasada, sin_registro]
+        logoDataUrl:
+          type: string
+          nullable: true
+          description: The clinic's logo as shown to its patients (PNG data URL). Null if none has been uploaded.
+
+    DirectorCenterIdentityBody:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: Name patients see (3 to 80 characters).
+        logoDataUrl:
+          type: string
+          nullable: true
+          description: A PNG, JPEG or WebP data URL (up to about 300 KB). Omit to keep the current logo; null removes it. The server re-encodes it to a PNG of at most 256 px.
+
+    PatientClinic:
+      type: object
+      required: [name, logoDataUrl]
+      properties:
+        name:
+          type: string
+        logoDataUrl:
+          type: string
+          nullable: true
 
     DirectorCenterPatch:
       type: object

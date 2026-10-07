@@ -26,7 +26,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
 import {
-  useGetPatient, getGetPatientQueryKey, useCreatePatient, useUpdatePatient, useDiscardPatientPhotos,
+  useGetPatient, getGetPatientQueryKey, useGetPatientClinic, getGetPatientClinicQueryKey, useCreatePatient, useUpdatePatient, useDiscardPatientPhotos,
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
@@ -34,6 +34,7 @@ import { formatRut, validateRut } from "@/lib/rut";
 import { getCapillaryPhotoProtocol, type PhotoProtocolView } from "@/lib/photo-protocol";
 import { formatBytes, reviewPhotoTechnicalQuality, type TechnicalPhotoReview } from "@/lib/photo-quality";
 import { BrandLogo } from "@/components/brand-logo";
+import { ClinicBadge } from "@/components/clinic-badge";
 
 async function dataUrlToFile(dataUrl: string, name: string): Promise<File> {
   const response = await fetch(dataUrl);
@@ -390,6 +391,19 @@ export default function PatientFlow() {
   const { data: existingData, isLoading: isLoadingExisting, isError: isTokenError, error: tokenError } = useGetPatient(token || "", {
     query: { enabled: !!token, queryKey: getGetPatientQueryKey(token || ""), retry: false },
   });
+
+  // La vista del paciente muestra a la clínica que hace la captura (su nombre y
+  // logo), no la marca de la plataforma. Sin token todavía no hay clínica
+  // conocida, así que ahí se mantiene la marca genérica.
+  const { data: clinic } = useGetPatientClinic(token || "", {
+    query: { enabled: !!token, queryKey: getGetPatientClinicQueryKey(token || ""), retry: false, staleTime: 5 * 60_000 },
+  });
+  useEffect(() => {
+    if (!clinic?.name) return;
+    const previousTitle = document.title;
+    document.title = clinic.name;
+    return () => { document.title = previousTitle; };
+  }, [clinic?.name]);
 
   // Remember a working token on this device (covers invitation links too).
   useEffect(() => {
@@ -911,11 +925,20 @@ export default function PatientFlow() {
     <div className="min-h-[100dvh] bg-[#F5F2EE] flex flex-col font-sans" dir={lang === "ar" ? "rtl" : "ltr"}>
       {/* Header */}
       <header className="bg-white px-5 py-4 shadow-sm border-b border-[#E8E4DE] flex items-center justify-between sticky top-0 z-40">
-        <Link href="/">
-          <div className="flex items-center cursor-pointer group">
-            <BrandLogo className="h-12 w-12 rounded-xl group-hover:scale-105 transition-transform" />
-          </div>
-        </Link>
+        {token ? (
+          clinic ? (
+            <ClinicBadge name={clinic.name} logoDataUrl={clinic.logoDataUrl} />
+          ) : (
+            // Mientras carga (o si falla) no se muestra ninguna marca ajena.
+            <div className="h-12 w-12 rounded-xl bg-[#F5F2EE] animate-pulse" aria-hidden="true" />
+          )
+        ) : (
+          <Link href="/">
+            <div className="flex items-center cursor-pointer group">
+              <BrandLogo className="h-12 w-12 rounded-xl group-hover:scale-105 transition-transform" />
+            </div>
+          </Link>
+        )}
 
         {/* Language selector */}
         <div className="relative">

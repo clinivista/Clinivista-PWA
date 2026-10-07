@@ -82,7 +82,7 @@ beforeAll(async () => {
       WHERE document_normalized IS NOT NULL AND document_normalized <> '';
      CREATE TABLE IF NOT EXISTS clinical_centers (
        id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
-       active boolean NOT NULL DEFAULT true, paid_until timestamptz,
+       active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text,
        created_at timestamptz NOT NULL DEFAULT now()
      );
      CREATE TABLE IF NOT EXISTS clinical_protocols (
@@ -701,5 +701,30 @@ describe("Clinical center isolation", () => {
     await pglite.exec(`UPDATE clinical_centers SET active = true WHERE id = '${DEFAULT_CENTER_ID}';`);
     const resumed = await request(app).post("/api/patients").send(VALID_BODY);
     expect(resumed.status).toBe(201);
+  });
+});
+
+describe("GET /api/patients/:token/clinic (identidad de la clínica para el paciente)", () => {
+  it("shows the clinic's own name and logo, not another clinic's", async () => {
+    const created = await createPatient();
+    const token = created.token;
+    await pglite.exec(`UPDATE clinical_centers SET name = 'Estecapelli', logo_data_url = 'data:image/png;base64,AAAA' WHERE id = '${DEFAULT_CENTER_ID}';`);
+    await pglite.exec(`INSERT INTO clinical_centers (id, name, slug, logo_data_url) VALUES ('otra', 'Otra Clínica', 'otra', 'data:image/png;base64,BBBB');`);
+
+    const res = await request(app).get(`/api/patients/${token}/clinic`).expect(200);
+    expect(res.body).toEqual({ name: "Estecapelli", logoDataUrl: "data:image/png;base64,AAAA" });
+    expect(JSON.stringify(res.body)).not.toContain("Otra");
+  });
+
+  it("falls back to the clinic name with no logo, and works before any identity was set", async () => {
+    const created = await createPatient();
+    const res = await request(app).get(`/api/patients/${created.token}/clinic`).expect(200);
+    expect(res.body.logoDataUrl).toBeNull();
+    expect(typeof res.body.name).toBe("string");
+    expect(res.body.name.length).toBeGreaterThan(0);
+  });
+
+  it("404 for an unknown token", async () => {
+    await request(app).get("/api/patients/nope-nope-nope/clinic").expect(404);
   });
 });

@@ -18,4 +18,6 @@ export interface DirectorCenterSummary {
   /** Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment. */
   paidUntil: Date | null;
   paymentStatus: DirectorCenterSummaryPaymentStatus;
+  /** The clinic's logo as shown to its patients (PNG data URL). Null if none has been uploaded. */
+  logoDataUrl: string | null;
 }

@@ -16,6 +16,8 @@ import {
   PatchDirectorTeamMemberBody,
   PatchDirectorTeamMemberParams,
   RecordDirectorCenterPaymentBody,
+  UpdateDirectorCenterIdentityBody,
+  UpdateDirectorCenterIdentityParams,
   RecordDirectorCenterPaymentParams,
   ResetDirectorCenterUserPasswordParams,
   ResetDirectorTeamMemberPasswordParams,
@@ -23,6 +25,7 @@ import {
 import { requireDirectorAuth, requireSupraAuth } from "./auth";
 import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
 import { seedSamplePatients } from "../lib/demo-patients";
+import { InvalidLogoError, normalizeLogoDataUrl } from "../lib/clinic-identity";
 import { clean, uid } from "../lib/helpers";
 import { destroySessionsForUser } from "../lib/sessions";
 
@@ -69,6 +72,7 @@ async function centerSummaries() {
         staffCount,
         paidUntil: center?.paidUntil ?? null,
         paymentStatus: paymentStatus(center?.paidUntil ?? null),
+        logoDataUrl: center?.logoDataUrl ?? null,
       };
     }),
   );
@@ -458,6 +462,62 @@ router.post("/director/team/:userId/reset-password", async (req, res): Promise<v
   }
   res.setHeader("Cache-Control", "no-store");
   res.json({ temporaryPassword: await resetToTemporaryPassword(member.id) });
+});
+
+router.put("/director/centers/:id/identity", async (req, res): Promise<void> => {
+  const context = requireSupraAuth(req, res);
+  if (!context) return;
+
+  const params = UpdateDirectorCenterIdentityParams.safeParse(req.params);
+  const body = UpdateDirectorCenterIdentityBody.safeParse(req.body);
+  if (!params.success || !body.success) {
+    res.status(400).json({ error: "Datos inválidos." });
+    return;
+  }
+  const name = clean(body.data.name, 80);
+  if (name.length < 3) {
+    res.status(400).json({ error: "El nombre de la clínica debe tener al menos 3 caracteres." });
+    return;
+  }
+  if (!(await centerSummaries()).some((center) => center.id === params.data.id)) {
+    res.status(404).json({ error: "Clínica no encontrada." });
+    return;
+  }
+
+  // undefined = keep the current logo, null = remove it, string = replace it.
+  let logoDataUrl: string | null | undefined;
+  if (body.data.logoDataUrl !== undefined && body.data.logoDataUrl !== null) {
+    try {
+      logoDataUrl = await normalizeLogoDataUrl(body.data.logoDataUrl);
+    } catch (error) {
+      if (error instanceof InvalidLogoError) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+      throw error;
+    }
+  } else if (body.data.logoDataUrl === null) {
+    logoDataUrl = null;
+  }
+
+  const [existing] = await db.select({ id: centersTable.id }).from(centersTable).where(eq(centersTable.id, params.data.id));
+  if (existing) {
+    await db.update(centersTable)
+      .set({ name, ...(logoDataUrl !== undefined ? { logoDataUrl } : {}) })
+      .where(eq(centersTable.id, params.data.id));
+  } else {
+    // A clinic that only exists implicitly (via leads/users) gets its row
+    // created the first time a director sets its identity.
+    await db.insert(centersTable).values({
+      id: params.data.id,
+      name,
+      slug: params.data.id,
+      logoDataUrl: logoDataUrl ?? null,
+    }).onConflictDoNothing();
+  }
+
+  const updated = (await centerSummaries()).find((center) => center.id === params.data.id);
+  res.json(updated);
 });
 
 router.post("/director/centers/:id/payments", async (req, res): Promise<void> => {

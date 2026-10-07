@@ -61,6 +61,20 @@ export interface DirectorCenterSummary {
   /** Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment. */
   paidUntil: string | null;
   paymentStatus: DirectorCenterSummaryPaymentStatus;
+  /** The clinic's logo as shown to its patients (PNG data URL). Null if none has been uploaded. */
+  logoDataUrl: string | null;
+}
+
+export interface DirectorCenterIdentityBody {
+  /** Name patients see (3 to 80 characters). */
+  name: string;
+  /** A PNG, JPEG or WebP data URL (up to about 300 KB). Omit to keep the current logo; null removes it. The server re-encodes it to a PNG of at most 256 px. */
+  logoDataUrl?: string | null;
+}
+
+export interface PatientClinic {
+  name: string;
+  logoDataUrl: string | null;
 }
 
 export interface DirectorCenterPatch {
