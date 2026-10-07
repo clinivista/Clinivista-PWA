@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
 import { eq, sql } from "drizzle-orm";
-import { db, centersTable, leadsTable, usersTable } from "@workspace/db";
+import { db, centersTable, leadsTable, usersTable, hashPassword, normalizeEmail } from "@workspace/db";
 import {
+  CreateDirectorCenterBody,
   GetDirectorCenterExportParams,
   PatchDirectorCenterBody,
   PatchDirectorCenterParams,
@@ -10,6 +11,8 @@ import {
 } from "@workspace/api-zod";
 import { requireDirectorAuth } from "./auth";
 import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
+import { seedSamplePatients } from "../lib/demo-patients";
+import { clean, uid } from "../lib/helpers";
 
 const router: IRouter = Router();
 
@@ -64,6 +67,95 @@ router.get("/director/centers", async (req, res): Promise<void> => {
   const context = requireDirectorAuth(req, res);
   if (!context) return;
   res.json({ centers: await centerSummaries() });
+});
+
+const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{2,39}$/;
+const MAX_NEW_CLINIC_USERS = 5;
+
+/** "Clínica Demo Capilar" -> "clinica-demo-capilar" */
+function slugFromName(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40)
+    .replace(/-+$/g, "");
+}
+
+router.post("/director/centers", async (req, res): Promise<void> => {
+  const context = requireDirectorAuth(req, res);
+  if (!context) return;
+
+  const body = CreateDirectorCenterBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: "Datos inválidos." });
+    return;
+  }
+
+  const name = clean(body.data.name, 80);
+  const slug = (body.data.slug?.trim() || slugFromName(name)).toLowerCase();
+  const users = body.data.users ?? [];
+  if (name.length < 3 || !SLUG_PATTERN.test(slug)) {
+    res.status(400).json({ error: "Revisa el nombre de la clínica y su identificador (solo minúsculas, números y guiones)." });
+    return;
+  }
+  if (users.length > MAX_NEW_CLINIC_USERS) {
+    res.status(400).json({ error: `Máximo ${MAX_NEW_CLINIC_USERS} cuentas al crear una clínica.` });
+    return;
+  }
+
+  const accounts = users.map((user) => ({
+    email: user.email.trim(),
+    emailNormalized: normalizeEmail(user.email),
+    name: clean(user.name ?? "", 100),
+    password: user.password,
+    role: user.role,
+  }));
+  const emailLooksValid = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (accounts.some((account) => !emailLooksValid(account.emailNormalized) || account.password.length < 8)) {
+    res.status(400).json({ error: "Cada cuenta necesita un correo válido y una contraseña de al menos 8 caracteres." });
+    return;
+  }
+  if (new Set(accounts.map((account) => account.emailNormalized)).size !== accounts.length) {
+    res.status(400).json({ error: "Los correos de las cuentas deben ser distintos." });
+    return;
+  }
+
+  // The slug is the clinic id: a clinic that already exists (explicitly, or
+  // implicitly through leads/users) must never be silently merged into.
+  const existingSummaries = await centerSummaries();
+  if (existingSummaries.some((center) => center.id === slug || center.slug === slug)) {
+    res.status(409).json({ error: "Ya existe una clínica con ese identificador." });
+    return;
+  }
+  for (const account of accounts) {
+    const [taken] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.emailNormalized, account.emailNormalized));
+    if (taken) {
+      res.status(409).json({ error: `El correo ${account.email} ya está en uso.` });
+      return;
+    }
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.insert(centersTable).values({ id: slug, name, slug });
+    for (const account of accounts) {
+      await tx.insert(usersTable).values({
+        id: uid(9),
+        email: account.email,
+        emailNormalized: account.emailNormalized,
+        passwordHash: hashPassword(account.password),
+        name: account.name,
+        role: account.role,
+        centerId: slug,
+      });
+    }
+  });
+  if (body.data.withSamplePatients) await seedSamplePatients(slug);
+
+  const created = (await centerSummaries()).find((center) => center.id === slug);
+  res.status(201).json(created);
 });
 
 router.patch("/director/centers/:id", async (req, res): Promise<void> => {

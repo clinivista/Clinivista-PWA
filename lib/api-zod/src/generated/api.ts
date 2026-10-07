@@ -285,6 +285,34 @@ export const GetDirectorCentersResponse = zod.object({
 
 
 /**
+ * @summary Create a new clinic with its staff accounts and, optionally, sample patients (director only)
+ */
+export const CreateDirectorCenterBody = zod.object({
+  "name": zod.string().describe('Display name of the clinic.'),
+  "slug": zod.string().optional().describe('Optional identifier (lowercase letters, digits and hyphens). Derived from the name when omitted.'),
+  "users": zod.array(zod.object({
+  "email": zod.string(),
+  "name": zod.string().optional(),
+  "password": zod.string().describe('At least 8 characters. Never stored in plain text.'),
+  "role": zod.enum(['medico', 'administrativo'])
+})).optional().describe('Initial staff accounts for the clinic (up to 5).'),
+  "withSamplePatients": zod.boolean().optional().describe('Also load a few fictitious demo patients (no photos).')
+})
+
+export const CreateDirectorCenterResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "active": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "patientCount": zod.number(),
+  "staffCount": zod.number(),
+  "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
+  "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro'])
+})
+
+
+/**
  * @summary Suspend or reactivate a clinic (director only)
  */
 export const PatchDirectorCenterParams = zod.object({
