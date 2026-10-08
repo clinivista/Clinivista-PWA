@@ -38,4 +38,6 @@ export interface LeadSummary {
   appointmentAt?: string | null;
   /** @nullable */
   isDemo?: boolean | null;
+  /** @nullable */
+  deliveryChannel?: string | null;
 }

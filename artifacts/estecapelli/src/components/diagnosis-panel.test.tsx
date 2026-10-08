@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 
 const api = vi.hoisted(() => ({
   state: undefined as unknown,
+  results: undefined as unknown, deliver: vi.fn(),
   save: vi.fn(), close: vi.fn(), reopen: vi.fn(), markup: vi.fn(), remove: vi.fn(),
   setQueryData: vi.fn(), invalidate: vi.fn(),
 }));
@@ -11,6 +12,9 @@ const api = vi.hoisted(() => ({
 vi.mock("@workspace/api-client-react", () => ({
   getGetLeadDiagnosisQueryKey: (id: string) => ["/api/leads", id, "diagnosis"],
   getGetLeadPhasesQueryKey: (id: string) => ["/api/leads", id, "phases"],
+  getGetLeadResultsQueryKey: (id: string) => ["/api/leads", id, "results"],
+  useGetLeadResults: () => ({ data: api.results }),
+  useDeliverLeadResults: () => ({ mutate: api.deliver, isPending: false }),
   useGetLeadDiagnosis: () => ({ data: api.state, isLoading: false, isError: false }),
   useSaveLeadDiagnosis: () => ({ mutate: api.save, isPending: false }),
   useCloseLeadDiagnosis: () => ({ mutate: api.close, isPending: false }),
@@ -45,6 +49,34 @@ describe("DiagnosisPanel", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     api.state = state();
+    api.results = { preferredChannel: "whatsapp", email: "p@example.com", phone: "+56911111111", emailConfigured: true, deliveries: [] };
+  });
+
+  it("offers the results only once the diagnosis is closed, and marks the channel the patient chose", () => {
+    const { unmount } = render(<DiagnosisPanel leadId="l1" onExpand={vi.fn()} />);
+    expect(screen.queryByTestId("results-delivery")).not.toBeInTheDocument();
+    unmount();
+    api.state = state({ status: "closed", responseText: "Listo", closedAt: "2026-01-02T00:00:00Z", closedByName: "Dra. Ana" });
+    render(<DiagnosisPanel leadId="l1" onExpand={vi.fn()} />);
+    expect(screen.getByTestId("results-delivery")).toHaveTextContent("Eligió recibirlo por WhatsApp");
+    expect(screen.getByRole("link", { name: /Ver PDF/ })).toHaveAttribute("href", "/api/leads/l1/results/pdf");
+  });
+
+  it("sends by email or WhatsApp, shows the wa.me link, the history, and explains when mail is not configured", async () => {
+    const user = userEvent.setup();
+    api.state = state({ status: "closed", responseText: "Listo", closedAt: "2026-01-02T00:00:00Z" });
+    api.results = {
+      preferredChannel: null, email: null, phone: "+56911111111", emailConfigured: false,
+      deliveries: [{ id: "d1", channel: "email", recipient: "p@example.com", status: "failed", error: "no configurado", createdByName: "Dra. Ana", createdAt: "2026-01-02T00:00:00Z", expiresAt: "2026-02-01T00:00:00Z" }],
+    };
+    api.deliver.mockImplementation((_vars, options) => options.onSuccess({ channel: "whatsapp", status: "link", recipient: "+56911111111", link: "https://x/api/results/t", whatsappUrl: "https://wa.me/56911111111?text=hola" }));
+    render(<DiagnosisPanel leadId="l1" onExpand={vi.fn()} />);
+    expect(screen.getByRole("button", { name: /Enviar por correo/ })).toBeDisabled();
+    expect(screen.getByText(/aún no está configurado/)).toBeInTheDocument();
+    expect(screen.getByText(/Falló/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Enviar por WhatsApp/ }));
+    expect(api.deliver.mock.calls[0][0]).toEqual({ id: "l1", data: { channel: "whatsapp" } });
+    expect(screen.getByRole("link", { name: /Abrir WhatsApp/ })).toHaveAttribute("href", "https://wa.me/56911111111?text=hola");
   });
 
   it("shows the patient's photos and notes, and a drawing where there is one", () => {

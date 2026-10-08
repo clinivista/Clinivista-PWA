@@ -14,6 +14,7 @@ import {
   protocolPhasesTable,
   protocolsTable,
   protocolViewsTable,
+  resultDeliveriesTable,
   type ClinicalPhoto,
   type Lead,
 } from "@workspace/db";
@@ -654,7 +655,14 @@ export async function getPhotoForStaff(lead: Lead, photoId: string) {
   return located.photo;
 }
 
+async function deleteDeliveriesForLead(leadId: string): Promise<void> {
+  const rows = await db.select().from(resultDeliveriesTable).where(eq(resultDeliveriesTable.leadId, leadId));
+  for (const row of rows) await privatePhotoStorage.remove(row.objectPath).catch(() => undefined);
+  if (rows.length) await db.delete(resultDeliveriesTable).where(inArray(resultDeliveriesTable.id, rows.map((row) => row.id)));
+}
+
 export async function deleteClinicalDataForLead(lead: Lead): Promise<void> {
+  await deleteDeliveriesForLead(lead.id);
   const [evaluation] = await db.select().from(evaluationsTable)
     .where(eq(evaluationsTable.leadId, lead.id));
   if (!evaluation) return;

@@ -66,6 +66,9 @@ import type {
   PatientResult,
   PhotoConfirmation,
   PhotoMarkup,
+  ResultsDeliverInput,
+  ResultsDelivery,
+  ResultsState,
   SimpleOk
 } from './api.schemas';
 
@@ -1070,6 +1073,155 @@ export const useSaveLeadDiagnosis = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getSaveLeadDiagnosisMutationOptions(options));
+    }
+
+export const getGetLeadResultsUrl = (id: string,) => {
+
+
+
+
+  return `/api/leads/${id}/results`
+}
+
+/**
+ * @summary Delivery options and history for the patient's results
+ */
+export const getLeadResults = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<ResultsState> => {
+
+  return customFetch<ResultsState>(getGetLeadResultsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLeadResultsQueryKey = (id: string,) => {
+    return [
+    `/api/leads/${id}/results`
+    ] as const;
+    }
+
+
+export const getGetLeadResultsQueryOptions = <TData = Awaited<ReturnType<typeof getLeadResults>>, TError = ErrorType<ErrorResponse>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLeadResults>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLeadResultsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLeadResults>>> = ({ signal }) => getLeadResults(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLeadResults>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLeadResultsQueryResult = NonNullable<Awaited<ReturnType<typeof getLeadResults>>>
+export type GetLeadResultsQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Delivery options and history for the patient's results
+ */
+
+export function useGetLeadResults<TData = Awaited<ReturnType<typeof getLeadResults>>, TError = ErrorType<ErrorResponse>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLeadResults>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLeadResultsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeliverLeadResultsUrl = (id: string,) => {
+
+
+
+
+  return `/api/leads/${id}/results/deliver`
+}
+
+/**
+ * @summary Send the results to the patient by email or give a WhatsApp link
+ */
+export const deliverLeadResults = async (id: string,
+    resultsDeliverInput: ResultsDeliverInput, options?: Parameters<typeof customFetch>[1]): Promise<ResultsDelivery> => {
+
+  return customFetch<ResultsDelivery>(getDeliverLeadResultsUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(resultsDeliverInput)
+  }
+);}
+
+
+
+
+
+export const getDeliverLeadResultsMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deliverLeadResults>>, TError,{id: string;data: BodyType<ResultsDeliverInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deliverLeadResults>>, TError,{id: string;data: BodyType<ResultsDeliverInput>}, TContext> => {
+
+const mutationKey = ['deliverLeadResults'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deliverLeadResults>>, {id: string;data: BodyType<ResultsDeliverInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  deliverLeadResults(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeliverLeadResultsMutationResult = NonNullable<Awaited<ReturnType<typeof deliverLeadResults>>>
+    export type DeliverLeadResultsMutationBody = BodyType<ResultsDeliverInput>
+    export type DeliverLeadResultsMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Send the results to the patient by email or give a WhatsApp link
+ */
+export const useDeliverLeadResults = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deliverLeadResults>>, TError,{id: string;data: BodyType<ResultsDeliverInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deliverLeadResults>>,
+        TError,
+        {id: string;data: BodyType<ResultsDeliverInput>},
+        TContext
+      > => {
+      return useMutation(getDeliverLeadResultsMutationOptions(options));
     }
 
 export const getCloseLeadDiagnosisUrl = (id: string,) => {

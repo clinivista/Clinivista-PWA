@@ -370,6 +370,102 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /leads/{id}/results:
+    get:
+      operationId: getLeadResults
+      tags: [diagnosis]
+      summary: Delivery options and history for the patient's results
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Delivery state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultsState"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Case not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /leads/{id}/results/deliver:
+    post:
+      operationId: deliverLeadResults
+      tags: [diagnosis]
+      summary: Send the results to the patient by email or give a WhatsApp link
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResultsDeliverInput"
+      responses:
+        "200":
+          description: Delivery done
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultsDelivery"
+        "400":
+          description: Invalid channel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Case not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Diagnosis not closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: The patient has no usable contact for that channel
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Mail provider failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Mail not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /leads/{id}/diagnosis/close:
     post:
       operationId: closeLeadDiagnosis
@@ -2561,6 +2657,50 @@ components:
         actorName: {type: ["string", "null"]}
         createdAt: {type: string, format: date-time}
 
+    ResultsState:
+      type: object
+      required: [emailConfigured, deliveries]
+      properties:
+        preferredChannel: {type: ["string", "null"]}
+        email: {type: ["string", "null"]}
+        phone: {type: ["string", "null"]}
+        emailConfigured: {type: boolean}
+        deliveries:
+          type: array
+          items:
+            $ref: "#/components/schemas/ResultsDeliveryRecord"
+
+    ResultsDeliveryRecord:
+      type: object
+      required: [id, channel, recipient, status, createdAt, expiresAt]
+      properties:
+        id: {type: string}
+        channel: {type: string}
+        recipient: {type: string}
+        status: {type: string}
+        error: {type: ["string", "null"]}
+        createdByName: {type: ["string", "null"]}
+        createdAt: {type: string, format: date-time}
+        expiresAt: {type: string, format: date-time}
+
+    ResultsDeliverInput:
+      type: object
+      required: [channel]
+      properties:
+        channel:
+          type: string
+          enum: [email, whatsapp]
+
+    ResultsDelivery:
+      type: object
+      required: [channel, status, recipient, link]
+      properties:
+        channel: {type: string}
+        status: {type: string}
+        recipient: {type: string}
+        link: {type: string}
+        whatsappUrl: {type: ["string", "null"]}
+
     DiagnosisState:
       type: object
       required: [status, responseText, readyToDiagnose, photos, events, canEdit]
@@ -2691,6 +2831,8 @@ components:
           type: ["string", "null"]
         isDemo:
           type: ["boolean", "null"]
+        deliveryChannel:
+          type: ["string", "null"]
 
     Lead:
       type: object
@@ -2813,6 +2955,8 @@ components:
           type: boolean
         marketingConsent:
           type: boolean
+        deliveryChannel:
+          type: string
         submit:
           type: boolean
 

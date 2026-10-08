@@ -100,6 +100,7 @@ const patientSchema = z.object({
   surgeryHistory: z.string().optional(),
   consent: z.boolean().refine(val => val === true, "Debes aceptar para continuar"),
   marketingConsent: z.boolean().optional(),
+  deliveryChannel: z.enum(["email", "whatsapp"]).default("email"),
 });
 
 type PatientFormValues = z.infer<typeof patientSchema>;
@@ -463,7 +464,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
 
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema),
-    defaultValues: { name: "", documentId: "", email: "", phone: "", age: "", city: "", hairLossTime: "", pattern: "", previousTreatment: "", symptoms: "", surgeryHistory: "", consent: false, marketingConsent: false },
+    defaultValues: { name: "", documentId: "", email: "", phone: "", age: "", city: "", hairLossTime: "", pattern: "", previousTreatment: "", symptoms: "", surgeryHistory: "", consent: false, marketingConsent: false, deliveryChannel: "email" },
   });
 
   // Live gate for the "Continuar" button: all required fields valid + consent checked
@@ -484,6 +485,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
         previousTreatment: (l as any).previousTreatment || "", symptoms: (l as any).symptoms || "",
         surgeryHistory: (l as any).surgeryHistory || "", consent: l.consent || false,
         marketingConsent: (l as any).marketingConsent || false,
+        deliveryChannel: (l as any).deliveryChannel === "whatsapp" ? "whatsapp" : "email",
       });
       const keys = Array.isArray((l as any).photoKeys) ? ((l as any).photoKeys as string[]) : [];
       if (keys.length > 0) {
@@ -1212,6 +1214,23 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
                       <FormItem>
                         <FormLabel className="text-sm font-bold">{t.pEmail}</FormLabel>
                         <FormControl><Input type="email" placeholder="correo@ejemplo.com" className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+
+                    <FormField control={form.control} name="deliveryChannel" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-bold">{t.pDeliveryTitle}</FormLabel>
+                        <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label={t.pDeliveryTitle}>
+                          {([["email", t.pDeliveryEmail], ["whatsapp", t.pDeliveryWhatsapp]] as const).map(([value, label]) => (
+                            <button key={value} type="button" role="radio" aria-checked={field.value === value}
+                              onClick={() => field.onChange(value)}
+                              className={`h-12 rounded-2xl border text-sm font-semibold transition-colors ${field.value === value ? "border-primary bg-primary/10 text-primary" : "border-[#E8E4DE] bg-[#F5F2EE] text-foreground"}`}>
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground">{t.pDeliveryHint}</p>
                         <FormMessage />
                       </FormItem>
                     )} />

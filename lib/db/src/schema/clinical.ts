@@ -168,3 +168,21 @@ export const photoAnnotationsTable = pgTable("clinical_photo_annotations", {
   updatedByUserId: text("updated_by_user_id"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Cada entrega de resultados al paciente: una copia congelada del PDF (para que
+// el enlace siempre muestre lo que se envió) y el registro de quién lo envió.
+export const resultDeliveriesTable = pgTable("clinical_result_deliveries", {
+  id: text("id").primaryKey(),
+  leadId: text("lead_id").notNull(),
+  // Enlace secreto de alta entropía con el que el paciente descarga el PDF.
+  token: text("token").notNull().unique(),
+  objectPath: text("object_path").notNull(),
+  channel: text("channel").notNull(), // email | whatsapp
+  recipient: text("recipient").notNull().default(""),
+  status: text("status").notNull(), // sent | link | failed
+  error: text("error"),
+  createdByUserId: text("created_by_user_id"),
+  createdByName: text("created_by_name"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+});

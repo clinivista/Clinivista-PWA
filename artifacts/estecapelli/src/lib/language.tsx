@@ -81,6 +81,10 @@ export type AppTranslations = {
   pDocId: string;
   pPhone: string;
   pEmail: string;
+  pDeliveryTitle: string;
+  pDeliveryEmail: string;
+  pDeliveryWhatsapp: string;
+  pDeliveryHint: string;
   pAge: string;
   pAgePlaceholder: string;
   pCity: string;
@@ -295,7 +299,7 @@ const T: Record<LangCode, AppTranslations> = {
 
     pDataTitle: "Tus Antecedentes", pDataSub: "Completa esta información básica para tu ficha clínica",
     pFullName: "Nombre completo *", pDocId: "Documento de identidad *",
-    pPhone: "Teléfono móvil (WhatsApp) *", pEmail: "Correo electrónico *",
+    pPhone: "Teléfono móvil (WhatsApp) *", pEmail: "Correo electrónico *", pDeliveryTitle: "¿Cómo quieres recibir tus resultados?", pDeliveryEmail: "Por correo", pDeliveryWhatsapp: "Por WhatsApp", pDeliveryHint: "Te enviaremos un enlace para descargar tu informe en PDF.",
     pAge: "Edad", pAgePlaceholder: "Años", pCity: "Ciudad", pCityPlaceholder: "Selecciona tu ciudad o comuna",
     pHairHistory: "Historial Capilar",
     pHairLossTime: "¿Hace cuánto notas la pérdida de cabello?",
@@ -431,7 +435,7 @@ const T: Record<LangCode, AppTranslations> = {
 
     pDataTitle: "Your Medical History", pDataSub: "Complete this basic information for your clinical file",
     pFullName: "Full name *", pDocId: "Identity document *",
-    pPhone: "Mobile phone (WhatsApp) *", pEmail: "Email address *",
+    pPhone: "Mobile phone (WhatsApp) *", pEmail: "Email address *", pDeliveryTitle: "How would you like to receive your results?", pDeliveryEmail: "By email", pDeliveryWhatsapp: "By WhatsApp", pDeliveryHint: "We will send you a link to download your PDF report.",
     pAge: "Age", pAgePlaceholder: "Years", pCity: "City", pCityPlaceholder: "Select your city",
     pHairHistory: "Hair History",
     pHairLossTime: "How long have you noticed hair loss?",
@@ -563,7 +567,7 @@ const T: Record<LangCode, AppTranslations> = {
     stepIntro: "Início", stepData: "Dados", stepPhotos: "Fotografias",
     pDataTitle: "Seus Antecedentes", pDataSub: "Complete estas informações para seu prontuário",
     pFullName: "Nome completo *", pDocId: "Documento de identidade *",
-    pPhone: "Celular (WhatsApp) *", pEmail: "E-mail *",
+    pPhone: "Celular (WhatsApp) *", pEmail: "E-mail *", pDeliveryTitle: "Como você quer receber seus resultados?", pDeliveryEmail: "Por e-mail", pDeliveryWhatsapp: "Por WhatsApp", pDeliveryHint: "Enviaremos um link para baixar seu relatório em PDF.",
     pAge: "Idade", pAgePlaceholder: "Anos", pCity: "Cidade", pCityPlaceholder: "Selecione sua cidade",
     pHairHistory: "Histórico Capilar",
     pHairLossTime: "Há quanto tempo nota a perda de cabelo?",
@@ -680,7 +684,7 @@ const T: Record<LangCode, AppTranslations> = {
     stepIntro: "Accueil", stepData: "Données", stepPhotos: "Photos",
     pDataTitle: "Vos Antécédents", pDataSub: "Complétez ces informations pour votre dossier clinique",
     pFullName: "Nom complet *", pDocId: "Document d'identité *",
-    pPhone: "Téléphone mobile (WhatsApp) *", pEmail: "Adresse e-mail *",
+    pPhone: "Téléphone mobile (WhatsApp) *", pEmail: "Adresse e-mail *", pDeliveryTitle: "Comment souhaitez-vous recevoir vos résultats ?", pDeliveryEmail: "Par e-mail", pDeliveryWhatsapp: "Par WhatsApp", pDeliveryHint: "Nous vous enverrons un lien pour télécharger votre rapport PDF.",
     pAge: "Âge", pAgePlaceholder: "Ans", pCity: "Ville", pCityPlaceholder: "Sélectionnez votre ville",
     pHairHistory: "Historique Capillaire",
     pHairLossTime: "Depuis combien de temps notez-vous la perte de cheveux ?",
@@ -797,7 +801,7 @@ const T: Record<LangCode, AppTranslations> = {
     stepIntro: "Einführung", stepData: "Daten", stepPhotos: "Fotos",
     pDataTitle: "Ihre Vorgeschichte", pDataSub: "Füllen Sie diese Informationen für Ihre Akte aus",
     pFullName: "Vollständiger Name *", pDocId: "Ausweisnummer *",
-    pPhone: "Mobiltelefon (WhatsApp) *", pEmail: "E-Mail-Adresse *",
+    pPhone: "Mobiltelefon (WhatsApp) *", pEmail: "E-Mail-Adresse *", pDeliveryTitle: "Wie möchten Sie Ihre Ergebnisse erhalten?", pDeliveryEmail: "Per E-Mail", pDeliveryWhatsapp: "Per WhatsApp", pDeliveryHint: "Wir senden Ihnen einen Link zum Download Ihres PDF-Berichts.",
     pAge: "Alter", pAgePlaceholder: "Jahre", pCity: "Stadt", pCityPlaceholder: "Wählen Sie Ihre Stadt",
     pHairHistory: "Haargeschichte",
     pHairLossTime: "Wie lange bemerken Sie den Haarausfall?",
@@ -914,7 +918,7 @@ const T: Record<LangCode, AppTranslations> = {
     stepIntro: "Intro", stepData: "Dati", stepPhotos: "Foto",
     pDataTitle: "I Tuoi Precedenti", pDataSub: "Completa queste informazioni per il tuo fascicolo clinico",
     pFullName: "Nome completo *", pDocId: "Documento d'identità *",
-    pPhone: "Cellulare (WhatsApp) *", pEmail: "Indirizzo e-mail *",
+    pPhone: "Cellulare (WhatsApp) *", pEmail: "Indirizzo e-mail *", pDeliveryTitle: "Come vuoi ricevere i tuoi risultati?", pDeliveryEmail: "Via e-mail", pDeliveryWhatsapp: "Via WhatsApp", pDeliveryHint: "Ti invieremo un link per scaricare il tuo referto in PDF.",
     pAge: "Età", pAgePlaceholder: "Anni", pCity: "Città", pCityPlaceholder: "Seleziona la tua città",
     pHairHistory: "Storia Capillare",
     pHairLossTime: "Da quanto tempo noti la perdita di capelli?",
@@ -1031,7 +1035,7 @@ const T: Record<LangCode, AppTranslations> = {
     stepIntro: "Başlangıç", stepData: "Veriler", stepPhotos: "Fotoğraflar",
     pDataTitle: "Geçmişiniz", pDataSub: "Klinik dosyanız için bu bilgileri doldurun",
     pFullName: "Tam adı *", pDocId: "Kimlik belgesi *",
-    pPhone: "Cep telefonu (WhatsApp) *", pEmail: "E-posta adresi *",
+    pPhone: "Cep telefonu (WhatsApp) *", pEmail: "E-posta adresi *", pDeliveryTitle: "Sonuçlarınızı nasıl almak istersiniz?", pDeliveryEmail: "E-posta ile", pDeliveryWhatsapp: "WhatsApp ile", pDeliveryHint: "PDF raporunuzu indirmeniz için size bir bağlantı göndereceğiz.",
     pAge: "Yaş", pAgePlaceholder: "Yıl", pCity: "Şehir", pCityPlaceholder: "Şehrinizi seçin",
     pHairHistory: "Saç Geçmişi",
     pHairLossTime: "Saç dökülmesini ne zamandan beri fark ediyorsunuz?",
@@ -1148,7 +1152,7 @@ const T: Record<LangCode, AppTranslations> = {
     stepIntro: "مقدمة", stepData: "البيانات", stepPhotos: "الصور",
     pDataTitle: "سجلاتك الطبية", pDataSub: "أكمل هذه المعلومات لملفك السريري",
     pFullName: "الاسم الكامل *", pDocId: "وثيقة الهوية *",
-    pPhone: "الهاتف المحمول (واتساب) *", pEmail: "البريد الإلكتروني *",
+    pPhone: "الهاتف المحمول (واتساب) *", pEmail: "البريد الإلكتروني *", pDeliveryTitle: "كيف تريد استلام نتائجك؟", pDeliveryEmail: "عبر البريد الإلكتروني", pDeliveryWhatsapp: "عبر واتساب", pDeliveryHint: "سنرسل لك رابطًا لتنزيل تقريرك بصيغة PDF.",
     pAge: "العمر", pAgePlaceholder: "سنة", pCity: "المدينة", pCityPlaceholder: "اختر مدينتك",
     pHairHistory: "تاريخ الشعر",
     pHairLossTime: "منذ متى تلاحظ تساقط الشعر؟",
@@ -1265,7 +1269,7 @@ const T: Record<LangCode, AppTranslations> = {
     stepIntro: "介绍", stepData: "数据", stepPhotos: "照片",
     pDataTitle: "您的病史", pDataSub: "填写此基本信息以建立您的临床档案",
     pFullName: "全名 *", pDocId: "身份证件 *",
-    pPhone: "手机（WhatsApp）*", pEmail: "电子邮件 *",
+    pPhone: "手机（WhatsApp）*", pEmail: "电子邮件 *", pDeliveryTitle: "您希望如何接收结果？", pDeliveryEmail: "通过电子邮件", pDeliveryWhatsapp: "通过 WhatsApp", pDeliveryHint: "我们会向您发送链接，以下载 PDF 报告。",
     pAge: "年龄", pAgePlaceholder: "岁", pCity: "城市", pCityPlaceholder: "选择您的城市",
     pHairHistory: "脱发史",
     pHairLossTime: "您多久开始注意到脱发？",
