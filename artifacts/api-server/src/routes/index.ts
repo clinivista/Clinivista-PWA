@@ -10,6 +10,7 @@ import clinicProtocolRouter from "./clinic-protocol";
 import leadPhasesRouter from "./lead-phases";
 import diagnosisRouter from "./diagnosis";
 import resultsRouter from "./results";
+import portalRouter from "./portal";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(clinicProtocolRouter);
 router.use(leadPhasesRouter);
 router.use(diagnosisRouter);
 router.use(resultsRouter);
+router.use(portalRouter);
 
 export default router;

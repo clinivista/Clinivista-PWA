@@ -56,3 +56,23 @@ export function resultsMail(input: { to: string; clinicName: string; patientName
       `<p style="color:#666">El enlace estará disponible por 30 días.</p>`,
   };
 }
+
+export function accountMail(input: { to: string; clinicName: string; link: string; kind: "setup" | "reset" }): Mail {
+  const clinic = escapeHtml(input.clinicName);
+  const link = escapeHtml(input.link);
+  const setup = input.kind === "setup";
+  const subject = setup ? `Crea tu clave - ${input.clinicName}` : "Recupera tu clave - Clinivista";
+  const intro = setup
+    ? `Tu evaluación en ${input.clinicName} quedó registrada. Crea tu clave para entrar a tu cuenta y ver tus resultados cuando estén listos.`
+    : "Recibimos una solicitud para cambiar la clave de tu cuenta.";
+  const days = setup ? "7 días" : "1 hora";
+  return {
+    to: input.to,
+    subject,
+    text: `Hola,\n\n${intro}\n\n${input.link}\n\nEl enlace sirve una vez y vence en ${days}. Si no fuiste tú, ignora este correo.`,
+    html:
+      `<p>Hola,</p><p>${setup ? `Tu evaluación en ${clinic} quedó registrada. Crea tu clave para entrar a tu cuenta y ver tus resultados cuando estén listos.` : "Recibimos una solicitud para cambiar la clave de tu cuenta."}</p>` +
+      `<p><a href="${link}">${setup ? "Crear mi clave" : "Cambiar mi clave"}</a></p>` +
+      `<p style="color:#666">El enlace sirve una vez y vence en ${days}. Si no fuiste tú, ignora este correo.</p>`,
+  };
+}

@@ -415,6 +415,55 @@ export interface DiagnosisEvent {
   createdAt: string;
 }
 
+export interface OkResponse {
+  ok: boolean;
+}
+
+export interface PortalLoginInput {
+  email: string;
+  password: string;
+}
+
+export interface PortalSetupInput {
+  token: string;
+  password: string;
+}
+
+export interface PortalForgotInput {
+  email: string;
+}
+
+/**
+ * @nullable
+ */
+export type PortalOptionsProfile = {
+  email?: string;
+  name?: string;
+} | null;
+
+export interface PortalOptions {
+  googleEnabled: boolean;
+  /** @nullable */
+  profile?: PortalOptionsProfile;
+}
+
+export interface PortalResult {
+  id: string;
+  createdAt: string;
+}
+
+export interface PortalCase {
+  leadId: string;
+  clinicName: string;
+  patientName: string;
+  results: PortalResult[];
+}
+
+export interface PortalOverview {
+  email: string;
+  cases: PortalCase[];
+}
+
 export interface ResultsDeliveryRecord {
   id: string;
   channel: string;

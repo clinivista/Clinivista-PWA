@@ -1,7 +1,7 @@
 import express, { Router, type IRouter } from "express";
 import sharp from "sharp";
 import { and, eq, or } from "drizzle-orm";
-import { db, leadsTable } from "@workspace/db";
+import { db, leadsTable, normalizeEmail } from "@workspace/db";
 import {
   ConfirmPatientPhotoParams,
   CreateClinicPatientParams,
@@ -36,6 +36,8 @@ import {
   getRequiredViewKeysForLead,
 } from "../lib/clinical-photos";
 import { privatePhotoStorage } from "../lib/clinical-photo-storage";
+import { ensurePatientAccountForLead } from "../lib/patient-accounts";
+import { baseUrl } from "./results";
 import { isCenterActive } from "../lib/centers";
 import { clinicIdentity, findCenterBySlug } from "../lib/clinic-identity";
 import { ALLOWED_IMAGE_TYPES, MAX_PHOTO_BYTES, parseImageRequest, parseOptionalPixelDimension } from "../lib/image-upload";
@@ -74,7 +76,7 @@ function legacyPhotoKeys(lead: typeof leadsTable.$inferSelect): string[] {
 }
 
 async function leadSummary(lead: typeof leadsTable.$inferSelect) {
-  const { photos, symptoms, surgeryHistory, notes, ...safe } = lead;
+  const { photos, symptoms, surgeryHistory, notes, patientAccountId, ...safe } = lead;
   const clinicalPhotos = await getPhotoStatusesForLead(lead);
   const visibleClinical = clinicalPhotos.filter((photo) => ["draft", "confirmed"].includes(photo.status));
   const keys = [...new Set([...legacyPhotoKeys(lead), ...visibleClinical.map((photo) => photo.key)])];
@@ -269,6 +271,9 @@ async function createPatientInCenter(req: express.Request, res: express.Response
   };
   await db.insert(leadsTable).values(newLead);
   const [inserted] = await db.select().from(leadsTable).where(eq(leadsTable.id, newLead.id));
+  // The patient's portal account is created from the email they typed; the
+  // mail with the link to choose a password goes out in the background.
+  void ensurePatientAccountForLead(inserted, baseUrl(req));
   res.status(201).json({ ok: true, lead: await leadSummary(inserted) });
 }
 
@@ -403,6 +408,12 @@ router.put("/patients/:token", async (req, res): Promise<void> => {
   const [updated] = await db.update(leadsTable)
     .set({ ...data, status: updatedStatus(existing.status, completed, requiredKeys.length), photoCount: String(completed) })
     .where(eq(leadsTable.id, existing.id)).returning();
+  if (normalizeEmail(updated.email ?? "") !== normalizeEmail(existing.email ?? "") && existing.patientAccountId) {
+    // A different email is a different account.
+    await db.update(leadsTable).set({ patientAccountId: null }).where(eq(leadsTable.id, updated.id));
+    updated.patientAccountId = null;
+  }
+  void ensurePatientAccountForLead(updated, baseUrl(req));
   res.json({ ok: true, lead: await leadSummary(updated) });
 });
 

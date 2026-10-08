@@ -13,7 +13,8 @@ vi.mock("@workspace/db", async () => {
   const schema = await import("../../../../lib/db/src/schema/index");
   const client = new PGlite();
   const db = drizzle(client, { schema });
-  return { ...schema, db, pool: client, __pglite: client };
+  const passwords = await import("../../../../lib/db/src/passwords");
+  return { ...schema, ...passwords, db, pool: client, __pglite: client };
 });
 
 import { eq } from "drizzle-orm";
@@ -23,8 +24,10 @@ import leadsRouter from "./leads";
 import leadPhasesRouter from "./lead-phases";
 import diagnosisRouter from "./diagnosis";
 import resultsRouter from "./results";
+import portalRouter from "./portal";
 import { createSession } from "../lib/sessions";
 import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
+import { resetThrottleForTests } from "../lib/patient-accounts";
 
 const typedMockedDb = mockedDb as unknown as {
   db: typeof mockedDb.db;
@@ -41,6 +44,7 @@ app.use("/api", leadsRouter);
 app.use("/api", leadPhasesRouter);
 app.use("/api", diagnosisRouter);
 app.use("/api", resultsRouter);
+app.use("/api", portalRouter);
 
 // Fixture data only — not a real person.
 const VALID_BODY = {
@@ -82,7 +86,8 @@ beforeAll(async () => {
        is_demo boolean DEFAULT false,
        center_id text DEFAULT 'default-center',
        protocol_id text DEFAULT 'capillary-initial',
-       delivery_channel text DEFAULT ''
+       delivery_channel text DEFAULT '',
+       patient_account_id text
     );
     CREATE UNIQUE INDEX IF NOT EXISTS leads_center_document_unique
       ON leads (center_id, document_normalized)
@@ -132,6 +137,12 @@ beforeAll(async () => {
        id text PRIMARY KEY, diagnosis_id text NOT NULL, action text NOT NULL, actor_user_id text, actor_name text,
        created_at timestamptz NOT NULL DEFAULT now()
      );
+     CREATE TABLE IF NOT EXISTS patient_accounts (
+       id text PRIMARY KEY, email text NOT NULL, email_normalized text NOT NULL UNIQUE, password_hash text,
+       name text NOT NULL DEFAULT '', email_verified boolean NOT NULL DEFAULT false,
+       token_hash text, token_expires_at timestamptz, created_at timestamptz NOT NULL DEFAULT now(),
+       updated_at timestamptz NOT NULL DEFAULT now()
+     );
      CREATE TABLE IF NOT EXISTS clinical_result_deliveries (
        id text PRIMARY KEY, lead_id text NOT NULL, token text NOT NULL UNIQUE, object_path text NOT NULL,
        channel text NOT NULL, recipient text NOT NULL DEFAULT '', status text NOT NULL, error text,
@@ -161,6 +172,7 @@ beforeEach(async () => {
   await pglite.exec(`
     DELETE FROM clinical_photo_audit_events;
     DELETE FROM clinical_result_deliveries;
+    DELETE FROM patient_accounts;
     DELETE FROM clinical_photo_annotations;
     DELETE FROM clinical_diagnosis_events;
     DELETE FROM clinical_diagnoses;
@@ -942,8 +954,8 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
     await request(app).post(`/api/leads/${leadId}/diagnosis/close`).set("Cookie", staff()).send({}).expect(200);
   };
   /** A patient whose diagnosis is closed, so the clinic's own phases are open. */
-  async function patientReadyForCapture() {
-    const lead = await patientWithPreEvaluation();
+  async function patientReadyForCapture(documentId?: string, email?: string, phone?: string) {
+    const lead = await patientWithPreEvaluation(true, documentId ? { documentId, email, phone } : {});
     await closeDiagnosis(lead.id);
     return lead;
   }
@@ -1304,6 +1316,226 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
       const rows = (await pglite.exec("SELECT count(*)::int AS n FROM clinical_result_deliveries;")) as Array<{ rows: Array<{ n: number }> }>;
       expect(rows[0].rows[0].n).toBe(0);
       await request(app).get(`/api/results/${token}`).expect(404);
+    });
+  });
+  describe("Cuenta del paciente (correo y clave)", () => {
+    const sent: Array<{ to: string[]; subject: string; text: string }> = [];
+    const mailOn = () => {
+      process.env.RESEND_API_KEY = "re_test_key";
+      process.env.MAIL_FROM = "Clínica <resultados@example.cl>";
+      process.env.PUBLIC_APP_URL = "https://app.example.cl";
+      sent.length = 0;
+      vi.stubGlobal("fetch", vi.fn(async (_url: string, init: RequestInit) => {
+        sent.push(JSON.parse(String(init.body)));
+        return new Response("{}", { status: 200 });
+      }));
+    };
+    const tokenFromMail = (index = sent.length - 1) => /token=([0-9a-f]{64})/.exec(sent[index].text)![1];
+    const accountCount = async () => ((await pglite.exec("SELECT count(*)::int AS n FROM patient_accounts;")) as Array<{ rows: Array<{ n: number }> }>)[0].rows[0].n;
+    const login = (email: string, password: string) => request(app).post("/api/portal/login").send({ email, password });
+    const cookieOf = (res: request.Response) => String(res.headers["set-cookie"]).split(";")[0];
+
+    beforeEach(() => resetThrottleForTests());
+    afterEach(() => {
+      vi.unstubAllGlobals();
+      delete process.env.RESEND_API_KEY;
+      delete process.env.MAIL_FROM;
+      delete process.env.PUBLIC_APP_URL;
+    });
+
+    it("registering the data form creates the account and emails the link to choose a password", async () => {
+      mailOn();
+      const lead = await createPatient();
+      await vi.waitFor(() => expect(sent).toHaveLength(1));
+      expect(sent[0].to).toEqual(["prueba@example.com"]);
+      expect(sent[0].text).toContain("https://app.example.cl/paciente/clave?token=");
+      expect(await accountCount()).toBe(1);
+      const row = (await pglite.exec(`SELECT patient_account_id FROM leads WHERE id = '${lead.id}';`)) as Array<{ rows: Array<{ patient_account_id: string | null }> }>;
+      expect(row[0].rows[0].patient_account_id).toBeTruthy();
+      // later saves of the same form do not send more mail
+      await request(app).put(`/api/patients/${lead.token}`).send({ ...VALID_BODY }).expect(200);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(sent).toHaveLength(1);
+      // the patient summary never exposes the account id
+      const summary = await request(app).get(`/api/patients/${lead.token}`).expect(200);
+      expect(JSON.stringify(summary.body)).not.toContain("patientAccountId");
+    });
+
+    it("the evaluation goes on when the mail service is not configured", async () => {
+      const lead = await createPatient();
+      await vi.waitFor(async () => expect(await accountCount()).toBe(1));
+      expect(lead.token).toBeTruthy();
+    });
+
+    it("the link sets the password once, signs the patient in, and expires", async () => {
+      mailOn();
+      await createPatient();
+      await vi.waitFor(() => expect(sent).toHaveLength(1));
+      const token = tokenFromMail();
+      await request(app).post("/api/portal/setup").send({ token, password: "corta" }).expect(400);
+      await request(app).post("/api/portal/setup").send({ token: "a".repeat(64), password: "clave-segura-1" }).expect(400);
+      const ok = await request(app).post("/api/portal/setup").send({ token, password: "clave-segura-1" }).expect(200);
+      expect(String(ok.headers["set-cookie"])).toContain("clinivista_patient=");
+      await request(app).get("/api/portal/me").set("Cookie", cookieOf(ok)).expect(200);
+      await request(app).post("/api/portal/setup").send({ token, password: "otra-clave-9" }).expect(400);
+      await login("prueba@example.com", "clave-segura-1").expect(200);
+
+      mailOn();
+      await request(app).post("/api/portal/forgot").send({ email: "prueba@example.com" }).expect(200);
+      await vi.waitFor(() => expect(sent).toHaveLength(1));
+      expect(sent[0].subject).toMatch(/Recupera/);
+      await pglite.exec("UPDATE patient_accounts SET token_expires_at = now() - interval '1 minute';");
+      await request(app).post("/api/portal/setup").send({ token: tokenFromMail(), password: "clave-nueva-22" }).expect(400);
+    });
+
+    it("login: wrong data looks the same whether the account exists or not, and repeated failures are throttled", async () => {
+      mailOn();
+      await createPatient();
+      await vi.waitFor(() => expect(sent).toHaveLength(1));
+      await request(app).post("/api/portal/setup").send({ token: tokenFromMail(), password: "clave-segura-1" }).expect(200);
+      const wrong = await login("prueba@example.com", "mala-clave-1").expect(401);
+      const ghost = await login("nadie@example.com", "mala-clave-1").expect(401);
+      expect(wrong.body.error).toBe(ghost.body.error);
+      // an account whose password was never set cannot sign in either
+      await pglite.exec("UPDATE patient_accounts SET password_hash = NULL;");
+      await login("prueba@example.com", "clave-segura-1").expect(401);
+      for (let i = 0; i < 6; i += 1) await login("prueba@example.com", "mala").expect(401);
+      await login("prueba@example.com", "mala").expect(429);
+    });
+
+    it("forgot-password answers the same for unknown emails and sends nothing", async () => {
+      mailOn();
+      await request(app).post("/api/portal/forgot").send({ email: "nadie@example.com" }).expect(200);
+      await request(app).post("/api/portal/forgot").send({}).expect(200);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(sent).toHaveLength(0);
+    });
+
+    it("the portal lists only the signed-in patient's delivered results and serves only their PDFs", async () => {
+      mailOn();
+      const mine = await patientReadyForCapture();
+      await vi.waitFor(() => expect(sent).toHaveLength(1));
+      await request(app).post("/api/portal/setup").send({ token: tokenFromMail(), password: "clave-segura-1" }).expect(200);
+      const other = await patientReadyForCapture("20.347.878-K", "otra@example.com", "+56933333333");
+      await vi.waitFor(() => expect(sent).toHaveLength(2));
+      await request(app).post("/api/portal/setup").send({ token: tokenFromMail(), password: "clave-segura-2" }).expect(200);
+
+      await request(app).post(`/api/leads/${mine.id}/results/deliver`).set("Cookie", staff()).send({ channel: "whatsapp" }).expect(200);
+      await request(app).post(`/api/leads/${other.id}/results/deliver`).set("Cookie", staff()).send({ channel: "whatsapp" }).expect(200);
+
+      const session = cookieOf(await login("prueba@example.com", "clave-segura-1").expect(200));
+      const me = await request(app).get("/api/portal/me").set("Cookie", session).expect(200);
+      expect(me.body.email).toBe("prueba@example.com");
+      expect(me.body.cases).toHaveLength(1);
+      expect(me.body.cases[0]).toMatchObject({ leadId: mine.id, patientName: "Paciente De Prueba" });
+      expect(me.body.cases[0].results).toHaveLength(1);
+      expect(JSON.stringify(me.body)).not.toContain("objectPath");
+      const pdf = await request(app).get(`/api/portal/results/${me.body.cases[0].results[0].id}`).set("Cookie", session).buffer(true).parse((r, cb) => {
+        const chunks: Buffer[] = [];
+        r.on("data", (c: Buffer) => chunks.push(c));
+        r.on("end", () => cb(null, Buffer.concat(chunks)));
+      }).expect(200);
+      expect(pdf.headers["content-type"]).toContain("application/pdf");
+      expect((pdf.body as Buffer).subarray(0, 5).toString()).toBe("%PDF-");
+
+      const theirs = (await pglite.exec(`SELECT id FROM clinical_result_deliveries WHERE lead_id = '${other.id}';`)) as Array<{ rows: Array<{ id: string }> }>;
+      await request(app).get(`/api/portal/results/${theirs[0].rows[0].id}`).set("Cookie", session).expect(404);
+      await request(app).get("/api/portal/me").expect(401);
+      await request(app).get(`/api/portal/results/${me.body.cases[0].results[0].id}`).expect(401);
+      await request(app).post("/api/portal/logout").set("Cookie", session).expect(200);
+      await request(app).get("/api/portal/me").set("Cookie", session).expect(401);
+    });
+
+    describe("Google", () => {
+      const idToken = (claims: Record<string, unknown>) =>
+        `x.${Buffer.from(JSON.stringify({ iss: "https://accounts.google.com", aud: "client-123", exp: Math.floor(Date.now() / 1000) + 600, email_verified: true, ...claims })).toString("base64url")}.y`;
+      const googleOn = (claims: Record<string, unknown> = {}) => {
+        process.env.GOOGLE_CLIENT_ID = "client-123";
+        process.env.GOOGLE_CLIENT_SECRET = "secret-456";
+        process.env.PUBLIC_APP_URL = "https://app.example.cl";
+        vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ id_token: idToken({ email: "Paciente.G@gmail.com", name: "Paciente Google", ...claims }) }), { status: 200 })));
+      };
+      afterEach(() => {
+        delete process.env.GOOGLE_CLIENT_ID;
+        delete process.env.GOOGLE_CLIENT_SECRET;
+      });
+      const start = (next?: string) => request(app).get("/api/portal/google/start").query(next ? { next } : {});
+      const stateCookie = (res: request.Response) => String(res.headers["set-cookie"]).split(";")[0];
+      const stateOfRedirect = (res: request.Response) => new URL(res.headers.location).searchParams.get("state")!;
+
+      it("reports whether Google is available", async () => {
+        expect((await request(app).get("/api/portal/options").expect(200)).body).toEqual({ googleEnabled: false, profile: null });
+        const off = await start("/c/demo-clinica").expect(302);
+        expect(off.headers.location).toBe("/c/demo-clinica?google=off");
+        googleOn();
+        expect((await request(app).get("/api/portal/options").expect(200)).body.googleEnabled).toBe(true);
+      });
+
+      it("sends the patient to Google and back, creating a verified account and signing in", async () => {
+        googleOn();
+        const go = await start("/c/demo-clinica").expect(302);
+        const target = new URL(go.headers.location);
+        expect(target.origin + target.pathname).toBe("https://accounts.google.com/o/oauth2/v2/auth");
+        expect(target.searchParams.get("client_id")).toBe("client-123");
+        expect(target.searchParams.get("redirect_uri")).toBe("https://app.example.cl/api/portal/google/callback");
+        expect(target.searchParams.get("scope")).toBe("openid email profile");
+        const back = await request(app).get("/api/portal/google/callback").query({ code: "abc", state: stateOfRedirect(go) }).set("Cookie", stateCookie(go)).expect(302);
+        expect(back.headers.location).toBe("/c/demo-clinica?google=ok");
+        const session = String(back.headers["set-cookie"]).match(/clinivista_patient=[0-9a-f]+/)![0];
+        const options = await request(app).get("/api/portal/options").set("Cookie", session).expect(200);
+        expect(options.body.profile).toEqual({ email: "Paciente.G@gmail.com", name: "Paciente Google" });
+        await request(app).get("/api/portal/me").set("Cookie", session).expect(200);
+        const row = (await pglite.exec("SELECT email_verified, password_hash FROM patient_accounts;")) as Array<{ rows: Array<{ email_verified: boolean; password_hash: string | null }> }>;
+        expect(row[0].rows).toEqual([{ email_verified: true, password_hash: null }]);
+      });
+
+      it("a patient who registered with Google gets no password email", async () => {
+        googleOn();
+        const go = await start("/c/demo-clinica").expect(302);
+        await request(app).get("/api/portal/google/callback").query({ code: "abc", state: stateOfRedirect(go) }).set("Cookie", stateCookie(go)).expect(302);
+        const calls = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls.length;
+        process.env.RESEND_API_KEY = "re_x";
+        process.env.MAIL_FROM = "C <r@example.cl>";
+        await createPatient({ email: "paciente.g@gmail.com" });
+        await vi.waitFor(async () => expect(await accountCount()).toBe(1));
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        expect((globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls.length).toBe(calls);
+        const link = (await pglite.exec("SELECT count(*)::int AS n FROM leads WHERE patient_account_id IS NOT NULL;")) as Array<{ rows: Array<{ n: number }> }>;
+        expect(link[0].rows[0].n).toBe(1);
+      });
+
+      it("rejects a wrong state, a missing code, an unverified email or a token meant for another app", async () => {
+        googleOn();
+        const go = await start().expect(302);
+        const good = { code: "abc", state: stateOfRedirect(go) };
+        await request(app).get("/api/portal/google/callback").query({ ...good, state: "otro" }).set("Cookie", stateCookie(go)).expect(302).expect("Location", "/paciente?google=error");
+        await request(app).get("/api/portal/google/callback").query({ state: good.state }).set("Cookie", stateCookie(go)).expect(302).expect("Location", "/paciente?google=error");
+        await request(app).get("/api/portal/google/callback").query(good).expect(302).expect("Location", "/paciente?google=error");
+        for (const bad of [{ email_verified: false }, { aud: "otra-app" }, { exp: 1 }, { iss: "https://evil.example" }]) {
+          googleOn(bad);
+          const res = await request(app).get("/api/portal/google/callback").query(good).set("Cookie", stateCookie(go)).expect(302);
+          expect(res.headers.location).toBe("/paciente?google=error");
+          expect(String(res.headers["set-cookie"])).not.toContain("clinivista_patient=");
+        }
+        expect(await accountCount()).toBe(0);
+      });
+
+      it("only returns to the clinic page or the portal", async () => {
+        googleOn();
+        const go = await start("https://evil.example/robo").expect(302);
+        const back = await request(app).get("/api/portal/google/callback").query({ code: "abc", state: stateOfRedirect(go) }).set("Cookie", stateCookie(go)).expect(302);
+        expect(back.headers.location).toBe("/paciente?google=ok");
+      });
+    });
+
+    it("changing the email moves the case to the account of the new email", async () => {
+      mailOn();
+      const lead = await createPatient();
+      await vi.waitFor(() => expect(sent).toHaveLength(1));
+      await request(app).put(`/api/patients/${lead.token}`).send({ ...VALID_BODY, email: "nuevo@example.com" }).expect(200);
+      await vi.waitFor(() => expect(sent).toHaveLength(2));
+      expect(sent[1].to).toEqual(["nuevo@example.com"]);
+      expect(await accountCount()).toBe(2);
     });
   });
 });

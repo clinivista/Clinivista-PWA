@@ -196,6 +196,12 @@ const PHOTO_STATUS_BODY = {
   hasAdjusted: false,
 };
 
+/** Answers every request with the same body, except the portal's options, which the form also asks for. */
+function alwaysAnswer(body: object, status: number) {
+  return async (input: RequestInfo | URL) =>
+    String(input).includes("/api/portal/options") ? jsonResponse({ googleEnabled: false, profile: null }, 200) : jsonResponse(body, status);
+}
+
 function jsonResponse(body: object, status: number) {
   return new Response(JSON.stringify(body), {
     status,
@@ -398,7 +404,7 @@ describe("Full patient form flow — end to end", () => {
   });
 
   it("shows the duplicate warning card when the API returns 409", async () => {
-    fetchSpy.mockResolvedValue(jsonResponse(DUPLICATE_BODY, 409));
+    fetchSpy.mockImplementation(alwaysAnswer(DUPLICATE_BODY, 409));
 
     const user = setupUser();
     renderFlow();
@@ -429,7 +435,7 @@ describe("Full patient form flow — end to end", () => {
   });
 
   it("tells the patient to resume from the original device when the 409 is for an in-progress evaluation", async () => {
-    fetchSpy.mockResolvedValue(jsonResponse({ ...DUPLICATE_BODY, resumable: true }, 409));
+    fetchSpy.mockImplementation(alwaysAnswer({ ...DUPLICATE_BODY, resumable: true }, 409));
 
     const user = setupUser();
     renderFlow();
@@ -446,8 +452,8 @@ describe("Full patient form flow — end to end", () => {
   });
 
   it("shows a clear, non-generic message when the clinic is suspended (403)", async () => {
-    fetchSpy.mockResolvedValue(
-      jsonResponse({ error: "Esta clínica no está aceptando nuevas evaluaciones en este momento." }, 403),
+    fetchSpy.mockImplementation(
+      alwaysAnswer({ error: "Esta clínica no está aceptando nuevas evaluaciones en este momento." }, 403),
     );
 
     const user = setupUser();

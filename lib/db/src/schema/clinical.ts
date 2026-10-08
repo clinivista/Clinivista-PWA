@@ -186,3 +186,20 @@ export const resultDeliveriesTable = pgTable("clinical_result_deliveries", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
 });
+
+// Cuenta del paciente (correo + clave) para ver sus resultados. Una por correo,
+// compartida entre clínicas. El enlace para crear o recuperar la clave se guarda
+// solo como hash y vence.
+export const patientAccountsTable = pgTable("patient_accounts", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull(),
+  emailNormalized: text("email_normalized").notNull().unique(),
+  passwordHash: text("password_hash"),
+  name: text("name").notNull().default(""),
+  // true once the email was proven (signed in with Google).
+  emailVerified: boolean("email_verified").notNull().default(false),
+  tokenHash: text("token_hash"),
+  tokenExpiresAt: timestamp("token_expires_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});

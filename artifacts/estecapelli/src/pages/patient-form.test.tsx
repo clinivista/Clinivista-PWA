@@ -10,6 +10,7 @@ vi.mock("@workspace/api-client-react", () => ({
   getGetPatientQueryKey: (token: string) => ["/api/patients", token],
   useGetPatientClinic: () => ({ data: undefined }),
   useGetPatientProtocol: () => ({ data: undefined }),
+  useGetPortalOptions: () => ({ data: undefined }),
   getGetPatientProtocolQueryKey: (token: string) => ["/api/patients", token, "protocol"],
   getGetPatientClinicQueryKey: (token: string) => ["/api/patients", token, "clinic"],
   useGetClinic: () => ({ data: undefined }),
