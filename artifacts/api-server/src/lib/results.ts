@@ -51,6 +51,7 @@ export async function buildResultsForLead(lead: Lead): Promise<Buffer> {
     doctorName: state.closedByName,
     responseText: state.responseText,
     photos,
+    language: lead.language,
   });
 }
 
