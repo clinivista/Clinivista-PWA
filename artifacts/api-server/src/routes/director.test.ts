@@ -84,7 +84,8 @@ beforeAll(async () => {
       appointment_at text DEFAULT '',
       is_demo boolean DEFAULT false,
       center_id text DEFAULT 'default-center',
-      protocol_id text DEFAULT 'capillary-initial'
+      protocol_id text DEFAULT 'capillary-initial',
+       delivery_channel text DEFAULT ''
     );
     CREATE TABLE IF NOT EXISTS users (
       id text PRIMARY KEY,

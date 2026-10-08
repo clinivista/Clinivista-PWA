@@ -415,6 +415,51 @@ export interface DiagnosisEvent {
   createdAt: string;
 }
 
+export interface ResultsDeliveryRecord {
+  id: string;
+  channel: string;
+  recipient: string;
+  status: string;
+  /** @nullable */
+  error?: string | null;
+  /** @nullable */
+  createdByName?: string | null;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export interface ResultsState {
+  /** @nullable */
+  preferredChannel?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  emailConfigured: boolean;
+  deliveries: ResultsDeliveryRecord[];
+}
+
+export type ResultsDeliverInputChannel = typeof ResultsDeliverInputChannel[keyof typeof ResultsDeliverInputChannel];
+
+
+export const ResultsDeliverInputChannel = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+} as const;
+
+export interface ResultsDeliverInput {
+  channel: ResultsDeliverInputChannel;
+}
+
+export interface ResultsDelivery {
+  channel: string;
+  status: string;
+  recipient: string;
+  link: string;
+  /** @nullable */
+  whatsappUrl?: string | null;
+}
+
 export type DiagnosisStateStatus = typeof DiagnosisStateStatus[keyof typeof DiagnosisStateStatus];
 
 
@@ -525,6 +570,8 @@ export interface LeadSummary {
   appointmentAt?: string | null;
   /** @nullable */
   isDemo?: boolean | null;
+  /** @nullable */
+  deliveryChannel?: string | null;
 }
 
 export interface Lead {
@@ -601,6 +648,7 @@ export interface PatientInput {
   surgeryHistory?: string;
   consent: boolean;
   marketingConsent?: boolean;
+  deliveryChannel?: string;
   submit?: boolean;
 }
 

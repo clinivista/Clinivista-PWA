@@ -61,6 +61,9 @@ function buildLead(payload: Record<string, unknown>, existing: Partial<typeof le
     surgeryHistory: clean(payload.surgeryHistory, 250),
     consent: Boolean(payload.consent),
     marketingConsent: Boolean(payload.marketingConsent),
+    deliveryChannel: payload.deliveryChannel === undefined
+      ? existing.deliveryChannel ?? ""
+      : ["email", "whatsapp"].includes(String(payload.deliveryChannel)) ? String(payload.deliveryChannel) : "",
   };
 }
 
@@ -219,6 +222,10 @@ async function createPatientInCenter(req: express.Request, res: express.Response
   }
   if (data.email && !EMAIL_REGEX.test(data.email)) {
     res.status(422).json({ error: "Ingresa un correo electrónico válido." });
+    return;
+  }
+  if (data.deliveryChannel === "email" && !data.email) {
+    res.status(422).json({ error: "Para recibir los resultados por correo, ingresa tu correo electrónico." });
     return;
   }
   // Duplicates never return the existing token: phone, email and RUT are not
@@ -380,6 +387,10 @@ router.put("/patients/:token", async (req, res): Promise<void> => {
   }
   if (!data.consent || !data.name || !data.phone) {
     res.status(422).json({ error: "Completa tu nombre, teléfono y consentimiento." });
+    return;
+  }
+  if (data.deliveryChannel === "email" && !data.email) {
+    res.status(422).json({ error: "Para recibir los resultados por correo, ingresa tu correo electrónico." });
     return;
   }
   const clinicalPhotos = await getPhotoStatusesForLead(existing);

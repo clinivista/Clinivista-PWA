@@ -9,6 +9,7 @@ import clinicUsersRouter from "./clinic-users";
 import clinicProtocolRouter from "./clinic-protocol";
 import leadPhasesRouter from "./lead-phases";
 import diagnosisRouter from "./diagnosis";
+import resultsRouter from "./results";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(clinicUsersRouter);
 router.use(clinicProtocolRouter);
 router.use(leadPhasesRouter);
 router.use(diagnosisRouter);
+router.use(resultsRouter);
 
 export default router;

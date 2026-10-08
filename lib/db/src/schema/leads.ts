@@ -50,6 +50,8 @@ export const leadsTable = pgTable("leads", {
   isDemo: boolean("is_demo").default(false),
   centerId: text("center_id").default("default-center"),
   protocolId: text("protocol_id").default("capillary-initial"),
+  // How the patient wants to receive the results: "email", "whatsapp" or "" (not chosen).
+  deliveryChannel: text("delivery_channel").default(""),
 }, (table) => [
   // Per-clinic uniqueness: the same RUT is only a duplicate within one center.
   uniqueIndex("leads_center_document_unique")

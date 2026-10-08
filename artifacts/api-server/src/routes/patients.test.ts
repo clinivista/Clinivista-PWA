@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from "vitest";
 import express from "express";
 import request from "supertest";
 import { createHash } from "node:crypto";
@@ -22,6 +22,7 @@ import patientsRouter from "./patients";
 import leadsRouter from "./leads";
 import leadPhasesRouter from "./lead-phases";
 import diagnosisRouter from "./diagnosis";
+import resultsRouter from "./results";
 import { createSession } from "../lib/sessions";
 import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
 
@@ -39,6 +40,7 @@ app.use("/api", patientsRouter);
 app.use("/api", leadsRouter);
 app.use("/api", leadPhasesRouter);
 app.use("/api", diagnosisRouter);
+app.use("/api", resultsRouter);
 
 // Fixture data only — not a real person.
 const VALID_BODY = {
@@ -79,7 +81,8 @@ beforeAll(async () => {
       appointment_at text DEFAULT '',
        is_demo boolean DEFAULT false,
        center_id text DEFAULT 'default-center',
-       protocol_id text DEFAULT 'capillary-initial'
+       protocol_id text DEFAULT 'capillary-initial',
+       delivery_channel text DEFAULT ''
     );
     CREATE UNIQUE INDEX IF NOT EXISTS leads_center_document_unique
       ON leads (center_id, document_normalized)
@@ -129,6 +132,12 @@ beforeAll(async () => {
        id text PRIMARY KEY, diagnosis_id text NOT NULL, action text NOT NULL, actor_user_id text, actor_name text,
        created_at timestamptz NOT NULL DEFAULT now()
      );
+     CREATE TABLE IF NOT EXISTS clinical_result_deliveries (
+       id text PRIMARY KEY, lead_id text NOT NULL, token text NOT NULL UNIQUE, object_path text NOT NULL,
+       channel text NOT NULL, recipient text NOT NULL DEFAULT '', status text NOT NULL, error text,
+       created_by_user_id text, created_by_name text, created_at timestamptz NOT NULL DEFAULT now(),
+       expires_at timestamptz NOT NULL
+     );
      CREATE TABLE IF NOT EXISTS clinical_photo_annotations (
        id text PRIMARY KEY, photo_id text NOT NULL UNIQUE, object_path text NOT NULL, mime_type text NOT NULL,
        strokes jsonb NOT NULL DEFAULT '[]', updated_by_user_id text, updated_at timestamptz NOT NULL DEFAULT now()
@@ -151,6 +160,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await pglite.exec(`
     DELETE FROM clinical_photo_audit_events;
+    DELETE FROM clinical_result_deliveries;
     DELETE FROM clinical_photo_annotations;
     DELETE FROM clinical_diagnosis_events;
     DELETE FROM clinical_diagnoses;
@@ -1150,6 +1160,150 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
       await request(app).delete(`/api/patients/${lead.token}/photos`).expect(200);
       const rows = (await pglite.exec("SELECT count(*)::int AS n FROM clinical_photo_annotations;")) as Array<{ rows: Array<{ n: number }> }>;
       expect(rows[0].rows[0].n).toBe(0);
+    });
+  });
+  describe("Entrega de resultados al paciente", () => {
+    const results = (leadId: string, cookie = staff()) => request(app).get(`/api/leads/${leadId}/results`).set("Cookie", cookie);
+    const deliver = (leadId: string, channel: unknown, cookie = staff()) =>
+      request(app).post(`/api/leads/${leadId}/results/deliver`).set("Cookie", cookie).send({ channel });
+    const pdfOf = (body: Buffer) => Buffer.isBuffer(body) && body.subarray(0, 5).toString() === "%PDF-";
+    const binary = (res: request.Response) => res.body as Buffer;
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+      delete process.env.RESEND_API_KEY;
+      delete process.env.MAIL_FROM;
+      delete process.env.PUBLIC_APP_URL;
+    });
+
+    it("the patient picks how to receive results in phase 1 and the clinic sees it; email needs an email", async () => {
+      const created = await request(app).post("/api/patients").send({ ...VALID_BODY, deliveryChannel: "whatsapp" }).expect(201);
+      expect(created.body.lead.deliveryChannel).toBe("whatsapp");
+      const token = created.body.lead.token as string;
+      // an update that omits the choice keeps it; an unknown value is cleared
+      const kept = await request(app).put(`/api/patients/${token}`).send({ ...VALID_BODY }).expect(200);
+      expect(kept.body.lead.deliveryChannel).toBe("whatsapp");
+      const noEmail = await request(app).put(`/api/patients/${token}`).send({ ...VALID_BODY, email: "", deliveryChannel: "email" });
+      expect(noEmail.status).toBe(422);
+      const bogus = await request(app).put(`/api/patients/${token}`).send({ ...VALID_BODY, deliveryChannel: "paloma" }).expect(200);
+      expect(bogus.body.lead.deliveryChannel).toBe("");
+      await request(app).post("/api/patients").send({ ...VALID_BODY, documentId: "20.347.878-K", phone: "+56933333333", email: "", deliveryChannel: "email" }).expect(422);
+      await request(app).put(`/api/patients/${token}`).send({ ...VALID_BODY, deliveryChannel: "email" }).expect(200);
+      const state = await results(created.body.lead.id).expect(200);
+      expect(state.body).toMatchObject({ preferredChannel: "email", email: "prueba@example.com", emailConfigured: false, deliveries: [] });
+    });
+
+    it("builds the PDF only once the diagnosis is closed, for staff of that clinic only", async () => {
+      const lead = await patientWithPreEvaluation();
+      await request(app).get(`/api/leads/${lead.id}/results/pdf`).set("Cookie", staff()).expect(409);
+      await deliver(lead.id, "whatsapp").expect(409);
+      await closeDiagnosis(lead.id);
+      const pdf = await request(app).get(`/api/leads/${lead.id}/results/pdf`).set("Cookie", staff()).buffer(true).parse((r, cb) => {
+        const chunks: Buffer[] = [];
+        r.on("data", (c: Buffer) => chunks.push(c));
+        r.on("end", () => cb(null, Buffer.concat(chunks)));
+      }).expect(200);
+      expect(pdf.headers["content-type"]).toContain("application/pdf");
+      expect(pdfOf(binary(pdf))).toBe(true);
+      await request(app).get(`/api/leads/${lead.id}/results/pdf`).expect(401);
+      await pglite.exec(`INSERT INTO clinical_centers (id, name, slug) VALUES ('clinic-z', 'Z', 'z');`);
+      await request(app).get(`/api/leads/${lead.id}/results/pdf`).set("Cookie", staff("clinic-z")).expect(404);
+      await deliver(lead.id, "whatsapp", staff("clinic-z")).expect(404);
+      await deliver(lead.id, "paloma").expect(400);
+    });
+
+    it("WhatsApp: returns a wa.me link with a secret PDF link that the patient opens without signing in", async () => {
+      process.env.PUBLIC_APP_URL = "https://app.example.cl/";
+      const lead = await patientReadyForCapture();
+      const res = await deliver(lead.id, "whatsapp").expect(200);
+      expect(res.body).toMatchObject({ channel: "whatsapp", status: "link", recipient: "+56911111111" });
+      expect(res.body.link).toMatch(/^https:\/\/app\.example\.cl\/api\/results\/[0-9a-f]{48}$/);
+      expect(res.body.whatsappUrl).toContain("https://wa.me/56911111111?text=");
+      expect(decodeURIComponent(res.body.whatsappUrl)).toContain(res.body.link);
+      const token = (res.body.link as string).split("/").pop()!;
+      const file = await request(app).get(`/api/results/${token}`).buffer(true).parse((r, cb) => {
+        const chunks: Buffer[] = [];
+        r.on("data", (c: Buffer) => chunks.push(c));
+        r.on("end", () => cb(null, Buffer.concat(chunks)));
+      }).expect(200);
+      expect(pdfOf(binary(file))).toBe(true);
+      expect(file.headers["cache-control"]).toContain("no-store");
+      await request(app).get(`/api/results/${"0".repeat(48)}`).expect(404);
+      await request(app).get("/api/results/corto").expect(404);
+      const history = (await results(lead.id).expect(200)).body.deliveries;
+      expect(history).toHaveLength(1);
+      expect(history[0]).toMatchObject({ channel: "whatsapp", status: "link" });
+      // an expired link stops working
+      await pglite.exec(`UPDATE clinical_result_deliveries SET expires_at = now() - interval '1 day';`);
+      await request(app).get(`/api/results/${token}`).expect(404);
+    });
+
+    it("email: sends the link through the mail service, and says so plainly when it is not configured", async () => {
+      process.env.PUBLIC_APP_URL = "https://app.example.cl";
+      const lead = await patientReadyForCapture();
+      const missing = await deliver(lead.id, "email");
+      expect(missing.status).toBe(503);
+      expect(missing.body.error).toMatch(/no está configurado/);
+      let history = (await results(lead.id).expect(200)).body.deliveries;
+      expect(history[0]).toMatchObject({ channel: "email", status: "failed" });
+
+      process.env.RESEND_API_KEY = "re_test_key";
+      process.env.MAIL_FROM = "Clínica <resultados@example.cl>";
+      const sent: Array<{ url: string; init: RequestInit }> = [];
+      vi.stubGlobal("fetch", vi.fn(async (url: string, init: RequestInit) => {
+        sent.push({ url, init });
+        return new Response(JSON.stringify({ id: "1" }), { status: 200 });
+      }));
+      const ok = await deliver(lead.id, "email").expect(200);
+      expect(ok.body).toMatchObject({ channel: "email", status: "sent", recipient: "prueba@example.com", whatsappUrl: null });
+      expect(sent).toHaveLength(1);
+      expect(sent[0].url).toBe("https://api.resend.com/emails");
+      expect((sent[0].init.headers as Record<string, string>).Authorization).toBe("Bearer re_test_key");
+      const payload = JSON.parse(String(sent[0].init.body)) as { to: string[]; text: string };
+      expect(payload.to).toEqual(["prueba@example.com"]);
+      expect(payload.text).toContain(ok.body.link);
+
+      vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 422 })));
+      const rejected = await deliver(lead.id, "email");
+      expect(rejected.status).toBe(502);
+      history = (await results(lead.id).expect(200)).body.deliveries;
+      expect(history.map((h: { status: string }) => h.status).sort()).toEqual(["failed", "failed", "sent"]);
+      // a failed attempt never leaves a working link behind
+      const failedTokens = (await pglite.exec("SELECT token FROM clinical_result_deliveries WHERE status = 'failed';")) as Array<{ rows: Array<{ token: string }> }>;
+      for (const row of failedTokens[0].rows) await request(app).get(`/api/results/${row.token}`).expect(404);
+    });
+
+    it("rejects a channel the patient has no contact for", async () => {
+      const lead = await patientReadyForCapture();
+      await pglite.exec(`UPDATE leads SET email = '', phone = '123';`);
+      expect((await deliver(lead.id, "email")).status).toBe(422);
+      expect((await deliver(lead.id, "whatsapp")).status).toBe(422);
+    });
+
+    it("the PDF includes the doctor's drawing when there is one, and the patient's photo otherwise", async () => {
+      const lead = await patientWithPreEvaluation();
+      const photos = (await request(app).get(`/api/leads/${lead.id}/diagnosis`).set("Cookie", staff()).expect(200)).body.photos as Array<{ photoId: string }>;
+      await request(app).put(`/api/leads/${lead.id}/photos/${photos[0].photoId}/annotation`).set("Cookie", staff())
+        .send({ image: `data:image/jpeg;base64,${JPEG.toString("base64")}`, strokes: [{ type: "line", color: "#ff0000", width: 0.004, points: [[0.1, 0.1], [0.4, 0.4]] }] }).expect(200);
+      await closeDiagnosis(lead.id);
+      const res = await request(app).get(`/api/leads/${lead.id}/results/pdf`).set("Cookie", staff()).buffer(true).parse((r, cb) => {
+        const chunks: Buffer[] = [];
+        r.on("data", (c: Buffer) => chunks.push(c));
+        r.on("end", () => cb(null, Buffer.concat(chunks)));
+      }).expect(200);
+      expect(pdfOf(binary(res))).toBe(true);
+      expect(binary(res).length).toBeGreaterThan(5_000);
+    });
+
+    it("erasing the patient's evaluation removes the delivered PDFs", async () => {
+      process.env.PUBLIC_APP_URL = "https://app.example.cl";
+      const lead = await patientReadyForCapture();
+      const res = await deliver(lead.id, "whatsapp").expect(200);
+      const token = (res.body.link as string).split("/").pop()!;
+      await request(app).delete(`/api/leads/${lead.id}`).set("Cookie", staff());
+      const rows = (await pglite.exec("SELECT count(*)::int AS n FROM clinical_result_deliveries;")) as Array<{ rows: Array<{ n: number }> }>;
+      expect(rows[0].rows[0].n).toBe(0);
+      await request(app).get(`/api/results/${token}`).expect(404);
     });
   });
 });

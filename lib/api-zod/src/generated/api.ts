@@ -90,7 +90,8 @@ export const GetLeadsResponse = zod.object({
   "previousTreatment": zod.string().nullish(),
   "norwood": zod.string().nullish(),
   "appointmentAt": zod.string().nullish(),
-  "isDemo": zod.boolean().nullish()
+  "isDemo": zod.boolean().nullish(),
+  "deliveryChannel": zod.string().nullish()
 }))
 })
 
@@ -364,6 +365,51 @@ export const SaveLeadDiagnosisResponse = zod.object({
 
 
 /**
+ * @summary Delivery options and history for the patient's results
+ */
+export const GetLeadResultsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetLeadResultsResponse = zod.object({
+  "preferredChannel": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "emailConfigured": zod.boolean(),
+  "deliveries": zod.array(zod.object({
+  "id": zod.string(),
+  "channel": zod.string(),
+  "recipient": zod.string(),
+  "status": zod.string(),
+  "error": zod.string().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "expiresAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Send the results to the patient by email or give a WhatsApp link
+ */
+export const DeliverLeadResultsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeliverLeadResultsBody = zod.object({
+  "channel": zod.enum(['email', 'whatsapp'])
+})
+
+export const DeliverLeadResultsResponse = zod.object({
+  "channel": zod.string(),
+  "status": zod.string(),
+  "recipient": zod.string(),
+  "link": zod.string(),
+  "whatsappUrl": zod.string().nullish()
+})
+
+
+/**
  * @summary Close the diagnosis (read-only); opens the next phase
  */
 export const CloseLeadDiagnosisParams = zod.object({
@@ -551,7 +597,8 @@ export const CreateInvitationResponse = zod.object({
   "previousTreatment": zod.string().nullish(),
   "norwood": zod.string().nullish(),
   "appointmentAt": zod.string().nullish(),
-  "isDemo": zod.boolean().nullish()
+  "isDemo": zod.boolean().nullish(),
+  "deliveryChannel": zod.string().nullish()
 }),
   "link": zod.string()
 })
@@ -860,6 +907,7 @@ export const CreatePatientBody = zod.object({
   "surgeryHistory": zod.string().optional(),
   "consent": zod.boolean(),
   "marketingConsent": zod.boolean().optional(),
+  "deliveryChannel": zod.string().optional(),
   "submit": zod.boolean().optional()
 })
 
@@ -885,7 +933,8 @@ export const CreatePatientResponse = zod.object({
   "previousTreatment": zod.string().nullish(),
   "norwood": zod.string().nullish(),
   "appointmentAt": zod.string().nullish(),
-  "isDemo": zod.boolean().nullish()
+  "isDemo": zod.boolean().nullish(),
+  "deliveryChannel": zod.string().nullish()
 })
 })
 
@@ -924,6 +973,7 @@ export const CreateClinicPatientBody = zod.object({
   "surgeryHistory": zod.string().optional(),
   "consent": zod.boolean(),
   "marketingConsent": zod.boolean().optional(),
+  "deliveryChannel": zod.string().optional(),
   "submit": zod.boolean().optional()
 })
 
@@ -949,7 +999,8 @@ export const CreateClinicPatientResponse = zod.object({
   "previousTreatment": zod.string().nullish(),
   "norwood": zod.string().nullish(),
   "appointmentAt": zod.string().nullish(),
-  "isDemo": zod.boolean().nullish()
+  "isDemo": zod.boolean().nullish(),
+  "deliveryChannel": zod.string().nullish()
 })
 })
 
@@ -1170,7 +1221,8 @@ export const GetPatientResponse = zod.object({
   "previousTreatment": zod.string().nullish(),
   "norwood": zod.string().nullish(),
   "appointmentAt": zod.string().nullish(),
-  "isDemo": zod.boolean().nullish()
+  "isDemo": zod.boolean().nullish(),
+  "deliveryChannel": zod.string().nullish()
 })
 })
 
@@ -1196,6 +1248,7 @@ export const UpdatePatientBody = zod.object({
   "surgeryHistory": zod.string().optional(),
   "consent": zod.boolean(),
   "marketingConsent": zod.boolean().optional(),
+  "deliveryChannel": zod.string().optional(),
   "submit": zod.boolean().optional()
 })
 
@@ -1221,7 +1274,8 @@ export const UpdatePatientResponse = zod.object({
   "previousTreatment": zod.string().nullish(),
   "norwood": zod.string().nullish(),
   "appointmentAt": zod.string().nullish(),
-  "isDemo": zod.boolean().nullish()
+  "isDemo": zod.boolean().nullish(),
+  "deliveryChannel": zod.string().nullish()
 })
 })
 
@@ -1322,7 +1376,8 @@ export const DiscardPatientPhotosResponse = zod.object({
   "previousTreatment": zod.string().nullish(),
   "norwood": zod.string().nullish(),
   "appointmentAt": zod.string().nullish(),
-  "isDemo": zod.boolean().nullish()
+  "isDemo": zod.boolean().nullish(),
+  "deliveryChannel": zod.string().nullish()
 })
 })
 

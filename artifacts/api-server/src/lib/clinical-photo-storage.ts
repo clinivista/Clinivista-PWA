@@ -180,6 +180,8 @@ function extensionForContentType(contentType: string): string {
       return ".png";
     case "image/webp":
       return ".webp";
+    case "application/pdf":
+      return ".pdf";
     default:
       return "";
   }
@@ -199,7 +201,7 @@ function extensionForContentType(contentType: string): string {
 export function createObjectKey(input: {
   centerId: string;
   evaluationId: string;
-  kind: "original" | "adjusted" | "annotation" | "legacy-quarantine";
+  kind: "original" | "adjusted" | "annotation" | "result" | "legacy-quarantine";
   contentType: string;
 }): string {
   const ext = extensionForContentType(input.contentType);

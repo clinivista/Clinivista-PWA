@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Loader2, Lock, Pencil, Trash2, Unlock } from "lucide-react";
+import { CheckCircle2, ExternalLink, FileText, Loader2, Lock, Mail, MessageCircle, Pencil, Trash2, Unlock } from "lucide-react";
 import {
   getGetLeadDiagnosisQueryKey,
+  getGetLeadResultsQueryKey,
+  useDeliverLeadResults,
+  useGetLeadResults,
+  type ResultsDelivery,
   getGetLeadPhasesQueryKey,
   useCloseLeadDiagnosis,
   useDeleteLeadPhotoAnnotation,
@@ -21,6 +25,72 @@ import type { Stroke } from "@/lib/annotation";
 
 const MAX_RESPONSE = 8000;
 const ACTION_LABEL: Record<string, string> = { saved: "Guardó un borrador", closed: "Cerró el diagnóstico", reopened: "Reabrió el diagnóstico" };
+
+const CHANNEL_LABEL: Record<string, string> = { email: "Correo", whatsapp: "WhatsApp" };
+const STATUS_LABEL: Record<string, string> = { sent: "Enviado", link: "Enlace entregado", failed: "Falló" };
+
+// Cierre del diagnóstico: el equipo envía el PDF al paciente por el canal que
+// eligió (o el otro). Correo lo envía el servidor; WhatsApp abre el chat con el
+// mensaje listo, sin pasar por la API de Meta.
+function ResultsDelivery_({ leadId }: { leadId: string }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { data } = useGetLeadResults(leadId);
+  const deliver = useDeliverLeadResults();
+  const [last, setLast] = useState<ResultsDelivery | null>(null);
+  if (!data) return null;
+  const send = (channel: "email" | "whatsapp") =>
+    deliver.mutate({ id: leadId, data: { channel } }, {
+      onSuccess: (result) => {
+        setLast(result);
+        void queryClient.invalidateQueries({ queryKey: getGetLeadResultsQueryKey(leadId) });
+        toast({ title: channel === "email" ? "Correo enviado al paciente" : "Enlace listo para WhatsApp" });
+      },
+      onError: (error) => {
+        void queryClient.invalidateQueries({ queryKey: getGetLeadResultsQueryKey(leadId) });
+        toast({ variant: "destructive", title: "No pudimos enviar los resultados", description: (error as { data?: { error?: string } | null }).data?.error ?? "Inténtalo de nuevo." });
+      },
+    });
+  const preferred = (channel: "email" | "whatsapp") => data.preferredChannel === channel;
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-border bg-background p-4" data-testid="results-delivery">
+      <p className="text-sm font-bold">Enviar resultados al paciente</p>
+      <p className="text-xs text-muted-foreground">
+        El paciente recibe un PDF con tus dibujos y tu respuesta.
+        {data.preferredChannel ? ` Eligió recibirlo ${data.preferredChannel === "email" ? "por correo" : "por WhatsApp"}.` : " No indicó cómo prefiere recibirlo."}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" className="rounded-full" asChild>
+          <a href={`/api/leads/${encodeURIComponent(leadId)}/results/pdf`} target="_blank" rel="noreferrer"><FileText className="w-4 h-4 mr-1.5" />Ver PDF</a>
+        </Button>
+        <Button type="button" variant={preferred("email") ? "default" : "outline"} className="rounded-full" disabled={deliver.isPending || !data.email} onClick={() => send("email")}
+          title={data.email ? undefined : "El paciente no registró correo"}>
+          <Mail className="w-4 h-4 mr-1.5" />Enviar por correo
+        </Button>
+        <Button type="button" variant={preferred("whatsapp") ? "default" : "outline"} className="rounded-full" disabled={deliver.isPending || !data.phone} onClick={() => send("whatsapp")}>
+          <MessageCircle className="w-4 h-4 mr-1.5" />Enviar por WhatsApp
+        </Button>
+        {deliver.isPending && <Loader2 className="w-4 h-4 animate-spin self-center" />}
+      </div>
+      {!data.emailConfigured && <p className="text-xs text-amber-700">El envío de correos aún no está configurado en el servidor; mientras tanto usa WhatsApp.</p>}
+      {last?.whatsappUrl && (
+        <Button type="button" className="rounded-full self-start" asChild>
+          <a href={last.whatsappUrl} target="_blank" rel="noreferrer"><ExternalLink className="w-4 h-4 mr-1.5" />Abrir WhatsApp</a>
+        </Button>
+      )}
+      {data.deliveries.length > 0 && (
+        <ul className="text-xs text-muted-foreground flex flex-col gap-1">
+          {data.deliveries.map((delivery) => (
+            <li key={delivery.id}>
+              {when(delivery.createdAt)} · {CHANNEL_LABEL[delivery.channel] ?? delivery.channel} a {delivery.recipient} · {STATUS_LABEL[delivery.status] ?? delivery.status}
+              {delivery.createdByName ? ` · ${delivery.createdByName}` : ""}{delivery.error ? ` (${delivery.error})` : ""}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 const when = (iso: string | null | undefined) =>
   iso ? new Date(iso).toLocaleString("es-CL", { dateStyle: "medium", timeStyle: "short" }) : "";
@@ -172,6 +242,8 @@ export function DiagnosisPanel({ leadId, onExpand }: { leadId: string; onExpand:
           )}
         </div>
       )}
+
+      {closed && <ResultsDelivery_ leadId={leadId} />}
 
       {data.events.length > 0 && (
         <details className="text-xs text-muted-foreground">
