@@ -394,7 +394,8 @@ export const PortalSetupResponse = zod.object({
  * @summary Email the patient a link to choose a new password
  */
 export const PortalForgotBody = zod.object({
-  "email": zod.string()
+  "email": zod.string(),
+  "language": zod.string().optional()
 })
 
 export const PortalForgotResponse = zod.object({
@@ -983,6 +984,7 @@ export const CreatePatientBody = zod.object({
   "consent": zod.boolean(),
   "marketingConsent": zod.boolean().optional(),
   "deliveryChannel": zod.string().optional(),
+  "language": zod.string().optional(),
   "submit": zod.boolean().optional()
 })
 
@@ -1049,6 +1051,7 @@ export const CreateClinicPatientBody = zod.object({
   "consent": zod.boolean(),
   "marketingConsent": zod.boolean().optional(),
   "deliveryChannel": zod.string().optional(),
+  "language": zod.string().optional(),
   "submit": zod.boolean().optional()
 })
 
@@ -1324,6 +1327,7 @@ export const UpdatePatientBody = zod.object({
   "consent": zod.boolean(),
   "marketingConsent": zod.boolean().optional(),
   "deliveryChannel": zod.string().optional(),
+  "language": zod.string().optional(),
   "submit": zod.boolean().optional()
 })
 

@@ -6,6 +6,7 @@ import { ensureEvaluationForLead, getPatientPhotoFile } from "./clinical-photos"
 import { clinicIdentity } from "./clinic-identity";
 import { getDiagnosisState, readAnnotationFile } from "./diagnosis";
 import { buildResultPdf } from "./result-pdf";
+import { MAIL_TEXT, toMailLanguage } from "./mail-i18n";
 import { MailNotConfiguredError, MailSendError, resultsMail, sendMail } from "./mailer";
 
 export const RESULT_LINK_DAYS = 30;
@@ -96,7 +97,7 @@ export async function deliverResults(
 
   if (channel === "email") {
     try {
-      await sendMail(resultsMail({ to: recipientEmail, clinicName: identity.name, patientName: lead.name, link }));
+      await sendMail(resultsMail({ to: recipientEmail, clinicName: identity.name, patientName: lead.name, link, language: lead.language }));
     } catch (error) {
       const message = error instanceof MailNotConfiguredError || error instanceof MailSendError ? error.message : "No se pudo enviar el correo.";
       await db.insert(resultDeliveriesTable).values({ ...row, status: "failed", error: message });
@@ -107,7 +108,7 @@ export async function deliverResults(
   }
 
   await db.insert(resultDeliveriesTable).values({ ...row, status: "link" });
-  const message = `Hola ${lead.name}, el equipo médico de ${identity.name} ya respondió a su evaluación. Puede descargar sus resultados aquí: ${link}`;
+  const message = MAIL_TEXT[toMailLanguage(lead.language)].whatsapp(lead.name, identity.name, link);
   return { channel, status: "link" as const, recipient: row.recipient, link, whatsappUrl: `https://wa.me/${number}?text=${encodeURIComponent(message)}` };
 }
 

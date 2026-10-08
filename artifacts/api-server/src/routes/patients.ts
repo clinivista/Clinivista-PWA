@@ -36,6 +36,7 @@ import {
   getRequiredViewKeysForLead,
 } from "../lib/clinical-photos";
 import { privatePhotoStorage } from "../lib/clinical-photo-storage";
+import { toMailLanguage } from "../lib/mail-i18n";
 import { ensurePatientAccountForLead } from "../lib/patient-accounts";
 import { baseUrl } from "./results";
 import { isCenterActive } from "../lib/centers";
@@ -63,6 +64,7 @@ function buildLead(payload: Record<string, unknown>, existing: Partial<typeof le
     surgeryHistory: clean(payload.surgeryHistory, 250),
     consent: Boolean(payload.consent),
     marketingConsent: Boolean(payload.marketingConsent),
+    language: payload.language === undefined ? existing.language ?? "" : toMailLanguage(payload.language) === payload.language ? String(payload.language) : "",
     deliveryChannel: payload.deliveryChannel === undefined
       ? existing.deliveryChannel ?? ""
       : ["email", "whatsapp"].includes(String(payload.deliveryChannel)) ? String(payload.deliveryChannel) : "",

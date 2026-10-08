@@ -70,7 +70,7 @@ describe("Portal del paciente", () => {
     expect(forgot).toBeDisabled();
     await user.type(screen.getByLabelText("Correo electrónico"), "p@x.cl");
     await user.click(forgot);
-    expect(api.forgot.mock.calls[0][0]).toEqual({ data: { email: "p@x.cl" } });
+    expect(api.forgot.mock.calls[0][0]).toEqual({ data: { email: "p@x.cl", language: "es" } });
     expect(screen.getByRole("status")).toHaveTextContent(/Si el correo tiene una cuenta/);
   });
 

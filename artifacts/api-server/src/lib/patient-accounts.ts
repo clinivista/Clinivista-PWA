@@ -67,10 +67,10 @@ async function issueToken(accountId: string, ttlMs: number): Promise<string> {
   return token;
 }
 
-async function sendAccountMail(accountEmail: string, centerId: string | null, kind: "setup" | "reset", token: string, baseUrl: string) {
+async function sendAccountMail(accountEmail: string, centerId: string | null, kind: "setup" | "reset", token: string, baseUrl: string, language?: string | null) {
   const identity = await clinicIdentity(centerId);
   const link = `${baseUrl.replace(/\/+$/, "")}/paciente/clave?token=${token}`;
-  await sendMail(accountMail({ to: accountEmail, clinicName: identity.name, link, kind }));
+  await sendMail(accountMail({ to: accountEmail, clinicName: identity.name, link, kind, language }));
 }
 
 /**
@@ -90,7 +90,7 @@ export async function ensurePatientAccountForLead(lead: Lead, baseUrl: string): 
     // Signed in with Google (verified email) or already has a password: nothing to set up.
     if (account.passwordHash || account.emailVerified) return;
     const token = await issueToken(account.id, SETUP_TTL_MS);
-    await sendAccountMail(account.email, lead.centerId ?? null, "setup", token, baseUrl);
+    await sendAccountMail(account.email, lead.centerId ?? null, "setup", token, baseUrl, lead.language);
   } catch (error) {
     if (error instanceof MailNotConfiguredError) {
       logger.info("Patient account created; no mail service configured, so no link to choose a password was sent");
@@ -117,14 +117,14 @@ export async function accountProfile(accountId: string): Promise<{ email: string
   return account ? { email: account.email, name: account.name } : null;
 }
 
-export async function requestPasswordReset(email: string, baseUrl: string): Promise<void> {
+export async function requestPasswordReset(email: string, baseUrl: string, language?: string | null): Promise<void> {
   const normalized = normalizeEmail(email);
   const [account] = await db.select().from(patientAccountsTable).where(eq(patientAccountsTable.emailNormalized, normalized));
   if (!account) return;
   const [lead] = await db.select().from(leadsTable).where(eq(leadsTable.patientAccountId, account.id)).limit(1);
   const kind = account.passwordHash ? "reset" : "setup";
   const token = await issueToken(account.id, kind === "reset" ? RESET_TTL_MS : SETUP_TTL_MS);
-  await sendAccountMail(account.email, lead?.centerId ?? null, kind, token, baseUrl);
+  await sendAccountMail(account.email, lead?.centerId ?? null, kind, token, baseUrl, language || lead?.language);
 }
 
 export class AccountError extends Error {
