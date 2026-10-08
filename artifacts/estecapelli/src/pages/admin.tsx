@@ -4,7 +4,8 @@ import { format, parseISO } from "date-fns";
 import { es as dateFnsEs } from "date-fns/locale";
 import {
   Users, UserCog, Layers, LogOut,
-  Search, ChevronRight, X, Phone, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu, Copy
+  Search, ChevronRight, X, Phone, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu, Copy,
+  ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ import { buildPublicPatientLink, copyToClipboard } from "@/lib/clipboard";
 import { DirectorPanel } from "./director-panel";
 import { ClinicUsersPanel } from "./clinic-users-panel";
 import { PhasesPanel } from "./phases-panel";
+import { ReportPanel } from "./report-panel";
 import { LeadPhases } from "@/components/lead-phases";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -47,7 +49,7 @@ export default function Admin() {
   const { t, lang, setLang } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [view, setView] = useState<"patients" | "users" | "phases">("patients");
+  const [view, setView] = useState<"patients" | "users" | "phases" | "report">("patients");
   const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
 
   const STATUS_LABELS: Record<string, string> = {
@@ -93,8 +95,21 @@ export default function Admin() {
   const patchMutation = usePatchLead();
 
   useEffect(() => {
-    if (!isAuthLoading && !authStatus?.authenticated) setLocation("/admin/login");
+    if (isAuthLoading || authStatus?.authenticated) return;
+    // A direct link to a patient (/admin?lead=…) survives the sign-in.
+    const lead = new URLSearchParams(window.location.search).get("lead");
+    setLocation(lead ? `/admin/login?next=${encodeURIComponent(`/admin?lead=${lead}`)}` : "/admin/login");
   }, [isAuthLoading, authStatus, setLocation]);
+
+  // Open the patient named by /admin?lead=… (the link in the pending-diagnosis report).
+  useEffect(() => {
+    if (!authStatus?.authenticated) return;
+    const lead = new URLSearchParams(window.location.search).get("lead");
+    if (!lead) return;
+    setView("patients");
+    setSelectedLeadId(lead);
+    window.history.replaceState(null, "", window.location.pathname);
+  }, [authStatus?.authenticated]);
 
   useEffect(() => {
     if (!linkCopied) return;
@@ -231,6 +246,14 @@ export default function Admin() {
                 {t.adminUsers}
               </Button>
             )}
+            <Button
+              variant="ghost"
+              onClick={() => { setView("report"); setMobileNavOpen(false); }}
+              className={`w-full justify-start text-white hover:bg-white/20 hover:text-white font-medium rounded-2xl h-12 ${view === "report" ? "bg-white/10" : "bg-transparent"}`}
+            >
+              <ClipboardList className="w-5 h-5 mr-3" />
+              Informe
+            </Button>
             {canEditPhases && (
               <Button
                 variant="ghost"
@@ -281,7 +304,7 @@ export default function Admin() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-h-0 md:h-[100dvh] overflow-hidden relative">
-        {view === "users" && canManageUsers ? <ClinicUsersPanel /> : view === "phases" && canEditPhases ? <PhasesPanel /> : (
+        {view === "report" ? <ReportPanel onOpenLead={(id) => { setView("patients"); setSelectedLeadId(id); }} /> : view === "users" && canManageUsers ? <ClinicUsersPanel /> : view === "phases" && canEditPhases ? <PhasesPanel /> : (
           <>
         {/* Mobile: whole content scrolls; desktop: only the patient list scrolls */}
         <div className="flex-1 min-h-0 flex flex-col overflow-y-auto md:overflow-hidden">

@@ -18,15 +18,21 @@ export default function Login() {
   const { toast } = useToast();
   const { t } = useLanguage();
 
+  // Where to go after signing in: only paths inside the staff panel are accepted.
+  const next = (() => {
+    const value = new URLSearchParams(window.location.search).get("next") ?? "";
+    return /^\/admin(\?[\w=&%.-]*)?$/.test(value) ? value : "/admin";
+  })();
+
   const { data: authStatus, isLoading } = useGetAuthMe({
     query: { queryKey: getGetAuthMeQueryKey() }
   });
 
   useEffect(() => {
     if (!isLoading && authStatus?.authenticated) {
-      setLocation("/admin");
+      setLocation(next);
     }
-  }, [isLoading, authStatus, setLocation]);
+  }, [isLoading, authStatus, setLocation, next]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +40,7 @@ export default function Login() {
     loginMutation.mutate({ data: { email, password } }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() });
-        setLocation("/admin");
+        setLocation(next);
       },
       onError: () => {
         toast({

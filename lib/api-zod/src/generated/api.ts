@@ -1579,3 +1579,75 @@ export const DiscardPatientPhotoResponse = zod.object({
 })
 
 
+/**
+ * @summary Patients pending diagnosis and the clinic's periodic report settings
+ */
+export const GetClinicReportResponse = zod.object({
+  "canEdit": zod.boolean(),
+  "mailConfigured": zod.boolean(),
+  "config": zod.object({
+  "enabled": zod.boolean(),
+  "recipients": zod.array(zod.string()),
+  "frequency": zod.enum(['daily', 'weekly', 'monthly']),
+  "weekday": zod.number(),
+  "hour": zod.number(),
+  "skipWhenEmpty": zod.boolean(),
+  "lastSentAt": zod.string().nullable(),
+  "lastError": zod.string().nullable()
+}),
+  "pending": zod.array(zod.object({
+  "leadId": zod.string(),
+  "name": zod.string(),
+  "documentId": zod.string(),
+  "phone": zod.string(),
+  "waitingDays": zod.number(),
+  "link": zod.string()
+}))
+})
+
+
+/**
+ * @summary Save the periodic report settings (legal representative only)
+ */
+export const UpdateClinicReportBody = zod.object({
+  "enabled": zod.boolean(),
+  "recipients": zod.array(zod.string()),
+  "frequency": zod.string(),
+  "weekday": zod.number(),
+  "hour": zod.number(),
+  "skipWhenEmpty": zod.boolean()
+})
+
+export const UpdateClinicReportResponse = zod.object({
+  "canEdit": zod.boolean(),
+  "mailConfigured": zod.boolean(),
+  "config": zod.object({
+  "enabled": zod.boolean(),
+  "recipients": zod.array(zod.string()),
+  "frequency": zod.enum(['daily', 'weekly', 'monthly']),
+  "weekday": zod.number(),
+  "hour": zod.number(),
+  "skipWhenEmpty": zod.boolean(),
+  "lastSentAt": zod.string().nullable(),
+  "lastError": zod.string().nullable()
+}),
+  "pending": zod.array(zod.object({
+  "leadId": zod.string(),
+  "name": zod.string(),
+  "documentId": zod.string(),
+  "phone": zod.string(),
+  "waitingDays": zod.number(),
+  "link": zod.string()
+}))
+})
+
+
+/**
+ * @summary Send the report now to the configured recipients (legal representative only)
+ */
+export const SendClinicReportResponse = zod.object({
+  "sent": zod.number(),
+  "pending": zod.number()
+})
+
+

@@ -78,3 +78,42 @@ export function accountMail(input: { to: string; clinicName: string; link: strin
       `<p style="color:#666">${escapeHtml(note)}</p>`),
   };
 }
+
+/** Internal report for the clinic's staff (Spanish, like the staff panel): who still needs a diagnosis, with a direct link to each. */
+export function pendingReportMail(input: {
+  to: string;
+  clinicName: string;
+  patients: Array<{ name: string; documentId: string; waitingDays: number; link: string }>;
+  baseUrl: string;
+}): Mail {
+  const total = input.patients.length;
+  const subject = total === 0 ? `Sin pacientes pendientes de diagnóstico - ${input.clinicName}` : `${total} ${total === 1 ? "paciente pendiente" : "pacientes pendientes"} de diagnóstico - ${input.clinicName}`;
+  const waiting = (days: number) => (days === 0 ? "hoy" : days === 1 ? "hace 1 día" : `hace ${days} días`);
+  const panel = `${input.baseUrl.replace(/\/+$/, "")}/admin`;
+  const text =
+    total === 0
+      ? `No hay pacientes pendientes de diagnóstico en ${input.clinicName}.\n\nPanel: ${panel}`
+      : `Pacientes pendientes de diagnóstico en ${input.clinicName} (${total}):\n\n` +
+        input.patients.map((p) => `- ${p.name}${p.documentId ? ` (${p.documentId})` : ""} · esperando ${waiting(p.waitingDays)}\n  ${p.link}`).join("\n") +
+        `\n\nPanel: ${panel}`;
+  const rows = input.patients
+    .map(
+      (p) =>
+        `<tr><td style="padding:8px 12px;border-bottom:1px solid #eee">${escapeHtml(p.name)}${p.documentId ? `<br><span style="color:#888;font-size:12px">${escapeHtml(p.documentId)}</span>` : ""}</td>` +
+        `<td style="padding:8px 12px;border-bottom:1px solid #eee;white-space:nowrap">${escapeHtml(waiting(p.waitingDays))}</td>` +
+        `<td style="padding:8px 12px;border-bottom:1px solid #eee"><a href="${escapeHtml(p.link)}" style="background:#0d3b9e;color:#fff;padding:7px 14px;border-radius:8px;text-decoration:none;font-size:13px">Diagnosticar</a></td></tr>`,
+    )
+    .join("");
+  return {
+    to: input.to,
+    subject,
+    text,
+    html:
+      `<div><p><strong>${escapeHtml(input.clinicName)}</strong></p>` +
+      (total === 0
+        ? `<p>No hay pacientes pendientes de diagnóstico.</p>`
+        : `<p>Pacientes con la pre-evaluación completa que aún esperan diagnóstico (${total}):</p><table style="border-collapse:collapse;font-size:14px">${rows}</table>`) +
+      `<p style="margin-top:16px"><a href="${escapeHtml(panel)}">Abrir el panel</a></p>` +
+      `<p style="color:#888;font-size:12px">Los enlaces piden iniciar sesión si no tienes la sesión abierta.</p></div>`,
+  };
+}
