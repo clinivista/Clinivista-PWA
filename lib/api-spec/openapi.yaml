@@ -2796,6 +2796,7 @@ components:
       required: [email]
       properties:
         email: {type: string}
+        language: {type: string}
 
     PortalOptions:
       type: object
@@ -3136,6 +3137,8 @@ components:
         marketingConsent:
           type: boolean
         deliveryChannel:
+          type: string
+        language:
           type: string
         submit:
           type: boolean

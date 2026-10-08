@@ -8,4 +8,5 @@
 
 export interface PortalForgotInput {
   email: string;
+  language?: string;
 }

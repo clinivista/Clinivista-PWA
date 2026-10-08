@@ -52,9 +52,9 @@ router.post("/portal/setup", async (req, res): Promise<void> => {
 
 // Always answers the same, so it cannot be used to find out who has an account.
 router.post("/portal/forgot", async (req, res): Promise<void> => {
-  const email = (req.body as { email?: unknown } | undefined)?.email;
+  const { email, language } = (req.body ?? {}) as { email?: unknown; language?: unknown };
   if (typeof email === "string" && email.includes("@") && !throttled(`forgot:${email.trim().toLowerCase()}`, 3, 15 * 60_000) && !throttled(`forgot-ip:${req.ip}`, 20, 15 * 60_000)) {
-    await requestPasswordReset(email, baseUrl(req)).catch(() => undefined);
+    await requestPasswordReset(email, baseUrl(req), typeof language === "string" ? language : null).catch(() => undefined);
   }
   res.json({ ok: true });
 });

@@ -150,7 +150,7 @@ export default function Portal() {
         <button type="button" className="text-sm text-primary underline self-start disabled:opacity-50" disabled={forgot.isPending || !email.includes("@")}
           onClick={() => {
             setError(null);
-            forgot.mutate({ data: { email } }, { onSuccess: () => setMessage(text.forgotSent) });
+            forgot.mutate({ data: { email, language: lang } }, { onSuccess: () => setMessage(text.forgotSent) });
           }}>
           {text.forgot}
         </button>

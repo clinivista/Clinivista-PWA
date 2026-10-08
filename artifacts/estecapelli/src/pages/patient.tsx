@@ -542,8 +542,8 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
   // /c/<slug> registra en esa clínica; /patient (legado) en la clínica principal.
   const createPatient = (data: PatientFormValues, options: CreateOptions) =>
     clinicSlug
-      ? createClinicMutation.mutate({ slug: clinicSlug, data }, options)
-      : createLegacyMutation.mutate({ data }, options);
+      ? createClinicMutation.mutate({ slug: clinicSlug, data: { ...data, language: lang } }, options)
+      : createLegacyMutation.mutate({ data: { ...data, language: lang } }, options);
   const updateMutation = useUpdatePatient();
   const discardMutation = useDiscardPatientPhotos();
 
@@ -566,7 +566,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
       .then(async () => {
         // A discard/restart happened while this save was queued — drop it.
         if (saveGenRef.current !== gen) return;
-        const res = await updateMutation.mutateAsync({ token: patientToken, data: formData });
+        const res = await updateMutation.mutateAsync({ token: patientToken, data: { ...formData, language: lang } });
         if (saveGenRef.current !== gen) return; // discarded while in flight; DELETE runs after this chain
         const keys = Array.isArray((res as any)?.lead?.photoKeys) ? ((res as any).lead.photoKeys as string[]) : [];
         setSavedKeys(prev => new Set([...prev, ...keys]));
@@ -913,7 +913,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
     }
     const formData = form.getValues();
     if (patientToken) {
-      updateMutation.mutate({ token: patientToken, data: { ...formData, submit: true } }, {
+      updateMutation.mutate({ token: patientToken, data: { ...formData, language: lang, submit: true } }, {
         onSuccess: (result) => {
           if (result.lead.status !== "listo") {
             toast({ variant: "destructive", title: "Faltan fotografías", description: "Guarda las cinco vistas obligatorias antes de enviar." });

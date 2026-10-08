@@ -21,5 +21,6 @@ export interface PatientInput {
   consent: boolean;
   marketingConsent?: boolean;
   deliveryChannel?: string;
+  language?: string;
   submit?: boolean;
 }
