@@ -26,7 +26,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
 import {
-  useGetPatient, getGetPatientQueryKey, useGetPatientClinic, getGetPatientClinicQueryKey, useCreatePatient, useGetClinic, getGetClinicQueryKey, useCreateClinicPatient, useUpdatePatient, useDiscardPatientPhotos, useGetPatientProtocol, getGetPatientProtocolQueryKey,
+  useGetPatient, getGetPatientQueryKey, useGetPatientClinic, getGetPatientClinicQueryKey, useCreatePatient, useGetClinic, getGetClinicQueryKey, useCreateClinicPatient, useUpdatePatient, useDiscardPatientPhotos, useGetPatientProtocol, getGetPatientProtocolQueryKey, useGetPortalOptions,
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
@@ -395,6 +395,10 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
 
   // Las fotos de la pre-evaluación las define cada clínica; mientras llegan
   // (o sin token todavía) se usan las cinco vistas iniciales.
+  // "Continuar con Google": returns to this page with the verified name and email.
+  const { data: portalOptions } = useGetPortalOptions({ query: { queryKey: ["portal-options"], staleTime: 60_000, retry: false } });
+  const googleProfile = portalOptions?.profile ?? null;
+  const googleReturn = params.get("google");
   const { data: protocolConfig } = useGetPatientProtocol(token || "", {
     query: { enabled: !!token, queryKey: getGetPatientProtocolQueryKey(token || ""), retry: false, staleTime: 60_000 },
   });
@@ -466,6 +470,16 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
     resolver: zodResolver(patientSchema),
     defaultValues: { name: "", documentId: "", email: "", phone: "", age: "", city: "", hairLossTime: "", pattern: "", previousTreatment: "", symptoms: "", surgeryHistory: "", consent: false, marketingConsent: false, deliveryChannel: "email" },
   });
+
+  useEffect(() => {
+    if (!googleProfile || token) return;
+    if (!form.getValues("email")) form.setValue("email", googleProfile.email ?? "");
+    if (!form.getValues("name") && googleProfile.name) form.setValue("name", googleProfile.name);
+  }, [googleProfile?.email, googleProfile?.name, token]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (googleReturn === "ok" && googleProfile && !token) setStep("data");
+  }, [googleReturn, googleProfile?.email, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Live gate for the "Continuar" button: all required fields valid + consent checked
   const watchedValues = form.watch();
@@ -1141,6 +1155,28 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
                   <div className="p-6 md:p-8 space-y-5">
                     <h3 className="font-bold text-foreground text-sm uppercase tracking-wider text-[#00A9A5]">{t.pDataTitle}</h3>
 
+                    {portalOptions?.googleEnabled && clinicSlug && !token && (
+                      googleProfile ? (
+                        <p className="rounded-2xl bg-[#00A9A5]/10 px-4 py-3 text-sm font-semibold text-[#007f7c]" data-testid="google-connected">
+                          Conectado con Google como {googleProfile.email}
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          <a href={`/api/portal/google/start?next=${encodeURIComponent(basePath)}`} data-testid="google-start"
+                            className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-[#E8E4DE] bg-white text-sm font-bold text-foreground shadow-sm hover:bg-[#F5F2EE] transition-colors">
+                            <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+                              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
+                              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                            </svg>
+                            Continuar con Google
+                          </a>
+                          <p className="text-center text-xs text-muted-foreground">Rellena tu nombre y correo, y te deja ver tus resultados en tu cuenta.</p>
+                        </div>
+                      )
+                    )}
+
                     <FormField control={form.control} name="name" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm font-bold">{t.pFullName}</FormLabel>
@@ -1213,7 +1249,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
                     <FormField control={form.control} name="email" render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm font-bold">{t.pEmail}</FormLabel>
-                        <FormControl><Input type="email" placeholder="correo@ejemplo.com" className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base" {...field} /></FormControl>
+                        <FormControl><Input type="email" placeholder="correo@ejemplo.com" readOnly={Boolean(googleProfile) && !token} className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />

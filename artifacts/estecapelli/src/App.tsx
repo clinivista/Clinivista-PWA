@@ -11,6 +11,7 @@ import Home from '@/pages/home';
 import Patient from '@/pages/patient';
 import ClinicPatient from '@/pages/clinic-patient';
 import Admin from '@/pages/admin';
+import Portal, { PortalSetPassword } from '@/pages/portal';
 import Login from '@/pages/login';
 
 const queryClient = new QueryClient({
@@ -36,6 +37,8 @@ function Router() {
         <Route path="/" component={HomeWithTokenRedirect} />
         <Route path="/patient">{() => <Patient />}</Route>
         <Route path="/c/:slug" component={ClinicPatient} />
+        <Route path="/paciente" component={Portal} />
+        <Route path="/paciente/clave" component={PortalSetPassword} />
         <Route path="/admin" component={Admin} />
         <Route path="/admin/login" component={Login} />
         <Route component={NotFound} />

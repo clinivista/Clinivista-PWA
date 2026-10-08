@@ -370,6 +370,120 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /portal/login:
+    post:
+      operationId: portalLogin
+      tags: [portal]
+      summary: Patient signs in with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortalLoginInput"
+      responses:
+        "200":
+          description: Done
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "401":
+          description: Wrong email or password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Too many attempts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /portal/setup:
+    post:
+      operationId: portalSetup
+      tags: [portal]
+      summary: Patient chooses a password from the emailed link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortalSetupInput"
+      responses:
+        "200":
+          description: Done
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          description: Invalid link or password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /portal/forgot:
+    post:
+      operationId: portalForgot
+      tags: [portal]
+      summary: Email the patient a link to choose a new password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PortalForgotInput"
+      responses:
+        "200":
+          description: Done
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+  /portal/logout:
+    post:
+      operationId: portalLogout
+      tags: [portal]
+      summary: Patient signs out
+      responses:
+        "200":
+          description: Done
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+  /portal/options:
+    get:
+      operationId: getPortalOptions
+      tags: [portal]
+      summary: Whether Google sign-in is available, and the profile of the signed-in patient (if any)
+      responses:
+        "200":
+          description: Portal options
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalOptions"
+  /portal/me:
+    get:
+      operationId: getPortalMe
+      tags: [portal]
+      summary: The signed-in patient's cases and delivered results
+      responses:
+        "200":
+          description: Portal overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalOverview"
+        "401":
+          description: Not signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /leads/{id}/results:
     get:
       operationId: getLeadResults
@@ -2655,6 +2769,72 @@ components:
           type: string
           enum: [saved, closed, reopened]
         actorName: {type: ["string", "null"]}
+        createdAt: {type: string, format: date-time}
+
+    OkResponse:
+      type: object
+      required: [ok]
+      properties:
+        ok: {type: boolean}
+
+    PortalLoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: {type: string}
+        password: {type: string}
+
+    PortalSetupInput:
+      type: object
+      required: [token, password]
+      properties:
+        token: {type: string}
+        password: {type: string}
+
+    PortalForgotInput:
+      type: object
+      required: [email]
+      properties:
+        email: {type: string}
+
+    PortalOptions:
+      type: object
+      required: [googleEnabled]
+      properties:
+        googleEnabled: {type: boolean}
+        profile:
+          type: ["object", "null"]
+          properties:
+            email: {type: string}
+            name: {type: string}
+
+    PortalOverview:
+      type: object
+      required: [email, cases]
+      properties:
+        email: {type: string}
+        cases:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortalCase"
+
+    PortalCase:
+      type: object
+      required: [leadId, clinicName, patientName, results]
+      properties:
+        leadId: {type: string}
+        clinicName: {type: string}
+        patientName: {type: string}
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortalResult"
+
+    PortalResult:
+      type: object
+      required: [id, createdAt]
+      properties:
+        id: {type: string}
         createdAt: {type: string, format: date-time}
 
     ResultsState:

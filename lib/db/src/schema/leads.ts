@@ -52,6 +52,8 @@ export const leadsTable = pgTable("leads", {
   protocolId: text("protocol_id").default("capillary-initial"),
   // How the patient wants to receive the results: "email", "whatsapp" or "" (not chosen).
   deliveryChannel: text("delivery_channel").default(""),
+  // The patient's own portal account (one per email, shared across clinics).
+  patientAccountId: text("patient_account_id"),
 }, (table) => [
   // Per-clinic uniqueness: the same RUT is only a duplicate within one center.
   uniqueIndex("leads_center_document_unique")

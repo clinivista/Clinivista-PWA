@@ -365,6 +365,81 @@ export const SaveLeadDiagnosisResponse = zod.object({
 
 
 /**
+ * @summary Patient signs in with email and password
+ */
+export const PortalLoginBody = zod.object({
+  "email": zod.string(),
+  "password": zod.string()
+})
+
+export const PortalLoginResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Patient chooses a password from the emailed link
+ */
+export const PortalSetupBody = zod.object({
+  "token": zod.string(),
+  "password": zod.string()
+})
+
+export const PortalSetupResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Email the patient a link to choose a new password
+ */
+export const PortalForgotBody = zod.object({
+  "email": zod.string()
+})
+
+export const PortalForgotResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Patient signs out
+ */
+export const PortalLogoutResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Whether Google sign-in is available, and the profile of the signed-in patient (if any)
+ */
+export const GetPortalOptionsResponse = zod.object({
+  "googleEnabled": zod.boolean(),
+  "profile": zod.object({
+  "email": zod.string().optional(),
+  "name": zod.string().optional()
+}).nullish()
+})
+
+
+/**
+ * @summary The signed-in patient's cases and delivered results
+ */
+export const GetPortalMeResponse = zod.object({
+  "email": zod.string(),
+  "cases": zod.array(zod.object({
+  "leadId": zod.string(),
+  "clinicName": zod.string(),
+  "patientName": zod.string(),
+  "results": zod.array(zod.object({
+  "id": zod.string(),
+  "createdAt": zod.coerce.date()
+}))
+}))
+})
+
+
+/**
  * @summary Delivery options and history for the patient's results
  */
 export const GetLeadResultsParams = zod.object({

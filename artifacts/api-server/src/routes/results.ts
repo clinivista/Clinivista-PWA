@@ -9,7 +9,7 @@ import { DiagnosisError } from "../lib/diagnosis";
 const router: IRouter = Router();
 const ID = /^[\w.-]{1,200}$/;
 
-function baseUrl(req: Request): string {
+export function baseUrl(req: Request): string {
   const configured = process.env.PUBLIC_APP_URL?.trim();
   if (configured) return configured;
   const proto = String(req.headers["x-forwarded-proto"] ?? req.protocol).split(",")[0].trim();
