@@ -1,4 +1,5 @@
 import { logger } from "./logger";
+import { MAIL_TEXT, toMailLanguage } from "./mail-i18n";
 
 export class MailNotConfiguredError extends Error {
   constructor() {
@@ -40,39 +41,79 @@ export async function sendMail(mail: Mail): Promise<void> {
 const escapeHtml = (value: string) =>
   value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
 
-export function resultsMail(input: { to: string; clinicName: string; patientName: string; link: string }): Mail {
-  const clinic = escapeHtml(input.clinicName);
-  const name = escapeHtml(input.patientName);
+function wrap(language: string, body: string): string {
+  return `<div dir="${language === "ar" ? "rtl" : "ltr"}">${body}</div>`;
+}
+
+export function resultsMail(input: { to: string; clinicName: string; patientName: string; link: string; language?: string | null }): Mail {
+  const language = toMailLanguage(input.language);
+  const t = MAIL_TEXT[language];
   const link = escapeHtml(input.link);
   return {
     to: input.to,
-    subject: `Sus resultados - ${input.clinicName}`,
-    text:
-      `Hola ${input.patientName},\n\nEl equipo médico de ${input.clinicName} ya respondió a su evaluación.\n` +
-      `Puede descargar sus resultados (PDF) aquí:\n${input.link}\n\nEl enlace estará disponible por 30 días.`,
-    html:
-      `<p>Hola ${name},</p><p>El equipo médico de ${clinic} ya respondió a su evaluación.</p>` +
-      `<p><a href="${link}">Descargar mis resultados (PDF)</a></p>` +
-      `<p style="color:#666">El enlace estará disponible por 30 días.</p>`,
+    subject: t.resultsSubject(input.clinicName),
+    text: `${t.hello(input.patientName)}\n\n${t.resultsIntro(input.clinicName)}\n${t.resultsButton}:\n${input.link}\n\n${t.resultsNote}`,
+    html: wrap(language,
+      `<p>${escapeHtml(t.hello(input.patientName))}</p><p>${escapeHtml(t.resultsIntro(input.clinicName))}</p>` +
+      `<p><a href="${link}">${escapeHtml(t.resultsButton)}</a></p>` +
+      `<p style="color:#666">${escapeHtml(t.resultsNote)}</p>`),
   };
 }
 
-export function accountMail(input: { to: string; clinicName: string; link: string; kind: "setup" | "reset" }): Mail {
-  const clinic = escapeHtml(input.clinicName);
+export function accountMail(input: { to: string; clinicName: string; link: string; kind: "setup" | "reset"; language?: string | null }): Mail {
+  const language = toMailLanguage(input.language);
+  const t = MAIL_TEXT[language];
   const link = escapeHtml(input.link);
   const setup = input.kind === "setup";
-  const subject = setup ? `Crea tu clave - ${input.clinicName}` : "Recupera tu clave - Clinivista";
-  const intro = setup
-    ? `Tu evaluación en ${input.clinicName} quedó registrada. Crea tu clave para entrar a tu cuenta y ver tus resultados cuando estén listos.`
-    : "Recibimos una solicitud para cambiar la clave de tu cuenta.";
-  const days = setup ? "7 días" : "1 hora";
+  const intro = setup ? t.setupIntro(input.clinicName) : t.resetIntro;
+  const button = setup ? t.setupButton : t.resetButton;
+  const note = `${t.linkNote(setup ? t.days7 : t.hour1)} ${t.ignore}`;
+  return {
+    to: input.to,
+    subject: setup ? t.setupSubject(input.clinicName) : t.resetSubject,
+    text: `${t.hello()}\n\n${intro}\n\n${input.link}\n\n${note}`,
+    html: wrap(language,
+      `<p>${escapeHtml(t.hello())}</p><p>${escapeHtml(intro)}</p>` +
+      `<p><a href="${link}">${escapeHtml(button)}</a></p>` +
+      `<p style="color:#666">${escapeHtml(note)}</p>`),
+  };
+}
+
+/** Internal report for the clinic's staff (Spanish, like the staff panel): who still needs a diagnosis, with a direct link to each. */
+export function pendingReportMail(input: {
+  to: string;
+  clinicName: string;
+  patients: Array<{ name: string; documentId: string; waitingDays: number; link: string }>;
+  baseUrl: string;
+}): Mail {
+  const total = input.patients.length;
+  const subject = total === 0 ? `Sin pacientes pendientes de diagnóstico - ${input.clinicName}` : `${total} ${total === 1 ? "paciente pendiente" : "pacientes pendientes"} de diagnóstico - ${input.clinicName}`;
+  const waiting = (days: number) => (days === 0 ? "hoy" : days === 1 ? "hace 1 día" : `hace ${days} días`);
+  const panel = `${input.baseUrl.replace(/\/+$/, "")}/admin`;
+  const text =
+    total === 0
+      ? `No hay pacientes pendientes de diagnóstico en ${input.clinicName}.\n\nPanel: ${panel}`
+      : `Pacientes pendientes de diagnóstico en ${input.clinicName} (${total}):\n\n` +
+        input.patients.map((p) => `- ${p.name}${p.documentId ? ` (${p.documentId})` : ""} · esperando ${waiting(p.waitingDays)}\n  ${p.link}`).join("\n") +
+        `\n\nPanel: ${panel}`;
+  const rows = input.patients
+    .map(
+      (p) =>
+        `<tr><td style="padding:8px 12px;border-bottom:1px solid #eee">${escapeHtml(p.name)}${p.documentId ? `<br><span style="color:#888;font-size:12px">${escapeHtml(p.documentId)}</span>` : ""}</td>` +
+        `<td style="padding:8px 12px;border-bottom:1px solid #eee;white-space:nowrap">${escapeHtml(waiting(p.waitingDays))}</td>` +
+        `<td style="padding:8px 12px;border-bottom:1px solid #eee"><a href="${escapeHtml(p.link)}" style="background:#0d3b9e;color:#fff;padding:7px 14px;border-radius:8px;text-decoration:none;font-size:13px">Diagnosticar</a></td></tr>`,
+    )
+    .join("");
   return {
     to: input.to,
     subject,
-    text: `Hola,\n\n${intro}\n\n${input.link}\n\nEl enlace sirve una vez y vence en ${days}. Si no fuiste tú, ignora este correo.`,
+    text,
     html:
-      `<p>Hola,</p><p>${setup ? `Tu evaluación en ${clinic} quedó registrada. Crea tu clave para entrar a tu cuenta y ver tus resultados cuando estén listos.` : "Recibimos una solicitud para cambiar la clave de tu cuenta."}</p>` +
-      `<p><a href="${link}">${setup ? "Crear mi clave" : "Cambiar mi clave"}</a></p>` +
-      `<p style="color:#666">El enlace sirve una vez y vence en ${days}. Si no fuiste tú, ignora este correo.</p>`,
+      `<div><p><strong>${escapeHtml(input.clinicName)}</strong></p>` +
+      (total === 0
+        ? `<p>No hay pacientes pendientes de diagnóstico.</p>`
+        : `<p>Pacientes con la pre-evaluación completa que aún esperan diagnóstico (${total}):</p><table style="border-collapse:collapse;font-size:14px">${rows}</table>`) +
+      `<p style="margin-top:16px"><a href="${escapeHtml(panel)}">Abrir el panel</a></p>` +
+      `<p style="color:#888;font-size:12px">Los enlaces piden iniciar sesión si no tienes la sesión abierta.</p></div>`,
   };
 }

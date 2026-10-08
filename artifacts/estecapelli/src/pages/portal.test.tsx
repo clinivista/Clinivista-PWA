@@ -24,6 +24,8 @@ vi.mock("wouter", () => ({
   useSearch: () => api.search,
 }));
 
+import { LanguageProvider, LANGS } from "@/lib/language";
+import { PORTAL_TEXT } from "@/lib/portal-i18n";
 import Portal, { PortalSetPassword } from "./portal";
 
 describe("Portal del paciente", () => {
@@ -51,7 +53,7 @@ describe("Portal del paciente", () => {
 
   it("signs in with email and password, and shows the server's message when it fails", async () => {
     const user = userEvent.setup();
-    api.login.mockImplementation((_vars, options) => options.onError({ data: { error: "Correo o clave incorrectos." } }));
+    api.login.mockImplementation((_vars, options) => options.onError({ status: 401 }));
     render(<Portal />);
     await user.type(screen.getByLabelText("Correo electrónico"), "p@x.cl");
     await user.type(screen.getByLabelText("Clave"), "mala-clave");
@@ -68,7 +70,7 @@ describe("Portal del paciente", () => {
     expect(forgot).toBeDisabled();
     await user.type(screen.getByLabelText("Correo electrónico"), "p@x.cl");
     await user.click(forgot);
-    expect(api.forgot.mock.calls[0][0]).toEqual({ data: { email: "p@x.cl" } });
+    expect(api.forgot.mock.calls[0][0]).toEqual({ data: { email: "p@x.cl", language: "es" } });
     expect(screen.getByRole("status")).toHaveTextContent(/Si el correo tiene una cuenta/);
   });
 
@@ -105,5 +107,27 @@ describe("Portal del paciente", () => {
     await user.click(save);
     expect(api.setup.mock.calls[0][0]).toEqual({ data: { token: "abc123", password: "clave-segura-1" } });
     expect(api.navigate).toHaveBeenCalledWith("/paciente");
+  });
+
+  it.each(LANGS.map((language) => language.code))("in %s: shows the portal in that language, with the failure message chosen by status", async (code) => {
+    const user = userEvent.setup();
+    localStorage.setItem("clinivista_lang", code);
+    const text = PORTAL_TEXT[code];
+    api.login.mockImplementation((_vars, options) => options.onError({ status: 429 }));
+    render(<LanguageProvider><Portal /></LanguageProvider>);
+    expect(screen.getByRole("heading", { level: 1, name: text.loginTitle })).toBeInTheDocument();
+    expect(screen.getByTestId("google-start")).toHaveTextContent(text.googleButton);
+    await user.type(screen.getByLabelText(text.emailLabel), "p@x.cl");
+    await user.type(screen.getByLabelText(text.passwordLabel), "una-clave-1");
+    await user.click(screen.getByRole("button", { name: text.enter }));
+    expect(screen.getByRole("alert")).toHaveTextContent(text.tooMany);
+    expect(document.querySelector("div[dir]")).toHaveAttribute("dir", code === "ar" ? "rtl" : "ltr");
+    localStorage.clear();
+  });
+
+  it("every language has every portal text", () => {
+    for (const { code } of LANGS) {
+      for (const [key, value] of Object.entries(PORTAL_TEXT[code])) expect(value, `${code}.${key}`).toBeTruthy();
+    }
   });
 });

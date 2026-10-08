@@ -6,7 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface PortalForgotInput {
-  email: string;
-  language?: string;
+export interface ClinicReportSent {
+  sent: number;
+  pending: number;
 }

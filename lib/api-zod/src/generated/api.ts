@@ -394,7 +394,8 @@ export const PortalSetupResponse = zod.object({
  * @summary Email the patient a link to choose a new password
  */
 export const PortalForgotBody = zod.object({
-  "email": zod.string()
+  "email": zod.string(),
+  "language": zod.string().optional()
 })
 
 export const PortalForgotResponse = zod.object({
@@ -983,6 +984,7 @@ export const CreatePatientBody = zod.object({
   "consent": zod.boolean(),
   "marketingConsent": zod.boolean().optional(),
   "deliveryChannel": zod.string().optional(),
+  "language": zod.string().optional(),
   "submit": zod.boolean().optional()
 })
 
@@ -1049,6 +1051,7 @@ export const CreateClinicPatientBody = zod.object({
   "consent": zod.boolean(),
   "marketingConsent": zod.boolean().optional(),
   "deliveryChannel": zod.string().optional(),
+  "language": zod.string().optional(),
   "submit": zod.boolean().optional()
 })
 
@@ -1324,6 +1327,7 @@ export const UpdatePatientBody = zod.object({
   "consent": zod.boolean(),
   "marketingConsent": zod.boolean().optional(),
   "deliveryChannel": zod.string().optional(),
+  "language": zod.string().optional(),
   "submit": zod.boolean().optional()
 })
 
@@ -1572,6 +1576,78 @@ export const DiscardPatientPhotoParams = zod.object({
 
 export const DiscardPatientPhotoResponse = zod.object({
   "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Patients pending diagnosis and the clinic's periodic report settings
+ */
+export const GetClinicReportResponse = zod.object({
+  "canEdit": zod.boolean(),
+  "mailConfigured": zod.boolean(),
+  "config": zod.object({
+  "enabled": zod.boolean(),
+  "recipients": zod.array(zod.string()),
+  "frequency": zod.enum(['daily', 'weekly', 'monthly']),
+  "weekday": zod.number(),
+  "hour": zod.number(),
+  "skipWhenEmpty": zod.boolean(),
+  "lastSentAt": zod.string().nullable(),
+  "lastError": zod.string().nullable()
+}),
+  "pending": zod.array(zod.object({
+  "leadId": zod.string(),
+  "name": zod.string(),
+  "documentId": zod.string(),
+  "phone": zod.string(),
+  "waitingDays": zod.number(),
+  "link": zod.string()
+}))
+})
+
+
+/**
+ * @summary Save the periodic report settings (legal representative only)
+ */
+export const UpdateClinicReportBody = zod.object({
+  "enabled": zod.boolean(),
+  "recipients": zod.array(zod.string()),
+  "frequency": zod.string(),
+  "weekday": zod.number(),
+  "hour": zod.number(),
+  "skipWhenEmpty": zod.boolean()
+})
+
+export const UpdateClinicReportResponse = zod.object({
+  "canEdit": zod.boolean(),
+  "mailConfigured": zod.boolean(),
+  "config": zod.object({
+  "enabled": zod.boolean(),
+  "recipients": zod.array(zod.string()),
+  "frequency": zod.enum(['daily', 'weekly', 'monthly']),
+  "weekday": zod.number(),
+  "hour": zod.number(),
+  "skipWhenEmpty": zod.boolean(),
+  "lastSentAt": zod.string().nullable(),
+  "lastError": zod.string().nullable()
+}),
+  "pending": zod.array(zod.object({
+  "leadId": zod.string(),
+  "name": zod.string(),
+  "documentId": zod.string(),
+  "phone": zod.string(),
+  "waitingDays": zod.number(),
+  "link": zod.string()
+}))
+})
+
+
+/**
+ * @summary Send the report now to the configured recipients (legal representative only)
+ */
+export const SendClinicReportResponse = zod.object({
+  "sent": zod.number(),
+  "pending": zod.number()
 })
 
 

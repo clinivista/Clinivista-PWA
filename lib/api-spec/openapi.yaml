@@ -2237,6 +2237,83 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /clinic/report:
+    get:
+      operationId: getClinicReport
+      tags: [clinic-report]
+      summary: Patients pending diagnosis and the clinic's periodic report settings
+      responses:
+        "200":
+          description: The pending list and the report configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicReport"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateClinicReport
+      tags: [clinic-report]
+      summary: Save the periodic report settings (legal representative only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClinicReportUpdate"
+      responses:
+        "200":
+          description: The saved settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicReport"
+        "400":
+          description: Invalid settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not the legal representative
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /clinic/report/send:
+    post:
+      operationId: sendClinicReport
+      tags: [clinic-report]
+      summary: Send the report now to the configured recipients (legal representative only)
+      responses:
+        "200":
+          description: Sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicReportSent"
+        "403":
+          description: Not the legal representative
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: No recipients configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Email service not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -2771,6 +2848,70 @@ components:
         actorName: {type: ["string", "null"]}
         createdAt: {type: string, format: date-time}
 
+    ClinicReportConfig:
+      type: object
+      required: [enabled, recipients, frequency, weekday, hour, skipWhenEmpty, lastSentAt, lastError]
+      properties:
+        enabled: {type: boolean}
+        recipients:
+          type: array
+          items: {type: string}
+        frequency:
+          type: string
+          enum: [daily, weekly, monthly]
+        weekday: {type: number}
+        hour: {type: number}
+        skipWhenEmpty: {type: boolean}
+        lastSentAt:
+          type: [string, "null"]
+        lastError:
+          type: [string, "null"]
+
+    PendingPatient:
+      type: object
+      required: [leadId, name, documentId, phone, waitingDays, link]
+      properties:
+        leadId: {type: string}
+        name: {type: string}
+        documentId: {type: string}
+        phone: {type: string}
+        waitingDays: {type: number}
+        link: {type: string}
+
+    ClinicReport:
+      type: object
+      required: [canEdit, mailConfigured, config, pending]
+      properties:
+        canEdit: {type: boolean}
+        mailConfigured: {type: boolean}
+        config:
+          $ref: "#/components/schemas/ClinicReportConfig"
+        pending:
+          type: array
+          items:
+            $ref: "#/components/schemas/PendingPatient"
+
+    ClinicReportUpdate:
+      type: object
+      required: [enabled, recipients, frequency, weekday, hour, skipWhenEmpty]
+      properties:
+        enabled: {type: boolean}
+        recipients:
+          type: array
+          items: {type: string}
+        frequency:
+          type: string
+        weekday: {type: number}
+        hour: {type: number}
+        skipWhenEmpty: {type: boolean}
+
+    ClinicReportSent:
+      type: object
+      required: [sent, pending]
+      properties:
+        sent: {type: number}
+        pending: {type: number}
+
     OkResponse:
       type: object
       required: [ok]
@@ -2796,6 +2937,7 @@ components:
       required: [email]
       properties:
         email: {type: string}
+        language: {type: string}
 
     PortalOptions:
       type: object
@@ -3136,6 +3278,8 @@ components:
         marketingConsent:
           type: boolean
         deliveryChannel:
+          type: string
+        language:
           type: string
         submit:
           type: boolean

@@ -54,6 +54,8 @@ export const leadsTable = pgTable("leads", {
   deliveryChannel: text("delivery_channel").default(""),
   // The patient's own portal account (one per email, shared across clinics).
   patientAccountId: text("patient_account_id"),
+  // The language the patient used in the form: emails and messages to them go in it.
+  language: text("language").default(""),
 }, (table) => [
   // Per-clinic uniqueness: the same RUT is only a duplicate within one center.
   uniqueIndex("leads_center_document_unique")

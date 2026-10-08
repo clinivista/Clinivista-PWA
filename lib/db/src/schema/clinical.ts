@@ -203,3 +203,23 @@ export const patientAccountsTable = pgTable("patient_accounts", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Informe periódico de pacientes pendientes de diagnóstico: a quién se envía y
+// cada cuánto (hora de Chile). Una fila por clínica; la configura su
+// representante legal. `lastSentAt` evita enviar dos veces el mismo período.
+export const reportSettingsTable = pgTable("clinic_report_settings", {
+  centerId: text("center_id").primaryKey(),
+  enabled: boolean("enabled").notNull().default(false),
+  recipients: text("recipients").notNull().default(""),
+  // "daily" | "weekly" | "monthly" (el día 1).
+  frequency: text("frequency").notNull().default("weekly"),
+  // 0 = domingo … 6 = sábado (solo para "weekly").
+  weekday: integer("weekday").notNull().default(1),
+  hour: integer("hour").notNull().default(8),
+  skipWhenEmpty: boolean("skip_when_empty").notNull().default(true),
+  lastSentAt: timestamp("last_sent_at", { withTimezone: true }),
+  lastError: text("last_error"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type ReportSettings = typeof reportSettingsTable.$inferSelect;

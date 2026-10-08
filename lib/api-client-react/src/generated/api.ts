@@ -23,6 +23,9 @@ import type {
   AuthStatus,
   ClinicProtocol,
   ClinicProtocolUpdate,
+  ClinicReport,
+  ClinicReportSent,
+  ClinicReportUpdate,
   ClinicUser,
   ClinicUserCreate,
   ClinicUserList,
@@ -4925,5 +4928,224 @@ export const useDiscardPatientPhoto = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getDiscardPatientPhotoMutationOptions(options));
+    }
+
+export const getGetClinicReportUrl = () => {
+
+
+
+
+  return `/api/clinic/report`
+}
+
+/**
+ * @summary Patients pending diagnosis and the clinic's periodic report settings
+ */
+export const getClinicReport = async ( options?: Parameters<typeof customFetch>[1]): Promise<ClinicReport> => {
+
+  return customFetch<ClinicReport>(getGetClinicReportUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetClinicReportQueryKey = () => {
+    return [
+    `/api/clinic/report`
+    ] as const;
+    }
+
+
+export const getGetClinicReportQueryOptions = <TData = Awaited<ReturnType<typeof getClinicReport>>, TError = ErrorType<ErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClinicReport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetClinicReportQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getClinicReport>>> = ({ signal }) => getClinicReport({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getClinicReport>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetClinicReportQueryResult = NonNullable<Awaited<ReturnType<typeof getClinicReport>>>
+export type GetClinicReportQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Patients pending diagnosis and the clinic's periodic report settings
+ */
+
+export function useGetClinicReport<TData = Awaited<ReturnType<typeof getClinicReport>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClinicReport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetClinicReportQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateClinicReportUrl = () => {
+
+
+
+
+  return `/api/clinic/report`
+}
+
+/**
+ * @summary Save the periodic report settings (legal representative only)
+ */
+export const updateClinicReport = async (clinicReportUpdate: ClinicReportUpdate, options?: Parameters<typeof customFetch>[1]): Promise<ClinicReport> => {
+
+  return customFetch<ClinicReport>(getUpdateClinicReportUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(clinicReportUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateClinicReportMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateClinicReport>>, TError,{data: BodyType<ClinicReportUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateClinicReport>>, TError,{data: BodyType<ClinicReportUpdate>}, TContext> => {
+
+const mutationKey = ['updateClinicReport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateClinicReport>>, {data: BodyType<ClinicReportUpdate>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateClinicReport(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateClinicReportMutationResult = NonNullable<Awaited<ReturnType<typeof updateClinicReport>>>
+    export type UpdateClinicReportMutationBody = BodyType<ClinicReportUpdate>
+    export type UpdateClinicReportMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Save the periodic report settings (legal representative only)
+ */
+export const useUpdateClinicReport = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateClinicReport>>, TError,{data: BodyType<ClinicReportUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateClinicReport>>,
+        TError,
+        {data: BodyType<ClinicReportUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateClinicReportMutationOptions(options));
+    }
+
+export const getSendClinicReportUrl = () => {
+
+
+
+
+  return `/api/clinic/report/send`
+}
+
+/**
+ * @summary Send the report now to the configured recipients (legal representative only)
+ */
+export const sendClinicReport = async ( options?: Parameters<typeof customFetch>[1]): Promise<ClinicReportSent> => {
+
+  return customFetch<ClinicReportSent>(getSendClinicReportUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getSendClinicReportMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendClinicReport>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendClinicReport>>, TError,void, TContext> => {
+
+const mutationKey = ['sendClinicReport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendClinicReport>>, void> = () => {
+
+
+          return  sendClinicReport(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendClinicReportMutationResult = NonNullable<Awaited<ReturnType<typeof sendClinicReport>>>
+
+    export type SendClinicReportMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Send the report now to the configured recipients (legal representative only)
+ */
+export const useSendClinicReport = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendClinicReport>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendClinicReport>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getSendClinicReportMutationOptions(options));
     }
 

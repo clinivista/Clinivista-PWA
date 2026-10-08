@@ -415,6 +415,58 @@ export interface DiagnosisEvent {
   createdAt: string;
 }
 
+export type ClinicReportConfigFrequency = typeof ClinicReportConfigFrequency[keyof typeof ClinicReportConfigFrequency];
+
+
+export const ClinicReportConfigFrequency = {
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export interface ClinicReportConfig {
+  enabled: boolean;
+  recipients: string[];
+  frequency: ClinicReportConfigFrequency;
+  weekday: number;
+  hour: number;
+  skipWhenEmpty: boolean;
+  /** @nullable */
+  lastSentAt: string | null;
+  /** @nullable */
+  lastError: string | null;
+}
+
+export interface PendingPatient {
+  leadId: string;
+  name: string;
+  documentId: string;
+  phone: string;
+  waitingDays: number;
+  link: string;
+}
+
+export interface ClinicReport {
+  canEdit: boolean;
+  mailConfigured: boolean;
+  config: ClinicReportConfig;
+  pending: PendingPatient[];
+}
+
+export interface ClinicReportUpdate {
+  enabled: boolean;
+  recipients: string[];
+  frequency: string;
+  weekday: number;
+  hour: number;
+  skipWhenEmpty: boolean;
+}
+
+export interface ClinicReportSent {
+  sent: number;
+  pending: number;
+}
+
 export interface OkResponse {
   ok: boolean;
 }
@@ -431,6 +483,7 @@ export interface PortalSetupInput {
 
 export interface PortalForgotInput {
   email: string;
+  language?: string;
 }
 
 /**
@@ -698,6 +751,7 @@ export interface PatientInput {
   consent: boolean;
   marketingConsent?: boolean;
   deliveryChannel?: string;
+  language?: string;
   submit?: boolean;
 }
 

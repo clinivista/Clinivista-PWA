@@ -28,6 +28,7 @@ import portalRouter from "./portal";
 import { createSession } from "../lib/sessions";
 import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
 import { resetThrottleForTests } from "../lib/patient-accounts";
+import { toMailLanguage } from "../lib/mail-i18n";
 
 const typedMockedDb = mockedDb as unknown as {
   db: typeof mockedDb.db;
@@ -87,6 +88,7 @@ beforeAll(async () => {
        center_id text DEFAULT 'default-center',
        protocol_id text DEFAULT 'capillary-initial',
        delivery_channel text DEFAULT '',
+       language text DEFAULT '',
        patient_account_id text
     );
     CREATE UNIQUE INDEX IF NOT EXISTS leads_center_document_unique
@@ -1250,6 +1252,16 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
       await request(app).get(`/api/results/${token}`).expect(404);
     });
 
+    it("WhatsApp message is written in the patient's language", async () => {
+      process.env.PUBLIC_APP_URL = "https://app.example.cl";
+      const lead = await patientReadyForCapture();
+      await pglite.exec(`UPDATE leads SET language = 'de' WHERE id = '${lead.id}';`);
+      const res = await deliver(lead.id, "whatsapp").expect(200);
+      const text = decodeURIComponent(String(res.body.whatsappUrl).split("text=")[1]);
+      expect(text).toContain(res.body.link);
+      expect(text).not.toMatch(/Hola/);
+    });
+
     it("email: sends the link through the mail service, and says so plainly when it is not configured", async () => {
       process.env.PUBLIC_APP_URL = "https://app.example.cl";
       const lead = await patientReadyForCapture();
@@ -1386,6 +1398,22 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
       expect(sent[0].subject).toMatch(/Recupera/);
       await pglite.exec("UPDATE patient_accounts SET token_expires_at = now() - interval '1 minute';");
       await request(app).post("/api/portal/setup").send({ token: tokenFromMail(), password: "clave-nueva-22" }).expect(400);
+    });
+
+    it("mails and the WhatsApp message follow the patient's language; an invalid language falls back to Spanish", async () => {
+      mailOn();
+      const created = await request(app).post("/api/patients").send({ ...VALID_BODY, language: "fr" }).expect(201);
+      expect(created.body.lead.language).toBe("fr");
+      await vi.waitFor(() => expect(sent).toHaveLength(1));
+      expect(sent[0].subject).toMatch(/^Créez votre mot de passe - /);
+      const bad = await request(app).put(`/api/patients/${created.body.lead.token}`).send({ ...VALID_BODY, language: "xx" }).expect(200);
+      expect(bad.body.lead.language).toBe("");
+      expect(toMailLanguage("xx")).toBe("es");
+      expect(toMailLanguage("ar")).toBe("ar");
+      await pglite.exec("UPDATE patient_accounts SET password_hash = 'x';");
+      await request(app).post("/api/portal/forgot").send({ email: "prueba@example.com", language: "de" }).expect(200);
+      await vi.waitFor(() => expect(sent).toHaveLength(2));
+      expect(sent[1].subject).toBe("Passwort zurücksetzen - Clinivista");
     });
 
     it("login: wrong data looks the same whether the account exists or not, and repeated failures are throttled", async () => {
