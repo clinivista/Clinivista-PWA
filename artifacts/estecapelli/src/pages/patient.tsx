@@ -1400,6 +1400,11 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
                             <FormLabel className="text-sm font-medium text-foreground leading-snug cursor-pointer">
                               {t.pConsentCheckbox}
                             </FormLabel>
+                            <p className="text-xs text-muted-foreground">
+                              <a href="/privacidad" target="_blank" rel="noreferrer" className="underline">Política de privacidad</a>
+                              {" · "}
+                              <a href="/terminos" target="_blank" rel="noreferrer" className="underline">Términos de servicio</a>
+                            </p>
                             <FormMessage />
                           </div>
                         </div>

@@ -24,6 +24,10 @@ function Shell({ title, children }: { title: string; children: React.ReactNode }
       <div className="w-full max-w-md flex flex-col gap-5">
         <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{title}</h1>
         {children}
+        <p className="text-xs text-muted-foreground flex gap-4">
+          <Link href="/privacidad" className="underline">Política de privacidad</Link>
+          <Link href="/terminos" className="underline">Términos de servicio</Link>
+        </p>
       </div>
     </div>
   );
