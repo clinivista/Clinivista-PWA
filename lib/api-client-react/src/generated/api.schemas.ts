@@ -52,6 +52,17 @@ export const DirectorCenterSummaryPaymentStatus = {
   sin_registro: 'sin_registro',
 } as const;
 
+/**
+ * The clinic's specialty; it decides the patient form, the photo protocol and the starting phases.
+ */
+export type DirectorCenterSummarySpecialty = typeof DirectorCenterSummarySpecialty[keyof typeof DirectorCenterSummarySpecialty];
+
+
+export const DirectorCenterSummarySpecialty = {
+  capilar: 'capilar',
+  plastica: 'plastica',
+} as const;
+
 export interface DirectorCenterSummary {
   id: string;
   name: string;
@@ -65,6 +76,8 @@ export interface DirectorCenterSummary {
   paymentStatus: DirectorCenterSummaryPaymentStatus;
   /** The clinic's logo as shown to its patients (PNG data URL). Null if none has been uploaded. */
   logoDataUrl: string | null;
+  /** The clinic's specialty; it decides the patient form, the photo protocol and the starting phases. */
+  specialty: DirectorCenterSummarySpecialty;
 }
 
 export interface DirectorCenterIdentityBody {
@@ -76,10 +89,23 @@ export interface DirectorCenterIdentityBody {
   logoDataUrl?: string | null;
 }
 
+/**
+ * The clinic's specialty; it decides the patient form, the photo protocol and the starting phases.
+ */
+export type MyClinicSpecialty = typeof MyClinicSpecialty[keyof typeof MyClinicSpecialty];
+
+
+export const MyClinicSpecialty = {
+  capilar: 'capilar',
+  plastica: 'plastica',
+} as const;
+
 export interface MyClinic {
   name: string;
   slug: string;
   logoDataUrl: string | null;
+  /** The clinic's specialty; it decides the patient form, the photo protocol and the starting phases. */
+  specialty: MyClinicSpecialty;
 }
 
 export interface ClinicProtocolView {
@@ -139,9 +165,22 @@ export interface PatientProtocol {
   views: PatientProtocolView[];
 }
 
+/**
+ * The clinic's specialty; it decides the patient form, the photo protocol and the starting phases.
+ */
+export type PatientClinicSpecialty = typeof PatientClinicSpecialty[keyof typeof PatientClinicSpecialty];
+
+
+export const PatientClinicSpecialty = {
+  capilar: 'capilar',
+  plastica: 'plastica',
+} as const;
+
 export interface PatientClinic {
   name: string;
   logoDataUrl: string | null;
+  /** The clinic's specialty; it decides the patient form, the photo protocol and the starting phases. */
+  specialty: PatientClinicSpecialty;
 }
 
 export interface DirectorCenterPatch {
@@ -254,6 +293,17 @@ export interface DirectorPasswordReset {
   temporaryPassword: string;
 }
 
+/**
+ * The clinic's specialty (default capilar). It cannot be changed afterwards.
+ */
+export type DirectorCenterCreateBodySpecialty = typeof DirectorCenterCreateBodySpecialty[keyof typeof DirectorCenterCreateBodySpecialty];
+
+
+export const DirectorCenterCreateBodySpecialty = {
+  capilar: 'capilar',
+  plastica: 'plastica',
+} as const;
+
 export type DirectorCenterCreateUserRole = typeof DirectorCenterCreateUserRole[keyof typeof DirectorCenterCreateUserRole];
 
 
@@ -280,6 +330,8 @@ export interface DirectorCenterCreateBody {
   users?: DirectorCenterCreateUser[];
   /** Also load a few fictitious demo patients (no photos). */
   withSamplePatients?: boolean;
+  /** The clinic's specialty (default capilar). It cannot be changed afterwards. */
+  specialty?: DirectorCenterCreateBodySpecialty;
 }
 
 export interface DirectorCenterPaymentBody {
@@ -641,6 +693,8 @@ export const LeadStatus = {
   cerrado: 'cerrado',
 } as const;
 
+export type LeadSummaryClinicalData = {[key: string]: string};
+
 export interface LeadSummary {
   id: string;
   token: string;
@@ -672,9 +726,12 @@ export interface LeadSummary {
   appointmentAt?: string | null;
   /** @nullable */
   isDemo?: boolean | null;
+  clinicalData?: LeadSummaryClinicalData;
   /** @nullable */
   deliveryChannel?: string | null;
 }
+
+export type LeadClinicalData = {[key: string]: string};
 
 export interface Lead {
   id: string;
@@ -709,6 +766,7 @@ export interface Lead {
   appointmentAt?: string | null;
   /** @nullable */
   isDemo?: boolean | null;
+  clinicalData?: LeadClinicalData;
 }
 
 export type LeadStatsCounts = {[key: string]: number};
@@ -736,6 +794,11 @@ export interface InvitationResult {
   link: string;
 }
 
+/**
+ * Answers to the clinic specialty's own questions (every specialty except capilar).
+ */
+export type PatientInputClinicalData = {[key: string]: string};
+
 export interface PatientInput {
   name: string;
   phone: string;
@@ -748,6 +811,8 @@ export interface PatientInput {
   previousTreatment?: string;
   symptoms?: string;
   surgeryHistory?: string;
+  /** Answers to the clinic specialty's own questions (every specialty except capilar). */
+  clinicalData?: PatientInputClinicalData;
   consent: boolean;
   marketingConsent?: boolean;
   deliveryChannel?: string;

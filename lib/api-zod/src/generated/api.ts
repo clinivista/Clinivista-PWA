@@ -91,6 +91,7 @@ export const GetLeadsResponse = zod.object({
   "norwood": zod.string().nullish(),
   "appointmentAt": zod.string().nullish(),
   "isDemo": zod.boolean().nullish(),
+  "clinicalData": zod.record(zod.string(), zod.string()).optional(),
   "deliveryChannel": zod.string().nullish()
 }))
 })
@@ -151,7 +152,8 @@ export const GetLeadByIdResponse = zod.object({
   "notes": zod.string().nullish(),
   "norwood": zod.string().nullish(),
   "appointmentAt": zod.string().nullish(),
-  "isDemo": zod.boolean().nullish()
+  "isDemo": zod.boolean().nullish(),
+  "clinicalData": zod.record(zod.string(), zod.string()).optional()
 })
 
 
@@ -220,7 +222,8 @@ export const PatchLeadResponse = zod.object({
   "notes": zod.string().nullish(),
   "norwood": zod.string().nullish(),
   "appointmentAt": zod.string().nullish(),
-  "isDemo": zod.boolean().nullish()
+  "isDemo": zod.boolean().nullish(),
+  "clinicalData": zod.record(zod.string(), zod.string()).optional()
 })
 
 
@@ -674,6 +677,7 @@ export const CreateInvitationResponse = zod.object({
   "norwood": zod.string().nullish(),
   "appointmentAt": zod.string().nullish(),
   "isDemo": zod.boolean().nullish(),
+  "clinicalData": zod.record(zod.string(), zod.string()).optional(),
   "deliveryChannel": zod.string().nullish()
 }),
   "link": zod.string()
@@ -694,7 +698,8 @@ export const GetDirectorCentersResponse = zod.object({
   "staffCount": zod.number(),
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
-  "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.')
+  "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
+  "specialty": zod.enum(['capilar', 'plastica']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 }))
 })
 
@@ -712,7 +717,8 @@ export const CreateDirectorCenterBody = zod.object({
   "role": zod.enum(['medico', 'administrativo']),
   "legalRepresentative": zod.boolean().optional()
 })).optional().describe('Initial staff accounts for the clinic (up to 5).'),
-  "withSamplePatients": zod.boolean().optional().describe('Also load a few fictitious demo patients (no photos).')
+  "withSamplePatients": zod.boolean().optional().describe('Also load a few fictitious demo patients (no photos).'),
+  "specialty": zod.enum(['capilar', 'plastica']).optional().describe('The clinic\'s specialty (default capilar). It cannot be changed afterwards.')
 })
 
 export const CreateDirectorCenterResponse = zod.object({
@@ -725,7 +731,8 @@ export const CreateDirectorCenterResponse = zod.object({
   "staffCount": zod.number(),
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
-  "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.')
+  "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
+  "specialty": zod.enum(['capilar', 'plastica']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
 
 
@@ -750,7 +757,8 @@ export const PatchDirectorCenterResponse = zod.object({
   "staffCount": zod.number(),
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
-  "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.')
+  "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
+  "specialty": zod.enum(['capilar', 'plastica']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
 
 
@@ -927,7 +935,8 @@ export const UpdateDirectorCenterIdentityResponse = zod.object({
   "staffCount": zod.number(),
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
-  "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.')
+  "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
+  "specialty": zod.enum(['capilar', 'plastica']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
 
 
@@ -952,7 +961,8 @@ export const RecordDirectorCenterPaymentResponse = zod.object({
   "staffCount": zod.number(),
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
-  "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.')
+  "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
+  "specialty": zod.enum(['capilar', 'plastica']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
 
 
@@ -981,6 +991,7 @@ export const CreatePatientBody = zod.object({
   "previousTreatment": zod.string().optional(),
   "symptoms": zod.string().optional(),
   "surgeryHistory": zod.string().optional(),
+  "clinicalData": zod.record(zod.string(), zod.string()).optional().describe('Answers to the clinic specialty\'s own questions (every specialty except capilar).'),
   "consent": zod.boolean(),
   "marketingConsent": zod.boolean().optional(),
   "deliveryChannel": zod.string().optional(),
@@ -1011,6 +1022,7 @@ export const CreatePatientResponse = zod.object({
   "norwood": zod.string().nullish(),
   "appointmentAt": zod.string().nullish(),
   "isDemo": zod.boolean().nullish(),
+  "clinicalData": zod.record(zod.string(), zod.string()).optional(),
   "deliveryChannel": zod.string().nullish()
 })
 })
@@ -1025,7 +1037,8 @@ export const GetClinicParams = zod.object({
 
 export const GetClinicResponse = zod.object({
   "name": zod.string(),
-  "logoDataUrl": zod.string().nullable()
+  "logoDataUrl": zod.string().nullable(),
+  "specialty": zod.enum(['capilar', 'plastica']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
 
 
@@ -1048,6 +1061,7 @@ export const CreateClinicPatientBody = zod.object({
   "previousTreatment": zod.string().optional(),
   "symptoms": zod.string().optional(),
   "surgeryHistory": zod.string().optional(),
+  "clinicalData": zod.record(zod.string(), zod.string()).optional().describe('Answers to the clinic specialty\'s own questions (every specialty except capilar).'),
   "consent": zod.boolean(),
   "marketingConsent": zod.boolean().optional(),
   "deliveryChannel": zod.string().optional(),
@@ -1078,6 +1092,7 @@ export const CreateClinicPatientResponse = zod.object({
   "norwood": zod.string().nullish(),
   "appointmentAt": zod.string().nullish(),
   "isDemo": zod.boolean().nullish(),
+  "clinicalData": zod.record(zod.string(), zod.string()).optional(),
   "deliveryChannel": zod.string().nullish()
 })
 })
@@ -1179,7 +1194,8 @@ export const ResetClinicUserPasswordResponse = zod.object({
 export const GetMyClinicResponse = zod.object({
   "name": zod.string(),
   "slug": zod.string(),
-  "logoDataUrl": zod.string().nullable()
+  "logoDataUrl": zod.string().nullable(),
+  "specialty": zod.enum(['capilar', 'plastica']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
 
 
@@ -1266,7 +1282,8 @@ export const GetPatientClinicParams = zod.object({
 
 export const GetPatientClinicResponse = zod.object({
   "name": zod.string(),
-  "logoDataUrl": zod.string().nullable()
+  "logoDataUrl": zod.string().nullable(),
+  "specialty": zod.enum(['capilar', 'plastica']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
 
 
@@ -1300,6 +1317,7 @@ export const GetPatientResponse = zod.object({
   "norwood": zod.string().nullish(),
   "appointmentAt": zod.string().nullish(),
   "isDemo": zod.boolean().nullish(),
+  "clinicalData": zod.record(zod.string(), zod.string()).optional(),
   "deliveryChannel": zod.string().nullish()
 })
 })
@@ -1324,6 +1342,7 @@ export const UpdatePatientBody = zod.object({
   "previousTreatment": zod.string().optional(),
   "symptoms": zod.string().optional(),
   "surgeryHistory": zod.string().optional(),
+  "clinicalData": zod.record(zod.string(), zod.string()).optional().describe('Answers to the clinic specialty\'s own questions (every specialty except capilar).'),
   "consent": zod.boolean(),
   "marketingConsent": zod.boolean().optional(),
   "deliveryChannel": zod.string().optional(),
@@ -1354,6 +1373,7 @@ export const UpdatePatientResponse = zod.object({
   "norwood": zod.string().nullish(),
   "appointmentAt": zod.string().nullish(),
   "isDemo": zod.boolean().nullish(),
+  "clinicalData": zod.record(zod.string(), zod.string()).optional(),
   "deliveryChannel": zod.string().nullish()
 })
 })
@@ -1456,6 +1476,7 @@ export const DiscardPatientPhotosResponse = zod.object({
   "norwood": zod.string().nullish(),
   "appointmentAt": zod.string().nullish(),
   "isDemo": zod.boolean().nullish(),
+  "clinicalData": zod.record(zod.string(), zod.string()).optional(),
   "deliveryChannel": zod.string().nullish()
 })
 })

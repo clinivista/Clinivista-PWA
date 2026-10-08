@@ -79,4 +79,28 @@ describe("/c/:slug", () => {
     const link = await screen.findByTestId("google-start");
     expect(link).toHaveAttribute("href", "/api/portal/google/start?next=%2Fc%2Festecapelli");
   });
+
+  it("cirugía plástica: its own questions and wording replace the hair history, in the patient's language", async () => {
+    state.clinic = { data: { name: "Clínica Plástica", logoDataUrl: null, specialty: "plastica" }, isLoading: false, isError: false, error: null };
+    localStorage.setItem("clinivista_lang", "en");
+    renderPage();
+    expect(screen.getByText(/the area you are interested in/)).toBeInTheDocument();
+    expect(screen.queryByText(/scalp/i)).not.toBeInTheDocument();
+    const start = screen.getAllByRole("button").find((b) => /begin|start/i.test(b.textContent ?? ""));
+    start?.click();
+    const intake = await screen.findByTestId("plastic-intake");
+    expect(intake).toHaveTextContent("Your interest in plastic surgery");
+    expect(intake).toHaveTextContent("Which procedure are you interested in?");
+    expect(intake).toHaveTextContent("Do you smoke?");
+    expect(screen.queryByText("Hair History")).not.toBeInTheDocument();
+  });
+
+  it("a hair clinic keeps the hair history form", async () => {
+    state.clinic = { data: { name: "Estecapelli", logoDataUrl: null, specialty: "capilar" }, isLoading: false, isError: false, error: null };
+    renderPage();
+    const start = screen.getAllByRole("button").find((b) => /comenzar|empezar|iniciar/i.test(b.textContent ?? ""));
+    start?.click();
+    expect(await screen.findByText("Historial Capilar")).toBeInTheDocument();
+    expect(screen.queryByTestId("plastic-intake")).not.toBeInTheDocument();
+  });
 });

@@ -89,14 +89,15 @@ beforeAll(async () => {
        protocol_id text DEFAULT 'capillary-initial',
        delivery_channel text DEFAULT '',
        language text DEFAULT '',
-       patient_account_id text
+       patient_account_id text,
+       clinical_data jsonb NOT NULL DEFAULT '{}'
     );
     CREATE UNIQUE INDEX IF NOT EXISTS leads_center_document_unique
       ON leads (center_id, document_normalized)
       WHERE document_normalized IS NOT NULL AND document_normalized <> '';
      CREATE TABLE IF NOT EXISTS clinical_centers (
        id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
-       active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text,
+       active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar',
        created_at timestamptz NOT NULL DEFAULT now()
      );
      CREATE TABLE IF NOT EXISTS clinical_protocols (
@@ -769,7 +770,7 @@ describe("GET /api/patients/:token/clinic (identidad de la clínica para el paci
     await pglite.exec(`INSERT INTO clinical_centers (id, name, slug, logo_data_url) VALUES ('otra', 'Otra Clínica', 'otra', 'data:image/png;base64,BBBB');`);
 
     const res = await request(app).get(`/api/patients/${token}/clinic`).expect(200);
-    expect(res.body).toEqual({ name: "Estecapelli", logoDataUrl: "data:image/png;base64,AAAA" });
+    expect(res.body).toEqual({ name: "Estecapelli", logoDataUrl: "data:image/png;base64,AAAA", specialty: "capilar" });
     expect(JSON.stringify(res.body)).not.toContain("Otra");
   });
 
@@ -876,6 +877,49 @@ describe("URL propia de cada clínica (/c/:slug)", () => {
     const res = await request(app).get("/api/clinic/me").set("Cookie", `clinivista_session=${staff}`).expect(200);
     expect(res.body.slug).toBe(DEFAULT_CENTER_ID);
     await request(app).get(`/api/clinics/${res.body.slug}`).expect(200);
+  });
+});
+
+describe("Cirugía plástica (segunda especialidad)", () => {
+  const answers = { procedure: "rhinoplasty", concern: "  Perfil de la nariz  ", timeframe: "m3to6", smoking: "yes", conditions: "Hipertensión", hacker: "x", previousSurgeries: "" };
+  const register = (slug: string, body: Record<string, unknown> = {}) =>
+    request(app).post(`/api/clinics/${slug}/patients`).send({ ...VALID_BODY, ...body });
+
+  beforeEach(async () => {
+    await pglite.exec(`INSERT INTO clinical_centers (id, name, slug, specialty) VALUES ('plastica-a', 'Clínica Plástica', 'plastica-a', 'plastica') ON CONFLICT DO NOTHING;`);
+  });
+
+  it("the clinic's specialty reaches the patient form", async () => {
+    expect((await request(app).get("/api/clinics/plastica-a").expect(200)).body.specialty).toBe("plastica");
+    const lead = (await register("plastica-a", { clinicalData: answers }).expect(201)).body.lead;
+    expect((await request(app).get(`/api/patients/${lead.token}/clinic`).expect(200)).body.specialty).toBe("plastica");
+  });
+
+  it("saves only this specialty's answers, trimmed, with unlisted options and unknown questions dropped", async () => {
+    const created = await register("plastica-a", { clinicalData: answers }).expect(201);
+    expect(created.body.lead.clinicalData).toEqual({ procedure: "rhinoplasty", concern: "Perfil de la nariz", timeframe: "m3to6", smoking: "yes", conditions: "Hipertensión" });
+    const token = created.body.lead.token as string;
+    // an update without answers keeps them; invalid selections are discarded
+    const kept = await request(app).put(`/api/patients/${token}`).send({ ...VALID_BODY }).expect(200);
+    expect(kept.body.lead.clinicalData.procedure).toBe("rhinoplasty");
+    const cleaned = await request(app).put(`/api/patients/${token}`).send({ ...VALID_BODY, clinicalData: { procedure: "magia", smoking: "no", concern: "  " } }).expect(200);
+    expect(cleaned.body.lead.clinicalData).toEqual({ smoking: "no" });
+  });
+
+  it("starts the clinic with the plastic surgery photo protocol and phases, not the hair one", async () => {
+    const lead = (await register("plastica-a", { clinicalData: answers }).expect(201)).body.lead;
+    const protocol = await request(app).get(`/api/patients/${lead.token}/protocol`).expect(200);
+    expect(protocol.body.views.map((v: { key: string }) => v.key)).toEqual(["plasticFront", "plasticProfileRight", "plasticProfileLeft", "plasticObliqueRight", "plasticObliqueLeft"]);
+    const phases = (await pglite.exec(`SELECT name, kind FROM clinical_protocol_phases WHERE protocol_id LIKE 'plastica-a%' ORDER BY position;`)) as Array<{ rows: Array<{ name: string; kind: string }> }>;
+    expect(phases[0].rows.map((r) => r.name)).toEqual(["Pre-evaluación", "Diagnóstico", "Pre-operatorio", "Post-operatorio", "Control médico 1", "Control médico 2"]);
+    const protocols = (await pglite.exec(`SELECT specialty FROM clinical_protocols WHERE center_id = 'plastica-a';`)) as Array<{ rows: Array<{ specialty: string }> }>;
+    expect(protocols[0].rows[0].specialty).toBe("plastica");
+  });
+
+  it("a hair clinic ignores those answers and keeps its own columns", async () => {
+    const created = await request(app).post("/api/patients").send({ ...VALID_BODY, hairLossTime: "1 a 3 años", clinicalData: answers }).expect(201);
+    expect(created.body.lead.hairLossTime).toBe("1 a 3 años");
+    expect(created.body.lead.clinicalData ?? {}).toEqual({});
   });
 });
 

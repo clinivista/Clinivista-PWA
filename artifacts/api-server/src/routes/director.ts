@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, eq, inArray, sql } from "drizzle-orm";
+import { toSpecialtyId } from "../lib/specialties";
 import { db, centersTable, leadsTable, usersTable, hashPassword, normalizeEmail } from "@workspace/db";
 import {
   CreateDirectorCenterBody,
@@ -73,6 +74,7 @@ async function centerSummaries() {
         paidUntil: center?.paidUntil ?? null,
         paymentStatus: paymentStatus(center?.paidUntil ?? null),
         logoDataUrl: center?.logoDataUrl ?? null,
+        specialty: toSpecialtyId(center?.specialty),
       };
     }),
   );
@@ -154,7 +156,7 @@ router.post("/director/centers", async (req, res): Promise<void> => {
   }
 
   await db.transaction(async (tx) => {
-    await tx.insert(centersTable).values({ id: slug, name, slug });
+    await tx.insert(centersTable).values({ id: slug, name, slug, specialty: toSpecialtyId(body.data.specialty) });
     for (const account of accounts) {
       await tx.insert(usersTable).values({
         id: uid(9),

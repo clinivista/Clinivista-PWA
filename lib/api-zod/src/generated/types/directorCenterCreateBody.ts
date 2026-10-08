@@ -5,6 +5,7 @@
  * Estecapelli API — Preevaluación capilar
  * OpenAPI spec version: 0.1.0
  */
+import type { DirectorCenterCreateBodySpecialty } from './directorCenterCreateBodySpecialty';
 import type { DirectorCenterCreateUser } from './directorCenterCreateUser';
 
 export interface DirectorCenterCreateBody {
@@ -16,4 +17,6 @@ export interface DirectorCenterCreateBody {
   users?: DirectorCenterCreateUser[];
   /** Also load a few fictitious demo patients (no photos). */
   withSamplePatients?: boolean;
+  /** The clinic's specialty (default capilar). It cannot be changed afterwards. */
+  specialty?: DirectorCenterCreateBodySpecialty;
 }

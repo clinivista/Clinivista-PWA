@@ -5,6 +5,7 @@
  * Estecapelli API — Preevaluación capilar
  * OpenAPI spec version: 0.1.0
  */
+import type { PatientInputClinicalData } from './patientInputClinicalData';
 
 export interface PatientInput {
   name: string;
@@ -18,6 +19,8 @@ export interface PatientInput {
   previousTreatment?: string;
   symptoms?: string;
   surgeryHistory?: string;
+  /** Answers to the clinic specialty's own questions (every specialty except capilar). */
+  clinicalData?: PatientInputClinicalData;
   consent: boolean;
   marketingConsent?: boolean;
   deliveryChannel?: string;

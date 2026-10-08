@@ -2369,7 +2369,7 @@ components:
 
     DirectorCenterSummary:
       type: object
-      required: [id, name, slug, active, createdAt, patientCount, staffCount, paidUntil, paymentStatus, logoDataUrl]
+      required: [id, name, slug, active, createdAt, patientCount, staffCount, paidUntil, paymentStatus, logoDataUrl, specialty]
       properties:
         id:
           type: string
@@ -2398,6 +2398,10 @@ components:
           type: string
           nullable: true
           description: The clinic's logo as shown to its patients (PNG data URL). Null if none has been uploaded.
+        specialty:
+          type: string
+          enum: [capilar, plastica]
+          description: The clinic's specialty; it decides the patient form, the photo protocol and the starting phases.
 
     DirectorCenterIdentityBody:
       type: object
@@ -2416,7 +2420,7 @@ components:
 
     MyClinic:
       type: object
-      required: [name, slug, logoDataUrl]
+      required: [name, slug, logoDataUrl, specialty]
       properties:
         name:
           type: string
@@ -2425,6 +2429,10 @@ components:
         logoDataUrl:
           type: string
           nullable: true
+        specialty:
+          type: string
+          enum: [capilar, plastica]
+          description: The clinic's specialty; it decides the patient form, the photo protocol and the starting phases.
 
     ClinicProtocolView:
       type: object
@@ -2510,13 +2518,17 @@ components:
 
     PatientClinic:
       type: object
-      required: [name, logoDataUrl]
+      required: [name, logoDataUrl, specialty]
       properties:
         name:
           type: string
         logoDataUrl:
           type: string
           nullable: true
+        specialty:
+          type: string
+          enum: [capilar, plastica]
+          description: The clinic's specialty; it decides the patient form, the photo protocol and the starting phases.
 
     DirectorCenterPatch:
       type: object
@@ -2680,6 +2692,10 @@ components:
         withSamplePatients:
           type: boolean
           description: Also load a few fictitious demo patients (no photos).
+        specialty:
+          type: string
+          enum: [capilar, plastica]
+          description: The clinic's specialty (default capilar). It cannot be changed afterwards.
 
     DirectorCenterCreateUser:
       type: object
@@ -3153,6 +3169,10 @@ components:
           type: ["string", "null"]
         isDemo:
           type: ["boolean", "null"]
+        clinicalData:
+          type: object
+          additionalProperties:
+            type: string
         deliveryChannel:
           type: ["string", "null"]
 
@@ -3204,6 +3224,10 @@ components:
           type: ["string", "null"]
         isDemo:
           type: ["boolean", "null"]
+        clinicalData:
+          type: object
+          additionalProperties:
+            type: string
 
     LeadStats:
       type: object
@@ -3273,6 +3297,11 @@ components:
           type: string
         surgeryHistory:
           type: string
+        clinicalData:
+          type: object
+          additionalProperties:
+            type: string
+          description: Answers to the clinic specialty's own questions (every specialty except capilar).
         consent:
           type: boolean
         marketingConsent:
