@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { FileText, Loader2, LogOut } from "lucide-react";
@@ -14,19 +14,34 @@ import {
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LanguagePicker } from "@/components/language-picker";
+import { useLanguage } from "@/lib/language";
+import { PORTAL_TEXT, type PortalText } from "@/lib/portal-i18n";
 
-const when = (iso: string) => new Date(iso).toLocaleString("es-CL", { dateStyle: "long", timeStyle: "short" });
-const errorText = (error: unknown, fallback: string) => (error as { data?: { error?: string } | null })?.data?.error ?? fallback;
+export const LOCALES: Record<string, string> = { es: "es-CL", en: "en-US", pt: "pt-BR", fr: "fr-FR", de: "de-DE", it: "it-IT", tr: "tr-TR", ar: "ar", zh: "zh-CN" };
 
-function Shell({ title, children }: { title: string; children: React.ReactNode }) {
+function usePortalText(): { text: PortalText; lang: string } {
+  const { lang } = useLanguage();
+  return { text: PORTAL_TEXT[lang], lang };
+}
+
+// The server answers in one language; the patient sees the message in theirs, chosen by what went wrong.
+function failure(text: PortalText, error: unknown, byStatus: Record<number, string> = {}): string {
+  const status = (error as { status?: number } | null)?.status;
+  return (status !== undefined && byStatus[status]) || text.genericError;
+}
+
+function Shell({ title, children }: { title: string; children: ReactNode }) {
+  const { text, lang } = usePortalText();
   return (
-    <div className="min-h-[100dvh] bg-[#F5F2EE] px-4 py-10 flex justify-center">
+    <div className="min-h-[100dvh] bg-[#F5F2EE] px-4 py-10 flex justify-center" dir={lang === "ar" ? "rtl" : "ltr"}>
       <div className="w-full max-w-md flex flex-col gap-5">
+        <LanguagePicker label={text.language} />
         <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{title}</h1>
         {children}
         <p className="text-xs text-muted-foreground flex gap-4">
-          <Link href="/privacidad" className="underline">Política de privacidad</Link>
-          <Link href="/terminos" className="underline">Términos de servicio</Link>
+          <Link href="/privacidad" className="underline">{text.privacy}</Link>
+          <Link href="/terminos" className="underline">{text.terms}</Link>
         </p>
       </div>
     </div>
@@ -45,6 +60,7 @@ const GoogleG = () => (
 // Portal del paciente: entra con Google o con correo y clave y ve los
 // resultados que su clínica le envió.
 export default function Portal() {
+  const { text, lang } = usePortalText();
   const queryClient = useQueryClient();
   const search = new URLSearchParams(useSearch());
   const { data: me, isLoading } = useGetPortalMe({ query: { queryKey: getGetPortalMeQueryKey(), retry: false } });
@@ -55,9 +71,10 @@ export default function Portal() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(
-    search.get("google") === "error" ? "No pudimos entrar con Google. Inténtalo de nuevo." : search.get("google") === "off" ? "El acceso con Google aún no está disponible." : null,
-  );
+  const [error, setError] = useState<string | null>(null);
+  const googleNotice = search.get("google") === "error" ? text.googleError : search.get("google") === "off" ? text.googleOff : null;
+  const shownError = error ?? googleNotice;
+  const when = (iso: string) => new Date(iso).toLocaleString(LOCALES[lang], { dateStyle: "long", timeStyle: "short" });
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: getGetPortalMeQueryKey() });
@@ -65,14 +82,14 @@ export default function Portal() {
   };
 
   if (isLoading) {
-    return <div className="min-h-[100dvh] flex items-center justify-center bg-[#F5F2EE]"><Loader2 className="w-8 h-8 animate-spin text-primary" aria-label="Cargando" /></div>;
+    return <div className="min-h-[100dvh] flex items-center justify-center bg-[#F5F2EE]"><Loader2 className="w-8 h-8 animate-spin text-primary" aria-label={text.loading} /></div>;
   }
 
   if (me) {
     return (
-      <Shell title="Mis resultados">
-        <p className="text-sm text-muted-foreground">Sesión iniciada como {me.email}</p>
-        {me.cases.length === 0 && <p className="rounded-2xl bg-white p-5 text-sm text-muted-foreground">Aún no tienes evaluaciones registradas con este correo.</p>}
+      <Shell title={text.homeTitle}>
+        <p className="text-sm text-muted-foreground">{text.signedInAs} {me.email}</p>
+        {me.cases.length === 0 && <p className="rounded-2xl bg-white p-5 text-sm text-muted-foreground">{text.noCases}</p>}
         {me.cases.map((item) => (
           <section key={item.leadId} className="rounded-2xl bg-white p-5 shadow-sm flex flex-col gap-3">
             <div>
@@ -80,14 +97,14 @@ export default function Portal() {
               <p className="text-xs text-muted-foreground">{item.patientName}</p>
             </div>
             {item.results.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Todavía no hay resultados. Aparecerán aquí cuando el equipo médico responda.</p>
+              <p className="text-sm text-muted-foreground">{text.noResults}</p>
             ) : (
               <ul className="flex flex-col gap-2">
                 {item.results.map((result) => (
                   <li key={result.id}>
                     <a href={`/api/portal/results/${encodeURIComponent(result.id)}`} target="_blank" rel="noreferrer"
                       className="flex items-center gap-3 rounded-xl border border-[#E8E4DE] px-4 py-3 text-sm font-semibold hover:bg-[#F5F2EE]">
-                      <FileText className="w-4 h-4 text-primary" />Resultados · {when(result.createdAt)}
+                      <FileText className="w-4 h-4 text-primary" />{text.resultsOn} · {when(result.createdAt)}
                     </a>
                   </li>
                 ))}
@@ -97,18 +114,18 @@ export default function Portal() {
         ))}
         <Button variant="outline" className="rounded-full self-start" disabled={logout.isPending}
           onClick={() => logout.mutate(undefined, { onSuccess: refresh })}>
-          <LogOut className="w-4 h-4 mr-1.5" />Cerrar sesión
+          <LogOut className="w-4 h-4 me-1.5" />{text.logout}
         </Button>
       </Shell>
     );
   }
 
   return (
-    <Shell title="Entrar a mi cuenta">
+    <Shell title={text.loginTitle}>
       {options?.googleEnabled && (
         <a href="/api/portal/google/start?next=/paciente" data-testid="google-start"
           className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-[#E8E4DE] bg-white text-sm font-bold shadow-sm hover:bg-[#F5F2EE]">
-          <GoogleG />Continuar con Google
+          <GoogleG />{text.googleButton}
         </a>
       )}
       <form className="rounded-2xl bg-white p-5 shadow-sm flex flex-col gap-3"
@@ -116,23 +133,26 @@ export default function Portal() {
           event.preventDefault();
           setError(null);
           setMessage(null);
-          login.mutate({ data: { email, password } }, { onSuccess: refresh, onError: (e) => setError(errorText(e, "No pudimos entrar.")) });
+          login.mutate({ data: { email, password } }, {
+            onSuccess: refresh,
+            onError: (e) => setError(failure(text, e, { 401: text.loginWrong, 429: text.tooMany })),
+          });
         }}>
-        <label className="text-sm font-bold" htmlFor="portal-email">Correo electrónico</label>
+        <label className="text-sm font-bold" htmlFor="portal-email">{text.emailLabel}</label>
         <Input id="portal-email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="h-12 rounded-2xl" />
-        <label className="text-sm font-bold" htmlFor="portal-password">Clave</label>
+        <label className="text-sm font-bold" htmlFor="portal-password">{text.passwordLabel}</label>
         <Input id="portal-password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} className="h-12 rounded-2xl" />
-        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+        {shownError && <p role="alert" className="text-sm text-destructive">{shownError}</p>}
         {message && <p role="status" className="text-sm text-[#007f7c]">{message}</p>}
         <Button type="submit" className="rounded-full font-bold" disabled={login.isPending || !email || !password}>
-          {login.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Entrar"}
+          {login.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : text.enter}
         </Button>
         <button type="button" className="text-sm text-primary underline self-start disabled:opacity-50" disabled={forgot.isPending || !email.includes("@")}
           onClick={() => {
             setError(null);
-            forgot.mutate({ data: { email } }, { onSuccess: () => setMessage("Si el correo tiene una cuenta, te enviamos un enlace para crear o cambiar tu clave.") });
+            forgot.mutate({ data: { email } }, { onSuccess: () => setMessage(text.forgotSent) });
           }}>
-          Crear o recuperar mi clave
+          {text.forgot}
         </button>
       </form>
     </Shell>
@@ -141,6 +161,7 @@ export default function Portal() {
 
 // Enlace del correo: el paciente elige su clave.
 export function PortalSetPassword() {
+  const { text } = usePortalText();
   const [, setLocation] = useLocation();
   const token = new URLSearchParams(useSearch()).get("token") ?? "";
   const setup = usePortalSetup();
@@ -149,21 +170,24 @@ export function PortalSetPassword() {
   const [error, setError] = useState<string | null>(null);
   const mismatch = again.length > 0 && password !== again;
   return (
-    <Shell title="Crea tu clave">
+    <Shell title={text.setupTitle}>
       <form className="rounded-2xl bg-white p-5 shadow-sm flex flex-col gap-3"
         onSubmit={(event) => {
           event.preventDefault();
           setError(null);
-          setup.mutate({ data: { token, password } }, { onSuccess: () => setLocation("/paciente"), onError: (e) => setError(errorText(e, "No pudimos guardar tu clave.")) });
+          setup.mutate({ data: { token, password } }, {
+            onSuccess: () => setLocation("/paciente"),
+            onError: (e) => setError(failure(text, e, { 400: text.invalidLink })),
+          });
         }}>
-        <label className="text-sm font-bold" htmlFor="new-password">Nueva clave (mínimo 8 caracteres)</label>
+        <label className="text-sm font-bold" htmlFor="new-password">{text.newPassword}</label>
         <Input id="new-password" type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} className="h-12 rounded-2xl" />
-        <label className="text-sm font-bold" htmlFor="repeat-password">Repite la clave</label>
+        <label className="text-sm font-bold" htmlFor="repeat-password">{text.repeatPassword}</label>
         <Input id="repeat-password" type="password" autoComplete="new-password" value={again} onChange={(event) => setAgain(event.target.value)} className="h-12 rounded-2xl" />
-        {mismatch && <p role="alert" className="text-sm text-destructive">Las claves no coinciden.</p>}
-        {error && <p role="alert" className="text-sm text-destructive">{error} <Link href="/paciente" className="underline">Pedir un enlace nuevo</Link></p>}
+        {mismatch && <p role="alert" className="text-sm text-destructive">{text.mismatch}</p>}
+        {error && <p role="alert" className="text-sm text-destructive">{error} <Link href="/paciente" className="underline">{text.requestNew}</Link></p>}
         <Button type="submit" className="rounded-full font-bold" disabled={setup.isPending || password.length < 8 || password !== again || !token}>
-          {setup.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar clave"}
+          {setup.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : text.savePassword}
         </Button>
       </form>
     </Shell>
