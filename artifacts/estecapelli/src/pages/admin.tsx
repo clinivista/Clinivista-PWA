@@ -28,6 +28,7 @@ import { buildPublicPatientLink, copyToClipboard } from "@/lib/clipboard";
 import { DirectorPanel } from "./director-panel";
 import { ClinicUsersPanel } from "./clinic-users-panel";
 import { PhasesPanel } from "./phases-panel";
+import { plasticSummaryRows } from "@/lib/specialty-i18n";
 import { ReportPanel } from "./report-panel";
 import { LeadPhases } from "@/components/lead-phases";
 
@@ -611,11 +612,11 @@ export default function Admin() {
                             <span className="font-semibold">{value || "—"}</span>
                           </div>
                         ))}
-                        {[
+                        {(myClinic?.specialty === "plastica" ? plasticSummaryRows(fullLead.clinicalData) : [
                           { label: t.adminHairLossTime, value: fullLead.hairLossTime },
                           { label: t.adminZone, value: fullLead.pattern },
                           { label: t.adminPrevTreatment, value: fullLead.previousTreatment },
-                        ].map(({ label, value }) => (
+                        ]).map(({ label, value }) => (
                           <div key={label} className="col-span-2 bg-[#F5F2EE] rounded-2xl p-4">
                             <span className="block text-xs text-muted-foreground font-bold uppercase tracking-wider mb-1">{label}</span>
                             <span className="font-semibold">{value || "—"}</span>
@@ -633,7 +634,7 @@ export default function Admin() {
                         {t.adminClinicalNotes}
                       </h3>
                       <div className="space-y-4">
-                        <div>
+                        {myClinic?.specialty !== "plastica" && <div>
                           <label className="text-xs font-bold text-foreground uppercase tracking-wider mb-2 block">{t.adminNorwood}</label>
                           <Select value={fullLead.norwood || "No concluyente"} onValueChange={v => handlePatch(fullLead.id, { norwood: v })}>
                             <SelectTrigger className="h-12 bg-[#F5F2EE] rounded-2xl font-semibold border-[#E8E4DE]">
@@ -643,7 +644,7 @@ export default function Admin() {
                               {NORWOOD_SCALES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                             </SelectContent>
                           </Select>
-                        </div>
+                        </div>}
                         <div>
                           <label className="text-xs font-bold text-foreground uppercase tracking-wider mb-2 block">{t.adminNotesLabel}</label>
                           <Textarea

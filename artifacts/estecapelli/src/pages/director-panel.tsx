@@ -185,7 +185,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                       {PAYMENT_STATUS_LABEL[center.paymentStatus]}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground font-medium mt-1">{center.slug}</p>
+                  <p className="text-xs text-muted-foreground font-medium mt-1">{center.slug}{center.specialty === "plastica" ? " · Cirugía plástica" : ""}</p>
                   <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground font-medium">
                     <span className="flex items-center gap-1.5">
                       <Building2 className="w-4 h-4" /> {center.patientCount} pacientes

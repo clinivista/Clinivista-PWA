@@ -20,7 +20,7 @@ import {
 } from "@workspace/db";
 import { uid } from "./helpers";
 import { createObjectKey, privatePhotoStorage } from "./clinical-photo-storage";
-import { SPECIALTY_ID, PROTOCOL_VIEWS, DEFAULT_PHASES, clinicalDataFromLead } from "./specialties/capilar";
+import { getSpecialty, type SpecialtyModule } from "./specialties";
 
 export const DEFAULT_CENTER_ID = process.env.DEFAULT_CENTER_ID ?? "default-center";
 export const DEFAULT_PROTOCOL_ID = process.env.DEFAULT_PROTOCOL_ID
@@ -97,12 +97,15 @@ export async function ensureClinicalConfiguration(
     name: centerId === DEFAULT_CENTER_ID ? "Centro principal" : `Centro ${centerId}`,
     slug: centerId,
   }).onConflictDoNothing();
+  // The clinic's specialty (fixed by supra-control when it was created) decides its starting views and phases.
+  const [center] = await db.select({ specialty: centersTable.specialty }).from(centersTable).where(eq(centersTable.id, centerId));
+  const specialty = getSpecialty(center?.specialty);
   await db.insert(protocolsTable).values({
     id: protocolId,
     centerId,
-    name: "Protocolo capilar inicial",
+    name: specialty.protocolName,
     version: "1",
-    specialty: SPECIALTY_ID,
+    specialty: specialty.id,
   }).onConflictDoNothing();
   // Once a protocol has phases the clinic owns its photo list: never re-insert
   // the starting views (they would bring back what the clinic removed).
@@ -110,7 +113,7 @@ export async function ensureClinicalConfiguration(
     .where(eq(protocolPhasesTable.protocolId, protocolId)).limit(1);
   if (configured) return;
   await db.insert(protocolViewsTable).values(
-    PROTOCOL_VIEWS.map(({ key, label, required }, position) => ({
+    specialty.views.map(({ key, label, required }, position) => ({
       id: `${protocolId}-${key}`,
       protocolId,
       key,
@@ -122,7 +125,7 @@ export async function ensureClinicalConfiguration(
       },
     })),
   ).onConflictDoNothing();
-  await ensureDefaultPhases(protocolId);
+  await ensureDefaultPhases(protocolId, specialty);
 }
 
 /**
@@ -133,8 +136,8 @@ export async function ensureClinicalConfiguration(
  * and this never touches it again. A cheap "any phase?" check keeps it free
  * on the hot path.
  */
-async function ensureDefaultPhases(protocolId: string): Promise<void> {
-  const phases = DEFAULT_PHASES.map(({ key, name, kind }, position) => ({
+async function ensureDefaultPhases(protocolId: string, specialty: SpecialtyModule): Promise<void> {
+  const phases = specialty.phases.map(({ key, name, kind }, position) => ({
     id: `${protocolId}-phase-${key}`,
     protocolId,
     key,
@@ -149,7 +152,7 @@ async function ensureDefaultPhases(protocolId: string): Promise<void> {
   await db.insert(protocolViewsTable).values(
     // The diagnosis phase has no photo list of its own: the doctor marks up the patient's.
     phases.slice(1).filter((phase) => phase.kind === "capture").flatMap((phase) =>
-      PROTOCOL_VIEWS.map(({ key, label, required }, position) => ({
+      specialty.views.map(({ key, label, required }, position) => ({
         id: `${protocolId}-${phase.key}-${key}`,
         protocolId,
         phaseId: phase.id,
@@ -221,6 +224,8 @@ export async function ensureEvaluationForLead(lead: Lead) {
       .where(eq(leadsTable.id, lead.id));
   }
 
+  const [evaluationCenter] = await db.select({ specialty: centersTable.specialty }).from(centersTable).where(eq(centersTable.id, centerId));
+  const clinicalDataFromLead = getSpecialty(evaluationCenter?.specialty).clinicalData;
   await db.insert(evaluationsTable).values({
     id: `evaluation-${lead.id}`,
     leadId: lead.id,

@@ -17,6 +17,9 @@ export const centersTable = pgTable("clinical_centers", {
   // servidor (PNG de hasta 256 px) y guardado como data URL. Es chico, no hay
   // que servirlo aparte ni abrir un bucket público.
   logoDataUrl: text("logo_data_url"),
+  // La especialidad define el formulario del paciente, el protocolo de fotos y
+  // las fases iniciales de la clínica. La fija supra-control al crearla.
+  specialty: text("specialty").notNull().default("capilar"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -30,6 +30,8 @@ import {
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
+import type { UseFormReturn } from "react-hook-form";
+import { PLASTIC_PROCEDURE_KEYS, PLASTIC_SMOKING_KEYS, PLASTIC_TEXT, PLASTIC_TIMEFRAME_KEYS, type PlasticText } from "@/lib/specialty-i18n";
 import { formatRut, validateRut } from "@/lib/rut";
 import { getConfiguredPhotoProtocol, type PhotoProtocolView } from "@/lib/photo-protocol";
 import { formatBytes, reviewPhotoTechnicalQuality, type TechnicalPhotoReview } from "@/lib/photo-quality";
@@ -98,12 +100,83 @@ const patientSchema = z.object({
   previousTreatment: z.string().optional(),
   symptoms: z.string().optional(),
   surgeryHistory: z.string().optional(),
+  // Answers to the clinic specialty's own questions (cirugía plástica).
+  clinicalData: z.object({
+    procedure: z.string().optional(),
+    concern: z.string().optional(),
+    timeframe: z.string().optional(),
+    previousSurgeries: z.string().optional(),
+    conditions: z.string().optional(),
+    medicationsAllergies: z.string().optional(),
+    smoking: z.string().optional(),
+  }).optional(),
   consent: z.boolean().refine(val => val === true, "Debes aceptar para continuar"),
   marketingConsent: z.boolean().optional(),
   deliveryChannel: z.enum(["email", "whatsapp"]).default("email"),
 });
 
 type PatientFormValues = z.infer<typeof patientSchema>;
+
+// ---------- Cirugía plástica: the clinic specialty's own questions ----------
+function PlasticIntake({ form, text, selectPlaceholder }: { form: UseFormReturn<PatientFormValues>; text: PlasticText; selectPlaceholder: string }) {
+  const selects: Array<{ name: "procedure" | "timeframe" | "smoking"; label: string; keys: readonly string[]; labels: string[] }> = [
+    { name: "procedure", label: text.procedure[0], keys: PLASTIC_PROCEDURE_KEYS, labels: text.procedure[1] },
+    { name: "timeframe", label: text.timeframe[0], keys: PLASTIC_TIMEFRAME_KEYS, labels: text.timeframe[1] },
+    { name: "smoking", label: text.smoking[0], keys: PLASTIC_SMOKING_KEYS, labels: text.smoking[1] },
+  ];
+  const texts: Array<{ name: "concern" | "previousSurgeries" | "conditions" | "medicationsAllergies"; copy: [string, string] }> = [
+    { name: "concern", copy: text.concern },
+    { name: "previousSurgeries", copy: text.previousSurgeries },
+    { name: "conditions", copy: text.conditions },
+    { name: "medicationsAllergies", copy: text.medicationsAllergies },
+  ];
+  const input = "rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base min-h-[80px] resize-none";
+  return (
+    <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm" data-testid="plastic-intake">
+      <div className="h-1 bg-gradient-to-r from-[#4F9CF9] to-[#4F9CF9]/30" />
+      <div className="p-6 md:p-8 space-y-5">
+        <h3 className="font-bold text-sm uppercase tracking-wider text-[#4F9CF9]">{text.section}</h3>
+        {selects.slice(0, 1).map((field) => <PlasticSelect key={field.name} form={form} placeholder={selectPlaceholder} {...field} />)}
+        <FormField control={form.control} name="clinicalData.concern" render={({ field }) => (
+          <FormItem>
+            <FormLabel className="text-sm font-bold">{text.concern[0]}</FormLabel>
+            <FormControl><Textarea placeholder={text.concern[1]} maxLength={300} className={input} {...field} value={field.value ?? ""} /></FormControl>
+          </FormItem>
+        )} />
+        {selects.slice(1, 2).map((field) => <PlasticSelect key={field.name} form={form} placeholder={selectPlaceholder} {...field} />)}
+        {texts.slice(1).map(({ name, copy }) => (
+          <FormField key={name} control={form.control} name={`clinicalData.${name}` as const} render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-bold">{copy[0]}</FormLabel>
+              <FormControl><Textarea placeholder={copy[1]} maxLength={250} className={input} {...field} value={field.value ?? ""} /></FormControl>
+            </FormItem>
+          )} />
+        ))}
+        {selects.slice(2).map((field) => <PlasticSelect key={field.name} form={form} placeholder={selectPlaceholder} {...field} />)}
+      </div>
+    </div>
+  );
+}
+
+function PlasticSelect({ form, name, label, keys, labels, placeholder }: { form: UseFormReturn<PatientFormValues>; name: "procedure" | "timeframe" | "smoking"; label: string; keys: readonly string[]; labels: string[]; placeholder: string }) {
+  return (
+    <FormField control={form.control} name={`clinicalData.${name}` as const} render={({ field }) => (
+      <FormItem>
+        <FormLabel className="text-sm font-bold">{label}</FormLabel>
+        <Select onValueChange={field.onChange} value={field.value || ""}>
+          <FormControl>
+            <SelectTrigger className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base">
+              <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+          </FormControl>
+          <SelectContent className="rounded-2xl">
+            {keys.map((key, index) => <SelectItem key={key} value={key}>{labels[index]}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </FormItem>
+    )} />
+  );
+}
 
 const PHOTO_NOTE_MAX = 500;
 
@@ -402,7 +475,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
   const { data: protocolConfig } = useGetPatientProtocol(token || "", {
     query: { enabled: !!token, queryKey: getGetPatientProtocolQueryKey(token || ""), retry: false, staleTime: 60_000 },
   });
-  const PHOTO_REQUIREMENTS = getConfiguredPhotoProtocol(t, protocolConfig?.views);
+  const PHOTO_REQUIREMENTS = getConfiguredPhotoProtocol(t, protocolConfig?.views, lang);
   const photoTotal = PHOTO_REQUIREMENTS.length;
 
   const [step, setStep] = useState<"intro" | "data" | "photos" | "success">("intro");
@@ -443,6 +516,8 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
     query: { enabled: !!clinicSlug, queryKey: getGetClinicQueryKey(clinicSlug ?? ""), retry: false, staleTime: 5 * 60_000 },
   });
   const clinic = tokenClinic ?? slugClinic;
+  const plastic = clinic?.specialty === "plastica";
+  const plasticText = PLASTIC_TEXT[lang];
   useEffect(() => {
     if (!clinic?.name) return;
     const previousTitle = document.title;
@@ -468,7 +543,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
 
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema),
-    defaultValues: { name: "", documentId: "", email: "", phone: "", age: "", city: "", hairLossTime: "", pattern: "", previousTreatment: "", symptoms: "", surgeryHistory: "", consent: false, marketingConsent: false, deliveryChannel: "email" },
+    defaultValues: { name: "", documentId: "", email: "", phone: "", age: "", city: "", hairLossTime: "", pattern: "", previousTreatment: "", symptoms: "", surgeryHistory: "", clinicalData: {}, consent: false, marketingConsent: false, deliveryChannel: "email" },
   });
 
   useEffect(() => {
@@ -497,7 +572,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
         phone: l.phone || "", age: l.age || "", city: l.city || "",
         hairLossTime: (l as any).hairLossTime || "", pattern: (l as any).pattern || "",
         previousTreatment: (l as any).previousTreatment || "", symptoms: (l as any).symptoms || "",
-        surgeryHistory: (l as any).surgeryHistory || "", consent: l.consent || false,
+        surgeryHistory: (l as any).surgeryHistory || "", clinicalData: (l as any).clinicalData || {}, consent: l.consent || false,
         marketingConsent: (l as any).marketingConsent || false,
         deliveryChannel: (l as any).deliveryChannel === "whatsapp" ? "whatsapp" : "email",
       });
@@ -1103,11 +1178,11 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
               </div>
 
               <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4 tracking-tight">{t.pIntroTitle}</h1>
-              <p className="text-muted-foreground mb-10 leading-relaxed max-w-md mx-auto text-base">{t.pIntroDesc}</p>
+              <p className="text-muted-foreground mb-10 leading-relaxed max-w-md mx-auto text-base">{plastic ? plasticText.introDesc : t.pIntroDesc}</p>
 
               <div className="space-y-3 mb-10 text-left">
                 {[
-                  { icon: "01", label: t.pStep1Label, detail: t.pStep1Detail, color: "#00A9A5", bg: "bg-[#00A9A5]/8" },
+                  { icon: "01", label: t.pStep1Label, detail: plastic ? plasticText.stepDetail : t.pStep1Detail, color: "#00A9A5", bg: "bg-[#00A9A5]/8" },
                   { icon: "02", label: t.pStep2Label, detail: t.pStep2Detail, color: "#4F9CF9", bg: "bg-[#4F9CF9]/8" },
                   { icon: "03", label: t.pStep3Label, detail: t.pStep3Detail, color: "#A78BFA", bg: "bg-[#A78BFA]/8" },
                 ].map(item => (
@@ -1300,7 +1375,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
                   </div>
                 </div>
 
-                {/* Hair history */}
+                {plastic ? <PlasticIntake form={form} text={plasticText} selectPlaceholder={t.pSelectOpt} /> : (
                 <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm">
                   <div className="h-1 bg-gradient-to-r from-[#4F9CF9] to-[#4F9CF9]/30" />
                   <div className="p-6 md:p-8 space-y-5">
@@ -1378,6 +1453,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
                     )} />
                   </div>
                 </div>
+                )}
 
                 {/* Consent */}
                 <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm">
@@ -1398,7 +1474,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
                           <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-0.5 border-primary data-[state=checked]:bg-primary" /></FormControl>
                           <div className="space-y-1">
                             <FormLabel className="text-sm font-medium text-foreground leading-snug cursor-pointer">
-                              {t.pConsentCheckbox}
+                              {plastic ? plasticText.consent : t.pConsentCheckbox}
                             </FormLabel>
                             <p className="text-xs text-muted-foreground">
                               <a href="/privacidad" target="_blank" rel="noreferrer" className="underline">{t.pPrivacyLink}</a>

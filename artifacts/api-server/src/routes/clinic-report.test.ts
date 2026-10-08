@@ -26,7 +26,7 @@ beforeAll(async () => {
   await pglite.exec(`
     CREATE TABLE IF NOT EXISTS clinical_centers (
       id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
-      active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text,
+      active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar',
       created_at timestamptz NOT NULL DEFAULT now()
     );
     CREATE TABLE IF NOT EXISTS users (
@@ -48,7 +48,7 @@ beforeAll(async () => {
       notes text DEFAULT '', norwood text DEFAULT '', appointment_at text DEFAULT '',
       is_demo boolean DEFAULT false, center_id text DEFAULT 'default-center',
       protocol_id text DEFAULT 'capillary-initial', delivery_channel text DEFAULT '',
-      language text DEFAULT '', patient_account_id text
+      language text DEFAULT '', patient_account_id text, clinical_data jsonb NOT NULL DEFAULT '{}'
     );
     CREATE TABLE IF NOT EXISTS clinical_evaluations (
       id text PRIMARY KEY, lead_id text NOT NULL UNIQUE, center_id text NOT NULL DEFAULT 'default-center',

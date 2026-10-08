@@ -56,6 +56,9 @@ export const leadsTable = pgTable("leads", {
   patientAccountId: text("patient_account_id"),
   // The language the patient used in the form: emails and messages to them go in it.
   language: text("language").default(""),
+  // Respuestas a las preguntas propias de la especialidad de la clínica (todas
+  // menos capilar, que conserva sus columnas históricas de arriba).
+  clinicalData: jsonb("clinical_data").notNull().default({}),
 }, (table) => [
   // Per-clinic uniqueness: the same RUT is only a duplicate within one center.
   uniqueIndex("leads_center_document_unique")

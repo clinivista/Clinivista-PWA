@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { DirectorCenterSummaryPaymentStatus } from './directorCenterSummaryPaymentStatus';
+import type { DirectorCenterSummarySpecialty } from './directorCenterSummarySpecialty';
 
 export interface DirectorCenterSummary {
   id: string;
@@ -20,4 +21,6 @@ export interface DirectorCenterSummary {
   paymentStatus: DirectorCenterSummaryPaymentStatus;
   /** The clinic's logo as shown to its patients (PNG data URL). Null if none has been uploaded. */
   logoDataUrl: string | null;
+  /** The clinic's specialty; it decides the patient form, the photo protocol and the starting phases. */
+  specialty: DirectorCenterSummarySpecialty;
 }

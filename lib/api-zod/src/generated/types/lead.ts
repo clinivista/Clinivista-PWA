@@ -5,6 +5,7 @@
  * Estecapelli API — Preevaluación capilar
  * OpenAPI spec version: 0.1.0
  */
+import type { LeadClinicalData } from './leadClinicalData';
 import type { LeadStatus } from './leadStatus';
 import type { PatientPhotoStatus } from './patientPhotoStatus';
 
@@ -41,4 +42,5 @@ export interface Lead {
   appointmentAt?: string | null;
   /** @nullable */
   isDemo?: boolean | null;
+  clinicalData?: LeadClinicalData;
 }

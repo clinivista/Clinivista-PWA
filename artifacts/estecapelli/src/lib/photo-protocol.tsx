@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import type { AppTranslations } from "./language";
+import type { AppTranslations, LangCode } from "./language";
+import { PLASTIC_TEXT, PLASTIC_VIEW_KEYS } from "./specialty-i18n";
 
 export type PhotoOrientation = "portrait" | "landscape" | "top-down" | "posterior";
 
@@ -88,10 +89,32 @@ export type ConfiguredPhotoView = { key: string; label: string; required: boolea
  * their translated guidance (unless the clinic renamed them); photos the
  * clinic added get neutral, clearly worded guidance.
  */
-export function getConfiguredPhotoProtocol(t: AppTranslations, views: ConfiguredPhotoView[] | undefined): PhotoProtocolView[] {
+export function getConfiguredPhotoProtocol(t: AppTranslations, views: ConfiguredPhotoView[] | undefined, lang: LangCode = "es"): PhotoProtocolView[] {
   const base = getCapillaryPhotoProtocol(t);
   if (!views || views.length === 0) return base;
   return views.map((view, index) => {
+    // Plastic surgery's starting views keep their translated guidance, like the hair ones.
+    const plasticIndex = (PLASTIC_VIEW_KEYS as readonly string[]).indexOf(view.key);
+    if (plasticIndex >= 0) {
+      const [title, description, tip] = PLASTIC_TEXT[lang].photos[plasticIndex];
+      const original = PLASTIC_TEXT.es.photos[plasticIndex][0];
+      return {
+        key: view.key,
+        title: view.label === original ? title : view.label,
+        description,
+        tip,
+        color: CUSTOM_COLORS[index % CUSTOM_COLORS.length],
+        required: view.required,
+        orientation: "portrait",
+        aspectRatio: "3:4",
+        minimumWidth: 1200,
+        minimumHeight: 1600,
+        light: t.photoLightEven ?? defaults.light,
+        distance: t.photoDistanceFace ?? defaults.distance,
+        background: t.photoBackgroundPlain ?? defaults.background,
+        referenceVisual: <GenericReference />,
+      };
+    }
     const known = base.find((item) => item.key === view.key);
     if (known) {
       const renamed = view.label !== STARTING_LABELS[view.key];

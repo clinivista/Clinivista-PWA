@@ -2,6 +2,7 @@ import sharp from "sharp";
 import { db, centersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { DEFAULT_CENTER_ID } from "./clinical-photos";
+import { toSpecialtyId, type SpecialtyId } from "./specialties";
 
 /** Public address of a clinic: app.../c/{slug}. */
 export const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{2,39}$/;
@@ -39,13 +40,14 @@ export async function normalizeLogoDataUrl(dataUrl: string): Promise<string> {
 }
 
 /** What a patient sees as "their clinic": the clinic's name and logo. */
-export async function clinicIdentity(centerId: string | null | undefined): Promise<{ name: string; logoDataUrl: string | null }> {
+export async function clinicIdentity(centerId: string | null | undefined): Promise<{ name: string; logoDataUrl: string | null; specialty: SpecialtyId }> {
   const id = centerId ?? DEFAULT_CENTER_ID;
-  const [center] = await db.select({ name: centersTable.name, logoDataUrl: centersTable.logoDataUrl })
+  const [center] = await db.select({ name: centersTable.name, logoDataUrl: centersTable.logoDataUrl, specialty: centersTable.specialty })
     .from(centersTable).where(eq(centersTable.id, id));
   return {
     name: center?.name ?? (id === DEFAULT_CENTER_ID ? "Centro principal" : id),
     logoDataUrl: center?.logoDataUrl ?? null,
+    specialty: toSpecialtyId(center?.specialty),
   };
 }
 

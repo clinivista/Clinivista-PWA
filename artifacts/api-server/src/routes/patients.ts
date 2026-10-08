@@ -1,7 +1,7 @@
 import express, { Router, type IRouter } from "express";
 import sharp from "sharp";
 import { and, eq, or } from "drizzle-orm";
-import { db, leadsTable, normalizeEmail } from "@workspace/db";
+import { db, centersTable, leadsTable, normalizeEmail } from "@workspace/db";
 import {
   ConfirmPatientPhotoParams,
   CreateClinicPatientParams,
@@ -41,14 +41,16 @@ import { ensurePatientAccountForLead } from "../lib/patient-accounts";
 import { baseUrl } from "./results";
 import { isCenterActive } from "../lib/centers";
 import { clinicIdentity, findCenterBySlug } from "../lib/clinic-identity";
+import { cleanIntake, getSpecialty } from "../lib/specialties";
 import { ALLOWED_IMAGE_TYPES, MAX_PHOTO_BYTES, parseImageRequest, parseOptionalPixelDimension } from "../lib/image-upload";
 
 const router: IRouter = Router();
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function buildLead(payload: Record<string, unknown>, existing: Partial<typeof leadsTable.$inferInsert> = {}) {
+function buildLead(payload: Record<string, unknown>, existing: Partial<typeof leadsTable.$inferInsert> = {}, clinicalData?: Record<string, string>) {
   return {
     ...existing,
+    ...(clinicalData ? { clinicalData } : {}),
     updatedAt: new Date(),
     name: clean(payload.name, 100),
     phone: cleanPhone(payload.phone),
@@ -201,6 +203,19 @@ function completedRequiredViews(
   ).size;
 }
 
+/**
+ * The answers to the clinic specialty's own questions. Capilar keeps its
+ * historical columns, so it has none here; any other specialty's answers are
+ * validated against its question list (unknown keys and unlisted options are
+ * dropped). An update that omits them keeps what was saved.
+ */
+async function specialtyAnswers(centerId: string, payload: Record<string, unknown>, existing?: unknown): Promise<Record<string, string> | undefined> {
+  const [center] = await db.select({ specialty: centersTable.specialty }).from(centersTable).where(eq(centersTable.id, centerId));
+  const intake = getSpecialty(center?.specialty).intake;
+  if (!intake) return undefined;
+  return cleanIntake(intake, payload.clinicalData === undefined ? existing : payload.clinicalData);
+}
+
 async function createPatientInCenter(req: express.Request, res: express.Response, centerId: string): Promise<void> {
   // A suspended clinic stops taking new patients too, not just staff logins —
   // otherwise "suspend" would only block the people reviewing evaluations,
@@ -219,7 +234,7 @@ async function createPatientInCenter(req: express.Request, res: express.Response
     res.status(400).json({ error: rutCheck.error });
     return;
   }
-  const data = buildLead(parsed.data as Record<string, unknown>);
+  const data = buildLead(parsed.data as Record<string, unknown>, {}, await specialtyAnswers(centerId, parsed.data as Record<string, unknown>));
   if (!data.consent || !data.name || !data.phone) {
     res.status(422).json({ error: "Completa tu nombre, teléfono y consentimiento." });
     return;
@@ -383,8 +398,8 @@ router.put("/patients/:token", async (req, res): Promise<void> => {
     res.status(400).json({ error: rutCheck.error });
     return;
   }
-  const data = buildLead(parsed.data as Record<string, unknown>, existing);
   const existingCenterId = existing.centerId ?? DEFAULT_CENTER_ID;
+  const data = buildLead(parsed.data as Record<string, unknown>, existing, await specialtyAnswers(existingCenterId, parsed.data as Record<string, unknown>, existing.clinicalData));
   const [rutClash] = await db.select({ id: leadsTable.id }).from(leadsTable)
     .where(and(eq(leadsTable.documentNormalized, data.documentNormalized), eq(leadsTable.centerId, existingCenterId)))
     .limit(1);

@@ -5,8 +5,11 @@
  * Estecapelli API — Preevaluación capilar
  * OpenAPI spec version: 0.1.0
  */
+import type { PatientClinicSpecialty } from './patientClinicSpecialty';
 
 export interface PatientClinic {
   name: string;
   logoDataUrl: string | null;
+  /** The clinic's specialty; it decides the patient form, the photo protocol and the starting phases. */
+  specialty: PatientClinicSpecialty;
 }

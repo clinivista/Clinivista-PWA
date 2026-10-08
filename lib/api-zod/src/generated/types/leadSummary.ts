@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { LeadStatus } from './leadStatus';
+import type { LeadSummaryClinicalData } from './leadSummaryClinicalData';
 
 export interface LeadSummary {
   id: string;
@@ -38,6 +39,7 @@ export interface LeadSummary {
   appointmentAt?: string | null;
   /** @nullable */
   isDemo?: boolean | null;
+  clinicalData?: LeadSummaryClinicalData;
   /** @nullable */
   deliveryChannel?: string | null;
 }

@@ -37,7 +37,7 @@ beforeAll(async () => {
   await pglite.exec(`
     CREATE TABLE IF NOT EXISTS clinical_centers (
       id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
-      active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text,
+      active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar',
       created_at timestamptz NOT NULL DEFAULT now()
     );
     CREATE TABLE IF NOT EXISTS clinical_protocols (
@@ -87,7 +87,8 @@ beforeAll(async () => {
       protocol_id text DEFAULT 'capillary-initial',
        delivery_channel text DEFAULT '',
        language text DEFAULT '',
-       patient_account_id text
+       patient_account_id text,
+       clinical_data jsonb NOT NULL DEFAULT '{}'
     );
     CREATE TABLE IF NOT EXISTS users (
       id text PRIMARY KEY,
@@ -331,6 +332,15 @@ describe("POST /api/director/centers (crear clínica)", () => {
     const byId = Object.fromEntries(list.body.centers.map((c: { id: string }) => [c.id, c]));
     expect(byId["default-center"]).toMatchObject({ patientCount: 2, staffCount: 1 });
     expect(byId["clinica-demo-capilar"]).toMatchObject({ patientCount: 4, staffCount: 2 });
+  });
+
+  it("a clinic is created with the specialty supra-control chooses (hair by default)", async () => {
+    const plastic = await request(app).post("/api/director/centers").set("Cookie", director()).send({ ...demoBody, name: "Clínica Plástica Sur", withSamplePatients: false, specialty: "plastica" }).expect(201);
+    expect(plastic.body.specialty).toBe("plastica");
+    const hair = await request(app).post("/api/director/centers").set("Cookie", director()).send({ ...demoBody, name: "Clínica Capilar Norte", withSamplePatients: false, users: [] }).expect(201);
+    expect(hair.body.specialty).toBe("capilar");
+    const bogus = await request(app).post("/api/director/centers").set("Cookie", director()).send({ name: "Clínica Rara Este", specialty: "astrologia", users: [] });
+    expect(bogus.status).toBe(400);
   });
 
   it("lets the new accounts log in, scoped to the new clinic only", async () => {
