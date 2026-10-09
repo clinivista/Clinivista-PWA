@@ -1,0 +1,877 @@
+{
+  "patient": [
+    {
+      "id": "1.1",
+      "title": "So gelangen Sie hinein: der Link der Klinik",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Sie müssen nichts installieren und kein Konto erstellen, um Ihre Vorbewertung durchzuführen. Die Klinik sendet Ihnen einen persönlichen Link per WhatsApp, E-Mail oder SMS (oder zeigt ihn Ihnen als QR-Code). Öffnen Sie ihn auf Ihrem Smartphone: Der Startbildschirm der Klinik erscheint sofort."
+        },
+        {
+          "t": "p",
+          "text": "Die Anwendung ist in neun Sprachen verfügbar: Spanisch, Englisch, Portugiesisch, Französisch, Deutsch, Italienisch, Türkisch, Arabisch und Chinesisch. Sie können die Sprache jederzeit mit der Auswahl in der oberen rechten Ecke ändern; Arabisch wird von rechts nach links angezeigt."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Sprachauswahl.",
+            "Fortschrittsbalken: Einführung → Daten → Fotos. So wissen Sie immer, in welchem Schritt Sie sind.",
+            "Geschätzte Dauer des Vorgangs (4 bis 6 Minuten).",
+            "Was enthalten ist: persönliche Daten, fünf geführte Fotos und die vertrauliche medizinische Prüfung."
+          ]
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Liste der verfügbaren Sprachen; die von Ihnen verwendete ist markiert.",
+            "Schaltfläche der Auswahl (erneut antippen, um die Liste zu schließen)."
+          ],
+          "caption": "Sprachwechsel."
+        }
+      ]
+    },
+    {
+      "id": "1.2",
+      "title": "Ihre persönlichen Daten",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Füllen Sie Ihre Kontaktdaten aus. Mit einem Sternchen (*) gekennzeichnete Felder sind Pflichtfelder. Die Telefonnummer wird mit der Vorwahl Ihres Landes gespeichert, und der Ausweis wird automatisch entsprechend dem Land der Klinik geprüft. Wenn Sie möchten, tippen Sie zuerst auf «Weiter mit Google»: Sie melden sich mit Ihrem Google-Konto an, Ihr Name und Ihre E-Mail-Adresse werden automatisch ausgefüllt, und später können Sie Ihre Ergebnisse in Ihrem Konto ansehen (ohne ein separates Passwort erstellen zu müssen). Außer diesen Angaben fragt das Formular nach Alter und Stadt; beides ist optional."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Schaltfläche «Weiter mit Google»: füllt Name und E-Mail-Adresse mit Ihrem Google-Konto aus (erscheint nur, wenn die Klinik die Funktion aktiviert hat).",
+            "Vollständiger Name.",
+            "Ausweisnummer (RUT in Chile).",
+            "Mobiltelefon mit WhatsApp und Landesvorwahl.",
+            "E-Mail-Adresse.",
+            "Wie Sie Ihre Ergebnisse erhalten möchten: per E-Mail oder per WhatsApp."
+          ]
+        },
+        {
+          "t": "note",
+          "text": "Die Beispieldaten in diesem Handbuch sind fiktiv."
+        }
+      ]
+    },
+    {
+      "id": "1.3",
+      "title": "Vorgeschichte, Einwilligung und Datenschutz",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Erzählen Sie uns kurz Ihre Vorgeschichte: seit wann Sie den Haarausfall bemerken, wo er sich konzentriert, welche Behandlungen Sie verwendet haben, ob Sie Symptome haben und ob Sie bereits eine Haartransplantation hatten. Das sind grundlegende Angaben, damit das medizinische Team Ihren Fall versteht; optionale Felder können leer bleiben."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Seit wann bemerken Sie den Haarausfall?",
+            "Wo konzentriert sich der Haarausfall? (Stirn, Scheitel, beides …).",
+            "Behandlungen, die Sie gegen den Haarausfall verwendet haben.",
+            "Damit verbundene Symptome (optional, Freitext).",
+            "Frühere Transplantationen (optional)."
+          ]
+        },
+        {
+          "t": "p",
+          "text": "Bevor Sie fortfahren, müssen Sie der Verarbeitung Ihrer Daten zustimmen. Die Zustimmung zu kommerziellen Informationen ist optional und hat keinen Einfluss auf Ihre Bewertung. Die Datenschutzerklärung und die Nutzungsbedingungen können Sie über die Links im selben Feld lesen."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Garantien: Ihre Fotos und Daten werden verschlüsselt übertragen, und die Bewertung ist keine ärztliche Diagnose vor Ort.",
+            "Pflichteinwilligung zur Verarbeitung Ihrer Daten (mit Links zur Datenschutzerklärung und zu den Nutzungsbedingungen).",
+            "Kommerzielle Informationen: optional.",
+            "Weiter zu den Fotos (wird aktiviert, sobald Sie die Einwilligung erteilen)."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1.4",
+      "title": "Die fünf geführten Fotos",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Wir benötigen fünf standardisierte Aufnahmen: Frontansicht, Vertex bzw. Scheitel, rechte Schläfe, linke Schläfe und Spenderbereich (Nacken). Jede Aufnahme hat eine Positionsanleitung mit der empfohlenen Ausrichtung, dem Licht, dem Abstand und dem Hintergrund. Lesen Sie sie vor dem Fotografieren und bitten Sie eine andere Person um Hilfe, wenn es Ihnen schwerfällt, das Foto selbst zu machen."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Zurück: führt zu Ihren Daten zurück.",
+            "Verlassen: bricht die Aufnahme ab (Ihr Fortschritt bleibt gespeichert).",
+            "Fortschritt: Foto 1 von 5 und Fortschrittsbalken.",
+            "Positionsanleitung: Ausrichtung, Licht, Abstand und Hintergrund.",
+            "Beschreibung der Aufnahme und Bereich zum Fotografieren oder Hochladen des Bildes."
+          ]
+        },
+        {
+          "t": "h3",
+          "text": "Das Foto mit der Kamera aufnehmen"
+        },
+        {
+          "t": "p",
+          "text": "Tippen Sie auf «Foto aufnehmen». Das Smartphone fragt nach der Erlaubnis, die Kamera zu verwenden: Bestätigen Sie sie. Sie sehen eine Vorschau mit einem Referenzrahmen; positionieren Sie den Kopf wie in der Anleitung beschrieben im Rahmen und tippen Sie auf die runde weiße Schaltfläche. Mit «Abbrechen» verlassen Sie die Kamera, ohne zu fotografieren, und mit dem Dreh-Symbol wechseln Sie zwischen Front- und Rückkamera."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Abbrechen: schließt die Kamera, ohne das Foto aufzunehmen.",
+            "Wechseln: schaltet zwischen Front- und Rückkamera um.",
+            "Referenzrahmen: platzieren Sie den zu beurteilenden Bereich innerhalb des Rahmens.",
+            "Auslöser."
+          ]
+        },
+        {
+          "t": "h3",
+          "text": "Technische Prüfung und Beschreibung"
+        },
+        {
+          "t": "p",
+          "text": "Nach der Aufnahme prüft die Anwendung die Qualität des Fotos (Auflösung, Belichtung, Kontrast und Schärfe) und zeigt Ihnen Empfehlungen an, wenn etwas verbessert werden kann. Das sind technische Hinweise, sie interpretieren keine medizinischen Merkmale. Sie können eine optionale Beschreibung mit bis zu 500 Zeichen eingeben (zum Beispiel «Ich habe weniger Haare im Bereich der Geheimratsecken»). Wenn Ihnen das Foto gefällt, tippen Sie auf «Dieses Foto verwenden»; andernfalls nehmen Sie es erneut auf."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Technische Daten des Bildes (Auflösung, Belichtung, Schärfe, Kontrast).",
+            "Automatische Empfehlungen zur Verbesserung der Aufnahme.",
+            "Optionale Beschreibung dieses Fotos.",
+            "Dieses Foto verwenden: speichert es und geht zum nächsten.",
+            "Foto wiederholen: öffnet die Kamera erneut.",
+            "Anderes Foto hochladen: wählt ein Bild aus Ihrer Galerie."
+          ]
+        },
+        {
+          "t": "tip",
+          "text": "Wenn Sie die Kamera im Moment lieber nicht verwenden möchten, können Sie mit «Anderes Foto hochladen» ein Bild aus Ihrer Galerie auswählen. Die Originaldatei bleibt unverkleinert erhalten."
+        }
+      ]
+    },
+    {
+      "id": "1.5",
+      "title": "Weitergehen, korrigieren und senden",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Nach jedem Foto erscheint die Meldung «Fortschritt gespeichert»: Ihr Fortschritt wird automatisch gespeichert. Gehen Sie Aufnahme für Aufnahme weiter, bis alle fünf abgeschlossen sind. Wenn Sie fertig sind, zeigt die Übersicht die Miniaturansichten; bei jeder können Sie das Foto wiederholen, die technischen Bildeinstellungen öffnen oder ein anderes hochladen. Die Schaltfläche zum Senden wird bei 5/5 aktiviert."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Foto der aktuellen Aufnahme wiederholen.",
+            "Technische Bildeinstellungen.",
+            "Anderes Foto aus der Galerie hochladen.",
+            "Miniaturansichten der fünf Aufnahmen, jeweils mit einem Link zum Wiederholen.",
+            "Bewertung senden (5/5): sendet alles an das medizinische Team."
+          ]
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Bestätigung: Ihre Bewertung wurde empfangen.",
+            "Wie es weitergeht: Prüfung Ihres Falls (bis zu 24 Werktage), Kontaktaufnahme per WhatsApp oder E-Mail und Vereinbarung Ihrer Konsultation.",
+            "Zurück zur Startseite."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1.6",
+      "title": "Ihr Konto zum Ansehen der Ergebnisse",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Sobald der Arzt Ihre Diagnose abgeschlossen hat, sendet Ihnen die Klinik einen Link über den von Ihnen gewählten Kanal (E-Mail oder WhatsApp). Damit können Sie Ihren Bericht als PDF herunterladen. Wenn Sie ihn später erneut ansehen möchten, melden Sie sich unter «Mein Konto» mit Ihrer E-Mail-Adresse und einem eigenen Passwort an."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "E-Mail-Adresse, mit der Sie sich bei der Klinik registriert haben.",
+            "Passwort (mit dem Auge können Sie es anzeigen oder verbergen).",
+            "Einloggen.",
+            "Passwort erstellen oder zurücksetzen: sendet Ihnen einen Link zur Wahl eines neuen Passworts (funktioniert auch, wenn Sie es vergessen haben)."
+          ]
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Neues Passwort (mindestens 8 Zeichen).",
+            "Passwort wiederholen.",
+            "Passwort speichern. Wenn der Link abgelaufen ist, fordern Sie auf demselben Bildschirm einen neuen an."
+          ]
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Ihre Ergebnisse: Jeder Bericht der Klinik erscheint mit seinem Datum; tippen Sie auf einen, um das PDF zu öffnen.",
+            "Sprachauswahl. Unten: Abmelden sowie Links zur Datenschutzerklärung und zu den Nutzungsbedingungen."
+          ]
+        },
+        {
+          "t": "legend",
+          "items": [],
+          "caption": "Beispiel eines Ergebnisberichts (Seite 1): Logo der Klinik, Patientendaten, Antwort des medizinischen Teams und Fotos mit den vom Arzt eingezeichneten Hinweisen."
+        },
+        {
+          "t": "note",
+          "text": "Geben Sie Ihr Passwort niemals weiter. Die Klinik fragt Sie weder per Nachricht noch telefonisch danach."
+        }
+      ]
+    },
+    {
+      "id": "1.7",
+      "title": "Häufige Fragen von Patienten",
+      "blocks": [
+        {
+          "t": "table",
+          "head": [
+            "Frage",
+            "Antwort"
+          ],
+          "rows": [
+            [
+              "Kann ich die Bewertung am Computer durchführen?",
+              "Ja, aber die Anwendung ist für das Smartphone gedacht, wo die Kamera jede Aufnahme anleitet."
+            ],
+            [
+              "Die Kamera öffnet sich nicht.",
+              "Prüfen Sie, ob Sie die Kameraberechtigung des Browsers erteilt haben. Falls das nicht möglich ist, nutzen Sie «Anderes Foto hochladen» und wählen Sie ein Bild aus Ihrer Galerie."
+            ],
+            [
+              "Ich habe bei einem Foto einen Fehler gemacht.",
+              "Tippen Sie auf «Foto wiederholen» (oder auf den Link unter der Miniaturansicht) und nehmen Sie es vor dem Senden erneut auf."
+            ],
+            [
+              "Wann erhalte ich eine Antwort?",
+              "Das Team prüft Ihren Fall innerhalb von höchstens 24 Werktagen und kontaktiert Sie über den gewählten Kanal."
+            ],
+            [
+              "Sind meine Fotos privat?",
+              "Sie werden verschlüsselt übertragen und nur vom autorisierten Personal der Klinik eingesehen. Die Datenschutzerklärung können Sie direkt in der Anwendung lesen."
+            ],
+            [
+              "Ich habe mein Passwort vergessen.",
+              "Tippen Sie unter «Mein Konto» auf «Passwort erstellen oder zurücksetzen» und folgen Sie dem Link, den Sie per E-Mail erhalten."
+            ]
+          ],
+          "widths": [
+            38,
+            62
+          ]
+        }
+      ]
+    }
+  ],
+  "staff": [
+    {
+      "id": "2.1",
+      "title": "Rollen und Berechtigungen",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Jede Person der Klinik meldet sich mit ihrer eigenen E-Mail-Adresse und ihrem eigenen Passwort an und hat eine von zwei Rollen. Die Rolle legt fest, was Sie tun können; auf dem Bildschirm erscheint alles, was Sie nicht tun können, im Nur-Lese-Modus oder wird gar nicht angezeigt."
+        },
+        {
+          "t": "table",
+          "head": [
+            "Funktion",
+            "Arzt",
+            "Verwaltung"
+          ],
+          "rows": [
+            [
+              "Patienten-Dashboard, Akten und Fotos ansehen",
+              "✔",
+              "✔"
+            ],
+            [
+              "Status ändern, Termindatum eintragen, als kontaktiert markieren, per WhatsApp kontaktieren",
+              "✔",
+              "✔"
+            ],
+            [
+              "Fotos der vom Personal erfassten Phasen aufnehmen",
+              "✔",
+              "✔"
+            ],
+            [
+              "Diagnose: Fotos markieren, Norwood, Notizen, Antwort, abschließen und wieder öffnen",
+              "✔",
+              "Nur Lesezugriff"
+            ],
+            [
+              "Ergebnisse senden (PDF per E-Mail oder WhatsApp) und Verlauf",
+              "✔",
+              "✔"
+            ],
+            [
+              "Bericht über ausstehende Fälle ansehen",
+              "✔",
+              "✔"
+            ],
+            [
+              "Bericht per E-Mail konfigurieren und senden; Phasen konfigurieren",
+              "Nur gesetzlicher Vertreter",
+              "Nur gesetzlicher Vertreter"
+            ],
+            [
+              "Benutzer verwalten (anlegen, sperren, zurücksetzen, löschen)",
+              "Wenn gesetzlicher Vertreter",
+              "✔"
+            ]
+          ],
+          "widths": [
+            58,
+            21,
+            21
+          ]
+        },
+        {
+          "t": "p",
+          "text": "Der gesetzliche Vertreter ist die Person, die die Klinik zur Verwaltung des Kontos bestimmt (ein Arzt oder ein Mitarbeiter der Verwaltung): Er wird unter Benutzer festgelegt. Deshalb erscheint im Menü Phasen nur für den gesetzlichen Vertreter und Benutzer für die Verwaltung und den gesetzlichen Vertreter."
+        },
+        {
+          "t": "note",
+          "text": "Die Screenshots in diesem Handbuch stammen von der fiktiven «Clínica Aurora». Die Fotos sind synthetische Illustrationen, keine echten Personen."
+        }
+      ]
+    },
+    {
+      "id": "2.2",
+      "title": "Anmelden und Passwort wiederherstellen",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Melden Sie sich über die Zugangsadresse des Teams Ihrer Klinik an. Geben Sie Ihre E-Mail-Adresse und Ihr Passwort ein und drücken Sie die Eingabetaste oder die Anmeldeschaltfläche. Bei falschem Passwort erscheint eine Meldung, und Sie können es erneut versuchen."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "E-Mail-Adresse des Teams.",
+            "Passwort.",
+            "Passwort vergessen? Wir senden Ihnen einen Link per E-Mail.",
+            "Anmeldeschaltfläche."
+          ]
+        },
+        {
+          "t": "p",
+          "text": "Zum Wiederherstellen tippen Sie auf «Passwort vergessen?», geben Ihre E-Mail-Adresse ein und erhalten einen Link zur Wahl eines neuen Passworts. Der Link läuft ab: Ist er bereits abgelaufen, fordern Sie einen neuen an. Wenn Sie keinen Zugriff auf Ihre E-Mails haben, kann eine andere Person mit entsprechenden Berechtigungen Ihr Passwort unter Benutzer zurücksetzen (Abschnitt 2.11)."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "E-Mail-Adresse, an die der Link zur Wiederherstellung gesendet wird.",
+            "Link senden."
+          ]
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Neues Passwort (mindestens 8 Zeichen; mit dem Auge können Sie es anzeigen oder verbergen).",
+            "Passwort wiederholen.",
+            "Passwort speichern. Danach können Sie sich mit dem neuen Passwort anmelden."
+          ],
+          "caption": "Bildschirm, der sich über den Link in der E-Mail öffnet."
+        }
+      ]
+    },
+    {
+      "id": "2.3",
+      "title": "Das Patienten-Dashboard",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Nach der Anmeldung gelangen Sie zum «Patienten-Dashboard», der Gesamtansicht Ihrer Klinik. Links befindet sich das Menü (Patienten, Benutzer, Bericht und, für den gesetzlichen Vertreter, Phasen), die Sprachauswahl und die Abmeldung."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Patienten: Liste und Akten.",
+            "Benutzer: Personen der Klinik.",
+            "Bericht über ausstehende Fälle.",
+            "Phasen: Konfiguration des Protokolls (nur gesetzlicher Vertreter).",
+            "Link kopieren: der Link der Klinik, um Patienten einzuladen.",
+            "Suche nach Name oder Telefonnummer.",
+            "Filter nach Status.",
+            "Patientenzeile: antippen, um die Akte zu öffnen."
+          ]
+        },
+        {
+          "t": "p",
+          "text": "Die oberen Karten zählen die Patienten nach Status (gesamt, unvollständig, bereit zur Überprüfung, bereit zur Kontaktaufnahme, operiert …) und dienen als schnelle Übersicht. Die Tabelle zeigt Name, Telefonnummer, Status, wie viele Fotos der Vorbewertung vorliegen (zum Beispiel 5/5) und das Aufnahmedatum."
+        },
+        {
+          "t": "h3",
+          "text": "Suchen und filtern"
+        },
+        {
+          "t": "p",
+          "text": "Geben Sie einen Teil des Namens oder der Telefonnummer in das Suchfeld ein, um die Liste einzugrenzen. Der Statusfilter zeigt nur die Patienten, die sich in der gewählten Phase befinden; zum Beispiel fasst «Bereit zur Kontaktaufnahme» diejenigen zusammen, deren Diagnose abgeschlossen ist und die darauf warten, dass jemand sie anruft."
+        },
+        {
+          "t": "legend",
+          "items": [],
+          "caption": "Liste der Status im Filter."
+        },
+        {
+          "t": "legend",
+          "items": [],
+          "caption": "Ergebnis des Filters «Bereit zur Kontaktaufnahme»."
+        },
+        {
+          "t": "h3",
+          "text": "Den Link der Klinik kopieren"
+        },
+        {
+          "t": "p",
+          "text": "«Link kopieren» öffnet ein Fenster mit dem persönlichen Link der Klinik, über den Patienten ihre Vorbewertung durchführen. Kopieren Sie ihn, um ihn per WhatsApp, E-Mail oder Nachricht zu versenden, oder zeigen Sie ihn am Empfang als QR-Code."
+        },
+        {
+          "t": "legend",
+          "items": [],
+          "caption": "Fenster mit dem Link der Klinik."
+        }
+      ]
+    },
+    {
+      "id": "2.4",
+      "title": "Patientenstatus",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Der Status jedes Patienten wird automatisch berechnet, je nachdem, was in seinem Prozess abgeschlossen wird. Sie müssen ihn nicht von Hand ändern: Sie tragen nur das Termindatum ein oder markieren, dass der Patient ohne Termin kontaktiert wurde."
+        },
+        {
+          "t": "table",
+          "head": [
+            "Status",
+            "Wann er vergeben wird"
+          ],
+          "rows": [
+            [
+              "Unvollständig",
+              "Der Patient hat die Fotos seiner Vorbewertung noch nicht abgeschlossen."
+            ],
+            [
+              "Bereit zur Überprüfung",
+              "Vorbewertung vollständig; der Arzt hat die Diagnose noch nicht abgeschlossen."
+            ],
+            [
+              "Bereit zur Kontaktaufnahme",
+              "Diagnose abgeschlossen; der Patient muss noch kontaktiert werden."
+            ],
+            [
+              "Geplant",
+              "Ein Termindatum wurde eingetragen."
+            ],
+            [
+              "Kontaktiert",
+              "Der Patient wurde kontaktiert, aber es wurde kein Termin vereinbart («Kontaktiert, ohne Termin»)."
+            ],
+            [
+              "Operiert",
+              "Hat die postoperative Phase abgeschlossen."
+            ],
+            [
+              "Behandlung abgeschlossen",
+              "Alle Phasen des Protokolls sind abgeschlossen."
+            ],
+            [
+              "Geschlossen",
+              "Wird vom Personal von Hand gesetzt und immer beachtet."
+            ]
+          ],
+          "widths": [
+            30,
+            70
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2.5",
+      "title": "Die Patientenakte",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Tippen Sie auf einen Patienten, um seine Akte in einem Seitenbereich zu öffnen. Oben stehen sein Name, seine Telefonnummer und die Schaltfläche zum Löschen des Datensatzes. Direkt darunter befindet sich das Verwaltungsfeld."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Patientenstatus (wird automatisch aktualisiert, sobald ein Schritt abgeschlossen ist).",
+            "Termindatum: Mit dem Eintragen wechselt der Status zu «Geplant».",
+            "Kontaktiert, ohne Termin: verwenden Sie dies, wenn Sie den Patienten angerufen haben und kein Termin vereinbart wurde.",
+            "Per WhatsApp kontaktieren: öffnet die Unterhaltung mit dem Patienten.",
+            "Datensatz löschen: dauerhaft; verlangt eine Bestätigung."
+          ]
+        },
+        {
+          "t": "warn",
+          "text": "Das Löschen eines Datensatzes entfernt die Daten des Patienten und alle seine Fotos für immer. Das lässt sich nicht rückgängig machen."
+        },
+        {
+          "t": "h3",
+          "text": "Fotodokumentation"
+        },
+        {
+          "t": "p",
+          "text": "Unter dem Verwaltungsfeld befindet sich die Fotodokumentation mit den Fotos der Vorbewertung (wie viele von wie vielen, zum Beispiel 5/5). Tippen Sie auf ein Foto, um es vergrößert anzusehen."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Fotodokumentation: die fünf Aufnahmen des Patienten mit ihrem Zähler."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2.6",
+      "title": "Ablauf nach Phasen",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Die Nachsorge ist in Phasen gegliedert: Vorbewertung, Diagnose, präoperativ, postoperativ und zwei ärztliche Kontrollen. Jede Phase öffnet sich, wenn die vorherige abgeschlossen ist, und was noch aussteht, erscheint gesperrt mit einem Hinweis (zum Beispiel «Öffnet sich nach Abschluss von Diagnose»). Die Namen und die in jeder Phase verlangten Fotos werden im Abschnitt Phasen (2.12) konfiguriert."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Titel des Abschnitts und seine Regel: Jede Phase öffnet sich, wenn die vorherige abgeschlossen ist.",
+            "Vorbewertung: wird vom Patienten über den Link aufgenommen; hier sehen Sie nur den Fortschritt (5/5).",
+            "Diagnose: wird vom Arzt bearbeitet (Abschnitt 2.7).",
+            "Status der Phase: Offen, Abgeschlossen oder gesperrt."
+          ]
+        },
+        {
+          "t": "p",
+          "text": "In den Phasen, die das Personal erfasst (präoperativ, postoperativ und Kontrollen), hat jeder Bereich eine Karte mit drei Aktionen: Foto aufnehmen (öffnet die Kamera des Geräts mit dem Führungsrahmen), Hochladen (wählt ein Bild vom Gerät) und, sobald ein Foto vorhanden ist, Wiederholen oder Entfernen. Der Fortschritt der Phase wird als Zähler angezeigt (0/5, 5/5)."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Diagnose wieder öffnen.",
+            "PDF ansehen: zeigt eine Vorschau des Berichts.",
+            "Per E-Mail senden.",
+            "Per WhatsApp senden."
+          ],
+          "caption": "Unterhalb der Diagnose: Versand der Ergebnisse und die präoperative Phase (0/5) mit ihren Karten «Foto aufnehmen» / «Hochladen»."
+        }
+      ]
+    },
+    {
+      "id": "2.7",
+      "title": "Diagnose (Ärzte)",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Wenn der Patient seine Vorbewertung abgeschlossen hat, öffnet sich die Phase Diagnose im Status «Offen / Entwurf». Nur der Arzt kann sie bearbeiten; das Verwaltungspersonal sieht sie im Nur-Lese-Modus (es erscheint der Hinweis «Nur der Arzt kann die Diagnose bearbeiten»)."
+        },
+        {
+          "t": "h3",
+          "text": "Schritt 1 · Die Fotos markieren"
+        },
+        {
+          "t": "p",
+          "text": "Unter jedem Foto des Patienten befindet sich die Schaltfläche «Markieren». Sie öffnet den Editor im Vollbild, um Hinweise auf das Bild zu zeichnen."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Markieren: öffnet den Zeichen-Editor für dieses Foto."
+          ]
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Zeichenwerkzeuge: Stift, Linie, Pfeil, Kreis, Text, Radierer und Verschieben.",
+            "Farben (Rot, Gelb, Grün, Blau, Weiß und Schwarz).",
+            "Strichstärke: dünn, mittel oder dick.",
+            "Bild vergrößern / verkleinern (mit Zoom-Prozentwert).",
+            "Die letzten Striche rückgängig machen und wiederholen.",
+            "Zeichnung speichern (oder Abbrechen, um ohne Speichern zu verlassen)."
+          ]
+        },
+        {
+          "t": "p",
+          "text": "Um kleine Details zu markieren, vergrößern Sie das Bild mit der Schaltfläche + (oder passen Sie es mit der letzten Schaltfläche an den Bildschirm an) und verwenden Sie das Werkzeug «Verschieben», um sich über das vergrößerte Foto zu bewegen. Die Zeichnungen verändern das Originalfoto nicht: Sie werden separat gespeichert, und das Foto des Patienten bleibt unverändert erhalten."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Verschieben: zieht das vergrößerte Bild.",
+            "Verkleinern.",
+            "Vergrößern.",
+            "An Bildschirm anpassen: kehrt zur vollständigen Ansicht zurück."
+          ]
+        },
+        {
+          "t": "h3",
+          "text": "Schritt 2 · Norwood, Notizen und Antwort"
+        },
+        {
+          "t": "p",
+          "text": "Wählen Sie die Norwood-Skala (oder lassen Sie «Nicht eindeutig»), schreiben Sie Ihre klinischen Notizen (intern) und die Antwort, die der Patient erhält (bis zu 8.000 Zeichen). «Entwurf speichern» sichert Ihre Arbeit, ohne sie abzuschließen: Sie können später weitermachen."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Norwood-Skala (Bewertung).",
+            "Klinische Notizen: nur für das Team sichtbar.",
+            "Antwort für den Patienten: erscheint in seinem PDF-Bericht."
+          ]
+        },
+        {
+          "t": "h3",
+          "text": "Schritt 3 · Die Diagnose abschließen"
+        },
+        {
+          "t": "p",
+          "text": "«Diagnose abschließen» setzt die Diagnose auf schreibgeschützt, öffnet die nächste Phase und setzt den Patienten auf «Bereit zur Kontaktaufnahme». Wenn Sie etwas korrigieren müssen, schaltet «Diagnose wieder öffnen» sie wieder frei (wird im Protokoll festgehalten) und sperrt die folgenden Phasen, bis sie erneut abgeschlossen wird."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Entwurf speichern.",
+            "Diagnose abschließen (verlangt eine Bestätigung)."
+          ]
+        },
+        {
+          "t": "legend",
+          "items": [],
+          "caption": "Abgeschlossene Diagnose: Die Fotos zeigen «mit Zeichnung» dort, wo der Arzt markiert hat."
+        },
+        {
+          "t": "legend",
+          "items": [],
+          "caption": "Ansicht eines Benutzers der Verwaltung: Die Diagnose im Entwurf kann nur angesehen werden."
+        }
+      ]
+    },
+    {
+      "id": "2.8",
+      "title": "Die Ergebnisse an den Patienten senden",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Bei abgeschlossener Diagnose erscheint das Feld «Ergebnisse an den Patienten senden». Der Patient erhält ein PDF mit den Zeichnungen des Arztes und seiner Antwort, über den Kanal, den er bei der Registrierung gewählt hat. Sie haben drei Aktionen: «PDF ansehen» (zeigt eine Vorschau des Berichts), «Per E-Mail senden» (sendet das PDF als Anhang an die E-Mail-Adresse des Patienten) und «Per WhatsApp senden» (öffnet WhatsApp mit einem Download-Link)."
+        },
+        {
+          "t": "p",
+          "text": "Jeder Versand wird im Protokoll unter dem Feld festgehalten (Datum, Kanal, Ziel, Status und wer ihn durchgeführt hat), sodass Sie immer wissen, ob der Patient seine Antwort bereits erhalten hat. Wenn auf dem Server der E-Mail-Versand noch nicht eingerichtet ist, weist Sie die Anwendung darauf hin, und Sie können in der Zwischenzeit WhatsApp nutzen."
+        },
+        {
+          "t": "legend",
+          "items": [],
+          "caption": "Zweite Seite des Ergebnisberichts: Fotos mit den Hinweisen des Arztes."
+        }
+      ]
+    },
+    {
+      "id": "2.9",
+      "title": "Verlauf: Phasen vergleichen",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "In der Akte vergleicht der Abschnitt Verlauf nebeneinander denselben anatomischen Bereich des Patienten in jeder Phase: Vorbewertung, Diagnose, präoperativ, postoperativ und Kontrollen. In der Diagnosephase wird das Foto mit den Hinweisen des Arztes angezeigt (gekennzeichnet mit «Vom Team bearbeitet»); in den anderen Phasen das Originalfoto."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Bereiche: wählen Sie den anatomischen Bereich (die Zahl gibt an, in wie vielen Phasen ein Foto vorhanden ist).",
+            "Vergrößern: öffnet das Foto im Vollbild."
+          ],
+          "caption": "Jede Spalte ist eine Phase; es wird zur Seite gescrollt."
+        },
+        {
+          "t": "p",
+          "text": "Tippen Sie auf das Vergrößern-Symbol eines Fotos, um es groß und im Detail zu vergleichen."
+        },
+        {
+          "t": "legend",
+          "items": [],
+          "caption": "Vergrößertes Foto."
+        },
+        {
+          "t": "h3",
+          "text": "Exportieren und senden"
+        },
+        {
+          "t": "p",
+          "text": "Wählen Sie unter «Exportieren und senden» zwischen «Alle Bereiche» und «Nur dieser Bereich» und tippen Sie auf «PDF exportieren», um den Vergleich herunterzuladen. Zum Senden prüfen Sie die «E-Mail des Empfängers» (standardmäßig die des Patienten; Sie können eine andere eingeben, zum Beispiel die der Verwaltung) und tippen auf «Per E-Mail senden»."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Alle Bereiche / Nur dieser Bereich.",
+            "PDF exportieren.",
+            "E-Mail des Empfängers (bearbeitbar).",
+            "Per E-Mail senden."
+          ]
+        },
+        {
+          "t": "legend",
+          "items": [],
+          "caption": "Beispiel des PDFs zum Verlauf (ein Bereich, eine Phase pro Spalte)."
+        }
+      ]
+    },
+    {
+      "id": "2.10",
+      "title": "Bericht über ausstehende Fälle",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Der «Bericht» listet die Patienten mit vollständiger Vorbewertung auf, die noch auf die Diagnose des Arztes warten, und ermöglicht es, eine regelmäßige Zusammenfassung per E-Mail an die Leitung der Klinik zu planen (Konfiguration und Versand obliegen dem gesetzlichen Vertreter)."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Ausstehende Diagnosen, mit den Wartetagen.",
+            "Diagnostizieren: öffnet die Akte des Patienten.",
+            "Den Bericht automatisch senden (aktiviert den regelmäßigen Versand).",
+            "E-Mail-Adressen der Empfänger: eine pro Zeile oder durch Komma getrennt (maximal 5).",
+            "Häufigkeit, Tag und Uhrzeit (Ortszeit Chile).",
+            "Konfiguration speichern.",
+            "Jetzt senden: sendet den Bericht sofort."
+          ]
+        },
+        {
+          "t": "note",
+          "text": "Wenn auf dem Server der E-Mail-Versand nicht eingerichtet ist, weist der Bildschirm darauf hin, und der Bericht kann noch nicht gesendet werden."
+        }
+      ]
+    },
+    {
+      "id": "2.11",
+      "title": "Benutzer der Klinik",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Wenn Sie in der Verwaltung tätig oder gesetzlicher Vertreter sind, verwalten Sie unter «Benutzer» die Personen, die das Dashboard Ihrer Klinik nutzen: Sie können sie anlegen, ihren Zugang sperren oder entsperren, ihr Passwort zurücksetzen, festlegen, wer gesetzlicher Vertreter ist, und sie löschen. Ihr eigener Benutzer ist mit «Sie» gekennzeichnet und hat keine destruktiven Aktionen für sich selbst."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Benutzer hinzufügen: legt eine neue Person mit ihrer Rolle an (Arzt oder Verwaltung).",
+            "Passwort zurücksetzen: sendet ihr einen Link zur Wahl eines neuen Passworts.",
+            "Zugang sperren: verhindert die Anmeldung, ohne die Person zu löschen.",
+            "Zum gesetzlichen Vertreter machen.",
+            "Löschen."
+          ]
+        },
+        {
+          "t": "legend",
+          "items": [],
+          "caption": "Formular zum Hinzufügen eines Benutzers."
+        }
+      ]
+    },
+    {
+      "id": "2.12",
+      "title": "Phasen: das Protokoll konfigurieren (gesetzlicher Vertreter)",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "«Phasen» legt die Erfassungs- und Nachsorgeschritte Ihrer Klinik und die in jedem verlangten Fotos fest. Die erste Phase ist immer die Vorbewertung, die der Patient aufnimmt; die Diagnose bearbeitet der Arzt, und sie hat keine eigenen Fotos; die übrigen erfasst das Personal der Reihe nach. Sie können Phasen und Fotos umbenennen, mit den Pfeilen neu anordnen, hinzufügen oder entfernen und mit «Phasen speichern» sichern."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Name der Phase und jedes Fotos (bearbeitbar).",
+            "Foto zur Phase hinzufügen.",
+            "Phase hinzufügen.",
+            "Phasen speichern (oder Änderungen verwerfen)."
+          ]
+        },
+        {
+          "t": "note",
+          "text": "Sie können die Konfiguration jederzeit ändern: Bereits vorhandene Fotos werden nicht gelöscht, sie werden nur nicht mehr verlangt."
+        }
+      ]
+    },
+    {
+      "id": "2.13",
+      "title": "Nutzung auf dem Smartphone",
+      "blocks": [
+        {
+          "t": "p",
+          "text": "Das Dashboard funktioniert auf dem Smartphone genauso: Das Menü öffnet sich über die Schaltfläche mit den drei Strichen, die Karten werden untereinander angeordnet und die Akte nimmt den ganzen Bildschirm ein."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Menü.",
+            "Link kopieren.",
+            "Übersicht nach Status.",
+            "Suche und Filter.",
+            "Patientenliste."
+          ]
+        },
+        {
+          "t": "legend",
+          "items": [],
+          "caption": "Geöffnetes Seitenmenü."
+        },
+        {
+          "t": "legend",
+          "items": [
+            "Status.",
+            "Termindatum.",
+            "Kontaktiert, ohne Termin.",
+            "Per WhatsApp kontaktieren."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2.14",
+      "title": "Tipps und Fehlerbehebung",
+      "blocks": [
+        {
+          "t": "table",
+          "head": [
+            "Situation",
+            "Was zu tun ist"
+          ],
+          "rows": [
+            [
+              "Der Patient erscheint nicht in der Liste.",
+              "Prüfen Sie die Suche und den Statusfilter: Ist einer aktiv, kehren Sie zu «Alle Status» zurück."
+            ],
+            [
+              "Ich kann die Diagnose nicht abschließen.",
+              "Der Patient muss seine Vorbewertung abgeschlossen haben (5/5). Nur die Rolle Arzt kann sie abschließen."
+            ],
+            [
+              "Die E-Mail wird nicht gesendet.",
+              "Wenn der Hinweis erscheint, dass der Versand nicht eingerichtet ist, informieren Sie den technischen Administrator; nutzen Sie in der Zwischenzeit WhatsApp."
+            ],
+            [
+              "Ich habe beim Markieren eines Fotos einen Fehler gemacht.",
+              "Verwenden Sie im Editor «Rückgängig» oder öffnen Sie «Markieren» erneut und zeichnen Sie noch einmal, bevor Sie die Diagnose abschließen."
+            ],
+            [
+              "Ich möchte, dass der Patient ein Foto wiederholt.",
+              "Kontaktieren Sie ihn über die Akte per WhatsApp und senden Sie ihm den Link der Klinik erneut."
+            ],
+            [
+              "Ich habe mein Passwort vergessen.",
+              "Verwenden Sie bei der Anmeldung «Passwort vergessen?» oder bitten Sie eine andere Person mit Berechtigungen, es zurückzusetzen."
+            ]
+          ],
+          "widths": [
+            38,
+            62
+          ]
+        },
+        {
+          "t": "tip",
+          "text": "Melden Sie sich auf gemeinsam genutzten Geräten immer ab und geben Sie Ihr Passwort nicht weiter: Jede Aktion wird mit Ihrem Namen protokolliert."
+        }
+      ]
+    }
+  ]
+}

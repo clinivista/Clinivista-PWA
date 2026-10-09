@@ -1,0 +1,877 @@
+{
+ "patient": [
+  {
+   "id": "1.1",
+   "title": "How to get in: your clinic's link",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "You don't need to install anything or create an account to do your pre-evaluation. The clinic will send you a personal link by WhatsApp, email or text message (or show it to you as a QR code). Open it on your phone: the clinic's home screen appears instantly."
+    },
+    {
+     "t": "p",
+     "text": "The app is available in nine languages: Spanish, English, Portuguese, French, German, Italian, Turkish, Arabic and Chinese. Change it at any time with the selector in the top right corner; Arabic is displayed right to left."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Language selector.",
+      "Progress bar: Start → Details → Photos. You always know which stage you're at.",
+      "Estimated time for the process (4 to 6 minutes).",
+      "What it includes: personal details, five guided photos and the confidential medical review."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "List of available languages; the one you are using has a check mark.",
+      "Selector button (press it again to close the list)."
+     ],
+     "caption": "Changing the language."
+    }
+   ]
+  },
+  {
+   "id": "1.2",
+   "title": "Your personal details",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Fill in your contact details. Fields marked with an asterisk (*) are required. Your phone number is saved with your country code, and your ID document is validated automatically according to the clinic's country. If you prefer, press «Continue with Google» first: you sign in with your Google account, your name and email are filled in automatically, and later you will be able to see your results in your account (without having to create a separate password). In addition to these details, the form asks for your age and city, which are optional."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "«Continue with Google» button: fills in your name and email from your Google account (it only appears if the clinic has enabled it).",
+      "Full name.",
+      "ID document (RUT in Chile).",
+      "Mobile phone with WhatsApp and country code.",
+      "Email address.",
+      "How you want to receive your results: by email or by WhatsApp."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "The sample data in this manual is fictitious."
+    }
+   ]
+  },
+  {
+   "id": "1.3",
+   "title": "Medical history, consent and privacy",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Tell us briefly about your history: how long you have noticed hair loss, where it is concentrated, which treatments you have used, whether you have any symptoms and whether you have had a hair transplant before. This is basic information so the medical team can understand your case; optional fields can be left blank."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "How long have you noticed hair loss?",
+      "Where is the hair loss concentrated? (front, crown, both…).",
+      "Treatments you have used for hair loss.",
+      "Associated symptoms (optional, free text).",
+      "Previous transplant surgeries (optional)."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Before continuing you must read and accept the processing of your data. Accepting commercial information is optional and does not affect your evaluation. You can read the privacy policy and the terms of service from the links in the same box."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Guarantees: your photos and data travel encrypted, and the evaluation is not an in-person medical diagnosis.",
+      "Required consent to process your data (with links to the privacy policy and the terms).",
+      "Commercial information: optional.",
+      "Continue to Photos (it is enabled once you accept the consent)."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "1.4",
+   "title": "The five guided photos",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "We need five standardized shots: front view, vertex or crown, right temple, left temple and donor area (back of the head). Each shot has a positioning guide with the recommended orientation, lighting, distance and background. Read it before taking the photo, and ask someone else for help if it is hard to take it yourself."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Back: returns to your details.",
+      "Exit: leaves the capture (your progress is saved).",
+      "Progress: photo 1 of 5 and progress bar.",
+      "Positioning guide: orientation, lighting, distance and background.",
+      "Description of the shot and area to photograph or upload the image."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Taking the photo with the camera"
+    },
+    {
+     "t": "p",
+     "text": "Press «Take photo». Your phone will ask for permission to use the camera: accept it. You will see a preview with a reference frame; place your head inside the frame as the guide shows and press the round white button. With «Cancel» you leave without taking a photo, and with the rotate icon you can switch between the front and rear cameras."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Cancel: closes the camera without taking the photo.",
+      "Flip: switches between the front and rear camera.",
+      "Reference frame: place the area to be evaluated inside the box.",
+      "Shutter button."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Technical check and description"
+    },
+    {
+     "t": "p",
+     "text": "When you take the photo, the app checks its quality (resolution, exposure, contrast and sharpness) and shows you recommendations if anything can be improved. These are technical guidelines; they do not interpret medical features. You can write an optional description of up to 500 characters (for example, «I notice less hair around the hairline»). If you like the photo, press «Use this photo»; if not, retake it."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Technical image data (resolution, exposure, sharpness, contrast).",
+      "Automatic recommendations to improve the shot.",
+      "Optional description of this photo.",
+      "Use this photo: saves it and moves on to the next one.",
+      "Retake photo: opens the camera again.",
+      "Upload another photo: choose an image from your gallery."
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "If you prefer not to use the camera at that moment, «Upload another photo» lets you choose an image from your gallery. The original file is kept without being reduced."
+    }
+   ]
+  },
+  {
+   "id": "1.5",
+   "title": "Moving on, correcting and submitting",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "After each photo the message «Progress saved» appears: your progress is saved automatically. Move forward shot by shot until you have completed all five. When you finish, the summary shows the thumbnails; from each one you can retake the photo, open the technical image settings or upload a different one. The submit button is enabled when you reach 5/5."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Retake the photo for the current shot.",
+      "Technical image settings.",
+      "Upload another photo from the gallery.",
+      "Thumbnails of the five shots, each with its link to retake it.",
+      "Submit Evaluation (5/5): sends everything to the medical team."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Confirmation: your evaluation was received.",
+      "What happens next: review of your case (up to 24 business hours), contact by WhatsApp or email and scheduling of your appointment.",
+      "Back to Home."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "1.6",
+   "title": "Your account to see your results",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "When the doctor closes your diagnosis, the clinic will send you a link through the channel you chose (email or WhatsApp). With it you can download your PDF report. If you want to check it again later, sign in to «My account» with your email and a password of your own."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Email address you registered with at the clinic.",
+      "Password (the eye icon lets you show or hide it).",
+      "Sign in.",
+      "Create or recover my password: sends you a link to choose a new password (it also works if you forgot it)."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "New password (minimum 8 characters).",
+      "Repeat the password.",
+      "Save password. If the link has expired, request a new one from the same screen."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Your results: each report from the clinic appears with its date; tap one to open the PDF.",
+      "Language selector. Below: sign out and links to the privacy policy and the terms."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Example results report (page 1): clinic logo, patient details, response from the medical team and photos with the markings drawn by the doctor."
+    },
+    {
+     "t": "note",
+     "text": "Never share your password. The clinic will not ask you for it by message or by phone."
+    }
+   ]
+  },
+  {
+   "id": "1.7",
+   "title": "Patient frequently asked questions",
+   "blocks": [
+    {
+     "t": "table",
+     "head": [
+      "Question",
+      "Answer"
+     ],
+     "rows": [
+      [
+       "Can I do the evaluation from a computer?",
+       "Yes, but the experience is designed for the phone, where the camera guides each shot."
+      ],
+      [
+       "The camera won't open.",
+       "Check that you have accepted the browser's camera permission. If that is not possible, use «Upload another photo» and choose an image from your gallery."
+      ],
+      [
+       "I made a mistake on a photo.",
+       "Press «Retake photo» (or the link under the thumbnail) and take it again before submitting."
+      ],
+      [
+       "When do I get a response?",
+       "The team reviews your case within a maximum of 24 business hours and contacts you through the channel you chose."
+      ],
+      [
+       "Are my photos private?",
+       "They are transmitted encrypted and only the clinic's authorized staff can see them. You can read the privacy policy from within the app itself."
+      ],
+      [
+       "I forgot my password.",
+       "In «My account» press «Create or recover my password» and follow the link that will arrive in your email."
+      ]
+     ],
+     "widths": [
+      38,
+      62
+     ]
+    }
+   ]
+  }
+ ],
+ "staff": [
+  {
+   "id": "2.1",
+   "title": "Roles and permissions",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Each person at the clinic signs in with their own email and password and has one of two roles. The role defines what they can do; on screen, anything you cannot do simply appears in read-only mode or is not shown."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Function",
+      "Doctor",
+      "Administrative"
+     ],
+     "rows": [
+      [
+       "View patient dashboard, records and photos",
+       "✔",
+       "✔"
+      ],
+      [
+       "Change status, appointment date, mark as contacted, contact via WhatsApp",
+       "✔",
+       "✔"
+      ],
+      [
+       "Record photos for the staff phases",
+       "✔",
+       "✔"
+      ],
+      [
+       "Diagnosis: annotate photos, Norwood, notes, response, close and reopen",
+       "✔",
+       "Read-only"
+      ],
+      [
+       "Send results (PDF by email or WhatsApp) and Evolution",
+       "✔",
+       "✔"
+      ],
+      [
+       "View the Pending report",
+       "✔",
+       "✔"
+      ],
+      [
+       "Configure and send the Report by email; configure the Phases",
+       "Legal representative only",
+       "Legal representative only"
+      ],
+      [
+       "Manage Users (create, block, reset, delete)",
+       "If legal representative",
+       "✔"
+      ]
+     ],
+     "widths": [
+      58,
+      21,
+      21
+     ]
+    },
+    {
+     "t": "p",
+     "text": "The legal representative is the person the clinic designates to manage the account (it can be a doctor or an administrative user): it is set in Users. That is why, in the menu, Phases only appears for the legal representative and Users for administrative users and the legal representative."
+    },
+    {
+     "t": "note",
+     "text": "The screenshots in this manual correspond to the fictitious clinic «Clínica Aurora». The photographs are synthetic illustrations, not real people."
+    }
+   ]
+  },
+  {
+   "id": "2.2",
+   "title": "Signing in and recovering your password",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Sign in from your clinic team's access address. Enter your email and password and press Enter or the sign-in button. If the password is wrong you will see a message and can try again."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Team email.",
+      "Password.",
+      "Forgot your password? We send you a link by email.",
+      "Sign-in button."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "To recover it, press «Forgot your password?», enter your email and you will receive a link to choose a new one. The link expires: if it has already expired, request another. If you don't have access to your email, another person with permissions can reset your password from Users (section 2.11)."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Email to which the recovery link will be sent.",
+      "Send link."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "New password (minimum 8 characters; the eye icon shows or hides it).",
+      "Repeat the password.",
+      "Save password. After that you can sign in with the new one."
+     ],
+     "caption": "Screen that opens from the link in the email."
+    }
+   ]
+  },
+  {
+   "id": "2.3",
+   "title": "The patient dashboard",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "When you sign in you arrive at the «Patient Dashboard», the general view of your clinic. On the left is the menu (Patients, Users, Report and, for the legal representative, Phases), the language selector and the sign-out button."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Patients: list and records.",
+      "Users: the clinic's people.",
+      "Pending report.",
+      "Phases: protocol configuration (legal representative only).",
+      "Copy link: the clinic's link to invite patients.",
+      "Search by name or phone.",
+      "Filter by status.",
+      "Patient row: tap to open their record."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "The cards at the top count patients by status (total, incomplete, ready for review, ready to contact, operated…) and serve as a quick summary. The table shows the name, phone, status, how many pre-evaluation photos there are (for example 5/5) and the date of registration."
+    },
+    {
+     "t": "h3",
+     "text": "Searching and filtering"
+    },
+    {
+     "t": "p",
+     "text": "Type part of the name or phone number in the search box to narrow the list. The status filter shows only the patients who are at the chosen stage; for example, «Ready to contact» gathers those who already have a closed diagnosis and are waiting for someone to call them."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "List of filter statuses."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Result of the «Ready to contact» filter."
+    },
+    {
+     "t": "h3",
+     "text": "Copying the clinic's link"
+    },
+    {
+     "t": "p",
+     "text": "«Copy link» opens a window with the clinic's personal link so patients can do their pre-evaluation. Copy it to send by WhatsApp, email or message, or show it as a QR code at reception."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Window with the clinic's link."
+    }
+   ]
+  },
+  {
+   "id": "2.4",
+   "title": "Patient statuses",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Each patient's status is calculated automatically, according to what has been completed in their process. You don't have to change it by hand: you only record the appointment date or mark that they were contacted without an appointment."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Status",
+      "When it is assigned"
+     ],
+     "rows": [
+      [
+       "Incomplete",
+       "The patient has not yet finished the photos of their pre-evaluation."
+      ],
+      [
+       "Ready for review",
+       "Pre-evaluation complete; the doctor has not yet closed the diagnosis."
+      ],
+      [
+       "Ready to contact",
+       "Diagnosis closed; the patient still needs to be contacted."
+      ],
+      [
+       "Scheduled",
+       "An appointment date was recorded."
+      ],
+      [
+       "Contacted",
+       "The patient was contacted but no appointment was scheduled («Contacted, no appointment»)."
+      ],
+      [
+       "Operated",
+       "Completed the post-operative phase."
+      ],
+      [
+       "Treatment completed",
+       "All the protocol phases are complete."
+      ],
+      [
+       "Closed",
+       "Set by staff by hand and always respected."
+      ]
+     ],
+     "widths": [
+      30,
+      70
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2.5",
+   "title": "The patient record",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Tap a patient to open their record in a side panel. At the top are their name and phone number and the button to delete the record. Right below is the management box."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Patient status (updates automatically as each stage is completed).",
+      "Appointment date: when you record it, the status changes to «Scheduled».",
+      "Contacted, no appointment: use it when you called the patient and no appointment was scheduled.",
+      "Contact via WhatsApp: opens the conversation with the patient.",
+      "Delete record: permanent; asks for confirmation."
+     ]
+    },
+    {
+     "t": "warn",
+     "text": "Deleting a record permanently erases the patient's data and all their photographs. It cannot be undone."
+    },
+    {
+     "t": "h3",
+     "text": "Photo record"
+    },
+    {
+     "t": "p",
+     "text": "Below the management box is the Photo Record with the pre-evaluation photos (how many out of how many, for example 5/5). Tap a photo to see it enlarged."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Photo Record: the patient's five shots with their counter."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2.6",
+   "title": "Process by phases",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Follow-up is organized into phases: pre-evaluation, diagnosis, pre-operative, post-operative and two medical check-ups. Each phase opens when the previous one is complete, and whatever is missing appears locked with a notice (for example «Opens once “Diagnosis” is complete»). The names and the photos requested in each phase are configured in the Phases section (2.12)."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Section title and its rule: each phase opens when the previous one is complete.",
+      "Pre-evaluation: taken by the patient from the link; here you only see the progress (5/5).",
+      "Diagnosis: worked on by the doctor (section 2.7).",
+      "Phase status: Open, Closed or locked."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "In the phases recorded by staff (pre-operative, post-operative and check-ups) each zone has a card with three actions: Take photo (opens the device camera with the guide frame), Upload (choose an image from the device) and, once there is a photo, Retake or Remove. Phase progress is shown as a counter (0/5, 5/5)."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Reopen diagnosis.",
+      "View PDF: previews the report.",
+      "Send by email.",
+      "Send by WhatsApp."
+     ],
+     "caption": "Below the diagnosis: sending results and the pre-operative phase (0/5) with its «Take photo» / «Upload» cards."
+    }
+   ]
+  },
+  {
+   "id": "2.7",
+   "title": "Diagnosis (doctors)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "When the patient completes their pre-evaluation, the Diagnosis phase opens in the «Open / Draft» state. Only the doctor can work on it; administrative staff see it in read-only mode (the notice «Only the doctor can edit the diagnosis» appears)."
+    },
+    {
+     "t": "h3",
+     "text": "Step 1 · Annotate the photographs"
+    },
+    {
+     "t": "p",
+     "text": "Under each patient photo is the «Annotate» button. It opens the editor full screen so you can draw markings on the image."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Annotate: opens the drawing editor for that photograph."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Drawing tools: pencil, line, arrow, circle, text, eraser and move.",
+      "Colors (red, yellow, green, blue, white and black).",
+      "Stroke thickness: thin, medium or thick.",
+      "Zoom the image in / out (with the zoom percentage).",
+      "Undo and redo the latest strokes.",
+      "Save drawing (or Cancel to leave without saving)."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "To mark small details, zoom in with the + button (or fit it to the screen with the last button) and use the «Move» tool to pan across the enlarged photo. Drawings do not alter the original photo: they are saved separately and the patient's photo is kept intact."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Move: drag the enlarged image.",
+      "Zoom out.",
+      "Zoom in.",
+      "Fit to screen: returns to the full view."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Step 2 · Norwood, notes and response"
+    },
+    {
+     "t": "p",
+     "text": "Choose the Norwood scale (or leave «Inconclusive»), write your clinical notes (internal) and the response the patient will receive (up to 8,000 characters). «Save draft» keeps your work without closing it: you can come back later."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Norwood scale (Assessment).",
+      "Clinical notes: only the team sees them.",
+      "Response for the patient: will appear in their PDF report."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Step 3 · Close the diagnosis"
+    },
+    {
+     "t": "p",
+     "text": "«Close diagnosis» leaves the diagnosis read-only, opens the next phase and moves the patient to «Ready to contact». If you need to correct something, «Reopen diagnosis» enables it again (it is recorded in the history) and locks the following phases until you close it again."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Save draft.",
+      "Close diagnosis (asks for confirmation)."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Closed diagnosis: photos show «with drawing» where the doctor made annotations."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "View as an administrative user: the draft diagnosis can only be viewed."
+    }
+   ]
+  },
+  {
+   "id": "2.8",
+   "title": "Sending the results to the patient",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Once the diagnosis is closed, the «Send results to the patient» box appears. The patient receives a PDF with the doctor's drawings and their response, through the channel they chose when registering. You have three actions: «View PDF» (previews the report), «Send by email» (sends the PDF attached to the patient's email) and «Send by WhatsApp» (opens WhatsApp with a download link)."
+    },
+    {
+     "t": "p",
+     "text": "Each submission is recorded in the history under the box (date, channel, recipient, status and who did it), so you always know whether the patient has already received their response. If the server does not yet have email sending configured, the app lets you know and you can use WhatsApp in the meantime."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Second page of the results report: photographs with the doctor's markings."
+    }
+   ]
+  },
+  {
+   "id": "2.9",
+   "title": "Evolution: comparing phases",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "In the record, the Evolution section compares, side by side, the same anatomical zone of the patient in each phase: pre-evaluation, diagnosis, pre-operative, post-operative and check-ups. In the diagnosis phase, the photo is shown with the doctor's markings (labeled «Edited by the team»); in the others, the original photo."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Zones: choose the anatomical zone (the number shows in how many phases there is a photo).",
+      "Enlarge: opens the photo full screen."
+     ],
+     "caption": "Each column is a phase; scroll sideways."
+    },
+    {
+     "t": "p",
+     "text": "Tap the enlarge icon on a photo to see it large and compare it in detail."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Enlarged photo."
+    },
+    {
+     "t": "h3",
+     "text": "Export and send"
+    },
+    {
+     "t": "p",
+     "text": "In «Export and send» choose between «All zones» or «This zone only» and press «Export PDF» to download the comparison. To send it, check the «Recipient email» (by default the patient's; you can type another, for example the administration's) and press «Send by email»."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "All zones / This zone only.",
+      "Export PDF.",
+      "Recipient email (editable).",
+      "Send by email."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Example of the Evolution PDF (one zone, one phase per column)."
+    }
+   ]
+  },
+  {
+   "id": "2.10",
+   "title": "Pending report",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "«Report» lists patients with a complete pre-evaluation who are still waiting for the doctor's diagnosis and lets you schedule a periodic email summary for the clinic's management (configuration and sending are up to the legal representative)."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Pending diagnosis, with days waiting.",
+      "Diagnose: opens the patient's record.",
+      "Send the report automatically (turns on periodic sending).",
+      "Emails that receive it: one per line or separated by commas (maximum 5).",
+      "Frequency, day and time (Chile time).",
+      "Save settings.",
+      "Send now: sends the report immediately."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "If the server does not have email sending configured, the screen indicates it and the report cannot be sent yet."
+    }
+   ]
+  },
+  {
+   "id": "2.11",
+   "title": "Clinic users",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "If you are an administrative user or the legal representative, from «Users» you manage the people who use your clinic's dashboard: create them, block or unblock their access, reset their password, define who the legal representative is and delete them. Your own user appears marked «You» and has no destructive actions on itself."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Add user: creates a new person with their role (doctor or administrative).",
+      "Reset password: sends them a link to choose a new one.",
+      "Block access: prevents them from signing in without deleting them.",
+      "Make legal representative.",
+      "Delete."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Form to add a user."
+    }
+   ]
+  },
+  {
+   "id": "2.12",
+   "title": "Phases: configuring the protocol (legal representative)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "«Phases» defines your clinic's recording and follow-up stages and the photographs requested in each one. The first phase is always the pre-evaluation taken by the patient; Diagnosis is worked on by the doctor and has no photos of its own; the rest are recorded by staff in order. You can rename phases and photographs, reorder them with the arrows, add or remove them and save with «Save phases»."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Name of the phase and of each photograph (editable).",
+      "Add photograph to the phase.",
+      "Add phase.",
+      "Save phases (or Discard changes)."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "You can change the configuration whenever you want: photographs that already exist are not deleted, they just stop being requested."
+    }
+   ]
+  },
+  {
+   "id": "2.13",
+   "title": "Using it from the phone",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "The dashboard works the same on the phone: the menu opens from the three-line button, the cards stack up and the record takes up the whole screen."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Menu.",
+      "Copy link.",
+      "Summary by status.",
+      "Search and filter.",
+      "Patient list."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Side menu open."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Status.",
+      "Appointment date.",
+      "Contacted, no appointment.",
+      "Contact via WhatsApp."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2.14",
+   "title": "Tips and troubleshooting",
+   "blocks": [
+    {
+     "t": "table",
+     "head": [
+      "Situation",
+      "What to do"
+     ],
+     "rows": [
+      [
+       "The patient does not appear in the list.",
+       "Check the search box and the status filter: if one is active, go back to «All statuses»."
+      ],
+      [
+       "I can't close the diagnosis.",
+       "The patient must have completed their pre-evaluation (5/5). Only the doctor role can close it."
+      ],
+      [
+       "The email is not being sent.",
+       "If the notice appears saying sending is not configured, let the technical administrator know; in the meantime use WhatsApp."
+      ],
+      [
+       "I made a mistake when annotating a photo.",
+       "Inside the editor use «Undo», or open «Annotate» again and redraw before closing the diagnosis."
+      ],
+      [
+       "I want the patient to retake a photo.",
+       "Contact them via WhatsApp from the record and send them the clinic's link again."
+      ],
+      [
+       "I forgot my password.",
+       "Use «Forgot your password?» on the sign-in screen or ask another person with permissions to reset it."
+      ]
+     ],
+     "widths": [
+      38,
+      62
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "Always sign out on shared computers and don't share your password: every action is recorded under your name."
+    }
+   ]
+  }
+ ]
+}

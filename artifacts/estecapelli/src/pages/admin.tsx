@@ -5,7 +5,7 @@ import { es as dateFnsEs } from "date-fns/locale";
 import {
   Users, UserCog, Layers, LogOut,
   Search, ChevronRight, X, Phone, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu, Copy,
-  ClipboardList,
+  ClipboardList, LifeBuoy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ import {
   useGetLeadById, getGetLeadByIdQueryKey,
   usePatchLead, useDeleteLead, useGetClinicProtocol, getGetClinicProtocolQueryKey,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
 import { BrandLogo } from "@/components/brand-logo";
 import { buildPublicPatientLink, copyToClipboard } from "@/lib/clipboard";
@@ -30,6 +30,8 @@ import { ClinicUsersPanel } from "./clinic-users-panel";
 import { PhasesPanel } from "./phases-panel";
 import { plasticSummaryRows } from "@/lib/specialty-i18n";
 import { ReportPanel } from "./report-panel";
+import { HelpPanel } from "./help-panel";
+import { HELP_TEXT } from "@/lib/help-i18n";
 import { LeadPhases } from "@/components/lead-phases";
 import { LeadEvolution } from "@/components/lead-evolution";
 import { NAV_TEXT } from "@/lib/phases-i18n";
@@ -53,7 +55,7 @@ export default function Admin() {
   const { t, lang, setLang } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [view, setView] = useState<"patients" | "users" | "phases" | "report">("patients");
+  const [view, setView] = useState<"patients" | "users" | "phases" | "report" | "help">("patients");
   const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
 
   const STATUS_LABELS: Record<string, string> = {
@@ -85,6 +87,12 @@ export default function Admin() {
   // Cuántas fotografías pide la pre-evaluación de esta clínica (por defecto 5) y si
   // quien mira es su representante legal (ve la pantalla "Fases").
   const isClinicStaff = authStatus?.authenticated === true && (authStatus.user?.role === "medico" || authStatus.user?.role === "administrativo");
+  const { data: supportUnread } = useQuery({
+    queryKey: ["support-unread"],
+    queryFn: async () => (await (await fetch("/api/support/unread", { credentials: "same-origin" })).json()) as { unread?: number },
+    refetchInterval: 20000, retry: false, enabled: isClinicStaff,
+  });
+  const helpUnread = supportUnread?.unread ?? 0;
   const { data: protocol } = useGetClinicProtocol({ query: { enabled: isClinicStaff, queryKey: getGetClinicProtocolQueryKey(), staleTime: 60_000 } });
   const photoTotal = protocol?.phases[0]?.views.length ?? 5;
   const canEditPhases = protocol?.canEdit === true;
@@ -271,6 +279,16 @@ export default function Admin() {
                 {t.adminPhases}
               </Button>
             )}
+            <Button
+              variant="ghost"
+              onClick={() => { setView("help"); setMobileNavOpen(false); }}
+              className={`w-full justify-start text-white hover:bg-white/20 hover:text-white font-medium rounded-2xl h-12 ${view === "help" ? "bg-white/10" : "bg-transparent"}`}
+              data-testid="nav-help"
+            >
+              <LifeBuoy className="w-5 h-5 mr-3" />
+              {HELP_TEXT[lang].nav}
+              {helpUnread > 0 && <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-bold text-white" data-testid="help-unread">{helpUnread}</span>}
+            </Button>
           </nav>
 
           {/* Language selector */}
@@ -311,7 +329,7 @@ export default function Admin() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-h-0 md:h-[100dvh] overflow-hidden relative">
-        {view === "report" ? <ReportPanel onOpenLead={(id) => { setView("patients"); setSelectedLeadId(id); }} /> : view === "users" && canManageUsers ? <ClinicUsersPanel /> : view === "phases" && canEditPhases ? <PhasesPanel /> : (
+        {view === "help" ? <HelpPanel initialTab={helpUnread > 0 ? "support" : "manual"} /> : view === "report" ? <ReportPanel onOpenLead={(id) => { setView("patients"); setSelectedLeadId(id); }} /> : view === "users" && canManageUsers ? <ClinicUsersPanel /> : view === "phases" && canEditPhases ? <PhasesPanel /> : (
           <>
         {/* Mobile: whole content scrolls; desktop: only the patient list scrolls */}
         <div className="flex-1 min-h-0 flex flex-col overflow-y-auto md:overflow-hidden">

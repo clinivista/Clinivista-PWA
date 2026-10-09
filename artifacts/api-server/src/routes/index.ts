@@ -13,6 +13,7 @@ import diagnosisRouter from "./diagnosis";
 import resultsRouter from "./results";
 import evolutionRouter from "./evolution";
 import portalRouter from "./portal";
+import supportRouter from "./support";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(diagnosisRouter);
 router.use(resultsRouter);
 router.use(evolutionRouter);
 router.use(portalRouter);
+router.use(supportRouter);
 
 export default router;
