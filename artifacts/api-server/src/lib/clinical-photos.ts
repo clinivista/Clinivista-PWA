@@ -1,3 +1,5 @@
+import { applyClinicWatermark } from "./photo-watermark";
+import { clinicIdentity } from "./clinic-identity";
 import crypto from "crypto";
 import sharp from "sharp";
 import { and, asc, eq, inArray, isNull, ne, or } from "drizzle-orm";
@@ -403,6 +405,12 @@ export async function createClinicalPhoto(input: {
   const view = patientViews.find((candidate) => candidate.key === input.key);
   if (!view) throw new Error("Unsupported protocol photo view.");
 
+  // The stored picture is the clinic-branded one (logo watermark); only that version is kept.
+  const branded = await applyClinicWatermark(
+    { bytes: input.bytes, contentType: input.contentType, width: input.width ?? 0, height: input.height ?? 0 },
+    (await clinicIdentity(evaluation.centerId)).logoDataUrl,
+  );
+  input = { ...input, bytes: branded.bytes, contentType: branded.contentType, width: branded.width || input.width, height: branded.height || input.height };
   const hash = crypto.createHash("sha256").update(input.bytes).digest("hex");
   const stored = await privatePhotoStorage.put({
     key: createObjectKey({
@@ -804,6 +812,11 @@ export async function createStaffPhasePhoto(input: {
   if (phase.patientCaptured) throw new PhaseCaptureError("La pre-evaluación la toma el paciente desde su enlace.");
   if (!phase.enabled) throw new PhaseCaptureError("Completa la fase anterior antes de registrar esta.", 409);
 
+  const branded = await applyClinicWatermark(
+    { bytes: input.bytes, contentType: input.contentType, width: input.width, height: input.height },
+    (await clinicIdentity(evaluation.centerId)).logoDataUrl,
+  );
+  input = { ...input, bytes: branded.bytes, contentType: branded.contentType, width: branded.width, height: branded.height };
   const hash = crypto.createHash("sha256").update(input.bytes).digest("hex");
   const stored = await privatePhotoStorage.put({
     key: createObjectKey({

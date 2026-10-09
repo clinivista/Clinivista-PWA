@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUpRight, Circle, Eraser, Loader2, Minus, Pencil, Redo2, Type, Undo2, X } from "lucide-react";
+import { ArrowUpRight, Circle, Eraser, Hand, Loader2, Maximize, Minus, Pencil, Plus, Redo2, Type, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/language";
 import { ANNOTATOR_TEXT } from "@/lib/annotator-i18n";
@@ -7,8 +7,9 @@ import {
   PALETTE, WIDTHS, clamp01, drawStrokes, hitsStroke, simplify, strokeToJson,
   type Pt, type Stroke, type StrokeType,
 } from "@/lib/annotation";
+import { FIT, MAX_ZOOM, MIN_ZOOM, ZOOM_STEP, clampView, zoomAt, type View } from "@/lib/zoom-view";
 
-type Tool = StrokeType | "eraser";
+type Tool = StrokeType | "eraser" | "pan";
 
 const TOOLS: Array<{ tool: Tool; icon: typeof Pencil }> = [
   { tool: "pen", icon: Pencil },
@@ -17,6 +18,7 @@ const TOOLS: Array<{ tool: Tool; icon: typeof Pencil }> = [
   { tool: "ellipse", icon: Circle },
   { tool: "text", icon: Type },
   { tool: "eraser", icon: Eraser },
+  { tool: "pan", icon: Hand },
 ];
 
 const MAX_EXPORT_SIDE = 2400;
@@ -47,6 +49,13 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   const [draft, setDraft] = useState<Stroke | null>(null);
   const [textAt, setTextAt] = useState<{ pt: Pt; value: string } | null>(null);
   const [box, setBox] = useState({ width: 0, height: 0 });
+  const [view, setView] = useState<View>(FIT);
+  const viewRef = useRef<View>(FIT);
+  viewRef.current = view;
+  const boxRef = useRef(box);
+  boxRef.current = box;
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const gesture = useRef<{ kind: "pinch"; dist: number; view: View; mid: { x: number; y: number } } | { kind: "pan"; start: { x: number; y: number }; view: View } | null>(null);
   const dragging = useRef(false);
   const erasedInDrag = useRef(false);
 
@@ -75,19 +84,64 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !image || !box.width) return;
-    const ratio = window.devicePixelRatio || 1;
-    canvas.width = Math.round(box.width * ratio);
-    canvas.height = Math.round(box.height * ratio);
+    // Con zoom se dibuja con más resolución para que la foto no se vea borrosa al acercarla.
+    const ratio = (window.devicePixelRatio || 1) * Math.max(1, Math.min(view.zoom, 3));
+    canvas.width = Math.min(4096, Math.round(box.width * ratio));
+    canvas.height = Math.min(4096, Math.round(box.height * ratio));
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
     drawStrokes(ctx, draft ? [...strokes, draft] : strokes, canvas.width, canvas.height);
-  }, [image, box, strokes, draft]);
+  }, [image, box, strokes, draft, view.zoom]);
 
   const pointOf = useCallback((event: React.PointerEvent): Pt => {
     const rect = canvasRef.current!.getBoundingClientRect();
     return [clamp01((event.clientX - rect.left) / rect.width), clamp01((event.clientY - rect.top) / rect.height)];
   }, []);
+
+  // Posición de un punto de pantalla respecto al centro del visor (el zoom se hace alrededor de ese punto).
+  const fromCenter = (clientX: number, clientY: number) => {
+    const rect = wrapRef.current!.getBoundingClientRect();
+    return { x: clientX - (rect.left + rect.width / 2), y: clientY - (rect.top + rect.height / 2) };
+  };
+  const viewport = () => {
+    const rect = wrapRef.current?.getBoundingClientRect();
+    return { width: rect?.width ?? 0, height: rect?.height ?? 0 };
+  };
+  const zoomBy = (factor: number, anchor = { x: 0, y: 0 }) =>
+    setView((prev) => zoomAt(prev, prev.zoom * factor, anchor, boxRef.current, viewport()));
+
+  // Rueda del ratón / trackpad: zoom alrededor del cursor. Listener nativo porque React registra wheel como pasivo.
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el || !image) return;
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const factor = Math.exp(-event.deltaY * (event.ctrlKey ? 0.01 : 0.0025));
+      const rect = el.getBoundingClientRect();
+      const anchor = { x: event.clientX - (rect.left + rect.width / 2), y: event.clientY - (rect.top + rect.height / 2) };
+      setView((prev) => zoomAt(prev, prev.zoom * factor, anchor, boxRef.current, { width: rect.width, height: rect.height }));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [image]);
+
+  // Teclado: + acerca, − aleja, 0 ajusta (no mientras se escribe un texto).
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.target as HTMLElement)?.tagName === "INPUT") return;
+      if (event.key === "+" || event.key === "=") zoomBy(ZOOM_STEP);
+      else if (event.key === "-" || event.key === "_") zoomBy(1 / ZOOM_STEP);
+      else if (event.key === "0") setView(FIT);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Si cambia el tamaño del lienzo, la vista se reajusta a los nuevos límites.
+  useEffect(() => {
+    if (box.width) setView((prev) => clampView(prev, box, viewport()));
+  }, [box]);
 
   const change = (next: Stroke[]) => {
     setPast((prev) => [...prev, strokes]);
@@ -96,8 +150,32 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   };
   const commit = (stroke: Stroke) => change([...strokes, stroke]);
 
+  const startPinch = () => {
+    const [p, q] = [...pointers.current.values()];
+    gesture.current = {
+      kind: "pinch",
+      dist: Math.max(1, Math.hypot(p.x - q.x, p.y - q.y)),
+      view: viewRef.current,
+      mid: fromCenter((p.x + q.x) / 2, (p.y + q.y) / 2),
+    };
+  };
+
   const onPointerDown = (event: React.PointerEvent) => {
     if (!image || textAt) return;
+    pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    // Dos dedos: pellizco para acercar/alejar y arrastre para mover. Cancela cualquier trazo en curso.
+    if (pointers.current.size === 2) {
+      dragging.current = false;
+      setDraft(null);
+      startPinch();
+      return;
+    }
+    if (pointers.current.size > 2) return;
+    if (tool === "pan") {
+      (event.target as Element).setPointerCapture?.(event.pointerId);
+      gesture.current = { kind: "pan", start: { x: event.clientX, y: event.clientY }, view: viewRef.current };
+      return;
+    }
     const pt = pointOf(event);
     if (tool === "text") {
       setTextAt({ pt, value: "" });
@@ -126,6 +204,21 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   };
 
   const onPointerMove = (event: React.PointerEvent) => {
+    if (pointers.current.has(event.pointerId)) pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const g = gesture.current;
+    if (g?.kind === "pinch" && pointers.current.size >= 2) {
+      const [p, q] = [...pointers.current.values()];
+      const mid = fromCenter((p.x + q.x) / 2, (p.y + q.y) / 2);
+      const dist = Math.hypot(p.x - q.x, p.y - q.y);
+      const zoomed = zoomAt(g.view, g.view.zoom * (dist / g.dist), g.mid, box, viewport());
+      // Mover los dos dedos desplaza la foto.
+      setView(clampView({ ...zoomed, x: zoomed.x + (mid.x - g.mid.x), y: zoomed.y + (mid.y - g.mid.y) }, box, viewport()));
+      return;
+    }
+    if (g?.kind === "pan") {
+      setView(clampView({ ...g.view, x: g.view.x + event.clientX - g.start.x, y: g.view.y + event.clientY - g.start.y }, box, viewport()));
+      return;
+    }
     if (!dragging.current) return;
     const pt = pointOf(event);
     if (tool === "eraser") {
@@ -140,7 +233,14 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     });
   };
 
-  const onPointerUp = () => {
+  const onPointerUp = (event: React.PointerEvent) => {
+    pointers.current.delete(event.pointerId);
+    if (gesture.current?.kind === "pinch") {
+      // Al soltar un dedo no se sigue dibujando con el otro.
+      if (pointers.current.size < 2) gesture.current = null;
+      return;
+    }
+    gesture.current = null;
     if (!dragging.current) return;
     dragging.current = false;
     if (!draft) return;
@@ -215,21 +315,26 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
             aria-pressed={width === value} onClick={() => setWidth(value)}>{[a.thin, a.medium, a.thick][index]}</Button>
         ))}
         <span className="w-px h-6 bg-white/20 mx-1" />
+        <Button type="button" size="icon" variant="secondary" className="rounded-full h-9 w-9" aria-label={a.zoomOut} disabled={view.zoom <= MIN_ZOOM} onClick={() => zoomBy(1 / ZOOM_STEP)}><Minus className="w-4 h-4" /></Button>
+        <span className="text-white text-xs tabular-nums w-10 text-center" aria-live="polite" data-testid="zoom-level">{Math.round(view.zoom * 100)}%</span>
+        <Button type="button" size="icon" variant="secondary" className="rounded-full h-9 w-9" aria-label={a.zoomIn} disabled={view.zoom >= MAX_ZOOM} onClick={() => zoomBy(ZOOM_STEP)}><Plus className="w-4 h-4" /></Button>
+        <Button type="button" size="icon" variant="secondary" className="rounded-full h-9 w-9" aria-label={a.zoomReset} disabled={view.zoom === 1} onClick={() => setView(FIT)}><Maximize className="w-4 h-4" /></Button>
+        <span className="w-px h-6 bg-white/20 mx-1" />
         <Button type="button" size="icon" variant="secondary" className="rounded-full h-9 w-9" aria-label={a.undo} disabled={!past.length} onClick={undo}><Undo2 className="w-4 h-4" /></Button>
         <Button type="button" size="icon" variant="secondary" className="rounded-full h-9 w-9" aria-label={a.redo} disabled={!future.length} onClick={redoLast}><Redo2 className="w-4 h-4" /></Button>
       </div>
 
-      <div ref={wrapRef} className="flex-1 min-h-0 overflow-auto px-3 flex items-start justify-center">
+      <div ref={wrapRef} className="flex-1 min-h-0 overflow-hidden px-3 flex items-center justify-center touch-none">
         {failed ? (
           <p className="text-white/80 text-sm py-10">{a.loadError}</p>
         ) : !image ? (
           <Loader2 className="w-6 h-6 animate-spin text-white mt-10" />
         ) : (
-          <div className="relative" style={{ width: box.width, height: box.height }}>
+          <div className="relative" style={{ width: box.width, height: box.height, transform: `translate(${view.x}px, ${view.y}px) scale(${view.zoom})`, transformOrigin: "center", willChange: "transform" }}>
             <canvas
               ref={canvasRef}
               data-testid="annotation-canvas"
-              style={{ width: box.width, height: box.height, touchAction: "none", cursor: tool === "eraser" ? "cell" : "crosshair" }}
+              style={{ width: box.width, height: box.height, touchAction: "none", cursor: tool === "pan" ? (view.zoom > 1 ? "grab" : "default") : tool === "eraser" ? "cell" : "crosshair" }}
               className="rounded-lg bg-black"
               // Sin esto el navegador mueve el foco al lienzo y cierra el campo de texto recién abierto.
               onMouseDown={(event) => { if (tool === "text") event.preventDefault(); }}
