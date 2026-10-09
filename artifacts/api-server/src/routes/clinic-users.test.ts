@@ -37,6 +37,7 @@ beforeAll(async () => {
       password_hash text NOT NULL, name text NOT NULL DEFAULT '', role text NOT NULL,
       center_id text, active boolean NOT NULL DEFAULT true,
       legal_representative boolean NOT NULL DEFAULT false,
+      reset_token_hash text, reset_token_expires_at timestamptz,
       created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
     );
   `);

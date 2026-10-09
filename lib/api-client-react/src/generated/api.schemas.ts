@@ -523,6 +523,16 @@ export interface OkResponse {
   ok: boolean;
 }
 
+export interface StaffForgotInput {
+  email: string;
+  language?: string;
+}
+
+export interface StaffResetInput {
+  token: string;
+  password: string;
+}
+
 export interface PortalLoginInput {
   email: string;
   password: string;

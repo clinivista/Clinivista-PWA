@@ -3,11 +3,12 @@ import { useLocation, Link } from "wouter";
 import { ArrowRight, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAdminLogin, useGetAuthMe, getGetAuthMeQueryKey } from "@workspace/api-client-react";
+import { useAdminLogin, useStaffForgot, useGetAuthMe, getGetAuthMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/lib/language";
 import { BrandLogo } from "@/components/brand-logo";
+import { STAFF_RESET_TEXT } from "@/lib/staff-reset-i18n";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -16,7 +17,11 @@ export default function Login() {
   const queryClient = useQueryClient();
   const loginMutation = useAdminLogin();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const reset = STAFF_RESET_TEXT[lang];
+  const forgotMutation = useStaffForgot();
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   // Where to go after signing in: only paths inside the staff panel are accepted.
   const next = (() => {
@@ -112,6 +117,38 @@ export default function Login() {
               <p className="text-muted-foreground mt-3 font-medium">{t.loginSub}</p>
             </div>
 
+            {forgotMode ? (
+              <form
+                dir={lang === "ar" ? "rtl" : "ltr"}
+                className="space-y-6"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!email.includes("@")) return;
+                  forgotMutation.mutate({ data: { email, language: lang } }, { onSuccess: () => setForgotSent(true) });
+                }}
+              >
+                <div>
+                  <h3 className="text-xl font-bold">{reset.forgotTitle}</h3>
+                  <p className="text-muted-foreground mt-2 text-sm">{reset.forgotSub}</p>
+                </div>
+                <Input
+                  type="email"
+                  aria-label={t.loginEmailLabel}
+                  placeholder={t.loginEmailPlaceholder}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-14 bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-lg px-5 rounded-2xl"
+                />
+                {forgotSent && <p role="status" className="text-sm text-emerald-700">{reset.sent}</p>}
+                <Button type="submit" className="w-full h-14 text-base font-bold rounded-full" disabled={forgotMutation.isPending || !email.includes("@")}>
+                  {forgotMutation.isPending ? reset.sending : reset.send}
+                </Button>
+                <button type="button" className="text-sm text-primary underline" onClick={() => { setForgotMode(false); setForgotSent(false); }}>
+                  {reset.back}
+                </button>
+              </form>
+            ) : (
+              <>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-3">
                 <label className="text-xs font-bold text-foreground uppercase tracking-wider ml-1">{t.loginEmailLabel}</label>
@@ -145,6 +182,11 @@ export default function Login() {
                 {!loginMutation.isPending && <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />}
               </Button>
             </form>
+                <button type="button" className="mt-4 text-sm text-primary underline" onClick={() => setForgotMode(true)}>
+                  {reset.forgotLink}
+                </button>
+              </>
+            )}
 
             <div className="mt-8 text-center">
               <Link href="/">

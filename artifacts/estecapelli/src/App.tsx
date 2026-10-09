@@ -14,6 +14,7 @@ import Admin from '@/pages/admin';
 import Portal, { PortalSetPassword } from '@/pages/portal';
 import { Privacy, Terms } from '@/pages/legal';
 import Login from '@/pages/login';
+import StaffReset from '@/pages/staff-reset';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,6 +45,7 @@ function Router() {
         <Route path="/terminos" component={Terms} />
         <Route path="/admin" component={Admin} />
         <Route path="/admin/login" component={Login} />
+        <Route path="/admin/clave" component={StaffReset} />
         <Route component={NotFound} />
       </Switch>
     </RoutedErrorBoundary>

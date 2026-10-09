@@ -71,6 +71,50 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /auth/forgot:
+    post:
+      operationId: staffForgot
+      tags: [auth]
+      summary: Email a staff member a link to choose a new password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffForgotInput"
+      responses:
+        "200":
+          description: Done (always, whether or not the account exists)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /auth/reset:
+    post:
+      operationId: staffReset
+      tags: [auth]
+      summary: Set a new staff password with the one-time link from the email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffResetInput"
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          description: Invalid or expired link, or password too short
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /auth/logout:
     post:
       operationId: adminLogout
@@ -2933,6 +2977,20 @@ components:
       required: [ok]
       properties:
         ok: {type: boolean}
+
+    StaffForgotInput:
+      type: object
+      required: [email]
+      properties:
+        email: {type: string}
+        language: {type: string}
+
+    StaffResetInput:
+      type: object
+      required: [token, password]
+      properties:
+        token: {type: string}
+        password: {type: string}
 
     PortalLoginInput:
       type: object
