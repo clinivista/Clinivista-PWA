@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, X, RotateCcw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cropRectForVideo, frameFor, parseRatio, type Size } from "@/lib/camera-crop";
 
 interface CameraModalProps {
   onCapture: (dataUrl: string) => void;
@@ -9,12 +10,17 @@ interface CameraModalProps {
    *  so the parent card can show an inline fallback alert. */
   onError?: (message: string) => void;
   title: string;
+  /** Shape of the reference frame ("3:4" portrait, "4:3" landscape); the photo is cropped to it. */
+  aspectRatio?: string;
 }
 
 type PermissionState = "requesting" | "granted" | "denied" | "unsupported";
 
-export function CameraModal({ onCapture, onClose, onError, title }: CameraModalProps) {
+export function CameraModal({ onCapture, onClose, onError, title, aspectRatio }: CameraModalProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const viewfinderRef = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState<Size>({ width: 0, height: 0 });
+  const frame = frameFor(box, parseRatio(aspectRatio));
   const streamRef = useRef<MediaStream | null>(null);
   /**
    * Per-call acquisition token.
@@ -28,6 +34,17 @@ export function CameraModal({ onCapture, onClose, onError, title }: CameraModalP
   const [permissionState, setPermissionState] = useState<PermissionState>("requesting");
   const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
   const [errorMessage, setErrorMessage] = useState<string>("");
+
+  useEffect(() => {
+    const element = viewfinderRef.current;
+    if (!element) return;
+    const measure = () => setBox({ width: element.clientWidth, height: element.clientHeight });
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
 
   const startCamera = async (facing: "environment" | "user") => {
     // Create a unique token for this acquisition attempt
@@ -126,12 +143,15 @@ export function CameraModal({ onCapture, onClose, onError, title }: CameraModalP
     const video = videoRef.current;
     if (!video) return;
 
+    // Keep only what is inside the reference frame, at the camera's full resolution (a zoom-in).
+    const crop = cropRectForVideo(box, { width: video.videoWidth, height: video.videoHeight }, frame);
     const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    canvas.width = crop ? crop.sw : video.videoWidth;
+    canvas.height = crop ? crop.sh : video.videoHeight;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    if (crop) ctx.drawImage(video, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, canvas.width, canvas.height);
+    else ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
 
     // Cancel any future acquisition and stop the stream before notifying parent
@@ -178,7 +198,7 @@ export function CameraModal({ onCapture, onClose, onError, title }: CameraModalP
 
       {/* Camera preview / error — large viewfinder: full width on mobile,
           min 360px and up to ~65vh tall on desktop */}
-      <div className="flex-1 relative overflow-hidden flex items-center justify-center bg-black min-h-[300px] sm:min-h-[360px] sm:h-[min(65vh,640px)]">
+      <div ref={viewfinderRef} className="flex-1 relative overflow-hidden flex items-center justify-center bg-black min-h-[300px] sm:min-h-[360px] sm:h-[min(65vh,640px)]">
         {permissionState === "requesting" && (
           <div className="flex flex-col items-center gap-4 text-white/70">
             <Camera className="w-12 h-12 animate-pulse" />
@@ -215,14 +235,19 @@ export function CameraModal({ onCapture, onClose, onError, title }: CameraModalP
           className={`w-full h-full object-cover ${permissionState === "granted" ? "block" : "hidden"}`}
         />
 
-        {/* Framing guide overlay */}
-        {permissionState === "granted" && (
+        {/* Framing guide overlay: the photo is cropped to this frame */}
+        {permissionState === "granted" && frame.width > 0 && (
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-72 border-2 border-white/50 rounded-2xl" />
-            <div className="absolute top-[calc(50%-144px)] left-[calc(50%-112px)] w-6 h-6 border-t-2 border-l-2 border-white rounded-tl-md" />
-            <div className="absolute top-[calc(50%-144px)] right-[calc(50%-112px)] w-6 h-6 border-t-2 border-r-2 border-white rounded-tr-md" />
-            <div className="absolute bottom-[calc(50%-144px)] left-[calc(50%-112px)] w-6 h-6 border-b-2 border-l-2 border-white rounded-bl-md" />
-            <div className="absolute bottom-[calc(50%-144px)] right-[calc(50%-112px)] w-6 h-6 border-b-2 border-r-2 border-white rounded-br-md" />
+            <div
+              data-testid="camera-frame"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-2 border-white/60 rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]"
+              style={{ width: frame.width, height: frame.height }}
+            >
+              <div className="absolute -top-0.5 -left-0.5 w-6 h-6 border-t-2 border-l-2 border-white rounded-tl-2xl" />
+              <div className="absolute -top-0.5 -right-0.5 w-6 h-6 border-t-2 border-r-2 border-white rounded-tr-2xl" />
+              <div className="absolute -bottom-0.5 -left-0.5 w-6 h-6 border-b-2 border-l-2 border-white rounded-bl-2xl" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 border-b-2 border-r-2 border-white rounded-br-2xl" />
+            </div>
           </div>
         )}
       </div>

@@ -233,6 +233,7 @@ function ActivePhotoCard({
       {cameraOpen && (
         <CameraModal
           title={title}
+          aspectRatio={aspectRatio}
           onCapture={async (url) => { setCameraOpen(false); await onCameraCaptured(photoKey, url); }}
           onClose={() => setCameraOpen(false)}
           onError={(msg) => setCameraError(msg)}
