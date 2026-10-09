@@ -31,6 +31,7 @@ import { PhasesPanel } from "./phases-panel";
 import { plasticSummaryRows } from "@/lib/specialty-i18n";
 import { ReportPanel } from "./report-panel";
 import { LeadPhases } from "@/components/lead-phases";
+import { LeadEvolution } from "@/components/lead-evolution";
 import { NAV_TEXT } from "@/lib/phases-i18n";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -609,6 +610,8 @@ export default function Admin() {
                         onPatch: (data) => handlePatch(fullLead.id, data),
                       }}
                     />
+
+                    <LeadEvolution leadId={fullLead.id} onExpand={setExpandedPhoto} />
 
                     {/* Patient history */}
                     <div className="bg-white p-6 md:p-8 rounded-[1.75rem] shadow-sm">

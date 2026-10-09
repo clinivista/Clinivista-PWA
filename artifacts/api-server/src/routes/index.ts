@@ -11,6 +11,7 @@ import clinicReportRouter from "./clinic-report";
 import leadPhasesRouter from "./lead-phases";
 import diagnosisRouter from "./diagnosis";
 import resultsRouter from "./results";
+import evolutionRouter from "./evolution";
 import portalRouter from "./portal";
 
 const router: IRouter = Router();
@@ -27,6 +28,7 @@ router.use(clinicReportRouter);
 router.use(leadPhasesRouter);
 router.use(diagnosisRouter);
 router.use(resultsRouter);
+router.use(evolutionRouter);
 router.use(portalRouter);
 
 export default router;

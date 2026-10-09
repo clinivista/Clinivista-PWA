@@ -528,6 +528,102 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /leads/{id}/evolution:
+    get:
+      operationId: getLeadEvolution
+      tags: [evolution]
+      summary: The patient's photos grouped by anatomical zone, one cell per phase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Photos by zone across the phases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Evolution"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Case not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /leads/{id}/evolution/send:
+    post:
+      operationId: sendLeadEvolution
+      tags: [evolution]
+      summary: Email the comparison as a PDF to the patient or to another address
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvolutionSendInput"
+      responses:
+        "200":
+          description: Email sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvolutionSent"
+        "400":
+          description: Invalid address
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Case not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Nothing to compare yet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: No address available
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: The mail service rejected the message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Email is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /leads/{id}/results:
     get:
       operationId: getLeadResults
@@ -3078,6 +3174,70 @@ components:
         createdByName: {type: ["string", "null"]}
         createdAt: {type: string, format: date-time}
         expiresAt: {type: string, format: date-time}
+
+    Evolution:
+      type: object
+      required: [phases, zones, patientEmail, emailConfigured]
+      properties:
+        phases:
+          type: array
+          description: Phases that have at least one photo, in process order
+          items:
+            type: object
+            required: [key, name, kind]
+            properties:
+              key: {type: string}
+              name: {type: string}
+              kind: {type: string, enum: [capture, diagnosis]}
+        zones:
+          type: array
+          items:
+            $ref: "#/components/schemas/EvolutionZone"
+        patientEmail: {type: [string, "null"]}
+        emailConfigured: {type: boolean}
+
+    EvolutionZone:
+      type: object
+      required: [key, label, cells]
+      properties:
+        key: {type: string}
+        label: {type: string}
+        cells:
+          type: array
+          items:
+            $ref: "#/components/schemas/EvolutionCell"
+
+    EvolutionCell:
+      type: object
+      required: [phaseKey, phaseName, phaseKind, viewKey, viewLabel, photoId, edited]
+      properties:
+        phaseKey: {type: string}
+        phaseName: {type: string}
+        phaseKind: {type: string, enum: [capture, diagnosis]}
+        viewKey: {type: string}
+        viewLabel: {type: string}
+        photoId: {type: string}
+        edited:
+          type: boolean
+          description: The picture is the doctor's annotated version (served from the annotation endpoint)
+        createdAt: {type: [string, "null"], format: date-time}
+
+    EvolutionSendInput:
+      type: object
+      properties:
+        email:
+          type: string
+          description: Address to send to; the patient's own when empty
+        zones:
+          type: array
+          items: {type: string}
+
+    EvolutionSent:
+      type: object
+      required: [status, recipient]
+      properties:
+        status: {type: string, enum: [sent]}
+        recipient: {type: string}
 
     ResultsDeliverInput:
       type: object

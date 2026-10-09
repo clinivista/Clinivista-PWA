@@ -1,6 +1,8 @@
 import { logger } from "./logger";
 import { MAIL_TEXT, toMailLanguage } from "./mail-i18n";
 import { STAFF_RESET_TEXT } from "./staff-reset-i18n";
+import { EVOLUTION_TEXT } from "./evolution-i18n";
+import { toPdfLanguage } from "./result-pdf-i18n";
 
 export class MailNotConfiguredError extends Error {
   constructor() {
@@ -10,7 +12,8 @@ export class MailNotConfiguredError extends Error {
 
 export class MailSendError extends Error {}
 
-export type Mail = { to: string; subject: string; text: string; html: string };
+export type MailAttachment = { filename: string; content: Buffer; contentType?: string };
+export type Mail = { to: string; subject: string; text: string; html: string; attachments?: MailAttachment[] };
 
 /**
  * Sends a transactional email through Resend's REST API. The key lives only in
@@ -26,8 +29,13 @@ export async function sendMail(mail: Mail): Promise<void> {
     response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to: [mail.to], subject: mail.subject, text: mail.text, html: mail.html }),
-      signal: AbortSignal.timeout(15_000),
+      body: JSON.stringify({
+        from, to: [mail.to], subject: mail.subject, text: mail.text, html: mail.html,
+        ...(mail.attachments?.length
+          ? { attachments: mail.attachments.map((file) => ({ filename: file.filename, content: file.content.toString("base64"), ...(file.contentType ? { content_type: file.contentType } : {}) })) }
+          : {}),
+      }),
+      signal: AbortSignal.timeout(mail.attachments?.length ? 30_000 : 15_000),
     });
   } catch (error) {
     logger.error({ err: error }, "Mail provider unreachable");
@@ -58,6 +66,23 @@ export function resultsMail(input: { to: string; clinicName: string; patientName
       `<p>${escapeHtml(t.hello(input.patientName))}</p><p>${escapeHtml(t.resultsIntro(input.clinicName))}</p>` +
       `<p><a href="${link}">${escapeHtml(t.resultsButton)}</a></p>` +
       `<p style="color:#666">${escapeHtml(t.resultsNote)}</p>`),
+  };
+}
+
+/** The Evolución comparison as a PDF attachment. Sent to the patient (greeting by name) or to another address (names the patient). */
+export function evolutionMail(input: { to: string; clinicName: string; patientName: string; pdf: Buffer; filename: string; toPatient: boolean; language?: string | null }): Mail {
+  const language = toMailLanguage(input.language);
+  const t = EVOLUTION_TEXT[toPdfLanguage(language)];
+  const intro = input.toPatient ? t.mailIntro(input.clinicName) : t.mailIntroOther(input.clinicName, input.patientName);
+  const greeting = input.toPatient ? `${MAIL_TEXT[language].hello(input.patientName)}\n\n` : "";
+  return {
+    to: input.to,
+    subject: t.subject(input.clinicName),
+    text: `${greeting}${intro}\n\n${t.note}`,
+    html: wrap(language,
+      (input.toPatient ? `<p>${escapeHtml(MAIL_TEXT[language].hello(input.patientName))}</p>` : "") +
+      `<p>${escapeHtml(intro)}</p><p style="color:#666">${escapeHtml(t.note)}</p>`),
+    attachments: [{ filename: input.filename, content: input.pdf, contentType: "application/pdf" }],
   };
 }
 

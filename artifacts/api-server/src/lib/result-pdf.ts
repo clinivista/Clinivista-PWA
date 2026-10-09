@@ -24,7 +24,7 @@ export type ResultPdfInput = {
 
 export { RESULT_NOTICE } from "./result-pdf-notice";
 
-const PAGE = { width: 595, height: 842, margin: 48 };
+export const DEFAULT_PAGE = { width: 595, height: 842, margin: 48 };
 const INK = rgb(0.1, 0.12, 0.16);
 const MUTED = rgb(0.4, 0.43, 0.48);
 const INK_HEX = "#1a1f29";
@@ -112,8 +112,21 @@ const formatDate = (date: Date, locale: string) =>
 
 type Style = { size?: number; bold?: boolean; color?: "ink" | "muted"; gap?: number; rtl?: boolean };
 
-/** The patient's result: clinic header, the doctor's response and the annotated photos, in the patient's language. */
-export async function buildResultPdf(input: ResultPdfInput): Promise<Buffer> {
+export type PdfWriterOptions = {
+  clinicName: string;
+  logoDataUrl: string | null;
+  language?: string | null;
+  /** Used for the document title. */
+  patientName: string;
+  documentTitle?: string;
+  /** Every text the document will print, so the extra fonts are embedded only when needed. */
+  fontText: string[];
+  page?: { width: number; height: number; margin: number };
+};
+
+/** Shared by the patient's documents: clinic header, text in any of the nine languages (Arabic and CJK shaped), pagination and footer. */
+export async function createPdfWriter(input: PdfWriterOptions) {
+  const PAGE = input.page ?? DEFAULT_PAGE;
   const language: PdfLanguage = toPdfLanguage(input.language);
   const labels = PDF_TEXT[language];
   const rtlLabels = language === "ar";
@@ -121,7 +134,7 @@ export async function buildResultPdf(input: ResultPdfInput): Promise<Buffer> {
   pdf.registerFontkit(fontkit);
 
   // Extra fonts are embedded only when some text needs them.
-  const everything = [input.clinicName, input.patientName, input.documentId, input.doctorName ?? "", input.responseText, ...input.photos.map((p) => p.label), ...Object.values(labels).filter((v) => typeof v === "string")].join("");
+  const everything = [input.clinicName, input.patientName, ...input.fontText, ...Object.values(labels).filter((v) => typeof v === "string")].join("");
   const helvChars = new Set((await pdf.embedFont(StandardFonts.Helvetica)).getCharacterSet());
   const needsExtended = [...everything].some((c) => !helvChars.has(c.codePointAt(0)!) && !needsImage(c));
   const fonts: Fonts = {
@@ -130,7 +143,7 @@ export async function buildResultPdf(input: ResultPdfInput): Promise<Buffer> {
     dejavu: needsExtended ? await pdf.embedFont(Buffer.from(DEJAVU_B64, "base64"), { subset: true }) : null,
     dejavuBold: needsExtended ? await pdf.embedFont(Buffer.from(DEJAVU_BOLD_B64, "base64"), { subset: true }) : null,
   };
-  pdf.setTitle(`${labels.documentTitle} - ${input.patientName}`.replace(/[^\u0020-\u00FF]/g, "?"));
+  pdf.setTitle(`${input.documentTitle ?? labels.documentTitle} - ${input.patientName}`.replace(/[^\u0020-\u00FF]/g, "?"));
   pdf.setAuthor(input.clinicName.replace(/[^\u0020-\u00FF]/g, "?"));
   pdf.setProducer("Clinivista");
 
@@ -189,6 +202,23 @@ export async function buildResultPdf(input: ResultPdfInput): Promise<Buffer> {
     }
     y -= style.gap ?? 0;
   };
+  /** A text block inside a column (left edge, width) at a fixed top; returns the height it took. Used by grids, which place their own cells. */
+  const block = async (value: string, style: Style, targetPage: PDFPage, top: number, left: number, width: number): Promise<number> => {
+    const size = style.size ?? 11;
+    const bold = style.bold ?? false;
+    const color = style.color === "muted" ? MUTED : INK;
+    if (needsImage(value) || style.rtl) return (await drawRich(value, style, targetPage, top, width, left)) + size * 0.3;
+    let used = 0;
+    for (const line of wrap(value, fonts, bold, size, width)) {
+      let x = left;
+      for (const run of toRuns(line, fonts, bold)) {
+        targetPage.drawText(run.text, { x, y: top - used - size, size, font: run.font, color });
+        x += run.font.widthOfTextAtSize(run.text, size);
+      }
+      used += size * 1.35;
+    }
+    return used;
+  };
   /** Fixed labels follow the language's direction; the patient's own text keeps its own. */
   const label = (value: string, style: Style = {}) => text(value, { ...style, rtl: rtlLabels });
 
@@ -216,9 +246,50 @@ export async function buildResultPdf(input: ResultPdfInput): Promise<Buffer> {
     }
     await text(input.clinicName, { size: 18, bold: true, gap: 6 });
   };
-  await header();
-  page.drawLine({ start: { x: PAGE.margin, y }, end: { x: PAGE.width - PAGE.margin, y }, thickness: 0.8, color: rgb(0.8, 0.82, 0.85) });
-  y -= 18;
+
+  /** Header with the clinic's logo and name, and the divider line. */
+  const letterhead = async () => {
+    await header();
+    page.drawLine({ start: { x: PAGE.margin, y }, end: { x: PAGE.width - PAGE.margin, y }, thickness: 0.8, color: rgb(0.8, 0.82, 0.85) });
+    y -= 18;
+  };
+
+  /** Footer with the clinic name and "page n of m" on every page, then the file. */
+  const finish = async () => {
+    const pages = pdf.getPages();
+    for (const [index, current] of pages.entries()) {
+      const footer = `${input.clinicName}  ·  ${labels.page(index + 1, pages.length)}`;
+      if (needsImage(footer) || rtlLabels) {
+        await drawRich(footer, { size: 8, color: "muted", rtl: rtlLabels }, current, 36, contentWidth);
+      } else {
+        let x = PAGE.margin;
+        for (const run of toRuns(footer, fonts, false)) {
+          current.drawText(run.text, { x, y: 24, size: 8, font: run.font, color: MUTED });
+          x += run.font.widthOfTextAtSize(run.text, 8);
+        }
+      }
+    }
+    return Buffer.from(await pdf.save());
+  };
+
+  return {
+    pdf, labels, language, rtlLabels, fonts, PAGE, contentWidth,
+    getPage: () => page, getY: () => y, setY: (value: number) => { y = value; },
+    ensure, text, label, block, drawRich, letterhead, finish,
+  };
+}
+
+/** The patient's result: clinic header, the doctor's response and the annotated photos, in the patient's language. */
+export async function buildResultPdf(input: ResultPdfInput): Promise<Buffer> {
+  const writer = await createPdfWriter({
+    clinicName: input.clinicName,
+    logoDataUrl: input.logoDataUrl,
+    language: input.language,
+    patientName: input.patientName,
+    fontText: [input.documentId, input.doctorName ?? "", input.responseText, ...input.photos.map((p) => p.label)],
+  });
+  const { pdf, labels, rtlLabels, contentWidth, PAGE, ensure, text, label } = writer;
+  await writer.letterhead();
 
   await label(labels.title, { size: 15, bold: true, gap: 6 });
   // In right-to-left text, left-to-right values (names, numbers) are fenced so their digits and hyphens keep their order.
@@ -226,7 +297,7 @@ export async function buildResultPdf(input: ResultPdfInput): Promise<Buffer> {
   await label(`${labels.patient}: ${ltr(input.patientName)}${input.documentId ? `  ·  ${labels.documentId} ${ltr(input.documentId)}` : ""}`, { color: "muted" });
   await label(`${labels.date}: ${ltr(formatDate(input.closedAt, labels.locale))}`, { color: "muted" });
   if (input.doctorName) await label(`${labels.doctor}: ${ltr(input.doctorName)}`, { color: "muted" });
-  y -= 10;
+  writer.setY(writer.getY() - 10);
 
   await label(labels.response, { size: 13, bold: true, gap: 4 });
   await text(input.responseText, { gap: 14 });
@@ -248,26 +319,12 @@ export async function buildResultPdf(input: ResultPdfInput): Promise<Buffer> {
     if (index === 0) await label(labels.photos, { size: 13, bold: true, gap: 6 });
     const caption = photo.annotated ? `${photo.label} (${labels.annotated})` : photo.label;
     await text(caption, { size: 10, bold: true, color: "muted", rtl: rtlLabels });
-    page.drawImage(image, { x: PAGE.margin, y: y - height, width, height });
-    y -= height + 16;
+    writer.getPage().drawImage(image, { x: PAGE.margin, y: writer.getY() - height, width, height });
+    writer.setY(writer.getY() - height - 16);
   }
 
   ensure(60);
-  y -= 6;
+  writer.setY(writer.getY() - 6);
   await label(labels.notice, { size: 9, color: "muted" });
-
-  const pages = pdf.getPages();
-  for (const [index, current] of pages.entries()) {
-    const footer = `${input.clinicName}  ·  ${labels.page(index + 1, pages.length)}`;
-    if (needsImage(footer) || rtlLabels) {
-      await drawRich(footer, { size: 8, color: "muted", rtl: rtlLabels }, current, 36, contentWidth);
-    } else {
-      let x = PAGE.margin;
-      for (const run of toRuns(footer, fonts, false)) {
-        current.drawText(run.text, { x, y: 24, size: 8, font: run.font, color: MUTED });
-        x += run.font.widthOfTextAtSize(run.text, 8);
-      }
-    }
-  }
-  return Buffer.from(await pdf.save());
+  return writer.finish();
 }

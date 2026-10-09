@@ -46,6 +46,9 @@ import type {
   DirectorTeamMember,
   DirectorUserPatch,
   ErrorResponse,
+  Evolution,
+  EvolutionSendInput,
+  EvolutionSent,
   GetDirectorCenterUsers200,
   GetDirectorCenters200,
   GetDirectorTeam200,
@@ -1665,6 +1668,155 @@ export function useGetPortalMe<TData = Awaited<ReturnType<typeof getPortalMe>>, 
 
 
 
+
+export const getGetLeadEvolutionUrl = (id: string,) => {
+
+
+
+
+  return `/api/leads/${id}/evolution`
+}
+
+/**
+ * @summary The patient's photos grouped by anatomical zone, one cell per phase
+ */
+export const getLeadEvolution = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<Evolution> => {
+
+  return customFetch<Evolution>(getGetLeadEvolutionUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLeadEvolutionQueryKey = (id: string,) => {
+    return [
+    `/api/leads/${id}/evolution`
+    ] as const;
+    }
+
+
+export const getGetLeadEvolutionQueryOptions = <TData = Awaited<ReturnType<typeof getLeadEvolution>>, TError = ErrorType<ErrorResponse>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLeadEvolution>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLeadEvolutionQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLeadEvolution>>> = ({ signal }) => getLeadEvolution(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLeadEvolution>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLeadEvolutionQueryResult = NonNullable<Awaited<ReturnType<typeof getLeadEvolution>>>
+export type GetLeadEvolutionQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary The patient's photos grouped by anatomical zone, one cell per phase
+ */
+
+export function useGetLeadEvolution<TData = Awaited<ReturnType<typeof getLeadEvolution>>, TError = ErrorType<ErrorResponse>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLeadEvolution>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLeadEvolutionQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSendLeadEvolutionUrl = (id: string,) => {
+
+
+
+
+  return `/api/leads/${id}/evolution/send`
+}
+
+/**
+ * @summary Email the comparison as a PDF to the patient or to another address
+ */
+export const sendLeadEvolution = async (id: string,
+    evolutionSendInput: EvolutionSendInput, options?: Parameters<typeof customFetch>[1]): Promise<EvolutionSent> => {
+
+  return customFetch<EvolutionSent>(getSendLeadEvolutionUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(evolutionSendInput)
+  }
+);}
+
+
+
+
+
+export const getSendLeadEvolutionMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendLeadEvolution>>, TError,{id: string;data: BodyType<EvolutionSendInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendLeadEvolution>>, TError,{id: string;data: BodyType<EvolutionSendInput>}, TContext> => {
+
+const mutationKey = ['sendLeadEvolution'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendLeadEvolution>>, {id: string;data: BodyType<EvolutionSendInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  sendLeadEvolution(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendLeadEvolutionMutationResult = NonNullable<Awaited<ReturnType<typeof sendLeadEvolution>>>
+    export type SendLeadEvolutionMutationBody = BodyType<EvolutionSendInput>
+    export type SendLeadEvolutionMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Email the comparison as a PDF to the patient or to another address
+ */
+export const useSendLeadEvolution = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendLeadEvolution>>, TError,{id: string;data: BodyType<EvolutionSendInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendLeadEvolution>>,
+        TError,
+        {id: string;data: BodyType<EvolutionSendInput>},
+        TContext
+      > => {
+      return useMutation(getSendLeadEvolutionMutationOptions(options));
+    }
 
 export const getGetLeadResultsUrl = (id: string,) => {
 
