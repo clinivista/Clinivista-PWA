@@ -1,0 +1,25 @@
+// Textos de la herramienta de dibujo sobre las fotos (diagnóstico), en los nueve idiomas.
+import type { LangCode } from "./language";
+
+export type AnnotatorText = {
+  title: (label: string) => string;
+  closeNoSave: string; toolbar: string;
+  pen: string; line: string; arrow: string; ellipse: string; text: string; eraser: string;
+  color: (value: string) => string;
+  thin: string; medium: string; thick: string;
+  undo: string; redo: string;
+  loadError: string; textAria: string; textPlaceholder: string;
+  cancel: string; save: string;
+};
+
+export const ANNOTATOR_TEXT: Record<LangCode, AnnotatorText> = {
+  es: { title: (l) => `Anotar: ${l}`, closeNoSave: "Cerrar sin guardar", toolbar: "Herramientas de dibujo", pen: "Lápiz", line: "Línea", arrow: "Flecha", ellipse: "Círculo", text: "Texto", eraser: "Borrador", color: (v) => `Color ${v}`, thin: "Fino", medium: "Medio", thick: "Grueso", undo: "Deshacer", redo: "Rehacer", loadError: "No pudimos cargar la foto.", textAria: "Texto sobre la foto", textPlaceholder: "Escribe y pulsa Enter", cancel: "Cancelar", save: "Guardar dibujo" },
+  en: { title: (l) => `Annotate: ${l}`, closeNoSave: "Close without saving", toolbar: "Drawing tools", pen: "Pen", line: "Line", arrow: "Arrow", ellipse: "Circle", text: "Text", eraser: "Eraser", color: (v) => `Color ${v}`, thin: "Thin", medium: "Medium", thick: "Thick", undo: "Undo", redo: "Redo", loadError: "We couldn't load the photo.", textAria: "Text on the photo", textPlaceholder: "Type and press Enter", cancel: "Cancel", save: "Save drawing" },
+  pt: { title: (l) => `Anotar: ${l}`, closeNoSave: "Fechar sem salvar", toolbar: "Ferramentas de desenho", pen: "Lápis", line: "Linha", arrow: "Seta", ellipse: "Círculo", text: "Texto", eraser: "Borracha", color: (v) => `Cor ${v}`, thin: "Fino", medium: "Médio", thick: "Grosso", undo: "Desfazer", redo: "Refazer", loadError: "Não foi possível carregar a foto.", textAria: "Texto sobre a foto", textPlaceholder: "Escreva e pressione Enter", cancel: "Cancelar", save: "Salvar desenho" },
+  fr: { title: (l) => `Annoter : ${l}`, closeNoSave: "Fermer sans enregistrer", toolbar: "Outils de dessin", pen: "Crayon", line: "Ligne", arrow: "Flèche", ellipse: "Cercle", text: "Texte", eraser: "Gomme", color: (v) => `Couleur ${v}`, thin: "Fin", medium: "Moyen", thick: "Épais", undo: "Annuler", redo: "Rétablir", loadError: "Impossible de charger la photo.", textAria: "Texte sur la photo", textPlaceholder: "Écrivez puis appuyez sur Entrée", cancel: "Annuler", save: "Enregistrer le dessin" },
+  de: { title: (l) => `Markieren: ${l}`, closeNoSave: "Schließen ohne Speichern", toolbar: "Zeichenwerkzeuge", pen: "Stift", line: "Linie", arrow: "Pfeil", ellipse: "Kreis", text: "Text", eraser: "Radierer", color: (v) => `Farbe ${v}`, thin: "Dünn", medium: "Mittel", thick: "Dick", undo: "Rückgängig", redo: "Wiederholen", loadError: "Das Foto konnte nicht geladen werden.", textAria: "Text auf dem Foto", textPlaceholder: "Tippen und Enter drücken", cancel: "Abbrechen", save: "Zeichnung speichern" },
+  it: { title: (l) => `Annota: ${l}`, closeNoSave: "Chiudi senza salvare", toolbar: "Strumenti di disegno", pen: "Matita", line: "Linea", arrow: "Freccia", ellipse: "Cerchio", text: "Testo", eraser: "Gomma", color: (v) => `Colore ${v}`, thin: "Sottile", medium: "Medio", thick: "Spesso", undo: "Annulla", redo: "Ripristina", loadError: "Impossibile caricare la foto.", textAria: "Testo sulla foto", textPlaceholder: "Scrivi e premi Invio", cancel: "Annulla", save: "Salva disegno" },
+  tr: { title: (l) => `Not al: ${l}`, closeNoSave: "Kaydetmeden kapat", toolbar: "Çizim araçları", pen: "Kalem", line: "Çizgi", arrow: "Ok", ellipse: "Daire", text: "Metin", eraser: "Silgi", color: (v) => `Renk ${v}`, thin: "İnce", medium: "Orta", thick: "Kalın", undo: "Geri al", redo: "Yinele", loadError: "Fotoğraf yüklenemedi.", textAria: "Fotoğraf üzerindeki metin", textPlaceholder: "Yazın ve Enter'a basın", cancel: "İptal", save: "Çizimi kaydet" },
+  ar: { title: (l) => `إضافة ملاحظات: ${l}`, closeNoSave: "إغلاق بدون حفظ", toolbar: "أدوات الرسم", pen: "قلم", line: "خط", arrow: "سهم", ellipse: "دائرة", text: "نص", eraser: "ممحاة", color: (v) => `اللون ${v}`, thin: "رفيع", medium: "متوسط", thick: "سميك", undo: "تراجع", redo: "إعادة", loadError: "تعذّر تحميل الصورة.", textAria: "نص على الصورة", textPlaceholder: "اكتب ثم اضغط Enter", cancel: "إلغاء", save: "حفظ الرسم" },
+  zh: { title: (l) => `标注：${l}`, closeNoSave: "不保存并关闭", toolbar: "绘图工具", pen: "画笔", line: "直线", arrow: "箭头", ellipse: "圆圈", text: "文字", eraser: "橡皮擦", color: (v) => `颜色 ${v}`, thin: "细", medium: "中", thick: "粗", undo: "撤销", redo: "重做", loadError: "无法加载照片。", textAria: "照片上的文字", textPlaceholder: "输入后按 Enter", cancel: "取消", save: "保存标注" },
+};
