@@ -1007,6 +1007,51 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
     return lead;
   }
 
+  const statusOf = async (leadId: string) =>
+    (await request(app).get(`/api/leads/${leadId}`).set("Cookie", staff()).expect(200)).body.status as string;
+  const completePhase = async (leadId: string, index: number) => {
+    for (const view of (await phases(leadId))[index].views) await capture(leadId, view.id).expect(201);
+  };
+
+  it("los estados cambian solos con cada etapa: incompleto → listo → contactar → agendado → operado → completado", async () => {
+    const lead = await patientWithPreEvaluation(false);
+    expect(await statusOf(lead.id)).toBe("incompleto");
+
+    for (const key of KEYS.slice(2)) {
+      const draft = await request(app).post(`/api/patients/${lead.token}/photos`)
+        .set("Content-Type", "image/jpeg").set("x-photo-key", key).set("x-photo-source", "upload").send(JPEG).expect(201);
+      await request(app).post(`/api/patients/${lead.token}/photos/${draft.body.id}/confirm`).expect(200);
+    }
+    await request(app).put(`/api/patients/${lead.token}`).send({ ...VALID_BODY, submit: true }).expect(200);
+    expect(await statusOf(lead.id)).toBe("listo");
+
+    await closeDiagnosis(lead.id);
+    expect(await statusOf(lead.id)).toBe("contactar");
+
+    // Booking an appointment after the contact makes the patient "agendado".
+    await request(app).patch(`/api/leads/${lead.id}`).set("Cookie", staff("default-center", "administrativo"))
+      .send({ appointmentAt: "2026-11-02T15:00:00.000Z" }).expect(200);
+    expect(await statusOf(lead.id)).toBe("agendado");
+
+    await completePhase(lead.id, 2); // pre-operatorio
+    expect(await statusOf(lead.id)).toBe("agendado");
+    await completePhase(lead.id, 3); // post-operatorio (fase 4)
+    expect(await statusOf(lead.id)).toBe("operado");
+    await completePhase(lead.id, 4);
+    expect(await statusOf(lead.id)).toBe("operado");
+    await completePhase(lead.id, 5);
+    expect(await statusOf(lead.id)).toBe("completado");
+  });
+
+  it("contactado si el administrativo contactó y no se agendó; reabrir el diagnóstico no pierde el contacto", async () => {
+    const lead = await patientReadyForCapture();
+    expect(await statusOf(lead.id)).toBe("contactar");
+    await request(app).patch(`/api/leads/${lead.id}`).set("Cookie", staff("default-center", "administrativo")).send({ status: "contactado" }).expect(200);
+    expect(await statusOf(lead.id)).toBe("contactado");
+    await request(app).post(`/api/leads/${lead.id}/diagnosis/reopen`).set("Cookie", staff()).expect(200);
+    expect(await statusOf(lead.id)).toBe("contactado");
+  });
+
   it("lists the six phases; each opens only when the previous one is complete", async () => {
     const lead = await patientWithPreEvaluation(false);
     let list = await phases(lead.id);

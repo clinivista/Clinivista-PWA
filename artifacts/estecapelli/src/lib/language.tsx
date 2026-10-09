@@ -260,6 +260,12 @@ export type AppTranslations = {
   statusContactar: string;
   statusAgendado: string;
   statusCerrado: string;
+  statusContactado: string;
+  statusOperado: string;
+  statusCompletado: string;
+  adminStatusAuto: string;
+  adminContactHint: string;
+  adminContactNoAppt: string;
 };
 
 const T: Record<LangCode, AppTranslations> = {
@@ -396,7 +402,11 @@ const T: Record<LangCode, AppTranslations> = {
     adminInviteSendWA: "Enviar por WhatsApp", adminInviteError: "Error al crear enlace",
     adminLinkError: "Error al crear enlace",
     statusNuevo: "Nuevo", statusIncompleto: "Incompleto", statusListo: "Listo para revisión",
-    statusContactar: "Contactar", statusAgendado: "Agendado", statusCerrado: "Cerrado",
+    statusContactar: "Listo para contactar", statusAgendado: "Agendado", statusCerrado: "Cerrado",
+    statusContactado: "Contactado", statusOperado: "Operado", statusCompletado: "Tratamiento completado",
+    adminStatusAuto: "El estado se actualiza solo al completar cada etapa del proceso.",
+    adminContactHint: "Tras contactar al paciente: registra la fecha de la cita (queda «Agendado») o marca que no se agendó.",
+    adminContactNoAppt: "Contactado, sin cita",
   },
 
   en: {
@@ -532,7 +542,11 @@ const T: Record<LangCode, AppTranslations> = {
     adminInviteSendWA: "Send via WhatsApp", adminInviteError: "Error creating link",
     adminLinkError: "Error creating link",
     statusNuevo: "New", statusIncompleto: "Incomplete", statusListo: "Ready for review",
-    statusContactar: "Contact", statusAgendado: "Scheduled", statusCerrado: "Closed",
+    statusContactar: "Ready to contact", statusAgendado: "Scheduled", statusCerrado: "Closed",
+    statusContactado: "Contacted", statusOperado: "Operated", statusCompletado: "Treatment completed",
+    adminStatusAuto: "The status updates automatically as each stage of the process is completed.",
+    adminContactHint: "After contacting the patient: enter the appointment date (it becomes “Scheduled”) or mark that no appointment was made.",
+    adminContactNoAppt: "Contacted, no appointment",
   },
 
   pt: {
@@ -651,7 +665,11 @@ const T: Record<LangCode, AppTranslations> = {
     adminInviteCreated: "Link criado!", adminInviteCreatedSub: "Copie ou envie diretamente", adminInviteCopyLink: "Copiar link", adminInviteLinkCopied: "Link copiado", adminInviteLinkCopiedDesc: "O link de pré-avaliação está na sua área de transferência.", adminInviteCopyError: "Não foi possível copiar. Selecione o link e copie manualmente.",
     adminInviteSendWA: "Enviar via WhatsApp", adminInviteError: "Erro ao criar link", adminLinkError: "Erro ao criar link",
     statusNuevo: "Novo", statusIncompleto: "Incompleto", statusListo: "Pronto para revisão",
-    statusContactar: "Contatar", statusAgendado: "Agendado", statusCerrado: "Encerrado",
+    statusContactar: "Pronto para contatar", statusAgendado: "Agendado", statusCerrado: "Encerrado",
+    statusContactado: "Contatado", statusOperado: "Operado", statusCompletado: "Tratamento concluído",
+    adminStatusAuto: "O status é atualizado automaticamente ao concluir cada etapa do processo.",
+    adminContactHint: "Após contatar o paciente: registre a data da consulta (fica “Agendado”) ou marque que não foi agendada.",
+    adminContactNoAppt: "Contatado, sem consulta",
   },
 
   fr: {
@@ -768,7 +786,11 @@ const T: Record<LangCode, AppTranslations> = {
     adminInviteCreated: "Lien créé !", adminInviteCreatedSub: "Copiez-le ou envoyez-le directement", adminInviteCopyLink: "Copier le lien", adminInviteLinkCopied: "Lien copié", adminInviteLinkCopiedDesc: "Le lien de pré-évaluation est dans votre presse-papiers.", adminInviteCopyError: "Impossible de copier. Sélectionnez le lien et copiez-le manuellement.",
     adminInviteSendWA: "Envoyer via WhatsApp", adminInviteError: "Erreur lors de la création du lien", adminLinkError: "Erreur lors de la création du lien",
     statusNuevo: "Nouveau", statusIncompleto: "Incomplet", statusListo: "Prêt pour révision",
-    statusContactar: "Contacter", statusAgendado: "Planifié", statusCerrado: "Fermé",
+    statusContactar: "Prêt à contacter", statusAgendado: "Planifié", statusCerrado: "Fermé",
+    statusContactado: "Contacté", statusOperado: "Opéré", statusCompletado: "Traitement terminé",
+    adminStatusAuto: "Le statut se met à jour automatiquement à chaque étape terminée.",
+    adminContactHint: "Après avoir contacté le patient : indiquez la date du rendez-vous (« Planifié ») ou signalez qu'aucun rendez-vous n'a été pris.",
+    adminContactNoAppt: "Contacté, sans rendez-vous",
   },
 
   de: {
@@ -885,7 +907,11 @@ const T: Record<LangCode, AppTranslations> = {
     adminInviteCreated: "Link erstellt!", adminInviteCreatedSub: "Kopieren oder direkt senden", adminInviteCopyLink: "Link kopieren", adminInviteLinkCopied: "Link kopiert", adminInviteLinkCopiedDesc: "Der Vorbewertungslink ist in Ihrer Zwischenablage.", adminInviteCopyError: "Kopieren fehlgeschlagen. Markieren Sie den Link und kopieren Sie ihn manuell.",
     adminInviteSendWA: "Via WhatsApp senden", adminInviteError: "Fehler beim Erstellen des Links", adminLinkError: "Fehler beim Erstellen des Links",
     statusNuevo: "Neu", statusIncompleto: "Unvollständig", statusListo: "Bereit zur Überprüfung",
-    statusContactar: "Kontaktieren", statusAgendado: "Geplant", statusCerrado: "Geschlossen",
+    statusContactar: "Bereit zur Kontaktaufnahme", statusAgendado: "Geplant", statusCerrado: "Geschlossen",
+    statusContactado: "Kontaktiert", statusOperado: "Operiert", statusCompletado: "Behandlung abgeschlossen",
+    adminStatusAuto: "Der Status wird automatisch aktualisiert, sobald eine Phase abgeschlossen ist.",
+    adminContactHint: "Nach der Kontaktaufnahme: Termin eintragen (wird „Geplant“) oder markieren, dass kein Termin vereinbart wurde.",
+    adminContactNoAppt: "Kontaktiert, ohne Termin",
   },
 
   it: {
@@ -1002,7 +1028,11 @@ const T: Record<LangCode, AppTranslations> = {
     adminInviteCreated: "Link creato!", adminInviteCreatedSub: "Copialo o invialo direttamente", adminInviteCopyLink: "Copia link", adminInviteLinkCopied: "Link copiato", adminInviteLinkCopiedDesc: "Il link di pre-valutazione è negli appunti.", adminInviteCopyError: "Impossibile copiare. Seleziona il link e copialo manualmente.",
     adminInviteSendWA: "Invia via WhatsApp", adminInviteError: "Errore nella creazione del link", adminLinkError: "Errore nella creazione del link",
     statusNuevo: "Nuovo", statusIncompleto: "Incompleto", statusListo: "Pronto per revisione",
-    statusContactar: "Contattare", statusAgendado: "Pianificato", statusCerrado: "Chiuso",
+    statusContactar: "Pronto da contattare", statusAgendado: "Pianificato", statusCerrado: "Chiuso",
+    statusContactado: "Contattato", statusOperado: "Operato", statusCompletado: "Trattamento completato",
+    adminStatusAuto: "Lo stato si aggiorna automaticamente al completamento di ogni fase.",
+    adminContactHint: "Dopo aver contattato il paziente: inserisci la data dell'appuntamento (diventa «Pianificato») o segna che non è stato fissato.",
+    adminContactNoAppt: "Contattato, senza appuntamento",
   },
 
   tr: {
@@ -1119,7 +1149,11 @@ const T: Record<LangCode, AppTranslations> = {
     adminInviteCreated: "Bağlantı oluşturuldu!", adminInviteCreatedSub: "Kopyalayın veya doğrudan gönderin", adminInviteCopyLink: "Bağlantıyı kopyala", adminInviteLinkCopied: "Bağlantı kopyalandı", adminInviteLinkCopiedDesc: "Ön değerlendirme bağlantısı panonuzda.", adminInviteCopyError: "Kopyalanamadı. Bağlantıyı seçip elle kopyalayın.",
     adminInviteSendWA: "WhatsApp ile Gönder", adminInviteError: "Bağlantı oluşturma hatası", adminLinkError: "Bağlantı oluşturma hatası",
     statusNuevo: "Yeni", statusIncompleto: "Eksik", statusListo: "İncelemeye hazır",
-    statusContactar: "İletişim", statusAgendado: "Planlandı", statusCerrado: "Kapalı",
+    statusContactar: "İletişime hazır", statusAgendado: "Planlandı", statusCerrado: "Kapalı",
+    statusContactado: "İletişime geçildi", statusOperado: "Ameliyat edildi", statusCompletado: "Tedavi tamamlandı",
+    adminStatusAuto: "Durum, sürecin her aşaması tamamlandıkça otomatik güncellenir.",
+    adminContactHint: "Hastayla iletişime geçtikten sonra: randevu tarihini girin (“Planlandı” olur) veya randevu alınmadığını işaretleyin.",
+    adminContactNoAppt: "İletişime geçildi, randevu yok",
   },
 
   ar: {
@@ -1236,7 +1270,11 @@ const T: Record<LangCode, AppTranslations> = {
     adminInviteCreated: "تم إنشاء الرابط!", adminInviteCreatedSub: "انسخه أو أرسله مباشرة", adminInviteCopyLink: "نسخ الرابط", adminInviteLinkCopied: "تم نسخ الرابط", adminInviteLinkCopiedDesc: "رابط التقييم المسبق موجود في الحافظة.", adminInviteCopyError: "تعذّر النسخ. حدّد الرابط وانسخه يدويًا.",
     adminInviteSendWA: "الإرسال عبر واتساب", adminInviteError: "خطأ في إنشاء الرابط", adminLinkError: "خطأ في إنشاء الرابط",
     statusNuevo: "جديد", statusIncompleto: "غير مكتمل", statusListo: "جاهز للمراجعة",
-    statusContactar: "اتصال", statusAgendado: "مجدول", statusCerrado: "مغلق",
+    statusContactar: "جاهز للتواصل", statusAgendado: "مجدول", statusCerrado: "مغلق",
+    statusContactado: "تم التواصل", statusOperado: "تمت العملية", statusCompletado: "اكتمل العلاج",
+    adminStatusAuto: "تتحدث الحالة تلقائياً عند إكمال كل مرحلة من العملية.",
+    adminContactHint: "بعد التواصل مع المريض: أدخل موعد الزيارة (تصبح «مجدول») أو حدد أنه لم يتم حجز موعد.",
+    adminContactNoAppt: "تم التواصل، بدون موعد",
   },
 
   zh: {
@@ -1353,7 +1391,11 @@ const T: Record<LangCode, AppTranslations> = {
     adminInviteCreated: "链接已创建！", adminInviteCreatedSub: "复制或直接发送", adminInviteCopyLink: "复制链接", adminInviteLinkCopied: "链接已复制", adminInviteLinkCopiedDesc: "预评估链接已复制到剪贴板。", adminInviteCopyError: "复制失败。请选中链接并手动复制。",
     adminInviteSendWA: "通过WhatsApp发送", adminInviteError: "创建链接时出错", adminLinkError: "创建链接时出错",
     statusNuevo: "新建", statusIncompleto: "不完整", statusListo: "待审查",
-    statusContactar: "联系", statusAgendado: "已安排", statusCerrado: "已关闭",
+    statusContactar: "待联系", statusAgendado: "已安排", statusCerrado: "已关闭",
+    statusContactado: "已联系", statusOperado: "已手术", statusCompletado: "治疗已完成",
+    adminStatusAuto: "完成每个阶段后，状态会自动更新。",
+    adminContactHint: "联系患者后：填写预约时间（状态变为“已安排”），或标记未预约。",
+    adminContactNoAppt: "已联系，未预约",
   },
 };
 

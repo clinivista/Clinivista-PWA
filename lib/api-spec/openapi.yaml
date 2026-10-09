@@ -3179,7 +3179,7 @@ components:
 
     LeadStatus:
       type: string
-      enum: [nuevo, incompleto, listo, contactar, agendado, cerrado]
+      enum: [nuevo, incompleto, listo, contactar, agendado, contactado, operado, completado, cerrado]
 
     LeadSummary:
       type: object
