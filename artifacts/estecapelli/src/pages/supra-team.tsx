@@ -10,6 +10,7 @@ import {
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { useToast } from "@/hooks/use-toast";
 import { UserRow } from "./user-row";
 
@@ -106,8 +107,7 @@ function SupraTeamBody() {
               value={draft.email}
               onChange={(event) => setDraft((prev) => ({ ...prev, email: event.target.value }))}
             />
-            <Input
-              type="password"
+            <PasswordInput
               required
               minLength={8}
               autoComplete="new-password"

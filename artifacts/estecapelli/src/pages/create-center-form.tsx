@@ -5,6 +5,7 @@ import { getGetDirectorCentersQueryKey, useCreateDirectorCenter } from "@workspa
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { useToast } from "@/hooks/use-toast";
 
 type AccountDraft = { email: string; name: string; password: string };
@@ -137,8 +138,7 @@ export function CreateCenterForm({ onClose }: { onClose: () => void }) {
               value={accounts[role].name}
               onChange={(event) => updateAccount(role, "name", event.target.value)}
             />
-            <Input
-              type="password"
+            <PasswordInput
               autoComplete="new-password"
               placeholder="Contraseña (mín. 8)"
               aria-label={`${title}: contraseña`}
