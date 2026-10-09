@@ -9,6 +9,7 @@ import {
   discardStaffPhasePhoto,
   getLeadPhases,
 } from "../lib/clinical-photos";
+import { syncLeadStatus } from "../lib/lead-status";
 import { MAX_PHOTO_BYTES, parseImageRequest } from "../lib/image-upload";
 
 const router: IRouter = Router();
@@ -56,6 +57,7 @@ router.post("/leads/:id/views/:viewId/photo", RAW_IMAGE, async (req, res): Promi
       source: req.headers["x-photo-source"] === "camera" ? "camera" : "upload",
       ...image,
     });
+    await syncLeadStatus(lead.id);
     res.status(201).json(photo);
   } catch (error) {
     if (error instanceof PhaseCaptureError) {
@@ -86,6 +88,7 @@ router.delete("/leads/:id/phase-photos/:photoId", async (req, res): Promise<void
     }
     throw error;
   }
+  await syncLeadStatus(lead.id);
   res.status(204).end();
 });
 

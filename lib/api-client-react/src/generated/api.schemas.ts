@@ -700,6 +700,9 @@ export const LeadStatus = {
   listo: 'listo',
   contactar: 'contactar',
   agendado: 'agendado',
+  contactado: 'contactado',
+  operado: 'operado',
+  completado: 'completado',
   cerrado: 'cerrado',
 } as const;
 

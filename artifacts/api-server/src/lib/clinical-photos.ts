@@ -708,6 +708,8 @@ export type LeadPhaseView = {
 
 export type LeadPhase = {
   id: string;
+  /** Stable name of the phase ("postoperatorio", …); clinics can rename it without changing the key. */
+  key: string;
   name: string;
   position: number;
   /** "diagnosis": the doctor marks up the patient's photos and writes the answer. */
@@ -761,6 +763,7 @@ export async function getLeadPhases(lead: Lead): Promise<LeadPhase[]> {
       : phaseViews.length > 0 && phaseViews.filter((view) => view.required).every((view) => view.photo !== null);
     const result: LeadPhase = {
       id: phase.id,
+      key: phase.key,
       name: phase.name,
       position: index,
       kind: isDiagnosis ? "diagnosis" : "capture",

@@ -12,11 +12,13 @@ import { requireStaffAuth } from "./auth";
 import { clean } from "../lib/helpers";
 import { DEFAULT_CENTER_ID, deleteClinicalDataForLead, ensureClinicalConfiguration, getPhotoForStaff, getPhotoStatusesForLead } from "../lib/clinical-photos";
 import { privatePhotoStorage } from "../lib/clinical-photo-storage";
+import { syncLeadStatus } from "../lib/lead-status";
+import { LEAD_STATUSES } from "../lib/lead-status-rules";
 import { clinicIdentity } from "../lib/clinic-identity";
 
 const router: IRouter = Router();
 
-const ALLOWED_STATUSES = ["nuevo", "incompleto", "listo", "contactar", "agendado", "cerrado"];
+const ALLOWED_STATUSES: readonly string[] = LEAD_STATUSES;
 
 async function leadSummary(lead: typeof leadsTable.$inferSelect) {
   const { photos, symptoms, surgeryHistory, notes, ...safe } = lead;
@@ -115,7 +117,9 @@ router.get("/leads/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  res.json(await leadFull(lead));
+  // Patients registered before the automatic states catch up when their file is opened.
+  const status = await syncLeadStatus(lead.id);
+  res.json(await leadFull(status && status !== lead.status ? { ...lead, status } : lead));
 });
 
 router.get("/leads/:id/photos/:photoId", async (req, res): Promise<void> => {
@@ -205,6 +209,10 @@ router.patch("/leads/:id", async (req, res): Promise<void> => {
   if (!existing || (existing.centerId ?? DEFAULT_CENTER_ID) !== context.centerId) {
     res.status(404).json({ error: "Caso no encontrado." });
     return;
+  }
+  // Booking an appointment after contacting the patient is what makes them "agendado".
+  if (updates.appointmentAt && ["contactar", "contactado"].includes(String(updates.status ?? existing.status))) {
+    updates.status = "agendado";
   }
 
   const [updated] = await db

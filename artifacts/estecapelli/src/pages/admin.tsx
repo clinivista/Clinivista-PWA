@@ -38,6 +38,9 @@ const STATUS_COLORS: Record<string, string> = {
   listo: "bg-emerald-100 text-emerald-700",
   contactar: "bg-violet-100 text-violet-700",
   agendado: "bg-indigo-100 text-indigo-700",
+  contactado: "bg-sky-100 text-sky-700",
+  operado: "bg-teal-100 text-teal-700",
+  completado: "bg-green-200 text-green-800",
   cerrado: "bg-gray-100 text-gray-500"
 };
 
@@ -59,6 +62,9 @@ export default function Admin() {
     listo: t.statusListo,
     contactar: t.statusContactar,
     agendado: t.statusAgendado,
+    contactado: t.statusContactado,
+    operado: t.statusOperado,
+    completado: t.statusCompletado,
     cerrado: t.statusCerrado,
   };
 
@@ -532,6 +538,23 @@ export default function Admin() {
                           />
                         </div>
                       </div>
+
+                      <p className="text-xs text-muted-foreground -mt-2">{t.adminStatusAuto}</p>
+                      {["contactar", "contactado", "agendado"].includes(fullLead.status) && (
+                        <div className="rounded-2xl bg-[#F5F2EE] p-4 space-y-3">
+                          <p className="text-sm font-medium text-foreground">{t.adminContactHint}</p>
+                          {fullLead.status === "contactar" && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="rounded-full font-semibold"
+                              onClick={() => handlePatch(fullLead.id, { status: "contactado" })}
+                            >
+                              {t.adminContactNoAppt}
+                            </Button>
+                          )}
+                        </div>
+                      )}
 
                       <Button
                         className="w-full h-14 gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white shadow-lg shadow-[#25D366]/20 font-bold text-base rounded-full transition-all hover:scale-[1.01]"

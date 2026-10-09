@@ -1,3 +1,4 @@
+import { syncLeadStatus } from "./lead-status";
 import { and, asc, eq } from "drizzle-orm";
 import {
   db,
@@ -172,6 +173,7 @@ export async function closeDiagnosis(lead: Lead, userId: string, text?: string) 
     updatedAt: new Date(),
   }).where(eq(diagnosesTable.id, diagnosis.id));
   await record(diagnosis.id, "closed", userId);
+  await syncLeadStatus(lead.id);
 }
 
 export async function reopenDiagnosis(lead: Lead, userId: string) {
@@ -180,6 +182,7 @@ export async function reopenDiagnosis(lead: Lead, userId: string) {
   if (!diagnosis || diagnosis.status !== "closed") throw new DiagnosisError("El diagnóstico no está cerrado.", 409);
   await db.update(diagnosesTable).set({ status: "draft", updatedAt: new Date() }).where(eq(diagnosesTable.id, diagnosis.id));
   await record(diagnosis.id, "reopened", userId);
+  await syncLeadStatus(lead.id);
 }
 
 async function patientPhotoOf(lead: Lead, photoId: string) {
