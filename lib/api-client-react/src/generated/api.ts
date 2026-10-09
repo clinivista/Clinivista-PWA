@@ -78,7 +78,9 @@ import type {
   ResultsDeliverInput,
   ResultsDelivery,
   ResultsState,
-  SimpleOk
+  SimpleOk,
+  StaffForgotInput,
+  StaffResetInput
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -331,6 +333,148 @@ export const useAdminLogin = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getAdminLoginMutationOptions(options));
+    }
+
+export const getStaffForgotUrl = () => {
+
+
+
+
+  return `/api/auth/forgot`
+}
+
+/**
+ * @summary Email a staff member a link to choose a new password
+ */
+export const staffForgot = async (staffForgotInput: StaffForgotInput, options?: Parameters<typeof customFetch>[1]): Promise<OkResponse> => {
+
+  return customFetch<OkResponse>(getStaffForgotUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(staffForgotInput)
+  }
+);}
+
+
+
+
+
+export const getStaffForgotMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof staffForgot>>, TError,{data: BodyType<StaffForgotInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof staffForgot>>, TError,{data: BodyType<StaffForgotInput>}, TContext> => {
+
+const mutationKey = ['staffForgot'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof staffForgot>>, {data: BodyType<StaffForgotInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  staffForgot(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StaffForgotMutationResult = NonNullable<Awaited<ReturnType<typeof staffForgot>>>
+    export type StaffForgotMutationBody = BodyType<StaffForgotInput>
+    export type StaffForgotMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Email a staff member a link to choose a new password
+ */
+export const useStaffForgot = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof staffForgot>>, TError,{data: BodyType<StaffForgotInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof staffForgot>>,
+        TError,
+        {data: BodyType<StaffForgotInput>},
+        TContext
+      > => {
+      return useMutation(getStaffForgotMutationOptions(options));
+    }
+
+export const getStaffResetUrl = () => {
+
+
+
+
+  return `/api/auth/reset`
+}
+
+/**
+ * @summary Set a new staff password with the one-time link from the email
+ */
+export const staffReset = async (staffResetInput: StaffResetInput, options?: Parameters<typeof customFetch>[1]): Promise<OkResponse> => {
+
+  return customFetch<OkResponse>(getStaffResetUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(staffResetInput)
+  }
+);}
+
+
+
+
+
+export const getStaffResetMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof staffReset>>, TError,{data: BodyType<StaffResetInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof staffReset>>, TError,{data: BodyType<StaffResetInput>}, TContext> => {
+
+const mutationKey = ['staffReset'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof staffReset>>, {data: BodyType<StaffResetInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  staffReset(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StaffResetMutationResult = NonNullable<Awaited<ReturnType<typeof staffReset>>>
+    export type StaffResetMutationBody = BodyType<StaffResetInput>
+    export type StaffResetMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Set a new staff password with the one-time link from the email
+ */
+export const useStaffReset = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof staffReset>>, TError,{data: BodyType<StaffResetInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof staffReset>>,
+        TError,
+        {data: BodyType<StaffResetInput>},
+        TContext
+      > => {
+      return useMutation(getStaffResetMutationOptions(options));
     }
 
 export const getAdminLogoutUrl = () => {

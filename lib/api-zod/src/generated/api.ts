@@ -54,6 +54,32 @@ export const AdminLoginResponse = zod.object({
 
 
 /**
+ * @summary Email a staff member a link to choose a new password
+ */
+export const StaffForgotBody = zod.object({
+  "email": zod.string(),
+  "language": zod.string().optional()
+})
+
+export const StaffForgotResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Set a new staff password with the one-time link from the email
+ */
+export const StaffResetBody = zod.object({
+  "token": zod.string(),
+  "password": zod.string()
+})
+
+export const StaffResetResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
  * @summary Admin logout
  */
 export const AdminLogoutResponse = zod.object({

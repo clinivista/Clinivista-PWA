@@ -25,6 +25,9 @@ export const usersTable = pgTable("users", {
   // "Representante legal" of a clinic: may be a médico, and (like every
   // administrativo) can manage the clinic's users from its own panel.
   legalRepresentative: boolean("legal_representative").notNull().default(false),
+  // "Olvidé mi clave": sha256 of the one-time link sent by email (never the token itself) and when it expires.
+  resetTokenHash: text("reset_token_hash"),
+  resetTokenExpiresAt: timestamp("reset_token_expires_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [

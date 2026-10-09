@@ -109,3 +109,5 @@ export * from './resultsDelivery';
 export * from './resultsDeliveryRecord';
 export * from './resultsState';
 export * from './simpleOk';
+export * from './staffForgotInput';
+export * from './staffResetInput';

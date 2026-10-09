@@ -5,6 +5,9 @@ import { db, usersTable, verifyPassword, normalizeEmail, type UserRole } from "@
 import { createSession, getSession, isValidSession, destroySession } from "../lib/sessions";
 import { getSessionToken } from "../lib/helpers";
 import { isCenterActive } from "../lib/centers";
+import { requestStaffPasswordReset, resetStaffPassword, StaffResetError } from "../lib/staff-password-reset";
+import { throttled } from "../lib/patient-accounts";
+import { baseUrl } from "./results";
 
 const router: IRouter = Router();
 
@@ -142,6 +145,33 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     `clinivista_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=43200${process.env.NODE_ENV === "production" ? "; Secure" : ""}`,
   );
   res.json({ ok: true, user: authUser(user) });
+});
+
+// Always answers the same, so it cannot be used to find out who has an account.
+router.post("/auth/forgot", async (req, res): Promise<void> => {
+  const { email, language } = (req.body ?? {}) as { email?: unknown; language?: unknown };
+  if (typeof email === "string" && email.includes("@") && email.length <= 200) {
+    await requestStaffPasswordReset(email, baseUrl(req), typeof language === "string" ? language : null, req.ip ?? "").catch(() => undefined);
+  }
+  res.json({ ok: true });
+});
+
+router.post("/auth/reset", async (req, res): Promise<void> => {
+  const { token, password } = (req.body ?? {}) as { token?: unknown; password?: unknown };
+  if (throttled(`staff-reset-ip:${req.ip}`, 20, 15 * 60_000)) {
+    res.status(429).json({ error: "Demasiados intentos. Espera unos minutos." });
+    return;
+  }
+  try {
+    await resetStaffPassword(token, password);
+    res.json({ ok: true });
+  } catch (error) {
+    if (error instanceof StaffResetError) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
 });
 
 router.post("/auth/logout", (req, res): void => {

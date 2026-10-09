@@ -1,5 +1,6 @@
 import { logger } from "./logger";
 import { MAIL_TEXT, toMailLanguage } from "./mail-i18n";
+import { STAFF_RESET_TEXT } from "./staff-reset-i18n";
 
 export class MailNotConfiguredError extends Error {
   constructor() {
@@ -57,6 +58,21 @@ export function resultsMail(input: { to: string; clinicName: string; patientName
       `<p>${escapeHtml(t.hello(input.patientName))}</p><p>${escapeHtml(t.resultsIntro(input.clinicName))}</p>` +
       `<p><a href="${link}">${escapeHtml(t.resultsButton)}</a></p>` +
       `<p style="color:#666">${escapeHtml(t.resultsNote)}</p>`),
+  };
+}
+
+export function staffResetMail(input: { to: string; name?: string | null; link: string; language?: string | null }): Mail {
+  const language = toMailLanguage(input.language);
+  const t = STAFF_RESET_TEXT[language];
+  const note = `${t.note} ${t.ignore}`;
+  return {
+    to: input.to,
+    subject: t.subject,
+    text: `${t.hello(input.name || undefined)}\n\n${t.intro}\n\n${input.link}\n\n${note}`,
+    html: wrap(language,
+      `<p>${escapeHtml(t.hello(input.name || undefined))}</p><p>${escapeHtml(t.intro)}</p>` +
+      `<p><a href="${escapeHtml(input.link)}">${escapeHtml(t.button)}</a></p>` +
+      `<p style="color:#666">${escapeHtml(note)}</p>`),
   };
 }
 
