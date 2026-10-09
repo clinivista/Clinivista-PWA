@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowUpRight, Circle, Eraser, Loader2, Minus, Pencil, Redo2, Type, Undo2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/lib/language";
+import { ANNOTATOR_TEXT } from "@/lib/annotator-i18n";
 import {
   PALETTE, WIDTHS, clamp01, drawStrokes, hitsStroke, simplify, strokeToJson,
   type Pt, type Stroke, type StrokeType,
@@ -8,13 +10,13 @@ import {
 
 type Tool = StrokeType | "eraser";
 
-const TOOLS: Array<{ tool: Tool; label: string; icon: typeof Pencil }> = [
-  { tool: "pen", label: "Lápiz", icon: Pencil },
-  { tool: "line", label: "Línea", icon: Minus },
-  { tool: "arrow", label: "Flecha", icon: ArrowUpRight },
-  { tool: "ellipse", label: "Círculo", icon: Circle },
-  { tool: "text", label: "Texto", icon: Type },
-  { tool: "eraser", label: "Borrador", icon: Eraser },
+const TOOLS: Array<{ tool: Tool; icon: typeof Pencil }> = [
+  { tool: "pen", icon: Pencil },
+  { tool: "line", icon: Minus },
+  { tool: "arrow", icon: ArrowUpRight },
+  { tool: "ellipse", icon: Circle },
+  { tool: "text", icon: Type },
+  { tool: "eraser", icon: Eraser },
 ];
 
 const MAX_EXPORT_SIDE = 2400;
@@ -29,6 +31,8 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   onSave: (strokes: ReturnType<typeof strokeToJson>, imageDataUrl: string) => void;
   onClose: () => void;
 }) {
+  const { lang } = useLanguage();
+  const a = ANNOTATOR_TEXT[lang];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
@@ -180,41 +184,44 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   };
 
   return (
-    <div role="dialog" aria-modal="true" aria-label={`Anotar ${label}`} className="fixed inset-0 z-[70] bg-neutral-950 flex flex-col">
+    <div role="dialog" aria-modal="true" aria-label={a.title(label)} className="fixed inset-0 z-[70] bg-neutral-950 flex flex-col">
       <div className="flex items-center justify-between gap-2 px-4 py-3 text-white">
-        <h2 className="font-bold truncate">Anotar: {label}</h2>
-        <Button type="button" variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={onClose} aria-label="Cerrar sin guardar">
+        <h2 className="font-bold truncate">{a.title(label)}</h2>
+        <Button type="button" variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={onClose} aria-label={a.closeNoSave}>
           <X className="w-5 h-5" />
         </Button>
       </div>
 
-      <div className="px-3 pb-2 flex flex-wrap items-center gap-2" role="toolbar" aria-label="Herramientas de dibujo">
-        {TOOLS.map(({ tool: value, label: text, icon: Icon }) => (
+      <div className="px-3 pb-2 flex flex-wrap items-center gap-2" role="toolbar" aria-label={a.toolbar}>
+        {TOOLS.map(({ tool: value, icon: Icon }) => {
+          const text = a[value];
+          return (
           <Button key={value} type="button" size="sm" variant={tool === value ? "default" : "secondary"} className="rounded-full h-9"
             aria-pressed={tool === value} aria-label={text} onClick={() => setTool(value)}>
             <Icon className="w-4 h-4 sm:mr-1.5" /><span className="hidden sm:inline">{text}</span>
           </Button>
-        ))}
+          );
+        })}
         <span className="w-px h-6 bg-white/20 mx-1" />
         {PALETTE.map((value) => (
-          <button key={value} type="button" aria-label={`Color ${value}`} aria-pressed={color === value}
+          <button key={value} type="button" aria-label={a.color(value)} aria-pressed={color === value}
             onClick={() => setColor(value)}
             className={`w-7 h-7 rounded-full border-2 ${color === value ? "border-white scale-110" : "border-white/30"}`}
             style={{ background: value }} />
         ))}
         <span className="w-px h-6 bg-white/20 mx-1" />
-        {WIDTHS.map(({ label: text, value }) => (
+        {WIDTHS.map(({ value }, index) => (
           <Button key={value} type="button" size="sm" variant={width === value ? "default" : "secondary"} className="rounded-full h-9 px-3"
-            aria-pressed={width === value} onClick={() => setWidth(value)}>{text}</Button>
+            aria-pressed={width === value} onClick={() => setWidth(value)}>{[a.thin, a.medium, a.thick][index]}</Button>
         ))}
         <span className="w-px h-6 bg-white/20 mx-1" />
-        <Button type="button" size="icon" variant="secondary" className="rounded-full h-9 w-9" aria-label="Deshacer" disabled={!past.length} onClick={undo}><Undo2 className="w-4 h-4" /></Button>
-        <Button type="button" size="icon" variant="secondary" className="rounded-full h-9 w-9" aria-label="Rehacer" disabled={!future.length} onClick={redoLast}><Redo2 className="w-4 h-4" /></Button>
+        <Button type="button" size="icon" variant="secondary" className="rounded-full h-9 w-9" aria-label={a.undo} disabled={!past.length} onClick={undo}><Undo2 className="w-4 h-4" /></Button>
+        <Button type="button" size="icon" variant="secondary" className="rounded-full h-9 w-9" aria-label={a.redo} disabled={!future.length} onClick={redoLast}><Redo2 className="w-4 h-4" /></Button>
       </div>
 
       <div ref={wrapRef} className="flex-1 min-h-0 overflow-auto px-3 flex items-start justify-center">
         {failed ? (
-          <p className="text-white/80 text-sm py-10">No pudimos cargar la foto.</p>
+          <p className="text-white/80 text-sm py-10">{a.loadError}</p>
         ) : !image ? (
           <Loader2 className="w-6 h-6 animate-spin text-white mt-10" />
         ) : (
@@ -234,7 +241,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
             {textAt && (
               <input
                 autoFocus
-                aria-label="Texto sobre la foto"
+                aria-label={a.textAria}
                 maxLength={200}
                 value={textAt.value}
                 onChange={(event) => setTextAt({ ...textAt, value: event.target.value })}
@@ -245,7 +252,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
                 onBlur={confirmText}
                 className="absolute bg-white/90 text-black text-sm rounded px-2 py-1 shadow min-w-[8rem] max-w-[80%]"
                 style={{ left: `${Math.min(textAt.pt[0] * 100, 70)}%`, top: `${textAt.pt[1] * 100}%` }}
-                placeholder="Escribe y pulsa Enter"
+                placeholder={a.textPlaceholder}
               />
             )}
           </div>
@@ -253,9 +260,9 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
       </div>
 
       <div className="px-4 py-3 flex justify-end gap-2">
-        <Button type="button" variant="secondary" className="rounded-full" onClick={onClose} disabled={saving}>Cancelar</Button>
+        <Button type="button" variant="secondary" className="rounded-full" onClick={onClose} disabled={saving}>{a.cancel}</Button>
         <Button type="button" className="rounded-full font-bold" onClick={handleSave} disabled={!image || !strokes.length || saving}>
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar dibujo"}
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : a.save}
         </Button>
       </div>
     </div>
