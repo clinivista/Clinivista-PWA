@@ -31,6 +31,7 @@ import { PhasesPanel } from "./phases-panel";
 import { plasticSummaryRows } from "@/lib/specialty-i18n";
 import { ReportPanel } from "./report-panel";
 import { LeadPhases } from "@/components/lead-phases";
+import { NAV_TEXT } from "@/lib/phases-i18n";
 
 const STATUS_COLORS: Record<string, string> = {
   nuevo: "bg-blue-100 text-blue-700",
@@ -43,8 +44,6 @@ const STATUS_COLORS: Record<string, string> = {
   completado: "bg-green-200 text-green-800",
   cerrado: "bg-gray-100 text-gray-500"
 };
-
-const NORWOOD_SCALES = ["I", "II", "IIA", "III", "III-V", "IIIA", "IV", "IVA", "V", "VA", "VI", "VII", "No concluyente"];
 
 export default function Admin() {
   const [, setLocation] = useLocation();
@@ -259,7 +258,7 @@ export default function Admin() {
               className={`w-full justify-start text-white hover:bg-white/20 hover:text-white font-medium rounded-2xl h-12 ${view === "report" ? "bg-white/10" : "bg-transparent"}`}
             >
               <ClipboardList className="w-5 h-5 mr-3" />
-              Informe
+              {NAV_TEXT[lang].report}
             </Button>
             {canEditPhases && (
               <Button
@@ -275,7 +274,7 @@ export default function Admin() {
 
           {/* Language selector */}
           <div className="mt-6 pt-4 border-t border-white/10">
-            <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3">Idioma</p>
+            <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3">{NAV_TEXT[lang].language}</p>
             <div className="relative">
               <button
                 onClick={() => setLangOpen(v => !v)}
@@ -331,25 +330,25 @@ export default function Admin() {
         </header>
 
         {/* Stats Strip — floating cards on bg */}
-        <div className="px-4 sm:px-6 md:px-10 py-4 sm:py-6 shrink-0 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 bg-[#F5F2EE]">
-          <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm hover:-translate-y-0.5 transition-transform">
-            <p className="text-xs text-muted-foreground font-bold mb-2 uppercase tracking-wider">{t.adminTotal}</p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-foreground">{stats?.total || 0}</p>
-          </div>
-          <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm ring-1 ring-blue-100 hover:-translate-y-0.5 transition-transform">
-            <p className="text-xs text-blue-500 font-bold mb-2 uppercase tracking-wider">{t.adminNew}</p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-blue-700">{stats?.counts?.nuevo || 0}</p>
-          </div>
-          <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm ring-1 ring-emerald-100 hover:-translate-y-0.5 transition-transform">
-            <p className="text-xs text-emerald-500 font-bold mb-2 uppercase tracking-wider">{t.adminReady}</p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-emerald-700">
-              {(stats?.counts?.listo || 0) + (stats?.counts?.agendado || 0)}
-            </p>
-          </div>
-          <div className="bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm ring-1 ring-amber-100 hover:-translate-y-0.5 transition-transform">
-            <p className="text-xs text-amber-500 font-bold mb-2 uppercase tracking-wider">{t.adminPending}</p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-amber-700">{stats?.counts?.incompleto || 0}</p>
-          </div>
+        <div className="px-4 sm:px-6 md:px-10 py-4 sm:py-6 shrink-0 grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 bg-[#F5F2EE]">
+          {([
+            { filter: "all", label: t.adminTotal, count: stats?.total || 0, ring: "ring-[#E8E4DE]", text: "text-foreground", sub: "text-muted-foreground" },
+            { filter: "incompleto", label: t.statusIncompleto, count: stats?.counts?.incompleto || 0, ring: "ring-amber-100", text: "text-amber-700", sub: "text-amber-500" },
+            { filter: "listo", label: t.statusListo, count: stats?.counts?.listo || 0, ring: "ring-emerald-100", text: "text-emerald-700", sub: "text-emerald-500" },
+            { filter: "contactar", label: t.statusContactar, count: stats?.counts?.contactar || 0, ring: "ring-violet-100", text: "text-violet-700", sub: "text-violet-500" },
+            { filter: "operado", label: t.statusOperado, count: stats?.counts?.operado || 0, ring: "ring-teal-100", text: "text-teal-700", sub: "text-teal-500" },
+          ]).map((card) => (
+            <button
+              key={card.filter}
+              type="button"
+              aria-pressed={statusFilter === card.filter}
+              onClick={() => setStatusFilter(card.filter)}
+              className={`text-start bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm ring-1 ${card.ring} hover:-translate-y-0.5 transition-transform ${statusFilter === card.filter ? "ring-2 ring-primary" : ""}`}
+            >
+              <p className={`text-xs font-bold mb-2 uppercase tracking-wider ${card.sub}`}>{card.label}</p>
+              <p className={`text-2xl sm:text-3xl font-extrabold ${card.text}`}>{card.count}</p>
+            </button>
+          ))}
         </div>
 
         {/* Filters */}
@@ -600,7 +599,16 @@ export default function Admin() {
                       )}
                     </div>
 
-                    <LeadPhases leadId={fullLead.id} onExpand={setExpandedPhoto} />
+                    <LeadPhases
+                      leadId={fullLead.id}
+                      onExpand={setExpandedPhoto}
+                      diagnosisLead={{
+                        norwood: fullLead.norwood,
+                        notes: fullLead.notes,
+                        showNorwood: myClinic?.specialty !== "plastica",
+                        onPatch: (data) => handlePatch(fullLead.id, data),
+                      }}
+                    />
 
                     {/* Patient history */}
                     <div className="bg-white p-6 md:p-8 rounded-[1.75rem] shadow-sm">
@@ -645,40 +653,6 @@ export default function Admin() {
                             <span className="font-semibold">{value || "—"}</span>
                           </div>
                         ))}
-                      </div>
-                    </div>
-
-                    {/* Clinical Notes */}
-                    <div className="bg-white p-6 md:p-8 rounded-[1.75rem] shadow-sm">
-                      <h3 className="text-lg font-extrabold text-foreground mb-5 flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <span className="h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
-                        </div>
-                        {t.adminClinicalNotes}
-                      </h3>
-                      <div className="space-y-4">
-                        {myClinic?.specialty !== "plastica" && <div>
-                          <label className="text-xs font-bold text-foreground uppercase tracking-wider mb-2 block">{t.adminNorwood}</label>
-                          <Select value={fullLead.norwood || "No concluyente"} onValueChange={v => handlePatch(fullLead.id, { norwood: v })}>
-                            <SelectTrigger className="h-12 bg-[#F5F2EE] rounded-2xl font-semibold border-[#E8E4DE]">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-2xl">
-                              {NORWOOD_SCALES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>}
-                        <div>
-                          <label className="text-xs font-bold text-foreground uppercase tracking-wider mb-2 block">{t.adminNotesLabel}</label>
-                          <Textarea
-                            defaultValue={fullLead.notes || ""}
-                            onBlur={e => {
-                              if (e.target.value !== fullLead.notes) handlePatch(fullLead.id, { notes: e.target.value });
-                            }}
-                            className="min-h-[140px] bg-[#F5F2EE] border-[#E8E4DE] rounded-2xl text-base p-4 focus:ring-primary/20"
-                            placeholder={t.adminNotesPlaceholder}
-                          />
-                        </div>
                       </div>
                     </div>
                   </div>
