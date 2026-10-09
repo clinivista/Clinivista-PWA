@@ -263,6 +263,7 @@ export const GetLeadPhasesParams = zod.object({
 export const GetLeadPhasesResponse = zod.object({
   "phases": zod.array(zod.object({
   "id": zod.string(),
+  "key": zod.string(),
   "name": zod.string(),
   "position": zod.number(),
   "kind": zod.enum(['capture', 'diagnosis']),

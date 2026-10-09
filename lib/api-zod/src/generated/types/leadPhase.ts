@@ -10,6 +10,7 @@ import type { LeadPhaseView } from './leadPhaseView';
 
 export interface LeadPhase {
   id: string;
+  key: string;
   name: string;
   position: number;
   kind: LeadPhaseKind;

@@ -1027,6 +1027,12 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
 
     await closeDiagnosis(lead.id);
     expect(await statusOf(lead.id)).toBe("contactar");
+    // The staff filters and counters follow the new statuses.
+    const inFilter = async (status: string) =>
+      ((await request(app).get(`/api/leads?status=${status}`).set("Cookie", staff()).expect(200)).body.leads as Array<{ id: string }>).map((l) => l.id);
+    expect(await inFilter("contactar")).toEqual([lead.id]);
+    expect(await inFilter("listo")).toEqual([]);
+    expect((await request(app).get("/api/leads/stats").set("Cookie", staff()).expect(200)).body.counts).toMatchObject({ contactar: 1 });
 
     // Booking an appointment after the contact makes the patient "agendado".
     await request(app).patch(`/api/leads/${lead.id}`).set("Cookie", staff("default-center", "administrativo"))
@@ -1037,6 +1043,8 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
     expect(await statusOf(lead.id)).toBe("agendado");
     await completePhase(lead.id, 3); // post-operatorio (fase 4)
     expect(await statusOf(lead.id)).toBe("operado");
+    expect(await inFilter("operado")).toEqual([lead.id]);
+    expect(await inFilter("agendado")).toEqual([]);
     await completePhase(lead.id, 4);
     expect(await statusOf(lead.id)).toBe("operado");
     await completePhase(lead.id, 5);

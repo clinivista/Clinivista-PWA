@@ -268,7 +268,7 @@ export type AppTranslations = {
   adminContactNoAppt: string;
 };
 
-const T: Record<LangCode, AppTranslations> = {
+export const T: Record<LangCode, AppTranslations> = {
   es: {
     teamAccess: "Acceso Equipo", logout: "Cerrar sesión", loading: "Cargando...",
     saving: "Guardando...", saved: "Guardado", cancel: "Cancelar", close: "Cerrar",

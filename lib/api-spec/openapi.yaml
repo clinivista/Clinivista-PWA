@@ -3134,9 +3134,10 @@ components:
 
     LeadPhase:
       type: object
-      required: [id, name, position, kind, patientCaptured, enabled, complete, views]
+      required: [id, key, name, position, kind, patientCaptured, enabled, complete, views]
       properties:
         id: {type: string}
+        key: {type: string}
         name: {type: string}
         position: {type: number}
         kind:
