@@ -1,0 +1,877 @@
+{
+ "patient": [
+  {
+   "id": "1.1",
+   "title": "Como entrar: o link da clínica",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Você não precisa instalar nada nem criar uma conta para fazer sua pré-avaliação. A clínica enviará um link pessoal por WhatsApp, e-mail ou mensagem de texto (ou o mostrará como código QR). Abra-o no seu celular: a tela inicial da clínica aparece na hora."
+    },
+    {
+     "t": "p",
+     "text": "O aplicativo está disponível em nove idiomas: espanhol, inglês, português, francês, alemão, italiano, turco, árabe e chinês. Troque o idioma a qualquer momento pelo seletor no canto superior direito; o árabe é exibido da direita para a esquerda."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Seletor de idioma.",
+      "Barra de progresso: Início → Dados → Fotografias. Você sempre sabe em que etapa está.",
+      "Tempo estimado do processo (4 a 6 minutos).",
+      "O que inclui: dados pessoais, cinco fotografias guiadas e a revisão médica confidencial."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Lista de idiomas disponíveis; o que você está usando tem uma marca.",
+      "Botão do seletor (toque de novo para fechar a lista)."
+     ],
+     "caption": "Troca de idioma."
+    }
+   ]
+  },
+  {
+   "id": "1.2",
+   "title": "Seus dados pessoais",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Preencha seus dados de contato. Os campos marcados com asterisco (*) são obrigatórios. O telefone é salvo com o código do seu país e o documento é validado automaticamente de acordo com o país da clínica. Se preferir, toque primeiro em «Continuar com o Google»: você entra com sua conta do Google, seu nome e e-mail são preenchidos sozinhos e depois poderá ver seus resultados na sua conta (sem precisar criar uma senha à parte). Além desses dados, o formulário pede idade e cidade, que são opcionais."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Botão «Continuar com o Google»: preenche nome e e-mail com a sua conta do Google (só aparece se a clínica o tiver ativado).",
+      "Nome completo.",
+      "Documento de identidade (RUT no Chile).",
+      "Celular com WhatsApp e código do país.",
+      "E-mail.",
+      "Como você quer receber seus resultados: por e-mail ou por WhatsApp."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Os dados de exemplo deste manual são fictícios."
+    }
+   ]
+  },
+  {
+   "id": "1.3",
+   "title": "Histórico, consentimento e privacidade",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Conte-nos brevemente o seu histórico: há quanto tempo você nota a perda de cabelo, onde ela se concentra, que tratamentos você já usou, se tem algum sintoma e se já fez um transplante antes. São dados básicos para que a equipe médica entenda o seu caso; os campos opcionais podem ficar em branco."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Há quanto tempo você nota a perda de cabelo?",
+      "Onde a perda se concentra? (frente, coroa, ambas…).",
+      "Tratamentos que você já usou para a queda.",
+      "Sintomas associados (opcional, texto livre).",
+      "Cirurgias de transplante anteriores (opcional)."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Antes de continuar, você deve ler e aceitar o tratamento dos seus dados. A aceitação de informações comerciais é opcional e não afeta a sua avaliação. Você pode ler a política de privacidade e os termos de serviço pelos links do mesmo quadro."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Garantias: suas fotos e dados viajam criptografados e a avaliação não é um diagnóstico médico presencial.",
+      "Consentimento obrigatório para tratar seus dados (com links para a política de privacidade e os termos).",
+      "Informações comerciais: opcional.",
+      "Continuar para Fotografias (é ativado quando você aceita o consentimento)."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "1.4",
+   "title": "As cinco fotografias guiadas",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Precisamos de cinco registros padronizados: vista frontal, vértex ou coroa, têmpora direita, têmpora esquerda e área doadora (nuca). Cada registro tem um guia de posição com a orientação, a luz, a distância e o fundo recomendados. Leia-o antes de fotografar e peça ajuda a outra pessoa se for difícil tirar a foto sozinho(a)."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Voltar: retorna aos seus dados.",
+      "Sair: abandona a captura (seu progresso fica salvo).",
+      "Progresso: foto 1 de 5 e barra de avanço.",
+      "Guia de posição: orientação, luz, distância e fundo.",
+      "Descrição do registro e área para fotografar ou enviar a imagem."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Tirar a foto com a câmera"
+    },
+    {
+     "t": "p",
+     "text": "Toque em «Tirar foto». O celular pedirá permissão para usar a câmera: aceite. Você verá uma pré-visualização com uma moldura de referência; posicione a cabeça dentro da moldura como indica o guia e toque no botão redondo branco. Com «Cancelar» você sai sem fotografar e, com o ícone de giro, pode alternar entre a câmera frontal e a traseira."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Cancelar: fecha a câmera sem tirar a foto.",
+      "Virar: alterna entre a câmera frontal e a traseira.",
+      "Moldura de referência: posicione a área a avaliar dentro do quadro.",
+      "Botão de disparo."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Revisão técnica e descrição"
+    },
+    {
+     "t": "p",
+     "text": "Ao tirar a foto, o aplicativo verifica a qualidade (resolução, exposição, contraste e nitidez) e mostra recomendações se algo puder melhorar. São orientações técnicas, não interpretam características médicas. Você pode escrever uma descrição opcional de até 500 caracteres (por exemplo, «noto menos cabelo na região das entradas»). Se gostou da foto, toque em «Usar esta foto»; se não, refaça-a."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Dados técnicos da imagem (resolução, exposição, nitidez, contraste).",
+      "Recomendações automáticas para melhorar o registro.",
+      "Descrição opcional desta foto.",
+      "Usar esta foto: salva e passa para a próxima.",
+      "Repetir foto: abre a câmera novamente.",
+      "Enviar outra foto: escolha uma imagem da sua galeria."
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "Se preferir não usar a câmera naquele momento, «Enviar outra foto» permite escolher uma imagem da sua galeria. O arquivo original é conservado sem redução."
+    }
+   ]
+  },
+  {
+   "id": "1.5",
+   "title": "Avançar, corrigir e enviar",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Depois de cada foto aparece o aviso «Progresso salvo»: seu progresso é salvo automaticamente. Avance registro por registro até completar as cinco. Quando terminar, o resumo mostra as miniaturas; em cada uma você pode repetir a foto, abrir os ajustes técnicos da imagem ou enviar outra diferente. O botão de envio é ativado ao chegar a 5/5."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Repetir a foto do registro atual.",
+      "Ajustes técnicos da imagem.",
+      "Enviar outra foto da galeria.",
+      "Miniaturas dos cinco registros, cada uma com seu link para repeti-la.",
+      "Enviar Avaliação (5/5): envia tudo para a equipe médica."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Confirmação: sua avaliação foi recebida.",
+      "O que vem a seguir: revisão do caso (até 24 horas úteis), contato por WhatsApp ou e-mail e agendamento da sua consulta.",
+      "Voltar ao Início."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "1.6",
+   "title": "Sua conta para ver os resultados",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Quando o médico fechar o seu diagnóstico, a clínica enviará um link pelo canal que você escolheu (e-mail ou WhatsApp). Com ele você pode baixar o seu relatório em PDF. Se quiser consultá-lo novamente depois, entre em «Minha conta» com o seu e-mail e uma senha própria."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "E-mail com o qual você se cadastrou na clínica.",
+      "Senha (o olho permite mostrá-la ou ocultá-la).",
+      "Entrar.",
+      "Criar ou recuperar minha senha: envia um link para você escolher uma senha nova (serve também se você a esqueceu)."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Nova senha (mínimo de 8 caracteres).",
+      "Repita a senha.",
+      "Salvar senha. Se o link expirou, peça um novo na mesma tela."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Seus resultados: cada relatório da clínica aparece com sua data; toque em um para abrir o PDF.",
+      "Seletor de idioma. Abaixo: sair e links para a política de privacidade e os termos."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Exemplo de relatório de resultados (página 1): logo da clínica, dados do paciente, resposta da equipe médica e fotografias com as indicações desenhadas pelo médico."
+    },
+    {
+     "t": "note",
+     "text": "Nunca compartilhe a sua senha. A clínica não a pedirá por mensagem nem por telefone."
+    }
+   ]
+  },
+  {
+   "id": "1.7",
+   "title": "Perguntas frequentes do paciente",
+   "blocks": [
+    {
+     "t": "table",
+     "head": [
+      "Pergunta",
+      "Resposta"
+     ],
+     "rows": [
+      [
+       "Posso fazer a avaliação pelo computador?",
+       "Sim, mas a experiência foi pensada para o celular, onde a câmera guia cada registro."
+      ],
+      [
+       "A câmera não abre.",
+       "Verifique se você aceitou a permissão de câmera do navegador. Se não for possível, use «Enviar outra foto» e escolha uma imagem da sua galeria."
+      ],
+      [
+       "Errei em uma foto.",
+       "Toque em «Repetir foto» (ou no link sob a miniatura) e tire-a novamente antes de enviar."
+      ],
+      [
+       "Quando recebo uma resposta?",
+       "A equipe revisa o seu caso em no máximo 24 horas úteis e entra em contato pelo canal escolhido."
+      ],
+      [
+       "Minhas fotos são privadas?",
+       "Elas são transmitidas criptografadas e só o pessoal autorizado da clínica as vê. Você pode ler a política de privacidade no próprio aplicativo."
+      ],
+      [
+       "Esqueci a minha senha.",
+       "Em «Minha conta», toque em «Criar ou recuperar minha senha» e siga o link que chegará ao seu e-mail."
+      ]
+     ],
+     "widths": [
+      38,
+      62
+     ]
+    }
+   ]
+  }
+ ],
+ "staff": [
+  {
+   "id": "2.1",
+   "title": "Perfis e permissões",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Cada pessoa da clínica entra com seu próprio e-mail e senha e tem um de dois perfis. O perfil define o que ela pode fazer; na tela, o que você não pode fazer simplesmente aparece em modo somente leitura ou não é exibido."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Função",
+      "Médico",
+      "Administrativo"
+     ],
+     "rows": [
+      [
+       "Ver o painel de pacientes, fichas e fotografias",
+       "✔",
+       "✔"
+      ],
+      [
+       "Alterar status, data da consulta, marcar como contatado, contatar por WhatsApp",
+       "✔",
+       "✔"
+      ],
+      [
+       "Registrar fotografias das fases da equipe",
+       "✔",
+       "✔"
+      ],
+      [
+       "Diagnóstico: anotar fotos, Norwood, notas, resposta, fechar e reabrir",
+       "✔",
+       "Somente leitura"
+      ],
+      [
+       "Enviar resultados (PDF por e-mail ou WhatsApp) e Evolução",
+       "✔",
+       "✔"
+      ],
+      [
+       "Ver o Relatório de pendências",
+       "✔",
+       "✔"
+      ],
+      [
+       "Configurar e enviar o Relatório por e-mail; configurar as Fases",
+       "Somente representante legal",
+       "Somente representante legal"
+      ],
+      [
+       "Gerenciar Usuários (criar, bloquear, redefinir, excluir)",
+       "Se for representante legal",
+       "✔"
+      ]
+     ],
+     "widths": [
+      58,
+      21,
+      21
+     ]
+    },
+    {
+     "t": "p",
+     "text": "O representante legal é a pessoa que a clínica designa para administrar a conta (pode ser um médico ou um administrativo): é definido em Usuários. Por isso, no menu, Fases só aparece para o representante legal e Usuários para os administrativos e o representante legal."
+    },
+    {
+     "t": "note",
+     "text": "As capturas de tela deste manual correspondem à clínica fictícia «Clínica Aurora». As fotografias são ilustrações sintéticas, não pessoas reais."
+    }
+   ]
+  },
+  {
+   "id": "2.2",
+   "title": "Entrar e recuperar a senha",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Entre pelo endereço de acesso da equipe da sua clínica. Digite seu e-mail e sua senha e pressione Enter ou o botão de entrada. Se a senha estiver incorreta, você verá um aviso e poderá tentar de novo."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "E-mail da equipe.",
+      "Senha.",
+      "Esqueceu sua senha? Enviamos um link por e-mail.",
+      "Botão de entrada."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Para recuperá-la, toque em «Esqueceu sua senha?», digite seu e-mail e você receberá um link para escolher uma nova. O link expira: se já venceu, peça outro. Se você não tem acesso ao e-mail, outra pessoa com permissões pode redefinir sua senha em Usuários (seção 2.11)."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "E-mail para o qual será enviado o link de recuperação.",
+      "Enviar link."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Nova senha (mínimo de 8 caracteres; o olho a mostra ou oculta).",
+      "Repita a senha.",
+      "Salvar senha. Depois, você já pode entrar com a nova."
+     ],
+     "caption": "Tela que se abre a partir do link do e-mail."
+    }
+   ]
+  },
+  {
+   "id": "2.3",
+   "title": "O painel de pacientes",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Ao entrar, você chega ao «Painel de Pacientes», a visão geral da sua clínica. À esquerda está o menu (Pacientes, Usuários, Relatório e, para o representante legal, Fases), o seletor de idioma e o botão de sair."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Pacientes: lista e fichas.",
+      "Usuários: pessoas da clínica.",
+      "Relatório de pendências.",
+      "Fases: configuração do protocolo (somente representante legal).",
+      "Copiar link: o link da clínica para convidar pacientes.",
+      "Busca por nome ou telefone.",
+      "Filtro por status.",
+      "Linha de paciente: toque para abrir a ficha."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Os cartões superiores contam os pacientes por status (total, incompleto, pronto para revisão, pronto para contatar, operado…) e servem de resumo rápido. A tabela mostra o nome, o telefone, o status, quantas fotos da pré-avaliação existem (por exemplo 5/5) e a data de cadastro."
+    },
+    {
+     "t": "h3",
+     "text": "Buscar e filtrar"
+    },
+    {
+     "t": "p",
+     "text": "Digite parte do nome ou do telefone na busca para restringir a lista. O filtro de status mostra apenas os pacientes que estão na etapa escolhida; por exemplo, «Pronto para contatar» reúne quem já tem o diagnóstico fechado e espera que alguém ligue."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Lista de status do filtro."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Resultado do filtro «Pronto para contatar»."
+    },
+    {
+     "t": "h3",
+     "text": "Copiar o link da clínica"
+    },
+    {
+     "t": "p",
+     "text": "«Copiar link» abre uma janela com o link pessoal da clínica para que os pacientes façam sua pré-avaliação. Copie-o para enviar por WhatsApp, e-mail ou mensagem, ou mostre-o como código QR na recepção."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Janela com o link da clínica."
+    }
+   ]
+  },
+  {
+   "id": "2.4",
+   "title": "Status do paciente",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "O status de cada paciente é calculado automaticamente, de acordo com o que vai sendo concluído no processo. Você não precisa alterá-lo manualmente: só registra a data da consulta ou marca que houve contato sem consulta."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Status",
+      "Quando é atribuído"
+     ],
+     "rows": [
+      [
+       "Incompleto",
+       "O paciente ainda não terminou as fotografias da pré-avaliação."
+      ],
+      [
+       "Pronto para revisão",
+       "Pré-avaliação completa; o médico ainda não fechou o diagnóstico."
+      ],
+      [
+       "Pronto para contatar",
+       "Diagnóstico fechado; falta contatar o paciente."
+      ],
+      [
+       "Agendado",
+       "Foi registrada uma data de consulta."
+      ],
+      [
+       "Contatado",
+       "O paciente foi contatado, mas não foi agendada consulta («Contatado, sem consulta»)."
+      ],
+      [
+       "Operado",
+       "Concluiu a fase pós-operatória."
+      ],
+      [
+       "Tratamento concluído",
+       "Todas as fases do protocolo estão completas."
+      ],
+      [
+       "Fechado",
+       "É marcado manualmente pela equipe e sempre é respeitado."
+      ]
+     ],
+     "widths": [
+      30,
+      70
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2.5",
+   "title": "A ficha do paciente",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Toque em um paciente para abrir sua ficha em um painel lateral. Na parte superior ficam o nome, o telefone e o botão para excluir o cadastro. Logo abaixo está o quadro de gestão."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Status do paciente (atualiza sozinho ao concluir cada etapa).",
+      "Data da consulta: ao registrá-la, o status passa para «Agendado».",
+      "Contatado, sem consulta: use quando você ligou para o paciente e não houve agendamento.",
+      "Contatar por WhatsApp: abre a conversa com o paciente.",
+      "Excluir cadastro: permanente; pede confirmação."
+     ]
+    },
+    {
+     "t": "warn",
+     "text": "Excluir um cadastro apaga para sempre os dados do paciente e todas as suas fotografias. Não é possível desfazer."
+    },
+    {
+     "t": "h3",
+     "text": "Registro fotográfico"
+    },
+    {
+     "t": "p",
+     "text": "Abaixo do quadro de gestão está o Registro Fotográfico com as fotos da pré-avaliação (quantas de quantas, por exemplo 5/5). Toque em uma foto para vê-la ampliada."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Registro Fotográfico: os cinco registros do paciente com seu contador."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2.6",
+   "title": "Processo por fases",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "O acompanhamento é organizado em fases: pré-avaliação, diagnóstico, pré-operatório, pós-operatório e dois controles médicos. Cada fase abre quando a anterior é concluída, e o que falta aparece bloqueado com um aviso (por exemplo «Abre ao concluir “Diagnóstico”»). Os nomes e as fotos pedidas em cada fase são configurados na seção Fases (2.12)."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Título da seção e sua regra: cada fase abre ao concluir a anterior.",
+      "Pré-avaliação: é feita pelo paciente a partir do link; aqui só se vê o andamento (5/5).",
+      "Diagnóstico: trabalhado pelo médico (seção 2.7).",
+      "Status da fase: Aberto, Fechado ou bloqueado."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Nas fases que a equipe registra (pré-operatório, pós-operatório e controles), cada área tem um cartão com três ações: Tirar foto (abre a câmera do dispositivo com a moldura-guia), Enviar (escolhe uma imagem do aparelho) e, quando já há foto, Repetir ou Remover. O andamento da fase aparece como um contador (0/5, 5/5)."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Reabrir diagnóstico.",
+      "Ver PDF: pré-visualiza o relatório.",
+      "Enviar por e-mail.",
+      "Enviar por WhatsApp."
+     ],
+     "caption": "Abaixo do diagnóstico: envio de resultados e a fase pré-operatório (0/5) com seus cartões «Tirar foto» / «Enviar»."
+    }
+   ]
+  },
+  {
+   "id": "2.7",
+   "title": "Diagnóstico (médicos)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Quando o paciente conclui a pré-avaliação, a fase Diagnóstico abre no estado «Aberto / Rascunho». Somente o médico pode trabalhá-la; o pessoal administrativo a vê em modo somente leitura (aparece o aviso «Somente o médico pode editar o diagnóstico»)."
+    },
+    {
+     "t": "h3",
+     "text": "Passo 1 · Anotar as fotografias"
+    },
+    {
+     "t": "p",
+     "text": "Abaixo de cada foto do paciente está o botão «Anotar». Ele abre o editor em tela cheia para desenhar indicações sobre a imagem."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Anotar: abre o editor de desenho dessa fotografia."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Ferramentas de desenho: lápis, linha, seta, círculo, texto, borracha e mover.",
+      "Cores (vermelho, amarelo, verde, azul, branco e preto).",
+      "Espessura do traço: fino, médio ou grosso.",
+      "Aproximar / afastar a imagem (com a porcentagem de zoom).",
+      "Desfazer e refazer os últimos traços.",
+      "Salvar desenho (ou Cancelar para sair sem salvar)."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Para marcar detalhes pequenos, aproxime a imagem com o botão + (ou ajuste-a à tela com o último botão) e use a ferramenta «Mover» para se deslocar sobre a foto ampliada. Os desenhos não alteram a foto original: são salvos à parte e a foto do paciente é conservada intacta."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Mover: arraste a imagem ampliada.",
+      "Afastar.",
+      "Aproximar.",
+      "Ajustar à tela: volta à visão completa."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Passo 2 · Norwood, notas e resposta"
+    },
+    {
+     "t": "p",
+     "text": "Escolha a escala Norwood (ou deixe «Inconclusivo»), escreva suas notas clínicas (internas) e a resposta que o paciente receberá (até 8.000 caracteres). «Salvar rascunho» guarda seu trabalho sem fechá-lo: você pode voltar depois."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Escala Norwood (Avaliação).",
+      "Notas clínicas: só a equipe as vê.",
+      "Resposta para o paciente: aparecerá no relatório em PDF dele."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Passo 3 · Fechar o diagnóstico"
+    },
+    {
+     "t": "p",
+     "text": "«Fechar diagnóstico» deixa o diagnóstico em somente leitura, abre a fase seguinte e passa o paciente para «Pronto para contatar». Se precisar corrigir algo, «Reabrir diagnóstico» o habilita novamente (fica registrado no histórico) e bloqueia as fases seguintes até fechá-lo de novo."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Salvar rascunho.",
+      "Fechar diagnóstico (pede confirmação)."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Diagnóstico fechado: as fotos mostram «com desenho» onde o médico fez anotações."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Visão de um usuário administrativo: o diagnóstico em rascunho só pode ser visualizado."
+    }
+   ]
+  },
+  {
+   "id": "2.8",
+   "title": "Enviar os resultados ao paciente",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Com o diagnóstico fechado, aparece o quadro «Enviar resultados ao paciente». O paciente recebe um PDF com os desenhos do médico e a resposta dele, pelo canal que escolheu ao se cadastrar. Você tem três ações: «Ver PDF» (pré-visualiza o relatório), «Enviar por e-mail» (envia o PDF anexado ao e-mail do paciente) e «Enviar por WhatsApp» (abre o WhatsApp com um link de download)."
+    },
+    {
+     "t": "p",
+     "text": "Cada envio fica registrado no histórico abaixo do quadro (data, canal, destino, status e quem o fez), de modo que você sempre sabe se o paciente já recebeu a resposta. Se o servidor ainda não tiver o envio de e-mails configurado, o aplicativo avisa e você pode usar o WhatsApp enquanto isso."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Segunda página do relatório de resultados: fotografias com as indicações do médico."
+    }
+   ]
+  },
+  {
+   "id": "2.9",
+   "title": "Evolução: comparar fases",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Na ficha, a seção Evolução compara, lado a lado, a mesma área anatômica do paciente em cada fase: pré-avaliação, diagnóstico, pré-operatório, pós-operatório e controles. Na fase de diagnóstico, mostra-se a foto com as indicações do médico (marcada «Editada pela equipe»); nas demais, a foto original."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Áreas: escolha a área anatômica (o número indica em quantas fases há foto).",
+      "Ampliar: abre a foto em tela cheia."
+     ],
+     "caption": "Cada coluna é uma fase; role para o lado."
+    },
+    {
+     "t": "p",
+     "text": "Toque no ícone de ampliar de uma foto para vê-la grande e compará-la em detalhe."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Foto ampliada."
+    },
+    {
+     "t": "h3",
+     "text": "Exportar e enviar"
+    },
+    {
+     "t": "p",
+     "text": "Em «Exportar e enviar», escolha entre «Todas as áreas» ou «Somente esta área» e toque em «Exportar PDF» para baixar a comparação. Para enviá-la, confira o «E-mail de destino» (por padrão o do paciente; você pode digitar outro, por exemplo o da administração) e toque em «Enviar por e-mail»."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Todas as áreas / Somente esta área.",
+      "Exportar PDF.",
+      "E-mail de destino (editável).",
+      "Enviar por e-mail."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Exemplo do PDF de Evolução (uma área, uma fase por coluna)."
+    }
+   ]
+  },
+  {
+   "id": "2.10",
+   "title": "Relatório de pendências",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "«Relatório» lista os pacientes com a pré-avaliação completa que ainda aguardam o diagnóstico do médico e permite programar um resumo periódico por e-mail para a direção da clínica (a configuração e o envio são do representante legal)."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Pendentes de diagnóstico, com os dias de espera.",
+      "Diagnosticar: abre a ficha do paciente.",
+      "Enviar o relatório automaticamente (ativa o envio periódico).",
+      "E-mails que o recebem: um por linha ou separados por vírgula (máximo 5).",
+      "Periodicidade, dia e hora (horário do Chile).",
+      "Salvar configuração.",
+      "Enviar agora: envia o relatório imediatamente."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Se o servidor não tiver o envio de e-mails configurado, a tela indica e o relatório ainda não poderá ser enviado."
+    }
+   ]
+  },
+  {
+   "id": "2.11",
+   "title": "Usuários da clínica",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Se você é administrativo ou representante legal, em «Usuários» gerencia as pessoas que usam o painel da sua clínica: criá-las, bloquear ou desbloquear o acesso, redefinir a senha, definir quem é o representante legal e excluí-las. Seu próprio usuário aparece marcado com «Você» e não tem ações destrutivas sobre si mesmo."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Adicionar usuário: cria uma nova pessoa com seu perfil (médico ou administrativo).",
+      "Redefinir senha: envia a ela um link para escolher uma nova.",
+      "Bloquear acesso: impede que entre sem excluí-la.",
+      "Tornar representante legal.",
+      "Excluir."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Formulário para adicionar um usuário."
+    }
+   ]
+  },
+  {
+   "id": "2.12",
+   "title": "Fases: configurar o protocolo (representante legal)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "«Fases» define as etapas de registro e acompanhamento da sua clínica e as fotografias pedidas em cada uma. A primeira fase é sempre a pré-avaliação feita pelo paciente; o Diagnóstico é trabalhado pelo médico e não tem fotos próprias; as demais são registradas pela equipe em ordem. Você pode renomear fases e fotografias, reordená-las com as setas, adicionar ou remover e salvar com «Salvar fases»."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Nome da fase e de cada fotografia (editável).",
+      "Adicionar fotografia à fase.",
+      "Adicionar fase.",
+      "Salvar fases (ou Descartar alterações)."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Você pode mudar a configuração quando quiser: as fotografias que já existem não são apagadas, apenas deixam de ser pedidas."
+    }
+   ]
+  },
+  {
+   "id": "2.13",
+   "title": "Uso pelo celular",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "O painel funciona igual no celular: o menu abre pelo botão de três linhas, os cartões se empilham e a ficha ocupa a tela toda."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Menu.",
+      "Copiar link.",
+      "Resumo por status.",
+      "Busca e filtro.",
+      "Lista de pacientes."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Menu lateral aberto."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Status.",
+      "Data da consulta.",
+      "Contatado, sem consulta.",
+      "Contatar por WhatsApp."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2.14",
+   "title": "Dicas e solução de problemas",
+   "blocks": [
+    {
+     "t": "table",
+     "head": [
+      "Situação",
+      "O que fazer"
+     ],
+     "rows": [
+      [
+       "O paciente não aparece na lista.",
+       "Verifique a busca e o filtro de status: se houver um ativo, volte para «Todos os status»."
+      ],
+      [
+       "Não consigo fechar o diagnóstico.",
+       "O paciente deve ter concluído a pré-avaliação (5/5). Somente o perfil médico pode fechá-lo."
+      ],
+      [
+       "O e-mail não é enviado.",
+       "Se aparecer o aviso de que o envio não está configurado, avise o administrador técnico; enquanto isso, use o WhatsApp."
+      ],
+      [
+       "Errei ao anotar uma foto.",
+       "Dentro do editor use «Desfazer», ou abra «Anotar» novamente e redesenhe antes de fechar o diagnóstico."
+      ],
+      [
+       "Quero que o paciente repita uma foto.",
+       "Contate-o por WhatsApp pela ficha e envie novamente o link da clínica."
+      ],
+      [
+       "Esqueci a minha senha.",
+       "Use «Esqueceu sua senha?» na tela de entrada ou peça a outra pessoa com permissões que a redefina."
+      ]
+     ],
+     "widths": [
+      38,
+      62
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "Sempre saia da sua sessão em computadores compartilhados e não compartilhe a sua senha: cada ação fica registrada com o seu nome."
+    }
+   ]
+  }
+ ]
+}

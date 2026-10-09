@@ -1,0 +1,877 @@
+{
+ "patient": [
+  {
+   "id": "1.1",
+   "title": "Nasıl girilir: kliniğin bağlantısı",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Ön değerlendirmeni yapmak için hiçbir şey kurman veya hesap oluşturman gerekmez. Klinik sana kişisel bir bağlantıyı WhatsApp, e-posta veya kısa mesajla gönderir (ya da QR kod olarak gösterir). Bağlantıyı telefonundan aç; kliniğin açılış ekranı hemen görünür."
+    },
+    {
+     "t": "p",
+     "text": "Uygulama dokuz dilde kullanılabilir: İspanyolca, İngilizce, Portekizce, Fransızca, Almanca, İtalyanca, Türkçe, Arapça ve Çince. Sağ üst köşedeki dil seçiciyle istediğin zaman dili değiştirebilirsin; Arapça sağdan sola görüntülenir."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Dil seçici.",
+      "İlerleme çubuğu: Başlangıç → Veriler → Fotoğraflar. Hangi aşamada olduğunu her zaman görürsün.",
+      "Süreç için tahmini süre (4 – 6 dakika).",
+      "Neleri içerir: kişisel veriler, beş yönlendirmeli fotoğraf ve gizli tıbbi inceleme."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Kullanılabilir dillerin listesi; kullandığın dilin yanında bir işaret bulunur.",
+      "Seçici düğmesi (listeyi kapatmak için tekrar basılır)."
+     ],
+     "caption": "Dil değiştirme."
+    }
+   ]
+  },
+  {
+   "id": "1.2",
+   "title": "Kişisel bilgilerin",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "İletişim bilgilerini doldur. Yıldız (*) işaretli alanlar zorunludur. Telefon, ülke kodunla birlikte kaydedilir; kimlik belgesi kliniğin ülkesine göre otomatik doğrulanır. İstersen önce «Google ile devam et» düğmesine basabilirsin: Google hesabınla giriş yapılır, adın ve e-postan otomatik doldurulur ve sonuçlarını daha sonra hesabında görebilirsin (ayrıca bir şifre oluşturmana gerek kalmaz). Bu bilgilere ek olarak form, isteğe bağlı olarak yaş ve şehir de sorar."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "«Google ile devam et» düğmesi: adını ve e-postanı Google hesabınla doldurur (yalnızca klinik etkinleştirdiyse görünür).",
+      "Ad soyad.",
+      "Kimlik belgesi (Şili'de RUT).",
+      "WhatsApp'lı cep telefonu ve ülke kodu.",
+      "E-posta adresi.",
+      "Sonuçlarını nasıl almak istediğin: e-posta veya WhatsApp."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Bu kılavuzdaki örnek veriler tamamen kurgusaldır."
+    }
+   ]
+  },
+  {
+   "id": "1.3",
+   "title": "Geçmiş bilgileri, onay ve gizlilik",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Geçmişini kısaca anlat: saç kaybını ne zamandır fark ettiğin, nerede yoğunlaştığı, hangi tedavileri kullandığın, bir belirti olup olmadığı ve daha önce saç ekimi yaptırıp yaptırmadığın. Bunlar tıbbi ekibin durumunu anlaması için temel bilgilerdir; isteğe bağlı alanlar boş bırakılabilir."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Saç kaybını ne zamandır fark ediyorsun?",
+      "Kayıp nerede yoğunlaşıyor? (alın, tepe, ikisi birden…).",
+      "Saç dökülmesi için kullandığın tedaviler.",
+      "İlişkili belirtiler (isteğe bağlı, serbest metin).",
+      "Önceki saç ekimi ameliyatları (isteğe bağlı)."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Devam etmeden önce verilerinin işlenmesini okuyup kabul etmelisin. Ticari bilgi almayı kabul etmek isteğe bağlıdır ve değerlendirmeni etkilemez. Gizlilik politikasını ve hizmet şartlarını aynı kutudaki bağlantılardan okuyabilirsin."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Güvenceler: fotoğraf ve verilerin şifreli iletilir; değerlendirme yüz yüze bir tıbbi teşhis değildir.",
+      "Verilerinin işlenmesi için zorunlu onay (gizlilik politikası ve şartlara bağlantılarla).",
+      "Ticari bilgi: isteğe bağlı.",
+      "Fotoğraflara devam et (onayı verince etkinleşir)."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "1.4",
+   "title": "Beş yönlendirmeli fotoğraf",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Beş standart çekim gerekir: ön görünüm, tepe (vertex), sağ şakak, sol şakak ve donör bölge (ense). Her çekimin; yönlendirme, ışık, mesafe ve arka plan önerilerini içeren bir konum rehberi vardır. Çekmeden önce oku; kendin çekmekte zorlanırsan başka birinden yardım iste."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Geri: bilgilerine döner.",
+      "Çık: çekimi bırakır (ilerlemen kaydedilir).",
+      "İlerleme: 5 fotoğraftan 1.'si ve ilerleme çubuğu.",
+      "Konum rehberi: yönelim, ışık, mesafe ve arka plan.",
+      "Çekimin açıklaması ve fotoğraf çekme / yükleme alanı."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Kamerayla fotoğraf çekme"
+    },
+    {
+     "t": "p",
+     "text": "«Tomar foto» düğmesine bas. Telefon kamera izni isteyecek: kabul et. Referans çerçeveli bir önizleme göreceksin; başını rehberin gösterdiği gibi çerçevenin içine yerleştir ve beyaz yuvarlak düğmeye bas. «Cancelar» ile çekmeden çıkabilir, çevirme simgesiyle ön ve arka kamera arasında geçiş yapabilirsin."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "İptal: fotoğraf çekmeden kamerayı kapatır.",
+      "Çevir: ön ve arka kamera arasında geçiş yapar.",
+      "Referans çerçeve: değerlendirilecek bölgeyi kutunun içine yerleştir.",
+      "Çekim düğmesi."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Teknik inceleme ve açıklama"
+    },
+    {
+     "t": "p",
+     "text": "Fotoğraf çekildiğinde uygulama kalitesini (çözünürlük, pozlama, kontrast ve netlik) kontrol eder ve iyileştirilebilecek bir şey varsa öneriler gösterir. Bunlar teknik yönlendirmelerdir, tıbbi bulguları yorumlamaz. En fazla 500 karakterlik isteğe bağlı bir açıklama yazabilirsin (örneğin «alın bölgesinde saçım azaldı gibi»). Fotoğrafı beğendiysen «Usar esta foto» düğmesine bas; beğenmediysen tekrar çek."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Görüntünün teknik verileri (çözünürlük, pozlama, netlik, kontrast).",
+      "Çekimi iyileştirmek için otomatik öneriler.",
+      "Bu fotoğraf için isteğe bağlı açıklama.",
+      "Bu fotoğrafı kullan: kaydeder ve sonrakine geçer.",
+      "Fotoğrafı tekrarla: kamerayı yeniden açar.",
+      "Başka fotoğraf yükle: galerinden bir görüntü seçersin."
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "O anda kamerayı kullanmak istemezsen «Subir otra foto» ile galerinden bir görüntü seçebilirsin. Orijinal dosya küçültülmeden saklanır."
+    }
+   ]
+  },
+  {
+   "id": "1.5",
+   "title": "İlerleme, düzeltme ve gönderme",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Her fotoğraftan sonra «İlerleme kaydedildi» uyarısı görünür: ilerlemen otomatik kaydedilir. Beşini tamamlayana kadar çekimleri sırayla yap. Bitirdiğinde özet küçük resimleri gösterir; her birinden fotoğrafı yineleyebilir, görüntü teknik ayarlarını açabilir veya başka bir fotoğraf yükleyebilirsin. Gönderme düğmesi 5/5'e ulaşınca etkinleşir."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Mevcut çekim için fotoğrafı yinele.",
+      "Görüntü teknik ayarları.",
+      "Galeriden başka fotoğraf yükle.",
+      "Beş çekimin küçük resimleri; her birinin yinelemek için bağlantısı var.",
+      "Değerlendirmeyi gönder (5/5): her şeyi tıbbi ekibe iletir."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Onay: değerlendirmen alındı.",
+      "Sırada ne var: vakanın incelenmesi (en fazla 24 iş saati), WhatsApp veya e-postayla iletişim ve muayenenin planlanması.",
+      "Başlangıca dön."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "1.6",
+   "title": "Sonuçlarını görmek için hesabın",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Doktor teşhisini kapattığında klinik, seçtiğin kanaldan (e-posta veya WhatsApp) sana bir bağlantı gönderir. Bununla raporunu PDF olarak indirebilirsin. Daha sonra tekrar bakmak istersen e-postan ve kendi şifrenle «Hesabıma giriş yap»a gir."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Kliniğe kaydolurken kullandığın e-posta adresi.",
+      "Şifre (göz simgesiyle gösterilir veya gizlenir).",
+      "Giriş.",
+      "Şifremi oluştur veya sıfırla: yeni bir şifre seçmen için bağlantı gönderir (unuttuysan da kullanılır)."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Yeni şifre (en az 8 karakter).",
+      "Şifreyi tekrarla.",
+      "Şifreyi kaydet. Bağlantının süresi dolduysa aynı ekrandan yenisini iste."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Sonuçların: kliniğin her raporu tarihiyle görünür; PDF'yi açmak için birine dokun.",
+      "Dil seçici. Aşağıda: oturumu kapat ile gizlilik politikası ve şartlara bağlantılar."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Sonuç raporu örneği (sayfa 1): kliniğin logosu, hasta bilgileri, tıbbi ekibin yanıtı ve doktorun çizdiği işaretlerle fotoğraflar."
+    },
+    {
+     "t": "note",
+     "text": "Şifreni kimseyle paylaşma. Klinik şifreni mesajla veya telefonla asla istemez."
+    }
+   ]
+  },
+  {
+   "id": "1.7",
+   "title": "Hastalar için sık sorulan sorular",
+   "blocks": [
+    {
+     "t": "table",
+     "head": [
+      "Soru",
+      "Yanıt"
+     ],
+     "rows": [
+      [
+       "Değerlendirmeyi bilgisayardan yapabilir miyim?",
+       "Evet, ancak deneyim, kameranın her çekimi yönlendirdiği telefon için tasarlanmıştır."
+      ],
+      [
+       "Kamera açılmıyor.",
+       "Tarayıcının kamera iznini verdiğinden emin ol. Olmuyorsa «Başka fotoğraf yükle» ile galerinden bir görüntü seç."
+      ],
+      [
+       "Bir fotoğrafta hata yaptım.",
+       "«Fotoğrafı tekrarla»ye (veya küçük resmin altındaki bağlantıya) bas ve göndermeden önce yeniden çek."
+      ],
+      [
+       "Yanıtı ne zaman alırım?",
+       "Ekip vakanı en fazla 24 iş saatinde inceler ve seçtiğin kanaldan seninle iletişime geçer."
+      ],
+      [
+       "Fotoğraflarım gizli mi?",
+       "Şifreli iletilir ve yalnızca kliniğin yetkili personeli görür. Gizlilik politikasını uygulamadan okuyabilirsin."
+      ],
+      [
+       "Şifremi unuttum.",
+       "«Hesabıma giriş yap»da «Şifremi oluştur veya sıfırla»ya bas ve e-postana gelen bağlantıyı izle."
+      ]
+     ],
+     "widths": [
+      38,
+      62
+     ]
+    }
+   ]
+  }
+ ],
+ "staff": [
+  {
+   "id": "2.1",
+   "title": "Roller ve yetkiler",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Kliniğin her çalışanı kendi e-posta ve şifresiyle girer ve iki rolden birine sahiptir. Rol, neler yapabileceğini belirler; yapamadığın şeyler ekranda salt okunur görünür ya da hiç gösterilmez."
+    },
+    {
+     "t": "table",
+     "head": [
+      "İşlev",
+      "Doktor",
+      "İdari personel"
+     ],
+     "rows": [
+      [
+       "Hasta panelini, dosyaları ve fotoğrafları görme",
+       "✔",
+       "✔"
+      ],
+      [
+       "Durum, randevu tarihi değiştirme, görüşüldü işaretleme, WhatsApp ile iletişim",
+       "✔",
+       "✔"
+      ],
+      [
+       "Personel aşamalarının fotoğraflarını kaydetme",
+       "✔",
+       "✔"
+      ],
+      [
+       "Teşhis: fotoğraf işaretleme, Norwood, notlar, yanıt, kapatma ve yeniden açma",
+       "✔",
+       "Salt okunur"
+      ],
+      [
+       "Sonuçları gönderme (e-posta/WhatsApp ile PDF) ve Gelişim",
+       "✔",
+       "✔"
+      ],
+      [
+       "Bekleyenler raporunu görme",
+       "✔",
+       "✔"
+      ],
+      [
+       "Raporu yapılandırma/e-postayla gönderme; Aşamaları yapılandırma",
+       "Yalnızca yasal temsilci",
+       "Yalnızca yasal temsilci"
+      ],
+      [
+       "Kullanıcıları yönetme (oluşturma, engelleme, sıfırlama, silme)",
+       "Yasal temsilciyse",
+       "✔"
+      ]
+     ],
+     "widths": [
+      58,
+      21,
+      21
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Yasal temsilci, kliniğin hesabı yönetmek üzere belirlediği kişidir (doktor veya idari personel olabilir); Kullanıcılar bölümünden tanımlanır. Bu nedenle menüde Aşamalar yalnızca yasal temsilciye, Kullanıcılar ise idari personele ve yasal temsilciye görünür."
+    },
+    {
+     "t": "note",
+     "text": "Bu kılavuzdaki ekran görüntüleri kurgusal «Clínica Aurora» kliniğine aittir. Fotoğraflar sentetik illüstrasyonlardır, gerçek kişiler değildir."
+    }
+   ]
+  },
+  {
+   "id": "2.2",
+   "title": "Giriş yapma ve şifre kurtarma",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Kliniğinin ekip erişim adresinden gir. E-postanı ve şifreni yaz, Enter'a veya giriş düğmesine bas. Şifre yanlışsa bir uyarı görürsün ve yeniden deneyebilirsin."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Ekip e-postası.",
+      "Şifre.",
+      "Şifrenizi mi unuttunuz? E-postayla bir bağlantı gönderilir.",
+      "Giriş düğmesi."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Kurtarmak için «Şifrenizi mi unuttunuz?» seçeneğine bas, e-postanı yaz; yeni bir şifre seçmen için bağlantı alırsın. Bağlantının süresi dolar: dolduysa yenisini iste. E-postana erişemiyorsan yetkili başka biri şifreni Kullanıcılar bölümünden sıfırlayabilir (bölüm 2.11)."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Kurtarma bağlantısının gönderileceği e-posta.",
+      "Bağlantıyı gönder."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Yeni şifre (en az 8 karakter; göz simgesi gösterir/gizler).",
+      "Şifreyi tekrarla.",
+      "Şifreyi kaydet. Ardından yeni şifrenle giriş yapabilirsin."
+     ],
+     "caption": "E-postadaki bağlantıdan açılan ekran."
+    }
+   ]
+  },
+  {
+   "id": "2.3",
+   "title": "Hasta paneli",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Giriş yaptığında kliniğinin genel görünümü olan «Hasta Panosu» ekranına gelirsin. Solda menü (Hastalar, Kullanıcılar, Rapor ve yasal temsilci için Aşamalar), dil seçici ve oturum kapatma bulunur."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Hastalar: liste ve dosyalar.",
+      "Kullanıcılar: kliniğin çalışanları.",
+      "Bekleyenler raporu.",
+      "Aşamalar: protokol yapılandırması (yalnızca yasal temsilci).",
+      "Bağlantıyı kopyala: hastaları davet etmek için kliniğin bağlantısı.",
+      "Ad veya telefona göre arama.",
+      "Duruma göre filtre.",
+      "Hasta satırı: dosyasını açmak için dokun."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Üstteki kartlar hastaları duruma göre sayar (toplam, eksik, incelemeye hazır, iletişime hazır, ameliyat edildi…) ve hızlı bir özet sunar. Tabloda ad, telefon, durum, ön değerlendirme fotoğraf sayısı (örneğin 5/5) ve kayıt tarihi görünür."
+    },
+    {
+     "t": "h3",
+     "text": "Arama ve filtreleme"
+    },
+    {
+     "t": "p",
+     "text": "Listeyi daraltmak için aramaya adın veya telefonun bir kısmını yaz. Durum filtresi yalnızca seçilen aşamadaki hastaları gösterir; örneğin «Listo para contactar», teşhisi kapatılmış ve aranmayı bekleyenleri toplar."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Filtredeki durum listesi."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "«İletişime hazır» filtresinin sonucu."
+    },
+    {
+     "t": "h3",
+     "text": "Kliniğin bağlantısını kopyalama"
+    },
+    {
+     "t": "p",
+     "text": "«Bağlantıyı kopyala», hastaların ön değerlendirmesini yapacağı kliniğe özel bağlantıyla bir pencere açar. WhatsApp, e-posta veya mesajla göndermek için kopyala ya da resepsiyonda QR kod olarak göster."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Kliniğin bağlantısını gösteren pencere."
+    }
+   ]
+  },
+  {
+   "id": "2.4",
+   "title": "Hasta durumları",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Her hastanın durumu, sürecinde tamamlanan adımlara göre otomatik hesaplanır. Elle değiştirmen gerekmez: yalnızca randevu tarihini kaydedersin veya randevusuz görüşüldüğünü işaretlersin."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Durum",
+      "Ne zaman atanır"
+     ],
+     "rows": [
+      [
+       "Eksik",
+       "Hasta ön değerlendirme fotoğraflarını henüz tamamlamadı."
+      ],
+      [
+       "İncelemeye hazır",
+       "Ön değerlendirme tamam; doktor teşhisi henüz kapatmadı."
+      ],
+      [
+       "İletişime hazır",
+       "Teşhis kapatıldı; hastayla iletişime geçilmesi gerekiyor."
+      ],
+      [
+       "Planlandı",
+       "Bir randevu tarihi kaydedildi."
+      ],
+      [
+       "İletişime geçildi",
+       "Hastayla görüşüldü ancak randevu verilmedi («İletişime geçildi, randevu yok»)."
+      ],
+      [
+       "Ameliyat edildi",
+       "Ameliyat sonrası aşamayı tamamladı."
+      ],
+      [
+       "Tedavi tamamlandı",
+       "Protokolün tüm aşamaları tamamlandı."
+      ],
+      [
+       "Kapalı",
+       "Personel elle işaretler ve her zaman korunur."
+      ]
+     ],
+     "widths": [
+      30,
+      70
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2.5",
+   "title": "Hasta dosyası",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Dosyasını yan panelde açmak için bir hastaya dokun. Üstte adı, telefonu ve kaydı silme düğmesi bulunur. Hemen altında yönetim kutusu yer alır."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Hasta durumu (her aşama tamamlandıkça kendiliğinden güncellenir).",
+      "Randevu tarihi: kaydedilince durum «Planlandı» olur.",
+      "«İletişime geçildi, randevu yok»: hastayı aradığında ve randevu verilmediğinde kullan.",
+      "WhatsApp ile İletişim: hastayla sohbeti açar.",
+      "Kaydı sil: kalıcıdır; onay ister."
+     ]
+    },
+    {
+     "t": "warn",
+     "text": "Bir kaydı silmek hastanın verilerini ve tüm fotoğraflarını kalıcı olarak siler. Geri alınamaz."
+    },
+    {
+     "t": "h3",
+     "text": "Fotoğraf kaydı"
+    },
+    {
+     "t": "p",
+     "text": "Yönetim kutusunun altında ön değerlendirme fotoğraflarını gösteren Fotoğraf Kaydı bulunur (örneğin 5/5). Büyütmek için bir fotoğrafa dokun."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Fotoğraf Kaydı: hastanın beş çekimi ve sayacı."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2.6",
+   "title": "Aşamalara göre süreç",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Takip aşamalara göre düzenlenir: ön değerlendirme, teşhis, ameliyat öncesi, ameliyat sonrası ve iki tıbbi kontrol. Her aşama bir öncekinin tamamlanmasıyla açılır; eksik olanlar bir uyarıyla kilitli görünür (örneğin «Teşhis tamamlandığında açılır»). Her aşamadaki adlar ve istenen fotoğraflar Aşamalar bölümünde (2.12) yapılandırılır."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Bölüm başlığı ve kuralı: her aşama bir öncekinin tamamlanmasıyla açılır.",
+      "Ön değerlendirme: hasta bağlantıdan çeker; burada yalnızca ilerleme görülür (5/5).",
+      "Teşhis: doktor tarafından yürütülür (bölüm 2.7).",
+      "Aşama durumu: Açık, Kapalı veya kilitli."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Personelin kaydettiği aşamalarda (ameliyat öncesi, ameliyat sonrası ve kontroller) her bölgenin üç işlemli bir kartı vardır: Fotoğraf çek (cihazın kamerasını rehber çerçeveyle açar), Yükle (cihazdan bir görüntü seçer) ve fotoğraf varsa Yinele veya Kaldır. Aşama ilerlemesi sayaç olarak gösterilir (0/5, 5/5)."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Teşhisi yeniden aç.",
+      "PDF'yi görüntüle: raporu önizler.",
+      "E-posta ile gönder.",
+      "WhatsApp ile gönder."
+     ],
+     "caption": "Teşhisin altında: sonuç gönderimi ve «Fotoğraf çek» / «Yükle» kartlarıyla ameliyat öncesi aşaması (0/5)."
+    }
+   ]
+  },
+  {
+   "id": "2.7",
+   "title": "Teşhis (doktorlar)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Hasta ön değerlendirmesini tamamlayınca Teşhis aşaması «Açık / Taslak» durumunda açılır. Yalnızca doktor çalışabilir; idari personel salt okunur görür («Teşhisi yalnızca doktor düzenleyebilir» uyarısı çıkar)."
+    },
+    {
+     "t": "h3",
+     "text": "Adım 1 · Fotoğrafları işaretleme"
+    },
+    {
+     "t": "p",
+     "text": "Hastanın her fotoğrafının altında «Not al» düğmesi bulunur. Görüntünün üzerine işaret çizmek için tam ekran düzenleyiciyi açar."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Not al: o fotoğrafın çizim düzenleyicisini açar."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Çizim araçları: kalem, çizgi, ok, daire, metin, silgi ve kaydır.",
+      "Renkler (kırmızı, sarı, yeşil, mavi, beyaz ve siyah).",
+      "Çizgi kalınlığı: ince, orta veya kalın.",
+      "Görüntüyü yakınlaştır / uzaklaştır (yakınlaştırma yüzdesiyle).",
+      "Son çizimleri geri al ve yinele.",
+      "Çizimi kaydet (veya kaydetmeden çıkmak için İptal)."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Küçük ayrıntıları işaretlemek için görüntüyü + düğmesiyle yakınlaştır (veya son düğmeyle ekrana sığdır) ve büyütülmüş fotoğraf üzerinde gezinmek için «Kaydır» aracını kullan. Çizimler orijinal fotoğrafı değiştirmez: ayrı saklanır ve hastanın fotoğrafı bozulmadan korunur."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Kaydır: büyütülmüş görüntüyü sürükler.",
+      "Uzaklaştır.",
+      "Yakınlaştır.",
+      "Ekrana sığdır: tam görünüme döner."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Adım 2 · Norwood, notlar ve yanıt"
+    },
+    {
+     "t": "p",
+     "text": "Norwood skalasını seç (veya «Sonuçsuz» bırak), klinik notlarını (dahili) ve hastanın alacağı yanıtı yaz (en fazla 8.000 karakter). «Taslağı kaydet» çalışmanı kapatmadan saklar: daha sonra devam edebilirsin."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Norwood skalası (Değerlendirme).",
+      "Klinik notlar: yalnızca ekip görür.",
+      "Hasta için yanıt: PDF raporunda görünür."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Adım 3 · Teşhisi kapatma"
+    },
+    {
+     "t": "p",
+     "text": "«Teşhisi kapat», teşhisi salt okunur yapar, sonraki aşamayı açar ve hastayı «İletişime hazır» durumuna geçirir. Bir şeyi düzeltmen gerekirse «Teşhisi yeniden aç» onu tekrar düzenlenebilir yapar (geçmişe kaydedilir) ve yeniden kapatılana kadar sonraki aşamaları kilitler."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Taslağı kaydet.",
+      "Teşhisi kapat (onay ister)."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Kapatılmış teşhis: doktorun işaret koyduğu fotoğraflarda «çizimli» yazar."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "İdari kullanıcı görünümü: taslak teşhis yalnızca görüntülenebilir."
+    }
+   ]
+  },
+  {
+   "id": "2.8",
+   "title": "Sonuçları hastaya gönderme",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Teşhis kapatılınca «Hastaya sonuçları gönder» kutusu görünür. Hasta, kaydolurken seçtiği kanaldan doktorun çizimlerini ve yanıtını içeren bir PDF alır. Üç işlem vardır: «PDF'yi görüntüle» (raporu önizler), «E-posta ile gönder» (PDF'yi hastanın e-postasına ekli gönderir) ve «WhatsApp ile gönder» (indirme bağlantısıyla WhatsApp'ı açar)."
+    },
+    {
+     "t": "p",
+     "text": "Her gönderim kutunun altındaki geçmişe kaydedilir (tarih, kanal, hedef, durum ve kimin yaptığı); böylece hastanın yanıtını alıp almadığını her zaman bilirsin. Sunucuda e-posta gönderimi henüz yapılandırılmadıysa uygulama seni uyarır ve bu arada WhatsApp'ı kullanabilirsin."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Sonuç raporunun ikinci sayfası: doktorun işaretleriyle fotoğraflar."
+    }
+   ]
+  },
+  {
+   "id": "2.9",
+   "title": "Gelişim: aşamaları karşılaştırma",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Dosyadaki Gelişim bölümü, hastanın aynı anatomik bölgesini her aşamada yan yana karşılaştırır: ön değerlendirme, teşhis, ameliyat öncesi, ameliyat sonrası ve kontroller. Teşhis aşamasında doktorun işaretli fotoğrafı gösterilir («Ekip tarafından düzenlendi» etiketiyle); diğerlerinde orijinal fotoğraf."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Bölgeler: anatomik bölgeyi seç (sayı, kaç aşamada fotoğraf olduğunu gösterir).",
+      "Büyüt: fotoğrafı tam ekran açar."
+     ],
+     "caption": "Her sütun bir aşamadır; yana kaydırılır."
+    },
+    {
+     "t": "p",
+     "text": "Ayrıntılı karşılaştırma için bir fotoğrafın büyütme simgesine dokun."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Büyütülmüş fotoğraf."
+    },
+    {
+     "t": "h3",
+     "text": "Dışa aktarma ve gönderme"
+    },
+    {
+     "t": "p",
+     "text": "«Dışa aktar ve gönder» bölümünde «Tüm bölgeler» veya «Yalnızca bu bölge»yi seç ve karşılaştırmayı indirmek için «PDF olarak dışa aktar»a bas. Göndermek için «Alıcının e-postası»nı kontrol et (varsayılan hastanın adresidir; örneğin yönetimin adresini yazabilirsin) ve «E-postayla gönder»e bas."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Tüm bölgeler / Yalnızca bu bölge.",
+      "PDF olarak dışa aktar.",
+      "Alıcının e-postası (düzenlenebilir).",
+      "E-posta ile gönder."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Gelişim PDF örneği (bir bölge, sütun başına bir aşama)."
+    }
+   ]
+  },
+  {
+   "id": "2.10",
+   "title": "Bekleyenler raporu",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "«Rapor», ön değerlendirmesi tamamlanmış ve doktor teşhisini bekleyen hastaları listeler ve klinik yönetimi için e-postayla periyodik özet planlamaya olanak tanır (yapılandırma ve gönderim yasal temsilciye aittir)."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "«Pendientes de diagnóstico»: teşhis bekleyen hastalar ve bekleme günleri.",
+      "«Diagnosticar»: hasta dosyasını açar.",
+      "«Enviar el informe automáticamente»: periyodik gönderimi etkinleştirir.",
+      "«Correos que lo reciben»: satır başına bir tane veya virgülle ayrılmış (en fazla 5).",
+      "«Periodicidad», «Día», «Hora (Chile)»: sıklık, gün ve saat (Şili saati).",
+      "«Guardar configuración»: yapılandırmayı kaydeder.",
+      "«Enviar ahora»: raporu hemen yollar."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Bu ekran (Rapor, Kullanıcılar ve Aşamalar) uygulamada şu anda yalnızca İspanyolca etiketlerle görüntülenir; kılavuzdaki açıklamalar Türkçedir."
+    }
+   ]
+  },
+  {
+   "id": "2.11",
+   "title": "Klinik kullanıcıları",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "İdari personel veya yasal temsilciysen «Kullanıcılar» bölümünden kliniğinin paneli kullanan kişileri yönetirsin: oluşturma, erişimi engelleme/açma, şifre sıfırlama, yasal temsilciyi belirleme ve silme. Kendi kullanıcın «Tú» (Sen) ile işaretlenir ve kendi üzerinde yıkıcı işlemleri yoktur."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "«Agregar usuario»: rolüyle (doktor veya idari) yeni bir kişi oluşturur.",
+      "«Restablecer contraseña»: yeni şifre seçmesi için bağlantı gönderir.",
+      "«Bloquear acceso»: silmeden girişini engeller.",
+      "«Hacer representante legal»: yasal temsilci yapar.",
+      "«Eliminar»: siler."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Kullanıcı ekleme formu."
+    }
+   ]
+  },
+  {
+   "id": "2.12",
+   "title": "Aşamalar: protokolü yapılandırma (yasal temsilci)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "«Aşamalar», kliniğinin kayıt ve takip aşamalarını ve her birinde istenen fotoğrafları tanımlar. İlk aşama her zaman hastanın çektiği ön değerlendirmedir; Teşhis'i doktor yürütür ve kendi fotoğrafı yoktur; diğerlerini personel sırayla kaydeder. Aşamaları ve fotoğrafları yeniden adlandırabilir, oklarla sıralayabilir, ekleyip kaldırabilir ve «Guardar fases» ile kaydedebilirsin."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Aşamanın ve her fotoğrafın adı (düzenlenebilir).",
+      "«Agregar fotografía»: aşamaya fotoğraf ekler.",
+      "«Agregar fase»: yeni aşama ekler.",
+      "«Guardar fases» (veya «Descartar cambios»): aşamaları kaydeder (veya değişiklikleri atar)."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Yapılandırmayı istediğin zaman değiştirebilirsin: mevcut fotoğraflar silinmez, yalnızca artık istenmezler."
+    }
+   ]
+  },
+  {
+   "id": "2.13",
+   "title": "Telefondan kullanım",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Panel telefonda da aynı şekilde çalışır: menü üç çizgili düğmeden açılır, kartlar üst üste dizilir ve dosya tüm ekranı kaplar."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Menü.",
+      "Bağlantıyı kopyala.",
+      "Duruma göre özet.",
+      "Arama ve filtre.",
+      "Hasta listesi."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Yan menü açık."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Durum.",
+      "Randevu tarihi.",
+      "Contactado, sin cita.",
+      "WhatsApp ile iletişim."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2.14",
+   "title": "İpuçları ve sorun giderme",
+   "blocks": [
+    {
+     "t": "table",
+     "head": [
+      "Durum",
+      "Ne yapmalı"
+     ],
+     "rows": [
+      [
+       "Hasta listede görünmüyor.",
+       "Aramayı ve durum filtresini kontrol et: biri etkinse «Todos los estados»e dön."
+      ],
+      [
+       "Teşhisi kapatamıyorum.",
+       "Hastanın ön değerlendirmesini (5/5) tamamlamış olması gerekir. Yalnızca doktor rolü kapatabilir."
+      ],
+      [
+       "E-posta gönderilmiyor.",
+       "Gönderimin yapılandırılmadığı uyarısı çıkıyorsa teknik yöneticiye bildir; bu arada WhatsApp'ı kullan."
+      ],
+      [
+       "Fotoğrafta yanlış işaret koydum.",
+       "Düzenleyicide «Geri al»ı kullan veya teşhisi kapatmadan önce «Not al»ı yeniden açıp yeniden çiz."
+      ],
+      [
+       "Hastanın bir fotoğrafı yinelemesini istiyorum.",
+       "Dosyadan WhatsApp ile iletişime geç ve kliniğin bağlantısını yeniden gönder."
+      ],
+      [
+       "Şifremi unuttum.",
+       "Girişteki «Şifrenizi mi unuttunuz?» seçeneğini kullan veya yetkili birinden sıfırlamasını iste."
+      ]
+     ],
+     "widths": [
+      38,
+      62
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "Ortak cihazlarda oturumunu her zaman kapat ve şifreni paylaşma: her işlem adınla kaydedilir."
+    }
+   ]
+  }
+ ]
+}
