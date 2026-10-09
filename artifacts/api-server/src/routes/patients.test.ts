@@ -24,6 +24,7 @@ import leadsRouter from "./leads";
 import leadPhasesRouter from "./lead-phases";
 import diagnosisRouter from "./diagnosis";
 import resultsRouter from "./results";
+import evolutionRouter from "./evolution";
 import portalRouter from "./portal";
 import { createSession } from "../lib/sessions";
 import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
@@ -45,6 +46,7 @@ app.use("/api", leadsRouter);
 app.use("/api", leadPhasesRouter);
 app.use("/api", diagnosisRouter);
 app.use("/api", resultsRouter);
+app.use("/api", evolutionRouter);
 app.use("/api", portalRouter);
 
 // Fixture data only — not a real person.
@@ -1662,6 +1664,121 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
       await vi.waitFor(() => expect(sent).toHaveLength(2));
       expect(sent[1].to).toEqual(["nuevo@example.com"]);
       expect(await accountCount()).toBe(2);
+    });
+  });
+  describe("Evolución: comparar la misma zona entre fases", () => {
+    const evolution = (leadId: string, cookie = staff()) => request(app).get(`/api/leads/${leadId}/evolution`).set("Cookie", cookie);
+    const send = (leadId: string, body: object, cookie = staff()) =>
+      request(app).post(`/api/leads/${leadId}/evolution/send`).set("Cookie", cookie).send(body);
+    const mailOnWithCapture = () => {
+      process.env.RESEND_API_KEY = "re_test_key";
+      process.env.MAIL_FROM = "Clínica <resultados@example.cl>";
+      const calls: Array<Record<string, unknown>> = [];
+      vi.stubGlobal("fetch", vi.fn(async (_url: string, init: RequestInit) => {
+        calls.push(JSON.parse(String(init.body)));
+        return new Response(JSON.stringify({ id: "1" }), { status: 200 });
+      }));
+      return calls;
+    };
+    /** Pre-evaluación + diagnóstico con un dibujo en la foto frontal + pre-operatorio completo. */
+    async function patientWithThreePhases() {
+      const lead = await patientWithPreEvaluation();
+      const [first] = (await request(app).get(`/api/leads/${lead.id}/diagnosis`).set("Cookie", staff()).expect(200)).body.photos as Array<{ photoId: string; viewKey: string }>;
+      await request(app).put(`/api/leads/${lead.id}/photos/${first.photoId}/annotation`).set("Cookie", staff())
+        .send({ image: `data:image/jpeg;base64,${JPEG.toString("base64")}`, strokes: [{ type: "pen", color: "#ff0000", width: 0.004, points: [[0.1, 0.1], [0.2, 0.25]] }] }).expect(200);
+      await closeDiagnosis(lead.id);
+      await completePhase(lead.id, 2);
+      return { lead, annotatedView: first.viewKey };
+    }
+
+    it("con solo la pre-evaluación hay una foto por zona y todavía no hay nada que comparar", async () => {
+      const lead = await patientWithPreEvaluation();
+      const res = await evolution(lead.id).expect(200);
+      expect(res.body.zones).toHaveLength(5);
+      for (const zone of res.body.zones) expect(zone.cells).toHaveLength(1);
+      expect(res.body.phases.map((p: { key: string }) => p.key)).toEqual(["preevaluacion"]);
+      expect(res.body.patientEmail).toBe("prueba@example.com");
+      const pdf = await request(app).get(`/api/leads/${lead.id}/evolution/pdf`).set("Cookie", staff());
+      expect(pdf.status).toBe(409);
+      expect(pdf.body.error).toMatch(/dos fases/);
+    });
+
+    it("junta la misma zona de cada fase; el diagnóstico aporta la foto con el dibujo del médico", async () => {
+      const { lead, annotatedView } = await patientWithThreePhases();
+      const res = await evolution(lead.id).expect(200);
+      const zone = res.body.zones.find((z: { key: string }) => z.key === annotatedView);
+      expect(zone.cells.map((c: { phaseKey: string }) => c.phaseKey)).toEqual(["preevaluacion", "diagnostico", "preoperatorio"]);
+      expect(zone.cells.map((c: { edited: boolean }) => c.edited)).toEqual([false, true, false]);
+      // las zonas sin dibujo no tienen columna de diagnóstico
+      const other = res.body.zones.find((z: { key: string }) => z.key !== annotatedView);
+      expect(other.cells.map((c: { phaseKey: string }) => c.phaseKey)).toEqual(["preevaluacion", "preoperatorio"]);
+      expect(res.body.phases.map((p: { key: string }) => p.key)).toEqual(["preevaluacion", "diagnostico", "preoperatorio"]);
+      // cada celda se puede ver con las rutas de fotos ya existentes
+      for (const cell of zone.cells) {
+        const url = cell.edited ? `/api/leads/${lead.id}/photos/${cell.photoId}/annotation` : `/api/leads/${lead.id}/photos/${cell.photoId}`;
+        await request(app).get(url).set("Cookie", staff()).expect(200);
+      }
+    });
+
+    it("exporta el PDF (todas las zonas o solo las pedidas) y el personal de otra clínica no lo ve", async () => {
+      const { lead, annotatedView } = await patientWithThreePhases();
+      const all = await request(app).get(`/api/leads/${lead.id}/evolution/pdf`).set("Cookie", staff()).buffer(true).parse((res, cb) => {
+        const chunks: Buffer[] = []; res.on("data", (c: Buffer) => chunks.push(c)); res.on("end", () => cb(null, Buffer.concat(chunks)));
+      }).expect(200);
+      expect(all.headers["content-type"]).toContain("application/pdf");
+      expect(all.headers["cache-control"]).toContain("no-store");
+      expect((all.body as Buffer).subarray(0, 5).toString()).toBe("%PDF-");
+      await request(app).get(`/api/leads/${lead.id}/evolution/pdf?zones=${annotatedView}`).set("Cookie", staff()).expect(200);
+      await request(app).get(`/api/leads/${lead.id}/evolution/pdf?zones=no-existe`).set("Cookie", staff()).expect(409);
+      await request(app).get(`/api/leads/${lead.id}/evolution/pdf`).expect(401);
+      await request(app).get(`/api/leads/${lead.id}/evolution/pdf`).set("Cookie", staff("otra-clinica")).expect(404);
+      await evolution(lead.id, staff("otra-clinica")).expect(404);
+    });
+
+    it("correo: al paciente por defecto, a otra dirección si se indica, con el PDF adjunto", async () => {
+      const { lead } = await patientWithThreePhases();
+      delete process.env.RESEND_API_KEY;
+      const missing = await send(lead.id, {});
+      expect(missing.status).toBe(503);
+      expect(missing.body.error).toMatch(/no está configurado/);
+
+      const calls = mailOnWithCapture();
+      const toPatient = await send(lead.id, {}).expect(200);
+      expect(toPatient.body).toEqual({ status: "sent", recipient: "prueba@example.com" });
+      expect(calls[0].to).toEqual(["prueba@example.com"]);
+      const attachment = (calls[0].attachments as Array<{ filename: string; content: string; content_type: string }>)[0];
+      expect(attachment).toMatchObject({ filename: "evolucion.pdf", content_type: "application/pdf" });
+      expect(Buffer.from(attachment.content, "base64").subarray(0, 5).toString()).toBe("%PDF-");
+      expect(String(calls[0].text)).toContain("Paciente De Prueba");
+
+      await send(lead.id, { email: "administracion@clinica.cl" }).expect(200);
+      expect(calls[1].to).toEqual(["administracion@clinica.cl"]);
+      expect(String(calls[1].text).startsWith("Hola")).toBe(false);
+
+      // el personal administrativo también puede enviarlo
+      await send(lead.id, {}, staff(DEFAULT_CENTER_ID, "administrativo")).expect(200);
+      expect(calls).toHaveLength(3);
+    });
+
+    it("el correo sale en el idioma del paciente", async () => {
+      const { lead } = await patientWithThreePhases();
+      await pglite.exec(`UPDATE leads SET language = 'en' WHERE id = '${lead.id}';`);
+      const calls = mailOnWithCapture();
+      await send(lead.id, {}).expect(200);
+      expect(calls[0].subject).toMatch(/^Your treatment progress/);
+    });
+
+    it("rechaza direcciones inválidas, falta de destinatario y nada que comparar", async () => {
+      const { lead } = await patientWithThreePhases();
+      const calls = mailOnWithCapture();
+      expect((await send(lead.id, { email: "no-es-correo" })).status).toBe(400);
+      expect((await send(lead.id, { email: "a@b.cl, c@d.cl" })).status).toBe(400);
+      await pglite.exec(`UPDATE leads SET email = '' WHERE id = '${lead.id}';`);
+      expect((await send(lead.id, {})).status).toBe(422);
+      const soloPre = await patientWithPreEvaluation(true, { documentId: "20.347.878-K", phone: "+56933333333", email: "otro@example.com" });
+      expect((await send(soloPre.id, {})).status).toBe(409);
+      // ningún intento llegó al servicio de correo con un adjunto (el aviso de cuenta del paciente nuevo es otro correo)
+      expect(calls.filter((call) => call.attachments)).toHaveLength(0);
     });
   });
 });

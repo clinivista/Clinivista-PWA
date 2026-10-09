@@ -603,6 +603,74 @@ export interface ResultsState {
   deliveries: ResultsDeliveryRecord[];
 }
 
+export type EvolutionPhasesItemKind = typeof EvolutionPhasesItemKind[keyof typeof EvolutionPhasesItemKind];
+
+
+export const EvolutionPhasesItemKind = {
+  capture: 'capture',
+  diagnosis: 'diagnosis',
+} as const;
+
+export type EvolutionPhasesItem = {
+  key: string;
+  name: string;
+  kind: EvolutionPhasesItemKind;
+};
+
+export type EvolutionCellPhaseKind = typeof EvolutionCellPhaseKind[keyof typeof EvolutionCellPhaseKind];
+
+
+export const EvolutionCellPhaseKind = {
+  capture: 'capture',
+  diagnosis: 'diagnosis',
+} as const;
+
+export interface EvolutionCell {
+  phaseKey: string;
+  phaseName: string;
+  phaseKind: EvolutionCellPhaseKind;
+  viewKey: string;
+  viewLabel: string;
+  photoId: string;
+  /** The picture is the doctor's annotated version (served from the annotation endpoint) */
+  edited: boolean;
+  /** @nullable */
+  createdAt?: string | null;
+}
+
+export interface EvolutionZone {
+  key: string;
+  label: string;
+  cells: EvolutionCell[];
+}
+
+export interface Evolution {
+  /** Phases that have at least one photo, in process order */
+  phases: EvolutionPhasesItem[];
+  zones: EvolutionZone[];
+  /** @nullable */
+  patientEmail: string | null;
+  emailConfigured: boolean;
+}
+
+export interface EvolutionSendInput {
+  /** Address to send to; the patient's own when empty */
+  email?: string;
+  zones?: string[];
+}
+
+export type EvolutionSentStatus = typeof EvolutionSentStatus[keyof typeof EvolutionSentStatus];
+
+
+export const EvolutionSentStatus = {
+  sent: 'sent',
+} as const;
+
+export interface EvolutionSent {
+  status: EvolutionSentStatus;
+  recipient: string;
+}
+
 export type ResultsDeliverInputChannel = typeof ResultsDeliverInputChannel[keyof typeof ResultsDeliverInputChannel];
 
 

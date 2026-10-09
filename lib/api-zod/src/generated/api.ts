@@ -471,6 +471,56 @@ export const GetPortalMeResponse = zod.object({
 
 
 /**
+ * @summary The patient's photos grouped by anatomical zone, one cell per phase
+ */
+export const GetLeadEvolutionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const GetLeadEvolutionResponse = zod.object({
+  "phases": zod.array(zod.object({
+  "key": zod.string(),
+  "name": zod.string(),
+  "kind": zod.enum(['capture', 'diagnosis'])
+})).describe('Phases that have at least one photo, in process order'),
+  "zones": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "cells": zod.array(zod.object({
+  "phaseKey": zod.string(),
+  "phaseName": zod.string(),
+  "phaseKind": zod.enum(['capture', 'diagnosis']),
+  "viewKey": zod.string(),
+  "viewLabel": zod.string(),
+  "photoId": zod.string(),
+  "edited": zod.boolean().describe('The picture is the doctor\'s annotated version (served from the annotation endpoint)'),
+  "createdAt": zod.coerce.date().nullish()
+}))
+})),
+  "patientEmail": zod.string().nullable(),
+  "emailConfigured": zod.boolean()
+})
+
+
+/**
+ * @summary Email the comparison as a PDF to the patient or to another address
+ */
+export const SendLeadEvolutionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const SendLeadEvolutionBody = zod.object({
+  "email": zod.string().optional().describe('Address to send to; the patient\'s own when empty'),
+  "zones": zod.array(zod.string()).optional()
+})
+
+export const SendLeadEvolutionResponse = zod.object({
+  "status": zod.enum(['sent']),
+  "recipient": zod.string()
+})
+
+
+/**
  * @summary Delivery options and history for the patient's results
  */
 export const GetLeadResultsParams = zod.object({
