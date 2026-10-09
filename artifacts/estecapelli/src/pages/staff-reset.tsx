@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { useStaffReset } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { BrandLogo } from "@/components/brand-logo";
 import { LanguagePicker } from "@/components/language-picker";
 import { useLanguage } from "@/lib/language";
@@ -45,10 +46,10 @@ export default function StaffReset() {
               });
             }}>
             <label className="text-sm font-bold" htmlFor="staff-new-password">{text.newPassword}</label>
-            <Input id="staff-new-password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-2xl" />
+            <PasswordInput id="staff-new-password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-2xl" />
             <p className="text-xs text-muted-foreground">{text.minLength}</p>
             <label className="text-sm font-bold" htmlFor="staff-repeat-password">{text.repeatPassword}</label>
-            <Input id="staff-repeat-password" type="password" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} className="h-12 rounded-2xl" />
+            <PasswordInput id="staff-repeat-password" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} className="h-12 rounded-2xl" />
             {mismatch && <p role="alert" className="text-sm text-destructive">{text.mismatch}</p>}
             {error && <p role="alert" className="text-sm text-destructive">{error} <Link href="/admin/login" className="underline">{text.forgotLink}</Link></p>}
             <Button type="submit" className="rounded-full font-bold" disabled={reset.isPending || password.length < 8 || password !== again || !token}>

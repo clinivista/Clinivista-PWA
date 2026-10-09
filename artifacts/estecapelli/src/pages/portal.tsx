@@ -14,6 +14,7 @@ import {
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { LanguagePicker } from "@/components/language-picker";
 import { useLanguage } from "@/lib/language";
 import { PORTAL_TEXT, type PortalText } from "@/lib/portal-i18n";
@@ -141,7 +142,7 @@ export default function Portal() {
         <label className="text-sm font-bold" htmlFor="portal-email">{text.emailLabel}</label>
         <Input id="portal-email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="h-12 rounded-2xl" />
         <label className="text-sm font-bold" htmlFor="portal-password">{text.passwordLabel}</label>
-        <Input id="portal-password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} className="h-12 rounded-2xl" />
+        <PasswordInput id="portal-password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} className="h-12 rounded-2xl" />
         {shownError && <p role="alert" className="text-sm text-destructive">{shownError}</p>}
         {message && <p role="status" className="text-sm text-[#007f7c]">{message}</p>}
         <Button type="submit" className="rounded-full font-bold" disabled={login.isPending || !email || !password}>
@@ -181,9 +182,9 @@ export function PortalSetPassword() {
           });
         }}>
         <label className="text-sm font-bold" htmlFor="new-password">{text.newPassword}</label>
-        <Input id="new-password" type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} className="h-12 rounded-2xl" />
+        <PasswordInput id="new-password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} className="h-12 rounded-2xl" />
         <label className="text-sm font-bold" htmlFor="repeat-password">{text.repeatPassword}</label>
-        <Input id="repeat-password" type="password" autoComplete="new-password" value={again} onChange={(event) => setAgain(event.target.value)} className="h-12 rounded-2xl" />
+        <PasswordInput id="repeat-password" autoComplete="new-password" value={again} onChange={(event) => setAgain(event.target.value)} className="h-12 rounded-2xl" />
         {mismatch && <p role="alert" className="text-sm text-destructive">{text.mismatch}</p>}
         {error && <p role="alert" className="text-sm text-destructive">{error} <Link href="/paciente" className="underline">{text.requestNew}</Link></p>}
         <Button type="submit" className="rounded-full font-bold" disabled={setup.isPending || password.length < 8 || password !== again || !token}>

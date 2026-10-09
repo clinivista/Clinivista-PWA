@@ -3,6 +3,7 @@ import { useLocation, Link } from "wouter";
 import { ArrowRight, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
 import { useAdminLogin, useStaffForgot, useGetAuthMe, getGetAuthMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -164,8 +165,7 @@ export default function Login() {
 
               <div className="space-y-3">
                 <label className="text-xs font-bold text-foreground uppercase tracking-wider ml-1">{t.loginLabel}</label>
-                <Input
-                  type="password"
+                <PasswordInput
                   placeholder={t.loginPlaceholder}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
