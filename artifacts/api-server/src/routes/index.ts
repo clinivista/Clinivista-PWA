@@ -14,6 +14,7 @@ import resultsRouter from "./results";
 import evolutionRouter from "./evolution";
 import portalRouter from "./portal";
 import supportRouter from "./support";
+import supraAdminRouter from "./supra-admin";
 
 const router: IRouter = Router();
 
@@ -32,5 +33,6 @@ router.use(resultsRouter);
 router.use(evolutionRouter);
 router.use(portalRouter);
 router.use(supportRouter);
+router.use(supraAdminRouter);
 
 export default router;

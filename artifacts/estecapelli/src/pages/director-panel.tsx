@@ -17,6 +17,7 @@ import { CreateCenterForm } from "./create-center-form";
 import { CenterUsers } from "./center-users";
 import { SupraTeam } from "./supra-team";
 import { SupraInbox } from "./supra-inbox";
+import { SupraAdmin, AdminBanner } from "./supra-admin";
 import { ClinicIdentityEditor } from "./clinic-identity-editor";
 
 // Fase 6 (facturación, alcance manual): no hay pasarela de pago ni cobro
@@ -134,8 +135,10 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
           Salir
         </Button>
       </header>
+      {canManageUsers && <AdminBanner />}
 
       <main className="flex-1 p-6 md:p-10 max-w-5xl w-full mx-auto">
+        {canManageUsers && <SupraAdmin />}
         <SupraInbox />
         {canManageUsers && <SupraTeam />}
         {creating ? (

@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { runDueReports } from "./lib/pending-report";
+import { runMonitorTick } from "./lib/service-monitor";
 
 const rawPort = process.env["PORT"];
 
@@ -33,3 +34,10 @@ const reportTimer = setInterval(() => {
 }, REPORT_TICK_MS);
 reportTimer.unref();
 if (!process.env["PUBLIC_APP_URL"]) logger.warn("PUBLIC_APP_URL no está definido: los informes programados no se enviarán.");
+
+// Revisión automática de servicios (base de datos, fotos, correo, dominio, HTTPS):
+// cada 5 minutos; avisa por correo si algo falla o una renovación está cerca.
+const MONITOR_TICK_MS = 5 * 60_000;
+const monitorTick = () => runMonitorTick().catch((err) => logger.error({ err }, "Service monitor tick failed"));
+setTimeout(monitorTick, 60_000).unref();
+setInterval(monitorTick, MONITOR_TICK_MS).unref();
