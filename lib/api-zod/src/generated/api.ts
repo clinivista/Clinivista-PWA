@@ -783,7 +783,7 @@ export const GetDirectorCentersResponse = zod.object({
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
   "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
-  "specialty": zod.enum(['capilar', 'plastica']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
+  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 }))
 })
 
@@ -802,7 +802,7 @@ export const CreateDirectorCenterBody = zod.object({
   "legalRepresentative": zod.boolean().optional()
 })).optional().describe('Initial staff accounts for the clinic (up to 5).'),
   "withSamplePatients": zod.boolean().optional().describe('Also load a few fictitious demo patients (no photos).'),
-  "specialty": zod.enum(['capilar', 'plastica']).optional().describe('The clinic\'s specialty (default capilar). It cannot be changed afterwards.')
+  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).optional().describe('The clinic\'s specialty (default capilar). It cannot be changed afterwards.')
 })
 
 export const CreateDirectorCenterResponse = zod.object({
@@ -816,7 +816,7 @@ export const CreateDirectorCenterResponse = zod.object({
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
   "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
-  "specialty": zod.enum(['capilar', 'plastica']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
+  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
 
 
@@ -842,7 +842,7 @@ export const PatchDirectorCenterResponse = zod.object({
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
   "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
-  "specialty": zod.enum(['capilar', 'plastica']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
+  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
 
 
@@ -1020,7 +1020,7 @@ export const UpdateDirectorCenterIdentityResponse = zod.object({
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
   "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
-  "specialty": zod.enum(['capilar', 'plastica']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
+  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
 
 
@@ -1046,7 +1046,7 @@ export const RecordDirectorCenterPaymentResponse = zod.object({
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
   "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
-  "specialty": zod.enum(['capilar', 'plastica']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
+  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
 
 
@@ -1122,7 +1122,7 @@ export const GetClinicParams = zod.object({
 export const GetClinicResponse = zod.object({
   "name": zod.string(),
   "logoDataUrl": zod.string().nullable(),
-  "specialty": zod.enum(['capilar', 'plastica']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
+  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
 
 
@@ -1279,7 +1279,7 @@ export const GetMyClinicResponse = zod.object({
   "name": zod.string(),
   "slug": zod.string(),
   "logoDataUrl": zod.string().nullable(),
-  "specialty": zod.enum(['capilar', 'plastica']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
+  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
 
 
@@ -1367,7 +1367,7 @@ export const GetPatientClinicParams = zod.object({
 export const GetPatientClinicResponse = zod.object({
   "name": zod.string(),
   "logoDataUrl": zod.string().nullable(),
-  "specialty": zod.enum(['capilar', 'plastica']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
+  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
 
 

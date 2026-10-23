@@ -15,4 +15,5 @@ export type DirectorCenterCreateBodySpecialty = typeof DirectorCenterCreateBodyS
 export const DirectorCenterCreateBodySpecialty = {
   capilar: 'capilar',
   plastica: 'plastica',
+  dermatologia: 'dermatologia',
 } as const;

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { AppTranslations, LangCode } from "./language";
 import { PLASTIC_TEXT, PLASTIC_VIEW_KEYS } from "./specialty-i18n";
+import { DERM_TEXT, DERM_VIEW_KEYS } from "./derm-i18n";
 
 export type PhotoOrientation = "portrait" | "landscape" | "top-down" | "posterior";
 
@@ -109,6 +110,27 @@ export function getConfiguredPhotoProtocol(t: AppTranslations, views: Configured
         aspectRatio: "3:4",
         minimumWidth: 1200,
         minimumHeight: 1600,
+        light: t.photoLightEven ?? defaults.light,
+        distance: t.photoDistanceFace ?? defaults.distance,
+        background: t.photoBackgroundPlain ?? defaults.background,
+        referenceVisual: <GenericReference />,
+      };
+    }
+    const dermIndex = (DERM_VIEW_KEYS as readonly string[]).indexOf(view.key);
+    if (dermIndex >= 0) {
+      const [title, description, tip] = DERM_TEXT[lang].photos[dermIndex];
+      const original = DERM_TEXT.es.photos[dermIndex][0];
+      return {
+        key: view.key,
+        title: view.label === original ? title : view.label,
+        description,
+        tip,
+        color: CUSTOM_COLORS[index % CUSTOM_COLORS.length],
+        required: view.required,
+        orientation: "portrait",
+        aspectRatio: "3:4",
+        minimumWidth: 800,
+        minimumHeight: 800,
         light: t.photoLightEven ?? defaults.light,
         distance: t.photoDistanceFace ?? defaults.distance,
         background: t.photoBackgroundPlain ?? defaults.background,

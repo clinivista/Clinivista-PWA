@@ -29,6 +29,8 @@ import { DirectorPanel } from "./director-panel";
 import { ClinicUsersPanel } from "./clinic-users-panel";
 import { PhasesPanel } from "./phases-panel";
 import { plasticSummaryRows } from "@/lib/specialty-i18n";
+import { dermSummaryRows } from "@/lib/derm-i18n";
+import { STATUS_TREATED } from "@/lib/staff-flow-i18n";
 import { ReportPanel } from "./report-panel";
 import { HelpPanel } from "./help-panel";
 import { HELP_TEXT } from "@/lib/help-i18n";
@@ -61,19 +63,6 @@ export default function Admin() {
   const [view, setView] = useState<"patients" | "users" | "phases" | "report" | "help">("patients");
   const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
 
-  const STATUS_LABELS: Record<string, string> = {
-    nuevo: t.statusNuevo,
-    incompleto: t.statusIncompleto,
-    listo: t.statusListo,
-    contactar: t.statusContactar,
-    agendado: t.statusAgendado,
-    contactado: t.statusContactado,
-    operado: t.statusOperado,
-    completado: t.statusCompletado,
-    cerrado: t.statusCerrado,
-    alta: t.statusAlta,
-  };
-
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
@@ -87,6 +76,19 @@ export default function Admin() {
   const deleteMutation = useDeleteLead();
 
   const { data: myClinic } = useGetMyClinic({ query: { enabled: authStatus?.authenticated, queryKey: getGetMyClinicQueryKey(), staleTime: 5 * 60_000 }});
+
+  const STATUS_LABELS: Record<string, string> = {
+    nuevo: t.statusNuevo,
+    incompleto: t.statusIncompleto,
+    listo: t.statusListo,
+    contactar: t.statusContactar,
+    agendado: t.statusAgendado,
+    contactado: t.statusContactado,
+    operado: myClinic?.specialty === "dermatologia" ? STATUS_TREATED[lang] : t.statusOperado,
+    completado: t.statusCompletado,
+    cerrado: t.statusCerrado,
+    alta: t.statusAlta,
+  };
   const { data: stats } = useGetLeadStats({ query: { enabled: authStatus?.authenticated, queryKey: getGetLeadStatsQueryKey() }});
 
   // Cuántas fotografías pide la pre-evaluación de esta clínica (por defecto 5) y si
@@ -372,7 +374,7 @@ export default function Admin() {
             { filter: "incompleto", label: t.statusIncompleto, count: stats?.counts?.incompleto || 0, ring: "ring-amber-100", text: "text-amber-700", sub: "text-amber-500" },
             { filter: "listo", label: t.statusListo, count: stats?.counts?.listo || 0, ring: "ring-emerald-100", text: "text-emerald-700", sub: "text-emerald-500" },
             { filter: "contactar", label: t.statusContactar, count: stats?.counts?.contactar || 0, ring: "ring-violet-100", text: "text-violet-700", sub: "text-violet-500" },
-            { filter: "operado", label: t.statusOperado, count: stats?.counts?.operado || 0, ring: "ring-teal-100", text: "text-teal-700", sub: "text-teal-500" },
+            { filter: "operado", label: myClinic?.specialty === "dermatologia" ? STATUS_TREATED[lang] : t.statusOperado, count: stats?.counts?.operado || 0, ring: "ring-teal-100", text: "text-teal-700", sub: "text-teal-500" },
           ]).map((card) => (
             <button
               key={card.filter}
@@ -641,7 +643,7 @@ export default function Admin() {
                       diagnosisLead={{
                         norwood: fullLead.norwood,
                         notes: fullLead.notes,
-                        showNorwood: myClinic?.specialty !== "plastica",
+                        showNorwood: myClinic?.specialty === undefined || myClinic.specialty === "capilar",
                         onPatch: (data) => handlePatch(fullLead.id, data),
                       }}
                       process={{
@@ -688,7 +690,7 @@ export default function Admin() {
                             <span className="font-semibold">{value || "—"}</span>
                           </div>
                         ))}
-                        {(myClinic?.specialty === "plastica" ? plasticSummaryRows(fullLead.clinicalData) : [
+                        {(myClinic?.specialty === "dermatologia" ? dermSummaryRows(fullLead.clinicalData) : myClinic?.specialty === "plastica" ? plasticSummaryRows(fullLead.clinicalData) : [
                           { label: t.adminHairLossTime, value: fullLead.hairLossTime },
                           { label: t.adminZone, value: fullLead.pattern },
                           { label: t.adminPrevTreatment, value: fullLead.previousTreatment },

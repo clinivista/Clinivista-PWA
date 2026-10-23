@@ -15,4 +15,5 @@ export type DirectorCenterSummarySpecialty = typeof DirectorCenterSummarySpecial
 export const DirectorCenterSummarySpecialty = {
   capilar: 'capilar',
   plastica: 'plastica',
+  dermatologia: 'dermatologia',
 } as const;

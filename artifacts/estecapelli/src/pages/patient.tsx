@@ -31,6 +31,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
 import type { UseFormReturn } from "react-hook-form";
+import { DERM_CHANGES_KEYS, DERM_DURATION_KEYS, DERM_REASON_KEYS, DERM_SKIN_KEYS, DERM_SUN_KEYS, DERM_TEXT, type DermText } from "@/lib/derm-i18n";
 import { PLASTIC_PROCEDURE_KEYS, PLASTIC_SMOKING_KEYS, PLASTIC_TEXT, PLASTIC_TIMEFRAME_KEYS, type PlasticText } from "@/lib/specialty-i18n";
 import { formatRut, validateRut } from "@/lib/rut";
 import { getConfiguredPhotoProtocol, type PhotoProtocolView } from "@/lib/photo-protocol";
@@ -109,6 +110,15 @@ const patientSchema = z.object({
     conditions: z.string().optional(),
     medicationsAllergies: z.string().optional(),
     smoking: z.string().optional(),
+    // Dermatología.
+    reason: z.string().optional(),
+    area: z.string().optional(),
+    duration: z.string().optional(),
+    changes: z.string().optional(),
+    history: z.string().optional(),
+    treatments: z.string().optional(),
+    sun: z.string().optional(),
+    skinType: z.string().optional(),
   }).optional(),
   consent: z.boolean().refine(val => val === true, "Debes aceptar para continuar"),
   marketingConsent: z.boolean().optional(),
@@ -175,6 +185,58 @@ function PlasticSelect({ form, name, label, keys, labels, placeholder }: { form:
         </Select>
       </FormItem>
     )} />
+  );
+}
+
+// ---------- Dermatología: the clinic specialty's own questions ----------
+type DermFieldName = "reason" | "duration" | "changes" | "sun" | "skinType" | "area" | "history" | "treatments";
+
+function DermIntake({ form, text, selectPlaceholder }: { form: UseFormReturn<PatientFormValues>; text: DermText; selectPlaceholder: string }) {
+  type Field =
+    | { kind: "select"; name: DermFieldName; copy: [string, string[]]; keys: readonly string[] }
+    | { kind: "text"; name: DermFieldName; copy: [string, string]; max: number };
+  const fields: Field[] = [
+    { kind: "select", name: "reason", copy: text.reason, keys: DERM_REASON_KEYS },
+    { kind: "text", name: "area", copy: text.area, max: 200 },
+    { kind: "select", name: "duration", copy: text.duration, keys: DERM_DURATION_KEYS },
+    { kind: "select", name: "changes", copy: text.changes, keys: DERM_CHANGES_KEYS },
+    { kind: "text", name: "history", copy: text.history, max: 250 },
+    { kind: "text", name: "treatments", copy: text.treatments, max: 250 },
+    { kind: "select", name: "sun", copy: text.sun, keys: DERM_SUN_KEYS },
+    { kind: "select", name: "skinType", copy: text.skinType, keys: DERM_SKIN_KEYS },
+  ];
+  const input = "rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base min-h-[80px] resize-none";
+  return (
+    <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm" data-testid="derm-intake">
+      <div className="h-1 bg-gradient-to-r from-[#4F9CF9] to-[#4F9CF9]/30" />
+      <div className="p-6 md:p-8 space-y-5">
+        <h3 className="font-bold text-sm uppercase tracking-wider text-[#4F9CF9]">{text.section}</h3>
+        {fields.map((field) => field.kind === "select" ? (
+          <FormField key={field.name} control={form.control} name={`clinicalData.${field.name}` as const} render={({ field: f }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-bold">{field.copy[0]}</FormLabel>
+              <Select onValueChange={f.onChange} value={f.value || ""}>
+                <FormControl>
+                  <SelectTrigger className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base">
+                    <SelectValue placeholder={selectPlaceholder} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="rounded-2xl">
+                  {field.keys.map((key, index) => <SelectItem key={key} value={key}>{field.copy[1][index]}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )} />
+        ) : (
+          <FormField key={field.name} control={form.control} name={`clinicalData.${field.name}` as const} render={({ field: f }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-bold">{field.copy[0]}</FormLabel>
+              <FormControl><Textarea placeholder={field.copy[1]} maxLength={field.max} className={input} {...f} value={f.value ?? ""} /></FormControl>
+            </FormItem>
+          )} />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -519,6 +581,10 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
   const clinic = tokenClinic ?? slugClinic;
   const plastic = clinic?.specialty === "plastica";
   const plasticText = PLASTIC_TEXT[lang];
+  const derm = clinic?.specialty === "dermatologia";
+  const dermText = DERM_TEXT[lang];
+  const specialtyText = derm ? dermText : plasticText;
+  const customSpecialty = plastic || derm;
   useEffect(() => {
     if (!clinic?.name) return;
     const previousTitle = document.title;
@@ -1179,11 +1245,11 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
               </div>
 
               <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4 tracking-tight">{t.pIntroTitle}</h1>
-              <p className="text-muted-foreground mb-10 leading-relaxed max-w-md mx-auto text-base">{plastic ? plasticText.introDesc : t.pIntroDesc}</p>
+              <p className="text-muted-foreground mb-10 leading-relaxed max-w-md mx-auto text-base">{customSpecialty ? specialtyText.introDesc : t.pIntroDesc}</p>
 
               <div className="space-y-3 mb-10 text-left">
                 {[
-                  { icon: "01", label: t.pStep1Label, detail: plastic ? plasticText.stepDetail : t.pStep1Detail, color: "#00A9A5", bg: "bg-[#00A9A5]/8" },
+                  { icon: "01", label: t.pStep1Label, detail: customSpecialty ? specialtyText.stepDetail : t.pStep1Detail, color: "#00A9A5", bg: "bg-[#00A9A5]/8" },
                   { icon: "02", label: t.pStep2Label, detail: t.pStep2Detail, color: "#4F9CF9", bg: "bg-[#4F9CF9]/8" },
                   { icon: "03", label: t.pStep3Label, detail: t.pStep3Detail, color: "#A78BFA", bg: "bg-[#A78BFA]/8" },
                 ].map(item => (
@@ -1376,7 +1442,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
                   </div>
                 </div>
 
-                {plastic ? <PlasticIntake form={form} text={plasticText} selectPlaceholder={t.pSelectOpt} /> : (
+                {derm ? <DermIntake form={form} text={dermText} selectPlaceholder={t.pSelectOpt} /> : plastic ? <PlasticIntake form={form} text={plasticText} selectPlaceholder={t.pSelectOpt} /> : (
                 <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm">
                   <div className="h-1 bg-gradient-to-r from-[#4F9CF9] to-[#4F9CF9]/30" />
                   <div className="p-6 md:p-8 space-y-5">
@@ -1475,7 +1541,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
                           <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-0.5 border-primary data-[state=checked]:bg-primary" /></FormControl>
                           <div className="space-y-1">
                             <FormLabel className="text-sm font-medium text-foreground leading-snug cursor-pointer">
-                              {plastic ? plasticText.consent : t.pConsentCheckbox}
+                              {customSpecialty ? specialtyText.consent : t.pConsentCheckbox}
                             </FormLabel>
                             <p className="text-xs text-muted-foreground">
                               <a href="/privacidad" target="_blank" rel="noreferrer" className="underline">{t.pPrivacyLink}</a>

@@ -1,11 +1,12 @@
 import * as capilarModule from "./capilar";
 import { plastica } from "./plastica";
+import { dermatologia } from "./dermatologia";
 import type { SpecialtyModule } from "./types";
 
 export type { IntakeField, SpecialtyModule } from "./types";
 export { cleanIntake } from "./plastica";
 
-export const SPECIALTY_IDS = ["capilar", "plastica"] as const;
+export const SPECIALTY_IDS = ["capilar", "plastica", "dermatologia"] as const;
 export type SpecialtyId = (typeof SPECIALTY_IDS)[number];
 
 const capilar: SpecialtyModule = {
@@ -17,7 +18,7 @@ const capilar: SpecialtyModule = {
   clinicalData: (lead) => capilarModule.clinicalDataFromLead(lead) as Record<string, string>,
 };
 
-const MODULES: Record<SpecialtyId, SpecialtyModule> = { capilar, plastica };
+const MODULES: Record<SpecialtyId, SpecialtyModule> = { capilar, plastica, dermatologia };
 
 export const toSpecialtyId = (value: unknown): SpecialtyId =>
   (SPECIALTY_IDS as readonly string[]).includes(String(value)) ? (value as SpecialtyId) : "capilar";

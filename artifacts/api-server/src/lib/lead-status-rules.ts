@@ -14,8 +14,9 @@ export type PhaseFacts = { key: string; kind: "capture" | "diagnosis"; complete:
  */
 export const LEAD_STATUSES = ["nuevo", "incompleto", "listo", "contactar", "agendado", "contactado", "operado", "completado", "cerrado", "alta"] as const;
 
-/** The phase after which a patient counts as "operado": the post-operatorio (the fourth phase of the starting protocol). */
+/** The phase after which a patient counts as "operado": the post-operatorio (the fourth phase of the starting protocol) or, in dermatología, the tratamiento. */
 const POSTOP_KEY = "postoperatorio";
+const TREATMENT_KEY = "tratamiento";
 const POSTOP_FALLBACK_POSITION = 3;
 
 /**
@@ -27,7 +28,7 @@ export function deriveStatus(current: string, appointmentAt: string | null | und
   if (current === "cerrado" || current === "alta" || phases.length === 0) return current;
   const preEvaluation = phases[0].complete;
   const diagnosisDone = phases.some((phase) => phase.kind === "diagnosis" && phase.complete);
-  const postop = phases.find((phase) => phase.key === POSTOP_KEY) ?? phases[POSTOP_FALLBACK_POSITION];
+  const postop = phases.find((phase) => phase.key === POSTOP_KEY) ?? phases.find((phase) => phase.key === TREATMENT_KEY) ?? phases[POSTOP_FALLBACK_POSITION];
 
   if (phases.every((phase) => phase.complete)) return "completado";
   if (postop?.complete) return "operado";

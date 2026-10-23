@@ -15,4 +15,5 @@ export type PatientClinicSpecialty = typeof PatientClinicSpecialty[keyof typeof 
 export const PatientClinicSpecialty = {
   capilar: 'capilar',
   plastica: 'plastica',
+  dermatologia: 'dermatologia',
 } as const;
