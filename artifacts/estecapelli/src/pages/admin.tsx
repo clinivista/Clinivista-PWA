@@ -5,7 +5,7 @@ import { es as dateFnsEs } from "date-fns/locale";
 import {
   Users, UserCog, Layers, LogOut,
   Search, ChevronRight, X, Phone, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu, Copy,
-  ClipboardList, LifeBuoy, UserPlus,
+  ClipboardList, LifeBuoy, UserPlus, Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,8 @@ import { HelpPanel } from "./help-panel";
 import { HELP_TEXT } from "@/lib/help-i18n";
 import { LeadPhases } from "@/components/lead-phases";
 import { AddPatientDialog } from "@/components/add-patient-dialog";
+import { ClinicChooser, selectClinic } from "@/components/clinic-chooser";
+import { CLINIC_ACCESS_TEXT } from "@/lib/clinic-access-i18n";
 import { STAFF_FLOW_TEXT } from "@/lib/staff-flow-i18n";
 import { LeadEvolution } from "@/components/lead-evolution";
 import { NAV_TEXT } from "@/lib/phases-i18n";
@@ -147,6 +149,17 @@ export default function Admin() {
   }, [mobileNavOpen]);
 
   if (isAuthLoading || !authStatus?.authenticated) return <div className="min-h-[100dvh] bg-[#F5F2EE]" />;
+
+  // Con acceso a varias clínicas se elige una al entrar; solo aparecen las suyas.
+  if (authStatus.user?.needsClinicChoice) {
+    return (
+      <ClinicChooser
+        clinics={authStatus.user.clinics ?? []}
+        director={authStatus.user.role === "director"}
+        onChosen={() => { queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== getGetAuthMeQueryKey()[0] }); queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() }); }}
+      />
+    );
+  }
 
   if (authStatus.user?.role === "director" || authStatus.user?.role === "supra_admin") {
     return (
@@ -327,6 +340,24 @@ export default function Admin() {
         </div>
 
         <div className="p-6 border-t border-white/10">
+          {(authStatus.user?.clinics?.length ?? 0) > 1 && (
+            <div className="mb-3">
+              <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-1">{CLINIC_ACCESS_TEXT[lang].currentClinic}</p>
+              <p className="text-sm font-semibold text-white break-words mb-2">{authStatus.user?.clinics?.find((c) => c.id === authStatus.user?.centerId)?.name ?? ""}</p>
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-white hover:bg-white/20 hover:text-white font-medium rounded-2xl h-11 bg-white/10"
+                data-testid="switch-clinic"
+                onClick={async () => {
+                  if (await selectClinic(null)) { queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== getGetAuthMeQueryKey()[0] }); queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() }); }
+                  else toast({ variant: "destructive", title: CLINIC_ACCESS_TEXT[lang].failed });
+                }}
+              >
+                <Building2 className="w-5 h-5 mr-3" />
+                {CLINIC_ACCESS_TEXT[lang].switchClinic}
+              </Button>
+            </div>
+          )}
           <Button variant="ghost" className="w-full justify-start text-white/50 hover:text-white hover:bg-white/5 font-medium rounded-2xl h-12 transition-colors" onClick={handleLogout}>
             <LogOut className="w-5 h-5 mr-3" />
             {t.logout}
@@ -336,6 +367,35 @@ export default function Admin() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-h-0 md:h-[100dvh] overflow-hidden relative">
+        {authStatus.user?.viewingAsDirector && (
+          <div className="bg-[#0B1F33] text-white px-4 sm:px-6 py-2.5 flex flex-wrap items-center gap-3 shrink-0 z-30" data-testid="director-banner">
+            <span className="text-sm font-semibold min-w-0 break-words">{CLINIC_ACCESS_TEXT[lang].directorBanner(authStatus.user.viewingClinic?.name ?? "")}</span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-full ml-auto bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
+              onClick={async () => {
+                await fetch("/api/auth/leave-clinic", { method: "POST", credentials: "include" });
+                queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== getGetAuthMeQueryKey()[0] });
+                queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() });
+              }}
+            >
+              {CLINIC_ACCESS_TEXT[lang].backToSupra}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-full bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
+              onClick={async () => {
+                await selectClinic(null);
+                queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== getGetAuthMeQueryKey()[0] });
+                queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() });
+              }}
+            >
+              {CLINIC_ACCESS_TEXT[lang].switchClinic}
+            </Button>
+          </div>
+        )}
         {view === "help" ? <HelpPanel initialTab={helpUnread > 0 ? "support" : "manual"} /> : view === "report" ? <ReportPanel onOpenLead={(id) => { setView("patients"); setSelectedLeadId(id); }} /> : view === "users" && canManageUsers ? <ClinicUsersPanel /> : view === "phases" && canEditPhases ? <PhasesPanel /> : (
           <>
         {/* Mobile: whole content scrolls; desktop: only the patient list scrolls */}

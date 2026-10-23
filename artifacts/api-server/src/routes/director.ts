@@ -1,3 +1,4 @@
+import { emailTaken } from "../lib/email-taken";
 import { Router, type IRouter } from "express";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { toSpecialtyId } from "../lib/specialties";
@@ -148,8 +149,7 @@ router.post("/director/centers", async (req, res): Promise<void> => {
     return;
   }
   for (const account of accounts) {
-    const [taken] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.emailNormalized, account.emailNormalized));
-    if (taken) {
+    if (await emailTaken(account.emailNormalized, slug)) {
       res.status(409).json({ error: `El correo ${account.email} ya está en uso.` });
       return;
     }
@@ -269,9 +269,8 @@ router.post("/director/centers/:id/users", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Clínica no encontrada." });
     return;
   }
-  // An email identifies one account on the whole platform, not per clinic.
-  const [taken] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.emailNormalized, emailNormalized));
-  if (taken) {
+  // The same email may exist in several clinics (each clinic has its own account and password).
+  if (await emailTaken(emailNormalized, params.data.id)) {
     res.status(409).json({ error: `El correo ${email} ya está en uso.` });
     return;
   }
@@ -396,8 +395,7 @@ router.post("/director/team", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Necesitas un correo válido y una contraseña de al menos 8 caracteres." });
     return;
   }
-  const [taken] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.emailNormalized, emailNormalized));
-  if (taken) {
+  if (await emailTaken(emailNormalized, null)) {
     res.status(409).json({ error: `El correo ${email} ya está en uso.` });
     return;
   }

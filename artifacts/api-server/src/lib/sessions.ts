@@ -8,6 +8,15 @@ export type SessionContext = {
   // null only for "director" accounts, which aren't scoped to one clinic.
   centerId: string | null;
   role: UserRole;
+  /** Directors only: the clinic they are working inside right now (they keep their director role). */
+  viewingCenterId?: string | null;
+  /** Directors only: they already picked "Supra-control" on the clinic chooser. */
+  supraChosen?: boolean;
+  /**
+   * Staff only: every account (one per clinic, same email) whose password matched at
+   * sign-in. Choosing a clinic switches the session to that clinic's account.
+   */
+  linkedUserIds?: string[];
 };
 
 const sessions = new Map<string, SessionContext>();
@@ -41,6 +50,38 @@ export function destroySession(token: string | undefined): void {
 /** Closes every open session of one user (e.g. after a password reset). */
 export function destroySessionsForUser(userId: string): void {
   for (const [token, session] of sessions) {
-    if (session.userId === userId) sessions.delete(token);
+    if (session.userId === userId || session.linkedUserIds?.includes(userId)) sessions.delete(token);
   }
+}
+
+/**
+ * Moves a staff session to another of its linked accounts (one per clinic).
+ * `centerId: null` sends it back to the clinic chooser.
+ */
+export function setSessionAccount(token: string | undefined, account: { userId: string; centerId: string | null; role: UserRole }): boolean {
+  const session = token ? sessions.get(token) : undefined;
+  if (!session || session.expiresAt <= Date.now()) return false;
+  if (session.linkedUserIds && !session.linkedUserIds.includes(account.userId)) return false;
+  session.userId = account.userId;
+  session.centerId = account.centerId;
+  session.role = account.role;
+  return true;
+}
+
+/** A director enters (or, with null, leaves) a clinic's panel without being assigned to it. */
+export function setSessionViewing(token: string | undefined, centerId: string | null): boolean {
+  const session = token ? sessions.get(token) : undefined;
+  if (!session || session.expiresAt <= Date.now() || session.role !== "director") return false;
+  session.viewingCenterId = centerId;
+  session.supraChosen = centerId ? false : true;
+  return true;
+}
+
+/** Directors: back to the chooser (clinics + supra-control) instead of any panel. */
+export function setSessionDirectorChoice(token: string | undefined): boolean {
+  const session = token ? sessions.get(token) : undefined;
+  if (!session || session.expiresAt <= Date.now() || session.role !== "director") return false;
+  session.viewingCenterId = null;
+  session.supraChosen = false;
+  return true;
 }

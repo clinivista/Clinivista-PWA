@@ -27,7 +27,18 @@ export const GetAuthMeResponse = zod.object({
   "name": zod.string(),
   "role": zod.enum(['medico', 'administrativo', 'director', 'supra_admin']),
   "centerId": zod.string().nullable().describe('null only for \"director\" and \"supra_admin\" accounts, which are not tied to one clinic.'),
-  "canManageUsers": zod.boolean().optional().describe('true for a clinic\'s administrativos and its legal representative (even a médico), who manage the clinic\'s users.')
+  "canManageUsers": zod.boolean().optional().describe('true for a clinic\'s administrativos and its legal representative (even a médico), who manage the clinic\'s users.'),
+  "clinics": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['medico', 'administrativo'])
+})).optional().describe('Clinics this médico\/administrativo can work in (not suspended). Only these are ever shown to them.'),
+  "needsClinicChoice": zod.boolean().optional().describe('true when the person has several clinics and has not chosen one for this session yet.'),
+  "viewingAsDirector": zod.boolean().optional().describe('true when a director is working inside a clinic\'s panel (with administrativo permissions).'),
+  "viewingClinic": zod.object({
+  "id": zod.string(),
+  "name": zod.string()
+}).optional()
 }).optional()
 })
 
@@ -48,7 +59,18 @@ export const AdminLoginResponse = zod.object({
   "name": zod.string(),
   "role": zod.enum(['medico', 'administrativo', 'director', 'supra_admin']),
   "centerId": zod.string().nullable().describe('null only for \"director\" and \"supra_admin\" accounts, which are not tied to one clinic.'),
-  "canManageUsers": zod.boolean().optional().describe('true for a clinic\'s administrativos and its legal representative (even a médico), who manage the clinic\'s users.')
+  "canManageUsers": zod.boolean().optional().describe('true for a clinic\'s administrativos and its legal representative (even a médico), who manage the clinic\'s users.'),
+  "clinics": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['medico', 'administrativo'])
+})).optional().describe('Clinics this médico\/administrativo can work in (not suspended). Only these are ever shown to them.'),
+  "needsClinicChoice": zod.boolean().optional().describe('true when the person has several clinics and has not chosen one for this session yet.'),
+  "viewingAsDirector": zod.boolean().optional().describe('true when a director is working inside a clinic\'s panel (with administrativo permissions).'),
+  "viewingClinic": zod.object({
+  "id": zod.string(),
+  "name": zod.string()
+}).optional()
 })
 })
 
@@ -71,7 +93,8 @@ export const StaffForgotResponse = zod.object({
  */
 export const StaffResetBody = zod.object({
   "token": zod.string(),
-  "password": zod.string()
+  "password": zod.string(),
+  "centerIds": zod.array(zod.string()).optional().describe('Clinics (same email) where the new password applies; omitted means all of them')
 })
 
 export const StaffResetResponse = zod.object({

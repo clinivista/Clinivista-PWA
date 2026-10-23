@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { pgTable, text, boolean, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -31,7 +32,11 @@ export const usersTable = pgTable("users", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
-  uniqueIndex("users_email_normalized_unique").on(table.emailNormalized),
+  // The same email may exist once per clinic (a person working in several
+  // clinics gets one account in each, with its own password). Directors and
+  // supra-control accounts have no clinic and their email must be unique across
+  // everything — the routes enforce that (see lib/email-taken.ts).
+  uniqueIndex("users_email_center_unique").on(table.emailNormalized, sql`coalesce(${table.centerId}, '')`),
 ]);
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ createdAt: true, updatedAt: true });

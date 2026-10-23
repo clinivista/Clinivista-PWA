@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearch } from "wouter";
 import { Loader2 } from "lucide-react";
 import { useStaffReset } from "@workspace/api-client-react";
@@ -21,6 +21,23 @@ export default function StaffReset() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const mismatch = again.length > 0 && password !== again;
+  // Un mismo correo puede tener una cuenta en cada clínica: se elige dónde aplicar la clave.
+  const [clinics, setClinics] = useState<{ centerId: string; name: string }[]>([]);
+  const [chosen, setChosen] = useState<string[]>([]);
+  useEffect(() => {
+    if (!token) return;
+    let active = true;
+    fetch(`/api/auth/reset-info?token=${encodeURIComponent(token)}`, { credentials: "include" })
+      .then((response) => (response.ok ? response.json() : { clinics: [] }))
+      .then((info: { clinics?: { centerId: string; name: string }[] }) => {
+        if (!active) return;
+        setClinics(info.clinics ?? []);
+        setChosen((info.clinics ?? []).map((clinic) => clinic.centerId));
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [token]);
+  const several = clinics.length > 1;
 
   return (
     <div className="min-h-[100dvh] bg-[#F5F2EE] px-4 py-10 flex justify-center" dir={lang === "ar" ? "rtl" : "ltr"}>
@@ -40,7 +57,7 @@ export default function StaffReset() {
             onSubmit={(event) => {
               event.preventDefault();
               setError(null);
-              reset.mutate({ data: { token, password } }, {
+              reset.mutate({ data: { token, password, ...(several ? { centerIds: chosen } : {}) } }, {
                 onSuccess: () => setDone(true),
                 onError: () => setError(text.invalid),
               });
@@ -50,9 +67,23 @@ export default function StaffReset() {
             <p className="text-xs text-muted-foreground">{text.minLength}</p>
             <label className="text-sm font-bold" htmlFor="staff-repeat-password">{text.repeatPassword}</label>
             <PasswordInput id="staff-repeat-password" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} className="h-12 rounded-2xl" />
+            {several && (
+              <fieldset className="flex flex-col gap-2 rounded-2xl bg-[#F5F2EE] p-3" data-testid="reset-clinics">
+                <legend className="text-sm font-bold px-1">{text.clinicsTitle}</legend>
+                <p className="text-xs text-muted-foreground">{text.clinicsHint}</p>
+                {clinics.map((clinic) => (
+                  <label key={clinic.centerId} className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" className="h-4 w-4" checked={chosen.includes(clinic.centerId)}
+                      onChange={(event) => setChosen((current) => event.target.checked ? [...current, clinic.centerId] : current.filter((id) => id !== clinic.centerId))} />
+                    <span className="break-words">{clinic.name}</span>
+                  </label>
+                ))}
+                {chosen.length === 0 && <p role="alert" className="text-xs text-destructive">{text.pickOne}</p>}
+              </fieldset>
+            )}
             {mismatch && <p role="alert" className="text-sm text-destructive">{text.mismatch}</p>}
             {error && <p role="alert" className="text-sm text-destructive">{error} <Link href="/admin/login" className="underline">{text.forgotLink}</Link></p>}
-            <Button type="submit" className="rounded-full font-bold" disabled={reset.isPending || password.length < 8 || password !== again || !token}>
+            <Button type="submit" className="rounded-full font-bold" disabled={reset.isPending || password.length < 8 || password !== again || !token || (several && chosen.length === 0)}>
               {reset.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : text.save}
             </Button>
           </form>

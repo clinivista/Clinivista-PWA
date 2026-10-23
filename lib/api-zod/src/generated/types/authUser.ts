@@ -5,7 +5,9 @@
  * Estecapelli API — Preevaluación capilar
  * OpenAPI spec version: 0.1.0
  */
+import type { AuthUserClinicsItem } from './authUserClinicsItem';
 import type { AuthUserRole } from './authUserRole';
+import type { AuthUserViewingClinic } from './authUserViewingClinic';
 
 export interface AuthUser {
   id: string;
@@ -16,4 +18,11 @@ export interface AuthUser {
   centerId: string | null;
   /** true for a clinic's administrativos and its legal representative (even a médico), who manage the clinic's users. */
   canManageUsers?: boolean;
+  /** Clinics this médico/administrativo can work in (not suspended). Only these are ever shown to them. */
+  clinics?: AuthUserClinicsItem[];
+  /** true when the person has several clinics and has not chosen one for this session yet. */
+  needsClinicChoice?: boolean;
+  /** true when a director is working inside a clinic's panel (with administrativo permissions). */
+  viewingAsDirector?: boolean;
+  viewingClinic?: AuthUserViewingClinic;
 }

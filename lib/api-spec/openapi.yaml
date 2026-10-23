@@ -2506,6 +2506,28 @@ components:
         canManageUsers:
           type: boolean
           description: true for a clinic's administrativos and its legal representative (even a médico), who manage the clinic's users.
+        clinics:
+          type: array
+          description: Clinics this médico/administrativo can work in (not suspended). Only these are ever shown to them.
+          items:
+            type: object
+            required: [id, name, role]
+            properties:
+              id: {type: string}
+              name: {type: string}
+              role: {type: string, enum: [medico, administrativo]}
+        needsClinicChoice:
+          type: boolean
+          description: true when the person has several clinics and has not chosen one for this session yet.
+        viewingAsDirector:
+          type: boolean
+          description: true when a director is working inside a clinic's panel (with administrativo permissions).
+        viewingClinic:
+          type: object
+          required: [id, name]
+          properties:
+            id: {type: string}
+            name: {type: string}
 
     DirectorCenterSummary:
       type: object
@@ -3087,6 +3109,10 @@ components:
       properties:
         token: {type: string}
         password: {type: string}
+        centerIds:
+          type: array
+          description: Clinics (same email) where the new password applies; omitted means all of them
+          items: {type: string}
 
     PortalLoginInput:
       type: object

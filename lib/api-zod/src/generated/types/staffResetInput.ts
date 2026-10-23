@@ -9,4 +9,6 @@
 export interface StaffResetInput {
   token: string;
   password: string;
+  /** Clinics (same email) where the new password applies; omitted means all of them */
+  centerIds?: string[];
 }

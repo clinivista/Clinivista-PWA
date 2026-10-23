@@ -131,8 +131,8 @@ export function CenterUsers({ centerId }: { centerId: string }) {
       )}
 
       {users.map((user) => (
+        <div key={user.id} className="flex flex-col gap-2">
         <UserRow
-          key={user.id}
           user={user}
           setActive={async (active) => {
             await patchUser.mutateAsync({ id: centerId, userId: user.id, data: { active } });
@@ -144,6 +144,7 @@ export function CenterUsers({ centerId }: { centerId: string }) {
           }}
           resetPassword={async () => (await resetPassword.mutateAsync({ id: centerId, userId: user.id })).temporaryPassword}
         />
+        </div>
       ))}
     </div>
   );

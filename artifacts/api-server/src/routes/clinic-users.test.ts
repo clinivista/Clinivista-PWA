@@ -124,7 +124,9 @@ describe("listar y crear", () => {
     await post({ email: "a@b.cl", password: "password123", role: "supra_admin" }).expect(400);
     await post({ email: "a@b.cl", password: "corta", role: "medico" }).expect(400);
     await post({ email: "no-es-correo", password: "password123", role: "medico" }).expect(400);
-    await post({ email: "OTHER@x.cl", password: "password123", role: "medico" }).expect(409);
+    await post({ email: "ADM@x.cl", password: "password123", role: "medico" }).expect(409); // ya existe en esta clínica
+    // El mismo correo en otra clínica sí se puede: cada clínica tiene su propia cuenta y clave.
+    await post({ email: "OTHER@x.cl", password: "password123", role: "medico" }).expect(201);
   });
 });
 
