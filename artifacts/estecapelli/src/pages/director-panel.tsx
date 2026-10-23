@@ -19,6 +19,7 @@ import { CreateCenterForm } from "./create-center-form";
 import { CenterUsers } from "./center-users";
 import { SupraTeam } from "./supra-team";
 import { SupraInbox } from "./supra-inbox";
+import { SupportAlerts } from "@/components/support-alerts";
 import { SupraAdmin, AdminBanner } from "./supra-admin";
 import { ClinicIdentityEditor } from "./clinic-identity-editor";
 
@@ -153,6 +154,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
           </Button>
         </div>
       </header>
+      {canManageUsers && <SupportAlerts />}
       {canManageUsers && <AdminBanner />}
 
       <main className="flex-1 p-6 md:p-10 max-w-5xl w-full mx-auto">

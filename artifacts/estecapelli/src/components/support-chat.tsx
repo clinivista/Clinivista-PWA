@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export type ChatMessage = { id: string; sender: "staff" | "support"; body: string; createdAt: string };
+export type ChatMessage = { id: string; sender: "staff" | "support" | "system"; body: string; createdAt: string; senderName?: string | null };
 
 async function api<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { credentials: "same-origin", ...init, headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) } });
@@ -16,9 +16,13 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
  * Conversación en línea (consulta cada 5 s mientras está abierta).
  * `own` indica de qué lado está quien mira: "staff" (clínica) o "support" (supra-control).
  */
-export function ChatThread({ listUrl, postUrl, own, labels, dir, onChanged }: {
+export function ChatThread({ listUrl, postUrl, own, labels, dir, onChanged, readOnly = false, footer }: {
   listUrl: string; postUrl: string; own: "staff" | "support"; dir?: "rtl" | "ltr"; onChanged?: () => void;
-  labels: { you: string; team: string; empty: string; placeholder: string; send: string; sendError: string; loadError: string; hint: string; other?: string };
+  /** Conversación cerrada o resuelta: se lee pero no se escribe. */
+  readOnly?: boolean;
+  /** Contenido bajo los mensajes en lugar del cuadro de escritura (p. ej. la valoración). */
+  footer?: React.ReactNode;
+  labels: { you: string; team: string; empty: string; placeholder: string; send: string; sendError: string; loadError: string; hint: string; other?: string; system?: string };
 }) {
   const queryClient = useQueryClient();
   const key = ["support-thread", listUrl];
@@ -54,11 +58,19 @@ export function ChatThread({ listUrl, postUrl, own, labels, dir, onChanged }: {
         {isError && <p className="py-8 text-center text-sm text-red-600">{labels.loadError}</p>}
         {!isLoading && !isError && messages.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">{labels.empty}</p>}
         {messages.map((m) => {
+          if (m.sender === "system") {
+            return (
+              <div key={m.id} className="flex flex-col items-center" data-testid="support-system-message">
+                <span className="mb-1 text-[11px] font-semibold text-muted-foreground">{labels.system ?? ""} · {new Date(m.createdAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}</span>
+                <p className="max-w-[90%] whitespace-pre-wrap break-words rounded-2xl border border-dashed border-[#00A9A5]/40 bg-[#00A9A5]/5 px-4 py-2.5 text-center text-sm text-foreground/80">{m.body}</p>
+              </div>
+            );
+          }
           const mine = m.sender === own;
           return (
             <div key={m.id} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
               <span className="mb-1 px-2 text-[11px] font-semibold text-muted-foreground">
-                {mine ? labels.you : own === "staff" ? labels.team : (labels.other ?? "")} · {new Date(m.createdAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}
+                {mine ? labels.you : own === "staff" ? (m.senderName ? `${labels.team} · ${m.senderName}` : labels.team) : (labels.other ?? "")} · {new Date(m.createdAt).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}
               </span>
               <p className={`max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-4 py-2.5 text-sm ${mine ? "bg-[#00A9A5] text-white" : "bg-[#F5F2EE] text-foreground"}`}>{m.body}</p>
             </div>
@@ -66,6 +78,7 @@ export function ChatThread({ listUrl, postUrl, own, labels, dir, onChanged }: {
         })}
         <div ref={endRef} />
       </div>
+      {footer ? <div className="border-t border-[#E8E4DE] p-3 md:p-4">{footer}</div> : readOnly ? null : (
       <div className="border-t border-[#E8E4DE] p-3 md:p-4">
         {error && <p className="mb-2 text-sm font-semibold text-red-600" role="alert">{error}</p>}
         <div className="flex items-end gap-2">
@@ -80,6 +93,7 @@ export function ChatThread({ listUrl, postUrl, own, labels, dir, onChanged }: {
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">{labels.hint}</p>
       </div>
+      )}
     </div>
   );
 }
