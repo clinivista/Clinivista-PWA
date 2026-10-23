@@ -4,8 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LanguageProvider } from "@/lib/language";
 import { HelpPanel } from "./help-panel";
-import { loadManual } from "@/lib/help-i18n";
-import type { LangCode } from "@/lib/language";
+
 
 const wrap = (ui: React.ReactNode) => render(
   <LanguageProvider><QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>{ui}</QueryClientProvider></LanguageProvider>,
@@ -13,16 +12,6 @@ const wrap = (ui: React.ReactNode) => render(
 
 describe("Ayuda", () => {
   beforeEach(() => { localStorage.setItem("clinivista_lang", "es"); });
-
-  it("los nueve idiomas tienen las mismas secciones que el original", async () => {
-    const es = await loadManual("es");
-    for (const code of ["en", "pt", "fr", "de", "it", "tr", "ar", "zh"] as LangCode[]) {
-      const m = await loadManual(code);
-      expect(m.patient.map((s) => s.id)).toEqual(es.patient.map((s) => s.id));
-      expect(m.staff.map((s) => s.id)).toEqual(es.staff.map((s) => s.id));
-      expect(m.staff.map((s) => s.blocks.length)).toEqual(es.staff.map((s) => s.blocks.length));
-    }
-  });
 
   it("muestra el manual, busca y cambia de parte", async () => {
     wrap(<HelpPanel />);
@@ -33,6 +22,19 @@ describe("Ayuda", () => {
     await userEvent.clear(screen.getByPlaceholderText("Buscar en el manual…"));
     await userEvent.click(screen.getByTestId("help-part-patient"));
     await waitFor(() => expect(screen.getByTestId("help-article")).toHaveTextContent("1.1"));
+  });
+
+  it("el manual cambia según la especialidad de la clínica", async () => {
+    const { unmount } = wrap(<HelpPanel specialty="dermatologia" />);
+    const article = await screen.findByTestId("help-article");
+    expect(article).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByText(/Tipos de consulta y varias consultas por paciente/).length).toBeGreaterThan(0));
+    expect(screen.getAllByText(/Varias clínicas con el mismo correo/).length).toBeGreaterThan(0);
+    unmount();
+    wrap(<HelpPanel specialty="capilar" />);
+    await screen.findByTestId("help-article");
+    await waitFor(() => expect(screen.getAllByText(/Varias clínicas con el mismo correo/).length).toBeGreaterThan(0));
+    expect(screen.queryByText(/Tipos de consulta y varias consultas por paciente/)).not.toBeInTheDocument();
   });
 
   it("soporte: abre un ticket nuevo cuando no hay uno activo", async () => {

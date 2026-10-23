@@ -1,0 +1,452 @@
+{
+ "sections": [
+  {
+   "id": "1",
+   "key": "acceso",
+   "title": "Quién es quién y cómo entrar",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Supra-control es el panel de Clinivista para administrar todas las clínicas de la plataforma. Tiene dos roles: el director, con acceso completo, y el administrativo de supra-control, que opera clínicas y soporte pero no maneja personas ni dinero. Lo que solo puede hacer el director aparece marcado con «Solo director» en todo este manual."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Función",
+      "Director",
+      "Administrativo"
+     ],
+     "rows": [
+      [
+       "Ver el Inicio y el estado general de la plataforma",
+       "✔",
+       "✔"
+      ],
+      [
+       "Crear, suspender y reactivar clínicas",
+       "✔",
+       "✔"
+      ],
+      [
+       "Registrar pagos, cambiar la identidad de una clínica y exportar sus datos",
+       "✔",
+       "✔"
+      ],
+      [
+       "Atender tickets de soporte (responder y resolver)",
+       "✔",
+       "✔"
+      ],
+      [
+       "Gestionar los usuarios de cada clínica",
+       "✔",
+       "—"
+      ],
+      [
+       "Entrar a una clínica como médico y administrativo",
+       "✔",
+       "—"
+      ],
+      [
+       "Gestionar el Equipo de supra-control",
+       "✔",
+       "—"
+      ],
+      [
+       "Servicios y finanzas, alertas de servicios y de tickets",
+       "✔",
+       "—"
+      ],
+      [
+       "Ver ingresos, gastos y balance en el Inicio",
+       "✔",
+       "—"
+      ]
+     ],
+     "widths": [
+      62,
+      19,
+      19
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Cómo entrar"
+    },
+    {
+     "t": "p",
+     "text": "Entras por la misma pantalla de ingreso que el personal de las clínicas, con tu correo y contraseña. Si eres director y además tienes cuentas en clínicas, aparece la elección «¿A qué clínica quieres entrar?» con la opción «Supra-control» al comienzo: elígela para ver el panel de todas las clínicas."
+    },
+    {
+     "t": "h3",
+     "text": "El menú lateral"
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Inicio: resumen de la plataforma.",
+      "Clínicas: lista de clínicas y sus acciones.",
+      "Soporte: tickets de las clínicas (con un globo que cuenta los que están en espera).",
+      "Equipo de supra-control y Servicios y finanzas: solo para el director.",
+      "Manual: este manual.",
+      "Cambiar de clínica (solo director) y Salir."
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "En el teléfono el menú se abre con el botón de arriba a la izquierda y se cierra solo al elegir una opción."
+    }
+   ]
+  },
+  {
+   "id": "2",
+   "key": "inicio",
+   "title": "Inicio: resumen de la plataforma",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "El Inicio responde de un vistazo si todo está funcionando y qué requiere atención. Se actualiza solo cada cierto tiempo."
+    },
+    {
+     "t": "h3",
+     "text": "Semáforo de servicios"
+    },
+    {
+     "t": "p",
+     "text": "Una franja de color resume el estado de los servicios de los que depende la plataforma (base de datos, almacenamiento de fotos, correo, GitHub, Claude y otros): verde «Todos los servicios funcionan», ámbar «Hay alguna alerta», rojo «Algún servicio no funciona» o gris «Sin datos de servicios» si aún no hay una revisión automática. Cada servicio se marca como Funcionando, Atención, Con falla o Sin datos."
+    },
+    {
+     "t": "p",
+     "text": "«Ver detalle» lleva a Servicios y finanzas, donde se explica cada falla y se puede volver a revisar al momento.",
+     "directorOnly": true
+    },
+    {
+     "t": "h3",
+     "text": "Contadores"
+    },
+    {
+     "t": "p",
+     "text": "Las tarjetas muestran cuántas clínicas, usuarios y pacientes hay en la plataforma y cuántos tickets están por resolver (con el desglose en espera y en atención)."
+    },
+    {
+     "t": "h3",
+     "text": "Soporte"
+    },
+    {
+     "t": "p",
+     "text": "Resume la calidad de la atención: tickets atendidos con respuesta, resueltos y abiertos este mes, tiempo de primera respuesta de los últimos 30 días y valoración promedio (o «sin valoraciones» si todavía no hay). «Ir a soporte» abre la cola de tickets."
+    },
+    {
+     "t": "h3",
+     "text": "Clínicas por estado de pago"
+    },
+    {
+     "t": "p",
+     "text": "Cuenta las clínicas Al día, Vencidas y Sin registro. «Ir a clínicas» abre la lista para registrar pagos."
+    },
+    {
+     "t": "h3",
+     "text": "Finanzas del mes",
+     "directorOnly": true
+    },
+    {
+     "t": "p",
+     "text": "Muestra los ingresos, gastos y balance del mes. Si no hay movimientos aparece «Sin movimientos este mes». Esta tarjeta solo la ve el director.",
+     "directorOnly": true
+    }
+   ]
+  },
+  {
+   "id": "3",
+   "key": "clinicas",
+   "title": "Clínicas",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "En Clínicas ves una tarjeta por cada clínica con su nombre, el estado (Activa o Suspendida), el estado de pago (Al día, Atrasada o Sin registro), su especialidad, cuántos pacientes y cuánto personal tiene, y hasta cuándo está pagada (o desde cuándo está vencida). El número de pacientes cuenta personas, no consultas adicionales."
+    },
+    {
+     "t": "h3",
+     "text": "Crear una clínica"
+    },
+    {
+     "t": "p",
+     "text": "Pulsa «Crear clínica» y completa: nombre de la clínica, identificador del enlace (se genera solo desde el nombre y puedes ajustarlo), especialidad (Capilar, Cirugía plástica o Dermatología) y los datos de la primera persona usuaria (nombre, correo y contraseña de al menos 8 caracteres). Con «Cargar pacientes de ejemplo» la clínica nace con pacientes ficticios, útil para demostraciones."
+    },
+    {
+     "t": "note",
+     "text": "La especialidad define el protocolo de fases, las preguntas del paciente y el manual que verá la clínica. Cada clínica ve en Ayuda el manual de su propia especialidad."
+    },
+    {
+     "t": "h3",
+     "text": "Registrar un pago"
+    },
+    {
+     "t": "p",
+     "text": "Bajo cada clínica, «Registrar pago hasta» recibe la fecha hasta la que queda pagada. Mientras esa fecha no pase, la clínica figura Al día; si vence pasa a Atrasada; si nunca se registró un pago figura Sin registro. No hay cobro automático: el pago se registra a mano."
+    },
+    {
+     "t": "h3",
+     "text": "Suspender y reactivar"
+    },
+    {
+     "t": "p",
+     "text": "«Suspender» impide que las personas de esa clínica inicien sesión (verán el aviso de que la clínica está suspendida y deben contactar al director). «Reactivar» devuelve el acceso. No borra ningún dato."
+    },
+    {
+     "t": "h3",
+     "text": "Identidad"
+    },
+    {
+     "t": "p",
+     "text": "«Identidad» permite cambiar el nombre de la clínica (mínimo 3 caracteres), su enlace público y su logo. El enlace admite de 3 a 40 letras minúsculas, números o guiones; al cambiarlo, el enlace anterior deja de funcionar y hay que volver a compartir el nuevo. El logo puede ser PNG, JPG o WebP y se ajusta solo a 256 px; funciona mejor uno cuadrado."
+    },
+    {
+     "t": "h3",
+     "text": "Exportar datos"
+    },
+    {
+     "t": "p",
+     "text": "«Exportar datos» descarga un archivo con la información de la clínica: datos de la clínica, su personal y sus pacientes. No incluye las fotografías clínicas (se guardan aparte en almacenamiento privado) ni las claves de acceso de los pacientes."
+    },
+    {
+     "t": "h3",
+     "text": "Usuarios de la clínica",
+     "directorOnly": true
+    },
+    {
+     "t": "p",
+     "text": "«Usuarios» despliega el personal de esa clínica: puedes agregar a una persona (nombre, correo, teléfono opcional, rol médico o administrativo y contraseña de al menos 8 caracteres), editar sus datos, restablecer su contraseña, bloquear o desbloquear su acceso y definir al representante legal. El mismo correo puede existir en varias clínicas: cada una es una cuenta distinta.",
+     "directorOnly": true
+    },
+    {
+     "t": "h3",
+     "text": "Entrar a la clínica",
+     "directorOnly": true
+    },
+    {
+     "t": "p",
+     "text": "«Entrar a la clínica» te lleva dentro de esa clínica como médico y administrativo a la vez, para dar soporte o hacer una demostración. Dentro verás el aviso «Estás dentro de … como director» con el botón «Volver a supra-control». También puedes usar «Cambiar de clínica» en el menú.",
+     "directorOnly": true
+    },
+    {
+     "t": "warn",
+     "text": "Dentro de una clínica actúas sobre datos reales de pacientes: usa esta función solo para soporte o demostraciones y cierra el acceso al terminar.",
+     "directorOnly": true
+    }
+   ]
+  },
+  {
+   "id": "4",
+   "key": "soporte",
+   "title": "Soporte: tickets de las clínicas",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Cualquier persona de una clínica puede abrir un ticket desde Ayuda › Soporte. En supra-control todos los tickets llegan a Soporte, donde la lista «Abiertos» muestra los que están En espera, En atención o Resueltos a la espera de valoración, con la clínica, quién escribió, el último mensaje y un contador de mensajes sin leer. La pestaña «Historial» guarda los tickets cerrados."
+    },
+    {
+     "t": "h3",
+     "text": "Atender un ticket"
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Abre el ticket: verás el mensaje automático inicial y la conversación completa.",
+      "Al responder, el ticket pasa a En atención y queda registrada la primera respuesta, que alimenta el tiempo de primera respuesta del Inicio.",
+      "Cuando el problema quedó resuelto, pulsa «Marcar como resuelto». El ticket queda a la espera de que la persona valore la atención.",
+      "Al recibir la valoración (de 1 a 5 estrellas y un comentario opcional) el ticket se cierra y pasa al Historial con la nota «Valoración:». Si no hubo, se muestra «sin valoración».",
+      "Con «Volver a los tickets» regresas a la lista."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Un ticket resuelto o cerrado ya no admite mensajes. Si el problema reaparece, la clínica abre un ticket nuevo."
+    },
+    {
+     "t": "h3",
+     "text": "Alertas",
+     "directorOnly": true
+    },
+    {
+     "t": "p",
+     "text": "Los directores ven en la parte superior del panel una alerta con los tickets que están en espera sin atención, del más antiguo al más nuevo, para no dejar a ninguna clínica sin respuesta.",
+     "directorOnly": true
+    }
+   ]
+  },
+  {
+   "id": "5",
+   "key": "equipo",
+   "title": "Equipo de supra-control",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Aquí el director gestiona a las personas que usan este panel: crea a un nuevo director o administrativo de supra-control (nombre, correo, teléfono opcional y contraseña de al menos 8 caracteres), edita sus datos y rol, restablece su contraseña y bloquea o desbloquea su acceso. Un administrativo de supra-control no ve esta sección."
+    },
+    {
+     "t": "tip",
+     "text": "Da el rol de director solo a quien deba ver las finanzas y entrar a las clínicas; para el resto basta el de administrativo."
+    }
+   ],
+   "directorOnly": true
+  },
+  {
+   "id": "6",
+   "key": "servicios",
+   "title": "Servicios y finanzas",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Esta sección reúne el control técnico y económico de la plataforma. Tiene tres partes."
+    },
+    {
+     "t": "h3",
+     "text": "Estado automático"
+    },
+    {
+     "t": "p",
+     "text": "La plataforma revisa por su cuenta sus servicios clave (base de datos, almacenamiento, correo, HTTPS, DNS, Google, GitHub y Claude, además de que haya correos de alerta configurados). Cada uno aparece como Funcionando, Atención, Con falla o Sin datos, con el detalle del problema. «Revisar ahora» repite la revisión de inmediato. Si un servicio falla o una renovación está cerca, aparece una franja de aviso en todo el panel."
+    },
+    {
+     "t": "note",
+     "text": "«Sin datos» en un servicio significa que no se pudo comprobar (por ejemplo, falta configurar su clave); no es una falla del servicio."
+    },
+    {
+     "t": "h3",
+     "text": "Correos que reciben las alertas"
+    },
+    {
+     "t": "p",
+     "text": "Escribe un correo por línea y pulsa «Guardar correos». A esas direcciones llegan los avisos cuando algo deja de funcionar."
+    },
+    {
+     "t": "h3",
+     "text": "Servicios contratados"
+    },
+    {
+     "t": "p",
+     "text": "Lista de los servicios que cuestan dinero (hosting, base de datos, correo, dominio…) con su proveedor, plan, costo, moneda, ciclo (Mensual, Anual o Sin cobro) y próxima renovación. Con «Agregar» o «Editar» los mantienes al día y con «Cargar servicios habituales» partes de una lista sugerida. Cuando una renovación se acerca, el panel te avisa."
+    },
+    {
+     "t": "h3",
+     "text": "Ingresos y gastos"
+    },
+    {
+     "t": "p",
+     "text": "Con «Registrar movimiento» anotas un ingreso o un gasto (fecha, monto, moneda, categoría, nota y, si corresponde, el servicio asociado). Puedes recorrer los meses, ver el balance de cada moneda y descargar la información como CSV: «Este mes (CSV)», «Últimos 12 meses» o «Todo (CSV)»."
+    }
+   ],
+   "directorOnly": true
+  },
+  {
+   "id": "7",
+   "key": "especialidades",
+   "title": "Especialidades: qué ve cada clínica",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Cada clínica trabaja con el protocolo de su especialidad y ve en Ayuda un manual propio, que ya incluye todas las funciones vigentes."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Especialidad",
+      "Pre-evaluación del paciente",
+      "Fases",
+      "Particularidades"
+     ],
+     "rows": [
+      [
+       "Capilar",
+       "5 fotografías (frontal, vértex, temporales y zona donante) y antecedentes capilares",
+       "Pre-evaluación, diagnóstico, pre-operatorio, post-operatorio y dos controles",
+       "Escala Norwood en el diagnóstico; estado «Operado»"
+      ],
+      [
+       "Cirugía plástica",
+       "5 fotografías (frontal, perfiles y oblicuas) y datos del procedimiento de interés",
+       "Las mismas fases que capilar",
+       "Diagnóstico sin Norwood, con notas y respuesta al paciente"
+      ],
+      [
+       "Dermatología",
+       "3 fotografías (panorámica, primer plano con referencia y dermatoscopía) y datos de la lesión",
+       "Pre-evaluación, diagnóstico, tratamiento y dos controles",
+       "Tipos de consulta (general y plantillas) y varias consultas por paciente; estado «Tratado»"
+      ]
+     ],
+     "widths": [
+      16,
+      34,
+      28,
+      22
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Funciones comunes a todas"
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Varias clínicas con el mismo correo: una cuenta por clínica y elección de clínica al ingresar.",
+      "Agregar paciente desde el panel (con constancia de consentimiento y aviso de duplicados por RUT).",
+      "Omitir etapa (con motivo obligatorio) y deshacer la omisión.",
+      "Alta médica, solo por el médico, y reabrir el proceso.",
+      "Editar los datos de los usuarios (nombre, teléfono, rol y contraseña).",
+      "Tickets de soporte con valoración."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "8",
+   "key": "solucion",
+   "title": "Consejos y solución de problemas",
+   "blocks": [
+    {
+     "t": "table",
+     "head": [
+      "Situación",
+      "Qué hacer"
+     ],
+     "rows": [
+      [
+       "Una clínica dice que no puede entrar.",
+       "Revisa en Clínicas si está Suspendida o Atrasada, y si el usuario está bloqueado en Usuarios (director). Si la contraseña no entra, restablécela desde Usuarios."
+      ],
+      [
+       "Una persona trabaja en dos clínicas y ve la clínica equivocada.",
+       "Cada clínica es una cuenta distinta con su propia contraseña: debe usar «Cambiar de clínica» o ingresar con la contraseña de la clínica que quiere."
+      ],
+      [
+       "Un servicio aparece «Sin datos».",
+       "Falta la clave o configuración de ese servicio; revisa el detalle en Servicios y finanzas y pulsa «Revisar ahora» después de corregirlo."
+      ],
+      [
+       "Un ticket no se puede responder.",
+       "Ya está resuelto o cerrado. La clínica debe abrir uno nuevo."
+      ],
+      [
+       "El enlace de una clínica dejó de funcionar.",
+       "Se cambió el identificador en Identidad: comparte el enlace nuevo con los pacientes."
+      ],
+      [
+       "Necesito los datos de una clínica que se va.",
+       "Usa «Exportar datos». Las fotografías se coordinan aparte con el equipo técnico."
+      ]
+     ],
+     "widths": [
+      38,
+      62
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "Cierra siempre tu sesión en equipos compartidos. Cada acción del panel queda asociada a tu usuario."
+    }
+   ]
+  }
+ ]
+}

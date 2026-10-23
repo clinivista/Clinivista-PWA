@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { LogOut, LogIn, Building2, Users, Download, ShieldOff, ShieldCheck, Loader2, CreditCard, Plus, ChevronDown, Palette, LayoutDashboard, Headphones, UserCog, BriefcaseBusiness, Menu, X, Repeat } from "lucide-react";
+import { LogOut, LogIn, Building2, Users, Download, ShieldOff, ShieldCheck, Loader2, CreditCard, Plus, ChevronDown, Palette, LayoutDashboard, Headphones, UserCog, BriefcaseBusiness, Menu, X, Repeat, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +18,7 @@ import { selectClinic } from "@/components/clinic-chooser";
 import { CreateCenterForm } from "./create-center-form";
 import { CenterUsers } from "./center-users";
 import { SupraTeam } from "./supra-team";
+import { SupraManual } from "./supra-manual";
 import { SupraInbox, OPEN_SUPPORT_INBOX_EVENT } from "./supra-inbox";
 import { SupraDashboard } from "./supra-dashboard";
 import { SupportAlerts } from "@/components/support-alerts";
@@ -64,7 +65,7 @@ function chileEndOfDayIso(dateValue: string): string {
 
 // Un director gestiona además a las personas (usuarios de clínica y equipo de
 // supra-control); un administrativo de supra-control solo opera el panel.
-type SupraView = "dashboard" | "clinics" | "support" | "team" | "admin";
+type SupraView = "dashboard" | "clinics" | "support" | "team" | "admin" | "manual";
 
 export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: () => void; canManageUsers?: boolean }) {
   const { toast } = useToast();
@@ -151,9 +152,10 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
     { id: "support", label: "Soporte", Icon: Headphones, show: true, badge: waiting },
     { id: "team", label: "Equipo de supra-control", Icon: UserCog, show: canManageUsers },
     { id: "admin", label: "Servicios y finanzas", Icon: BriefcaseBusiness, show: canManageUsers },
+    { id: "manual", label: "Manual", Icon: BookOpen, show: true },
   ];
   const go = (next: SupraView) => { setView(next); setMobileNavOpen(false); if (next !== "support") setOpenTicketId(null); };
-  const titles: Record<SupraView, string> = { dashboard: "Resumen de la plataforma", clinics: "Clínicas", support: "Soporte (tickets de las clínicas)", team: "Equipo de supra-control", admin: "Administración: servicios y finanzas" };
+  const titles: Record<SupraView, string> = { dashboard: "Resumen de la plataforma", clinics: "Clínicas", support: "Soporte (tickets de las clínicas)", team: "Equipo de supra-control", admin: "Administración: servicios y finanzas", manual: "Manual de supra-control" };
 
   return (
     <div className="h-[100dvh] bg-[#F5F2EE] flex flex-col md:flex-row font-sans">
@@ -232,6 +234,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
             {view === "support" && <SupraInbox embedded openTicketId={openTicketId} />}
             {view === "team" && canManageUsers && <SupraTeam embedded />}
             {view === "admin" && canManageUsers && <SupraAdmin embedded />}
+            {view === "manual" && <SupraManual />}
             {view === "clinics" && (
               <>
         {creating ? (

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BookOpen, Info, LifeBuoy, Lightbulb, Loader2, MessageCircle, Search, TriangleAlert } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/language";
-import { HELP_TEXT, loadManual, type HelpBlock, type HelpManual, type HelpSection } from "@/lib/help-i18n";
+import { HELP_TEXT, loadManual, MANUAL_SPECIALTIES, type HelpBlock, type HelpManual, type HelpSection, type ManualSpecialty } from "@/lib/help-i18n";
 import { SupportTickets } from "@/components/support-tickets";
 
 const CALLOUT = {
@@ -11,7 +11,7 @@ const CALLOUT = {
   warn: { icon: TriangleAlert, cls: "bg-amber-50 text-amber-900 border-amber-200" },
 } as const;
 
-function Block({ block }: { block: HelpBlock }) {
+export function Block({ block }: { block: HelpBlock }) {
   switch (block.t) {
     case "p": return <p className="text-sm leading-relaxed text-foreground/90">{block.text}</p>;
     case "h3": return <h4 className="pt-2 text-sm font-bold text-foreground">{block.text}</h4>;
@@ -34,23 +34,27 @@ function Block({ block }: { block: HelpBlock }) {
       <div className="overflow-x-auto rounded-2xl border border-[#E8E4DE]">
         <table className="w-full text-sm">
           <thead className="bg-[#F5F2EE] text-start"><tr>{block.head.map((h, n) => <th key={n} className="px-3 py-2 text-start font-bold">{h}</th>)}</tr></thead>
-          <tbody>{block.rows.map((r, i) => <tr key={i} className="border-t border-[#E8E4DE]">{r.map((c, n) => <td key={n} className={`px-3 py-2 align-top ${n === 0 ? "font-semibold" : ""}`}>{c}</td>)}</tr>)}</tbody>
+          <tbody>{block.rows.map((row, i) => { const r = Array.isArray(row) ? row : row.cells; return <tr key={i} className="border-t border-[#E8E4DE]">{r.map((c, n) => <td key={n} className={`px-3 py-2 align-top ${n === 0 ? "font-semibold" : ""}`}>{c}</td>)}</tr>; })}</tbody>
         </table>
       </div>
     );
   }
 }
 
-const sectionText = (s: HelpSection) => [s.title, ...s.blocks.flatMap((b) => "text" in b ? [b.text] : "items" in b ? b.items : "rows" in b ? [...b.head, ...b.rows.flat()] : [])].join(" ").toLowerCase();
+export const sectionText = (s: HelpSection) => [s.title, ...s.blocks.flatMap((b) => "text" in b ? [b.text] : "items" in b ? b.items : "rows" in b ? [...b.head, ...b.rows.flatMap((row) => Array.isArray(row) ? row : row.cells)] : [])].join(" ").toLowerCase();
 
-function ManualView() {
+/** La especialidad de la clínica decide qué manual se muestra; si no es una conocida, el de capilar. */
+export const manualSpecialty = (specialty: string | undefined): ManualSpecialty =>
+  (MANUAL_SPECIALTIES as readonly string[]).includes(specialty ?? "") ? (specialty as ManualSpecialty) : "capilar";
+
+function ManualView({ specialty }: { specialty: ManualSpecialty }) {
   const { lang } = useLanguage();
   const h = HELP_TEXT[lang];
   const [manual, setManual] = useState<HelpManual | null>(null);
   const [part, setPart] = useState<"staff" | "patient">("staff");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
-  useEffect(() => { let alive = true; setManual(null); void loadManual(lang).then((m) => alive && setManual(m)); return () => { alive = false; }; }, [lang]);
+  useEffect(() => { let alive = true; setManual(null); void loadManual(lang, specialty).then((m) => alive && setManual(m)); return () => { alive = false; }; }, [lang, specialty]);
 
   const sections = useMemo(() => {
     const all = manual?.[part] ?? [];
@@ -100,7 +104,7 @@ function ManualView() {
   );
 }
 
-export function HelpPanel({ initialTab = "manual" }: { initialTab?: "manual" | "support" }) {
+export function HelpPanel({ initialTab = "manual", specialty }: { initialTab?: "manual" | "support"; specialty?: string }) {
   const { lang } = useLanguage();
   const h = HELP_TEXT[lang];
   const queryClient = useQueryClient();
@@ -118,7 +122,7 @@ export function HelpPanel({ initialTab = "manual" }: { initialTab?: "manual" | "
             <button type="button" onClick={() => setTab("support")} data-testid="help-tab-support" className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold ${tab === "support" ? "bg-[#00A9A5] text-white" : "text-muted-foreground"}`}><MessageCircle className="h-4 w-4" />{h.tabSupport}</button>
           </div>
         </div>
-        {tab === "manual" ? <ManualView /> : (
+        {tab === "manual" ? <ManualView specialty={manualSpecialty(specialty)} /> : (
           <SupportTickets onChanged={() => void queryClient.invalidateQueries({ queryKey: ["support-unread"] })} />
         )}
       </div>

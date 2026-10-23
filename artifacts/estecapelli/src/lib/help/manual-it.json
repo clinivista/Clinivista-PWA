@@ -1,877 +1,1436 @@
 {
-  "patient": [
+ "patient": [
+  {
+   "id": "1.1",
+   "title": "Come accedere: il link della clinica",
+   "blocks": [
     {
-      "id": "1.1",
-      "title": "Come accedere: il link della clinica",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Non devi installare nulla né creare un account per fare la tua pre-valutazione. La clinica ti invierà un link personale via WhatsApp, e-mail o SMS (oppure te lo mostrerà come codice QR). Aprilo dal tuo telefono: la schermata iniziale della clinica compare subito."
-        },
-        {
-          "t": "p",
-          "text": "L'applicazione è disponibile in nove lingue: spagnolo, inglese, portoghese, francese, tedesco, italiano, turco, arabo e cinese. Puoi cambiarla in qualsiasi momento con il selettore nell'angolo in alto a destra; l'arabo si legge da destra a sinistra."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Selettore della lingua.",
-            "Barra di avanzamento: Intro → Dati → Foto. Sai sempre in quale fase ti trovi.",
-            "Tempo stimato del processo (da 4 a 6 minuti).",
-            "Cosa comprende: dati personali, cinque foto guidate e la revisione medica riservata."
-          ]
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Elenco delle lingue disponibili; quella in uso è contrassegnata.",
-            "Pulsante del selettore (si tocca di nuovo per chiudere l'elenco)."
-          ],
-          "caption": "Cambio di lingua."
-        }
-      ]
+     "t": "p",
+     "text": "Non devi installare nulla né creare un account per fare la tua pre-valutazione. La clinica ti invierà un link personale via WhatsApp, e-mail o SMS (oppure te lo mostrerà come codice QR). Aprilo dal tuo telefono: la schermata iniziale della clinica compare subito."
     },
     {
-      "id": "1.2",
-      "title": "I tuoi dati personali",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Compila i tuoi dati di contatto. I campi contrassegnati da un asterisco (*) sono obbligatori. Il telefono viene salvato con il prefisso del tuo paese e il documento viene convalidato automaticamente in base al paese della clinica. Se preferisci, tocca prima «Continua con Google»: accedi con il tuo account Google, nome ed e-mail si compilano da soli e in seguito potrai vedere i tuoi risultati nel tuo account (senza dover creare una password a parte). Oltre a questi dati, il modulo chiede età e città, che sono facoltative."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Pulsante «Continua con Google»: compila nome ed e-mail con il tuo account Google (compare solo se la clinica lo ha attivato).",
-            "Nome completo.",
-            "Documento d'identità (RUT in Cile).",
-            "Cellulare con WhatsApp e prefisso internazionale.",
-            "Indirizzo e-mail.",
-            "Come vuoi ricevere i tuoi risultati: via e-mail o su WhatsApp."
-          ]
-        },
-        {
-          "t": "note",
-          "text": "I dati di esempio di questo manuale sono fittizi."
-        }
-      ]
+     "t": "p",
+     "text": "L'applicazione è disponibile in nove lingue: spagnolo, inglese, portoghese, francese, tedesco, italiano, turco, arabo e cinese. Puoi cambiarla in qualsiasi momento con il selettore nell'angolo in alto a destra; l'arabo si legge da destra a sinistra."
     },
     {
-      "id": "1.3",
-      "title": "Anamnesi, consenso e privacy",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Raccontaci brevemente la tua storia: da quanto tempo noti la perdita di capelli, dove si concentra, quali trattamenti hai usato, se hai qualche sintomo e se hai già fatto un trapianto. Sono dati di base perché il team medico comprenda il tuo caso; i campi facoltativi possono restare vuoti."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Da quanto tempo noti la perdita di capelli?",
-            "Dove si concentra la perdita? (fronte, sommità, entrambe…).",
-            "Trattamenti che hai usato contro la caduta.",
-            "Sintomi associati (facoltativo, testo libero).",
-            "Interventi di trapianto precedenti (facoltativo)."
-          ]
-        },
-        {
-          "t": "p",
-          "text": "Prima di continuare devi leggere e accettare il trattamento dei tuoi dati. L'accettazione delle informazioni commerciali è facoltativa e non influisce sulla tua valutazione. Puoi leggere l'informativa sulla privacy e i termini di servizio dai link nello stesso riquadro."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Garanzie: le tue foto e i tuoi dati viaggiano cifrati e la valutazione non è una diagnosi medica in presenza.",
-            "Consenso obbligatorio al trattamento dei tuoi dati (con link all'informativa sulla privacy e ai termini).",
-            "Informazioni commerciali: facoltative.",
-            "Continua alle Foto (si attiva quando accetti il consenso)."
-          ]
-        }
-      ]
+     "t": "legend",
+     "items": [
+      "Selettore della lingua.",
+      "Barra di avanzamento: Intro → Dati → Foto. Sai sempre in quale fase ti trovi.",
+      "Tempo stimato del processo (da 4 a 6 minuti).",
+      "Cosa comprende: dati personali, cinque foto guidate e la revisione medica riservata."
+     ],
+     "only": [
+      "capilar",
+      "plastica"
+     ]
     },
     {
-      "id": "1.4",
-      "title": "Le cinque foto guidate",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Servono cinque scatti standardizzati: vista frontale, vertice o sommità, tempia destra, tempia sinistra e zona donatrice (nuca). Ogni scatto ha una guida di posizione con l'orientamento, la luce, la distanza e lo sfondo consigliati. Leggila prima di fotografare e chiedi aiuto a un'altra persona se ti risulta difficile scattare da solo."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Indietro: torna ai tuoi dati.",
-            "Esci: abbandona l'acquisizione (il tuo avanzamento resta salvato).",
-            "Avanzamento: foto 1 di 5 e barra di avanzamento.",
-            "Guida di posizione: orientamento, luce, distanza e sfondo.",
-            "Descrizione dello scatto e area per fotografare o caricare l'immagine."
-          ]
-        },
-        {
-          "t": "h3",
-          "text": "Scattare la foto con la fotocamera"
-        },
-        {
-          "t": "p",
-          "text": "Tocca «Scatta foto». Il telefono chiederà il permesso di usare la fotocamera: accettalo. Vedrai un'anteprima con una cornice di riferimento; posiziona la testa all'interno della cornice come indica la guida e tocca il pulsante rotondo bianco. Con «Annulla» esci senza fotografare e con l'icona di rotazione puoi passare dalla fotocamera anteriore a quella posteriore."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Annulla: chiude la fotocamera senza scattare la foto.",
-            "Inverti: passa dalla fotocamera anteriore a quella posteriore.",
-            "Cornice di riferimento: posiziona la zona da valutare all'interno del riquadro.",
-            "Pulsante di scatto."
-          ]
-        },
-        {
-          "t": "h3",
-          "text": "Verifica tecnica e descrizione"
-        },
-        {
-          "t": "p",
-          "text": "Dopo lo scatto, l'applicazione controlla la qualità della foto (risoluzione, esposizione, contrasto e nitidezza) e ti mostra dei consigli se qualcosa può essere migliorato. Sono indicazioni tecniche, non interpretano caratteristiche mediche. Puoi scrivere una descrizione facoltativa di massimo 500 caratteri (per esempio, «noto meno capelli nella zona delle tempie»). Se la foto ti piace, tocca «Usa questa foto»; altrimenti, ripetila."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Dati tecnici dell'immagine (risoluzione, esposizione, nitidezza, contrasto).",
-            "Consigli automatici per migliorare lo scatto.",
-            "Descrizione facoltativa di questa foto.",
-            "Usa questa foto: la salva e passa alla successiva.",
-            "Ripeti foto: riapre la fotocamera.",
-            "Carica un'altra foto: scegli un'immagine dalla tua galleria."
-          ]
-        },
-        {
-          "t": "tip",
-          "text": "Se in quel momento preferisci non usare la fotocamera, «Carica un'altra foto» ti permette di scegliere un'immagine dalla tua galleria. Il file originale viene conservato senza essere ridotto."
-        }
-      ]
+     "t": "legend",
+     "items": [
+      "Selettore della lingua.",
+      "Barra di avanzamento: Intro → Dati → Foto. Sai sempre in quale fase ti trovi.",
+      "Tempo stimato del processo (da 4 a 6 minuti).",
+      "Cosa comprende: dati personali, tre foto guidate e la revisione medica riservata."
+     ],
+     "only": [
+      "dermatologia"
+     ]
     },
     {
-      "id": "1.5",
-      "title": "Procedere, correggere e inviare",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Dopo ogni foto compare l'avviso «Avanzamento salvato»: i tuoi progressi vengono salvati automaticamente. Procedi scatto dopo scatto fino a completare le cinque foto. Quando hai finito, il riepilogo mostra le miniature; da ciascuna puoi ripetere la foto, aprire le impostazioni tecniche dell'immagine o caricarne un'altra. Il pulsante di invio si attiva quando arrivi a 5/5."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Ripeti la foto dello scatto attuale.",
-            "Impostazioni tecniche dell'immagine.",
-            "Carica un'altra foto dalla galleria.",
-            "Miniature dei cinque scatti, ciascuna con il suo link per ripeterla.",
-            "Invia Valutazione (5/5): invia tutto al team medico."
-          ]
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Conferma: la tua valutazione è stata ricevuta.",
-            "Cosa succede dopo: revisione del caso (fino a 24 giorni lavorativi), contatto via WhatsApp o e-mail e organizzazione della tua visita.",
-            "Torna alla home."
-          ]
-        }
-      ]
-    },
-    {
-      "id": "1.6",
-      "title": "Il tuo account per vedere i risultati",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Quando il medico chiude la tua diagnosi, la clinica ti invierà un link attraverso il canale che hai scelto (e-mail o WhatsApp). Con quello puoi scaricare il tuo referto in PDF. Se vuoi consultarlo di nuovo più tardi, accedi a «Il mio account» con la tua e-mail e una password personale."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "E-mail con cui ti sei registrato presso la clinica.",
-            "Password (l'occhio permette di mostrarla o nasconderla).",
-            "Accedi.",
-            "Crea o recupera la mia password: ti invia un link per scegliere una nuova password (serve anche se l'hai dimenticata)."
-          ]
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Nuova password (almeno 8 caratteri).",
-            "Ripeti la password.",
-            "Salva password. Se il link è scaduto, richiedine uno nuovo dalla stessa schermata."
-          ]
-        },
-        {
-          "t": "legend",
-          "items": [
-            "I tuoi risultati: ogni referto della clinica compare con la sua data; toccane uno per aprire il PDF.",
-            "Selettore della lingua. In basso: esci e link all'informativa sulla privacy e ai termini di servizio."
-          ]
-        },
-        {
-          "t": "legend",
-          "items": [],
-          "caption": "Esempio di referto dei risultati (pagina 1): logo della clinica, dati del paziente, risposta del team medico e foto con le indicazioni disegnate dal medico."
-        },
-        {
-          "t": "note",
-          "text": "Non condividere mai la tua password. La clinica non te la chiederà né per messaggio né per telefono."
-        }
-      ]
-    },
-    {
-      "id": "1.7",
-      "title": "Domande frequenti dei pazienti",
-      "blocks": [
-        {
-          "t": "table",
-          "head": [
-            "Domanda",
-            "Risposta"
-          ],
-          "rows": [
-            [
-              "Posso fare la valutazione dal computer?",
-              "Sì, ma l'esperienza è pensata per il telefono, dove la fotocamera guida ogni scatto."
-            ],
-            [
-              "La fotocamera non si apre.",
-              "Controlla di aver accettato il permesso della fotocamera nel browser. Se non è possibile, usa «Carica un'altra foto» e scegli un'immagine dalla tua galleria."
-            ],
-            [
-              "Ho sbagliato una foto.",
-              "Tocca «Ripeti foto» (o il link sotto la miniatura) e scattala di nuovo prima di inviare."
-            ],
-            [
-              "Quando ricevo una risposta?",
-              "Il team esamina il tuo caso entro un massimo di 24 giorni lavorativi e ti contatta attraverso il canale scelto."
-            ],
-            [
-              "Le mie foto sono private?",
-              "Vengono trasmesse cifrate e le vede solo il personale autorizzato della clinica. Puoi leggere l'informativa sulla privacy direttamente nell'applicazione."
-            ],
-            [
-              "Ho dimenticato la mia password.",
-              "In «Il mio account» tocca «Crea o recupera la mia password» e segui il link che riceverai via e-mail."
-            ]
-          ],
-          "widths": [
-            38,
-            62
-          ]
-        }
-      ]
+     "t": "legend",
+     "items": [
+      "Elenco delle lingue disponibili; quella in uso è contrassegnata.",
+      "Pulsante del selettore (si tocca di nuovo per chiudere l'elenco)."
+     ],
+     "caption": "Cambio di lingua."
     }
-  ],
-  "staff": [
+   ],
+   "key": "entry"
+  },
+  {
+   "id": "1.2",
+   "title": "I tuoi dati personali",
+   "blocks": [
     {
-      "id": "2.1",
-      "title": "Ruoli e permessi",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Ogni persona della clinica accede con la propria e-mail e password e ha uno dei due ruoli. Il ruolo definisce cosa può fare; a schermo, ciò che non puoi fare appare semplicemente in sola lettura oppure non viene mostrato."
-        },
-        {
-          "t": "table",
-          "head": [
-            "Funzione",
-            "Medico",
-            "Amministrativo"
-          ],
-          "rows": [
-            [
-              "Vedere la dashboard dei pazienti, le schede e le foto",
-              "✔",
-              "✔"
-            ],
-            [
-              "Cambiare stato, data dell'appuntamento, segnare come contattato, contattare via WhatsApp",
-              "✔",
-              "✔"
-            ],
-            [
-              "Registrare le foto delle fasi gestite dal personale",
-              "✔",
-              "✔"
-            ],
-            [
-              "Diagnosi: annotare le foto, Norwood, note, risposta, chiudere e riaprire",
-              "✔",
-              "Sola lettura"
-            ],
-            [
-              "Inviare i risultati (PDF via e-mail o WhatsApp) ed Evoluzione",
-              "✔",
-              "✔"
-            ],
-            [
-              "Vedere il Report dei casi in sospeso",
-              "✔",
-              "✔"
-            ],
-            [
-              "Configurare e inviare il Report via e-mail; configurare le Fasi",
-              "Solo rappresentante legale",
-              "Solo rappresentante legale"
-            ],
-            [
-              "Gestire gli Utenti (creare, bloccare, reimpostare, eliminare)",
-              "Se è rappresentante legale",
-              "✔"
-            ]
-          ],
-          "widths": [
-            58,
-            21,
-            21
-          ]
-        },
-        {
-          "t": "p",
-          "text": "Il rappresentante legale è la persona che la clinica designa per amministrare l'account (può essere un medico o un amministrativo): si definisce in Utenti. Per questo, nel menu, Fasi compare solo per il rappresentante legale e Utenti per gli amministrativi e il rappresentante legale."
-        },
-        {
-          "t": "note",
-          "text": "Le schermate di questo manuale appartengono alla clinica fittizia «Clínica Aurora». Le fotografie sono illustrazioni sintetiche, non persone reali."
-        }
-      ]
+     "t": "p",
+     "text": "Compila i tuoi dati di contatto. I campi contrassegnati da un asterisco (*) sono obbligatori. Il telefono viene salvato con il prefisso del tuo paese e il documento viene convalidato automaticamente in base al paese della clinica. Se preferisci, tocca prima «Continua con Google»: accedi con il tuo account Google, nome ed e-mail si compilano da soli e in seguito potrai vedere i tuoi risultati nel tuo account (senza dover creare una password a parte). Oltre a questi dati, il modulo chiede età e città, che sono facoltative."
     },
     {
-      "id": "2.2",
-      "title": "Accedere e recuperare la password",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Accedi dall'indirizzo di accesso del team della tua clinica. Scrivi la tua e-mail e la tua password e premi Invio oppure il pulsante di accesso. Se la password è errata vedrai un avviso e potrai riprovare."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "E-mail del team.",
-            "Password.",
-            "Hai dimenticato la password? Ti inviamo un link via e-mail.",
-            "Pulsante di accesso."
-          ]
-        },
-        {
-          "t": "p",
-          "text": "Per recuperarla tocca «Hai dimenticato la password?», scrivi la tua e-mail e riceverai un link per sceglierne una nuova. Il link scade: se è già scaduto, richiedine un altro. Se non hai accesso all'e-mail, un'altra persona con i permessi può reimpostare la tua password da Utenti (sezione 2.11)."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "E-mail a cui verrà inviato il link di recupero.",
-            "Invia link."
-          ]
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Nuova password (almeno 8 caratteri; l'occhio la mostra o la nasconde).",
-            "Ripeti la password.",
-            "Salva password. Dopo potrai accedere con la nuova."
-          ],
-          "caption": "Schermata che si apre dal link dell'e-mail."
-        }
-      ]
+     "t": "legend",
+     "items": [
+      "Pulsante «Continua con Google»: compila nome ed e-mail con il tuo account Google (compare solo se la clinica lo ha attivato).",
+      "Nome completo.",
+      "Documento d'identità (RUT in Cile).",
+      "Cellulare con WhatsApp e prefisso internazionale.",
+      "Indirizzo e-mail.",
+      "Come vuoi ricevere i tuoi risultati: via e-mail o su WhatsApp."
+     ]
     },
     {
-      "id": "2.3",
-      "title": "La dashboard dei pazienti",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Quando accedi arrivi alla «Dashboard Pazienti», la vista generale della tua clinica. A sinistra c'è il menu (Pazienti, Utenti, Report e, per il rappresentante legale, Fasi), il selettore della lingua e l'uscita dall'account."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Pazienti: elenco e schede.",
-            "Utenti: persone della clinica.",
-            "Report dei casi in sospeso.",
-            "Fasi: configurazione del protocollo (solo rappresentante legale).",
-            "Copia link: il link della clinica per invitare i pazienti.",
-            "Ricerca per nome o telefono.",
-            "Filtro per stato.",
-            "Riga del paziente: toccala per aprire la sua scheda."
-          ]
-        },
-        {
-          "t": "p",
-          "text": "Le schede in alto contano i pazienti per stato (totale, incompleto, pronto per revisione, pronto da contattare, operato…) e servono da riepilogo rapido. La tabella mostra il nome, il telefono, lo stato, quante foto della pre-valutazione ci sono (per esempio 5/5) e la data di ingresso."
-        },
-        {
-          "t": "h3",
-          "text": "Cercare e filtrare"
-        },
-        {
-          "t": "p",
-          "text": "Scrivi una parte del nome o del telefono nella barra di ricerca per restringere l'elenco. Il filtro degli stati mostra solo i pazienti che si trovano nella fase scelta; per esempio, «Pronto da contattare» raccoglie chi ha già la diagnosi chiusa e aspetta che qualcuno lo chiami."
-        },
-        {
-          "t": "legend",
-          "items": [],
-          "caption": "Elenco degli stati del filtro."
-        },
-        {
-          "t": "legend",
-          "items": [],
-          "caption": "Risultato del filtro «Pronto da contattare»."
-        },
-        {
-          "t": "h3",
-          "text": "Copiare il link della clinica"
-        },
-        {
-          "t": "p",
-          "text": "«Copia link» apre una finestra con il link personale della clinica perché i pazienti facciano la loro pre-valutazione. Copialo per inviarlo via WhatsApp, e-mail o messaggio, oppure mostralo come codice QR alla reception."
-        },
-        {
-          "t": "legend",
-          "items": [],
-          "caption": "Finestra con il link della clinica."
-        }
-      ]
-    },
-    {
-      "id": "2.4",
-      "title": "Stati del paziente",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Lo stato di ogni paziente si calcola da solo, in base a ciò che viene completato nel suo percorso. Non devi cambiarlo a mano: devi solo registrare la data dell'appuntamento o segnare che è stato contattato senza appuntamento."
-        },
-        {
-          "t": "table",
-          "head": [
-            "Stato",
-            "Quando viene assegnato"
-          ],
-          "rows": [
-            [
-              "Incompleto",
-              "Il paziente non ha ancora terminato le foto della sua pre-valutazione."
-            ],
-            [
-              "Pronto per revisione",
-              "Pre-valutazione completa; il medico non ha ancora chiuso la diagnosi."
-            ],
-            [
-              "Pronto da contattare",
-              "Diagnosi chiusa; il paziente deve ancora essere contattato."
-            ],
-            [
-              "Pianificato",
-              "È stata registrata una data di appuntamento."
-            ],
-            [
-              "Contattato",
-              "Il paziente è stato contattato ma non è stato fissato alcun appuntamento («Contattato, senza appuntamento»)."
-            ],
-            [
-              "Operato",
-              "Ha completato la fase post-operatoria."
-            ],
-            [
-              "Trattamento completato",
-              "Tutte le fasi del protocollo sono complete."
-            ],
-            [
-              "Chiuso",
-              "Lo segna il personale a mano e viene sempre rispettato."
-            ]
-          ],
-          "widths": [
-            30,
-            70
-          ]
-        }
-      ]
-    },
-    {
-      "id": "2.5",
-      "title": "La scheda del paziente",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Tocca un paziente per aprire la sua scheda in un pannello laterale. In alto ci sono il nome, il telefono e il pulsante per eliminare il record. Subito sotto c'è il riquadro di gestione."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Stato del paziente (si aggiorna da solo quando completi ogni fase).",
-            "Data dell'appuntamento: quando la registri, lo stato passa a «Pianificato».",
-            "Contattato, senza appuntamento: usalo quando hai chiamato il paziente e non è stato fissato alcun appuntamento.",
-            "Contatta via WhatsApp: apre la conversazione con il paziente.",
-            "Elimina record: permanente; chiede conferma."
-          ]
-        },
-        {
-          "t": "warn",
-          "text": "Eliminare un record cancella per sempre i dati del paziente e tutte le sue foto. Non si può annullare."
-        },
-        {
-          "t": "h3",
-          "text": "Registro fotografico"
-        },
-        {
-          "t": "p",
-          "text": "Sotto il riquadro di gestione c'è il Registro Fotografico con le foto della pre-valutazione (quante su quante, per esempio 5/5). Tocca una foto per vederla ingrandita."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Registro Fotografico: i cinque scatti del paziente con il loro contatore."
-          ]
-        }
-      ]
-    },
-    {
-      "id": "2.6",
-      "title": "Percorso per fasi",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Il monitoraggio è organizzato in fasi: pre-valutazione, diagnosi, pre-operatorio, post-operatorio e due controlli medici. Ogni fase si apre quando si completa la precedente, e ciò che manca appare bloccato con un avviso (per esempio «Si apre al completamento di Diagnosi»). I nomi e le foto richieste in ogni fase si configurano nella sezione Fasi (2.12)."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Titolo della sezione e la sua regola: ogni fase si apre al completamento della precedente.",
-            "Pre-valutazione: la scatta il paziente dal link; qui si vede solo l'avanzamento (5/5).",
-            "Diagnosi: la gestisce il medico (sezione 2.7).",
-            "Stato della fase: Aperto, Chiuso o bloccato."
-          ]
-        },
-        {
-          "t": "p",
-          "text": "Nelle fasi registrate dal personale (pre-operatorio, post-operatorio e controlli) ogni zona ha una scheda con tre azioni: Scatta foto (apre la fotocamera del dispositivo con la cornice guida), Carica (sceglie un'immagine dal dispositivo) e, quando c'è già una foto, Ripeti o Rimuovi. L'avanzamento della fase si mostra come un contatore (0/5, 5/5)."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Riapri diagnosi.",
-            "Vedi PDF: mostra l'anteprima del referto.",
-            "Invia via e-mail.",
-            "Invia su WhatsApp."
-          ],
-          "caption": "Sotto la diagnosi: invio dei risultati e fase pre-operatorio (0/5) con le sue schede «Scatta foto» / «Carica»."
-        }
-      ]
-    },
-    {
-      "id": "2.7",
-      "title": "Diagnosi (medici)",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Quando il paziente completa la pre-valutazione, la fase Diagnosi si apre nello stato «Aperto / Bozza». Solo il medico può lavorarci; il personale amministrativo la vede in sola lettura (compare l'avviso «Solo il medico può modificare la diagnosi»)."
-        },
-        {
-          "t": "h3",
-          "text": "Passo 1 · Annotare le foto"
-        },
-        {
-          "t": "p",
-          "text": "Sotto ogni foto del paziente c'è il pulsante «Annota». Apre l'editor a schermo intero per disegnare indicazioni sull'immagine."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Annota: apre l'editor di disegno di quella foto."
-          ]
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Strumenti di disegno: matita, linea, freccia, cerchio, testo, gomma e sposta.",
-            "Colori (rosso, giallo, verde, blu, bianco e nero).",
-            "Spessore del tratto: sottile, medio o spesso.",
-            "Ingrandire / ridurre l'immagine (con la percentuale di zoom).",
-            "Annullare e ripristinare gli ultimi tratti.",
-            "Salva disegno (oppure Annulla per uscire senza salvare)."
-          ]
-        },
-        {
-          "t": "p",
-          "text": "Per segnare piccoli dettagli, ingrandisci l'immagine con il pulsante + (oppure adattala allo schermo con l'ultimo pulsante) e usa lo strumento «Sposta» per muoverti sulla foto ingrandita. I disegni non alterano la foto originale: vengono salvati a parte e la foto del paziente resta intatta."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Sposta: trascina l'immagine ingrandita.",
-            "Riduci.",
-            "Ingrandisci.",
-            "Adatta allo schermo: torna alla vista completa."
-          ]
-        },
-        {
-          "t": "h3",
-          "text": "Passo 2 · Norwood, note e risposta"
-        },
-        {
-          "t": "p",
-          "text": "Scegli la scala Norwood (oppure lascia «Non conclusivo»), scrivi le tue note cliniche (interne) e la risposta che riceverà il paziente (fino a 8.000 caratteri). «Salva bozza» conserva il tuo lavoro senza chiuderlo: puoi riprenderlo più tardi."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Scala Norwood (Valutazione).",
-            "Note cliniche: le vede solo il team.",
-            "Risposta per il paziente: comparirà nel suo referto PDF."
-          ]
-        },
-        {
-          "t": "h3",
-          "text": "Passo 3 · Chiudere la diagnosi"
-        },
-        {
-          "t": "p",
-          "text": "«Chiudi diagnosi» rende la diagnosi di sola lettura, apre la fase successiva e porta il paziente a «Pronto da contattare». Se devi correggere qualcosa, «Riapri diagnosi» la riabilita (viene registrato nello storico) e blocca le fasi successive finché non la chiudi di nuovo."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Salva bozza.",
-            "Chiudi diagnosi (chiede conferma)."
-          ]
-        },
-        {
-          "t": "legend",
-          "items": [],
-          "caption": "Diagnosi chiusa: le foto mostrano «con disegno» dove il medico ha annotato."
-        },
-        {
-          "t": "legend",
-          "items": [],
-          "caption": "Vista di un utente amministrativo: la diagnosi in bozza si può solo vedere."
-        }
-      ]
-    },
-    {
-      "id": "2.8",
-      "title": "Inviare i risultati al paziente",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Con la diagnosi chiusa compare il riquadro «Invia i risultati al paziente». Il paziente riceve un PDF con i disegni del medico e la sua risposta, attraverso il canale che ha scelto al momento della registrazione. Hai tre azioni: «Vedi PDF» (mostra l'anteprima del referto), «Invia via e-mail» (invia il PDF in allegato all'e-mail del paziente) e «Invia su WhatsApp» (apre WhatsApp con un link di download)."
-        },
-        {
-          "t": "p",
-          "text": "Ogni invio viene annotato nello storico sotto il riquadro (data, canale, destinazione, stato e chi lo ha effettuato), così sai sempre se il paziente ha già ricevuto la sua risposta. Se sul server non è ancora configurato l'invio delle e-mail, l'applicazione ti avvisa e nel frattempo puoi usare WhatsApp."
-        },
-        {
-          "t": "legend",
-          "items": [],
-          "caption": "Seconda pagina del referto dei risultati: fotografie con le indicazioni del medico."
-        }
-      ]
-    },
-    {
-      "id": "2.9",
-      "title": "Evoluzione: confrontare le fasi",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Nella scheda, la sezione Evoluzione confronta, fianco a fianco, la stessa zona anatomica del paziente in ogni fase: pre-valutazione, diagnosi, pre-operatorio, post-operatorio e controlli. Nella fase di diagnosi viene mostrata la foto con le indicazioni del medico (contrassegnata «Modificata dal team»); nelle altre, la foto originale."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Zone: scegli la zona anatomica (il numero indica in quante fasi c'è una foto).",
-            "Ingrandisci: apre la foto a schermo intero."
-          ],
-          "caption": "Ogni colonna è una fase; si scorre di lato."
-        },
-        {
-          "t": "p",
-          "text": "Tocca l'icona di ingrandimento di una foto per vederla grande e confrontarla nel dettaglio."
-        },
-        {
-          "t": "legend",
-          "items": [],
-          "caption": "Foto ingrandita."
-        },
-        {
-          "t": "h3",
-          "text": "Esportare e inviare"
-        },
-        {
-          "t": "p",
-          "text": "In «Esporta e invia» scegli tra «Tutte le zone» e «Solo questa zona» e tocca «Esporta PDF» per scaricare il confronto. Per inviarlo, controlla l'«E-mail del destinatario» (per impostazione predefinita quella del paziente; puoi scriverne un'altra, per esempio quella dell'amministrazione) e tocca «Invia per e-mail»."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Tutte le zone / Solo questa zona.",
-            "Esporta PDF.",
-            "E-mail del destinatario (modificabile).",
-            "Invia per e-mail."
-          ]
-        },
-        {
-          "t": "legend",
-          "items": [],
-          "caption": "Esempio del PDF di Evoluzione (una zona, una fase per colonna)."
-        }
-      ]
-    },
-    {
-      "id": "2.10",
-      "title": "Report dei casi in sospeso",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "«Report» elenca i pazienti con la pre-valutazione completa che aspettano ancora la diagnosi del medico e permette di programmare un riepilogo periodico via e-mail per la direzione della clinica (la configurazione e l'invio spettano al rappresentante legale)."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "In attesa di diagnosi, con i giorni di attesa.",
-            "Diagnostica: apre la scheda del paziente.",
-            "Inviare il report automaticamente (attiva l'invio periodico).",
-            "E-mail che lo ricevono: una per riga o separate da virgola (massimo 5).",
-            "Periodicità, giorno e ora (ora del Cile).",
-            "Salva configurazione.",
-            "Invia ora: manda subito il report."
-          ]
-        },
-        {
-          "t": "note",
-          "text": "Se sul server non è configurato l'invio delle e-mail, la schermata lo indica e il report non potrà ancora essere inviato."
-        }
-      ]
-    },
-    {
-      "id": "2.11",
-      "title": "Utenti della clinica",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Se sei amministrativo o rappresentante legale, da «Utenti» gestisci le persone che usano il pannello della tua clinica: crearle, bloccare o sbloccare il loro accesso, reimpostare la password, definire chi è il rappresentante legale ed eliminarle. Il tuo utente compare contrassegnato con «Tu» e non ha azioni distruttive su se stesso."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Aggiungi utente: crea una nuova persona con il suo ruolo (medico o amministrativo).",
-            "Reimposta password: le invia un link per scegliere una nuova password.",
-            "Blocca accesso: le impedisce di entrare senza eliminarla.",
-            "Rendi rappresentante legale.",
-            "Elimina."
-          ]
-        },
-        {
-          "t": "legend",
-          "items": [],
-          "caption": "Modulo per aggiungere un utente."
-        }
-      ]
-    },
-    {
-      "id": "2.12",
-      "title": "Fasi: configurare il protocollo (rappresentante legale)",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "«Fasi» definisce le tappe di registrazione e monitoraggio della tua clinica e le foto richieste in ciascuna. La prima fase è sempre la pre-valutazione che scatta il paziente; la Diagnosi la gestisce il medico e non ha foto proprie; le altre le registra il personale in ordine. Puoi rinominare fasi e foto, riordinarle con le frecce, aggiungerle o rimuoverle e salvare con «Salva fasi»."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Nome della fase e di ciascuna foto (modificabile).",
-            "Aggiungi foto alla fase.",
-            "Aggiungi fase.",
-            "Salva fasi (oppure Scarta modifiche)."
-          ]
-        },
-        {
-          "t": "note",
-          "text": "Puoi cambiare la configurazione quando vuoi: le foto già esistenti non vengono cancellate, semplicemente non vengono più richieste."
-        }
-      ]
-    },
-    {
-      "id": "2.13",
-      "title": "Uso da telefono",
-      "blocks": [
-        {
-          "t": "p",
-          "text": "Il pannello funziona allo stesso modo sul telefono: il menu si apre dal pulsante con le tre linee, le schede si impilano e la scheda del paziente occupa tutto lo schermo."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Menu.",
-            "Copia link.",
-            "Riepilogo per stato.",
-            "Ricerca e filtro.",
-            "Elenco dei pazienti."
-          ]
-        },
-        {
-          "t": "legend",
-          "items": [],
-          "caption": "Menu laterale aperto."
-        },
-        {
-          "t": "legend",
-          "items": [
-            "Stato.",
-            "Data dell'appuntamento.",
-            "Contattato, senza appuntamento.",
-            "Contatta via WhatsApp."
-          ]
-        }
-      ]
-    },
-    {
-      "id": "2.14",
-      "title": "Consigli e risoluzione dei problemi",
-      "blocks": [
-        {
-          "t": "table",
-          "head": [
-            "Situazione",
-            "Cosa fare"
-          ],
-          "rows": [
-            [
-              "Il paziente non compare nell'elenco.",
-              "Controlla la ricerca e il filtro per stato: se ce n'è uno attivo, torna a «Tutti gli stati»."
-            ],
-            [
-              "Non riesco a chiudere la diagnosi.",
-              "Il paziente deve aver completato la sua pre-valutazione (5/5). Solo il ruolo medico può chiuderla."
-            ],
-            [
-              "L'e-mail non viene inviata.",
-              "Se compare l'avviso che l'invio non è configurato, avvisa l'amministratore tecnico; nel frattempo usa WhatsApp."
-            ],
-            [
-              "Ho sbagliato ad annotare una foto.",
-              "Nell'editor usa «Annulla», oppure riapri «Annota» e ridisegna prima di chiudere la diagnosi."
-            ],
-            [
-              "Voglio che il paziente ripeta una foto.",
-              "Contattalo via WhatsApp dalla scheda e invia di nuovo il link della clinica."
-            ],
-            [
-              "Ho dimenticato la mia password.",
-              "Usa «Hai dimenticato la password?» nella schermata di accesso oppure chiedi a un'altra persona con i permessi di reimpostarla."
-            ]
-          ],
-          "widths": [
-            38,
-            62
-          ]
-        },
-        {
-          "t": "tip",
-          "text": "Esci sempre dall'account sui dispositivi condivisi e non condividere la tua password: ogni azione viene registrata con il tuo nome."
-        }
-      ]
+     "t": "note",
+     "text": "I dati di esempio di questo manuale sono fittizi."
     }
-  ]
+   ],
+   "key": "data"
+  },
+  {
+   "id": "1.3",
+   "title": "Anamnesi, consenso e privacy",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Raccontaci brevemente la tua storia: da quanto tempo noti la perdita di capelli, dove si concentra, quali trattamenti hai usato, se hai qualche sintomo e se hai già fatto un trapianto. Sono dati di base perché il team medico comprenda il tuo caso; i campi facoltativi possono restare vuoti.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Da quanto tempo noti la perdita di capelli?",
+      "Dove si concentra la perdita? (fronte, sommità, entrambe…).",
+      "Trattamenti che hai usato contro la caduta.",
+      "Sintomi associati (facoltativo, testo libero).",
+      "Interventi di trapianto precedenti (facoltativo)."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Raccontaci brevemente quale intervento ti interessa, cosa vorresti migliorare, quando vorresti operarti, se hai interventi precedenti, malattie, farmaci o allergie e se fumi. Sono dati di base perché il team medico capisca il tuo caso; i campi facoltativi possono restare vuoti.",
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Quale intervento ti interessa?",
+      "Cosa vorresti migliorare?",
+      "Quando vorresti operarti?",
+      "Interventi precedenti",
+      "Malattie o condizioni mediche",
+      "Farmaci e allergie",
+      "Fumi?"
+     ],
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Raccontaci brevemente cosa ti preoccupa, in quale zona del corpo si trova, da quanto è comparso, se è cambiato, i tuoi precedenti, i farmaci o trattamenti precedenti, l'esposizione al sole e il tipo di pelle. Sono dati di base perché il team medico capisca il tuo caso; i campi facoltativi possono restare vuoti.",
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Cosa ti preoccupa?",
+      "In quale zona del corpo si trova?",
+      "Da quanto tempo è comparso?",
+      "È cambiato di recente?",
+      "Anamnesi",
+      "Farmaci e trattamenti precedenti",
+      "Esposizione al sole",
+      "Tipo di pelle"
+     ],
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Prima di continuare devi leggere e accettare il trattamento dei tuoi dati. L'accettazione delle informazioni commerciali è facoltativa e non influisce sulla tua valutazione. Puoi leggere l'informativa sulla privacy e i termini di servizio dai link nello stesso riquadro."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Garanzie: le tue foto e i tuoi dati viaggiano cifrati e la valutazione non è una diagnosi medica in presenza.",
+      "Consenso obbligatorio al trattamento dei tuoi dati (con link all'informativa sulla privacy e ai termini).",
+      "Informazioni commerciali: facoltative.",
+      "Continua alle Foto (si attiva quando accetti il consenso)."
+     ]
+    }
+   ],
+   "key": "history"
+  },
+  {
+   "id": "1.4",
+   "title": "Le cinque foto guidate",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Servono cinque scatti standardizzati: vista frontale, vertice o sommità, tempia destra, tempia sinistra e zona donatrice (nuca). Ogni scatto ha una guida di posizione con l'orientamento, la luce, la distanza e lo sfondo consigliati. Leggila prima di fotografare e chiedi aiuto a un'altra persona se ti risulta difficile scattare da solo.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Servono cinque scatti standardizzati: vista frontale, profilo destro, profilo sinistro, obliqua destra e obliqua sinistra. Ogni scatto ha una guida di posizione con orientamento, luce, distanza e sfondo consigliati. Leggila prima di fotografare e chiedi aiuto a qualcuno se è difficile farlo da solo.",
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Servono tre scatti standardizzati: una vista panoramica della zona, un primo piano con un riferimento di dimensione e la dermatoscopia (se la tua clinica la usa). Ogni scatto ha una guida di posizione con orientamento, luce, distanza e sfondo consigliati. Leggila prima di fotografare e chiedi aiuto a qualcuno se è difficile farlo da solo.",
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Indietro: torna ai tuoi dati.",
+      "Esci: abbandona l'acquisizione (il tuo avanzamento resta salvato).",
+      "Avanzamento: foto 1 di 5 e barra di avanzamento.",
+      "Guida di posizione: orientamento, luce, distanza e sfondo.",
+      "Descrizione dello scatto e area per fotografare o caricare l'immagine."
+     ],
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Indietro: torna ai tuoi dati.",
+      "Esci: abbandona l'acquisizione (il tuo avanzamento resta salvato).",
+      "Avanzamento: foto 1 di 3 e barra di avanzamento.",
+      "Guida di posizione: orientamento, luce, distanza e sfondo.",
+      "Descrizione dello scatto e area per fotografare o caricare l'immagine."
+     ],
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Scattare la foto con la fotocamera"
+    },
+    {
+     "t": "p",
+     "text": "Tocca «Scatta foto». Il telefono chiederà il permesso di usare la fotocamera: accettalo. Vedrai un'anteprima con una cornice di riferimento; posiziona la testa all'interno della cornice come indica la guida e tocca il pulsante rotondo bianco. Con «Annulla» esci senza fotografare e con l'icona di rotazione puoi passare dalla fotocamera anteriore a quella posteriore.",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Tocca «Scatta foto». Il telefono chiederà il permesso di usare la fotocamera: accettalo. Vedrai un'anteprima con una cornice di riferimento; posiziona la zona all'interno della cornice come indica la guida e tocca il pulsante rotondo bianco. Con «Annulla» esci senza fotografare e con l'icona di rotazione puoi passare dalla fotocamera anteriore a quella posteriore.",
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Annulla: chiude la fotocamera senza scattare la foto.",
+      "Inverti: passa dalla fotocamera anteriore a quella posteriore.",
+      "Cornice di riferimento: posiziona la zona da valutare all'interno del riquadro.",
+      "Pulsante di scatto."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Verifica tecnica e descrizione"
+    },
+    {
+     "t": "p",
+     "text": "Dopo lo scatto, l'applicazione controlla la qualità della foto (risoluzione, esposizione, contrasto e nitidezza) e ti mostra dei consigli se qualcosa può essere migliorato. Sono indicazioni tecniche, non interpretano caratteristiche mediche. Puoi scrivere una descrizione facoltativa di massimo 500 caratteri (per esempio, «noto meno capelli nella zona delle tempie»). Se la foto ti piace, tocca «Usa questa foto»; altrimenti, ripetila.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Dopo lo scatto, l'applicazione controlla la qualità della foto (risoluzione, esposizione, contrasto e nitidezza) e ti mostra dei consigli se qualcosa può essere migliorato. Sono indicazioni tecniche, non interpretano caratteristiche mediche. Puoi scrivere una descrizione facoltativa di massimo 500 caratteri (per esempio, «vorrei un naso più armonioso con il mio viso»). Se la foto ti piace, tocca «Usa questa foto»; altrimenti, ripetila.",
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Dopo lo scatto, l'applicazione controlla la qualità della foto (risoluzione, esposizione, contrasto e nitidezza) e ti mostra dei consigli se qualcosa può essere migliorato. Sono indicazioni tecniche, non interpretano caratteristiche mediche. Puoi scrivere una descrizione facoltativa di massimo 500 caratteri (per esempio, «prude ed è cresciuto nelle ultime settimane»). Se la foto ti piace, tocca «Usa questa foto»; altrimenti, ripetila.",
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Dati tecnici dell'immagine (risoluzione, esposizione, nitidezza, contrasto).",
+      "Consigli automatici per migliorare lo scatto.",
+      "Descrizione facoltativa di questa foto.",
+      "Usa questa foto: la salva e passa alla successiva.",
+      "Ripeti foto: riapre la fotocamera.",
+      "Carica un'altra foto: scegli un'immagine dalla tua galleria."
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "Se in quel momento preferisci non usare la fotocamera, «Carica un'altra foto» ti permette di scegliere un'immagine dalla tua galleria. Il file originale viene conservato senza essere ridotto."
+    }
+   ],
+   "key": "photos",
+   "titles": {
+    "dermatologia": "Le tre foto guidate"
+   }
+  },
+  {
+   "id": "1.5",
+   "title": "Procedere, correggere e inviare",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Dopo ogni foto compare l'avviso «Avanzamento salvato»: i tuoi progressi vengono salvati automaticamente. Procedi scatto dopo scatto fino a completare le cinque foto. Quando hai finito, il riepilogo mostra le miniature; da ciascuna puoi ripetere la foto, aprire le impostazioni tecniche dell'immagine o caricarne un'altra. Il pulsante di invio si attiva quando arrivi a 5/5.",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Dopo ogni foto compare l'avviso «Avanzamento salvato»: i tuoi progressi vengono salvati automaticamente. Procedi scatto dopo scatto fino a completare le tre foto. Quando hai finito, il riepilogo mostra le miniature; da ciascuna puoi ripetere la foto, aprire le impostazioni tecniche dell'immagine o caricarne un'altra. Il pulsante di invio si attiva quando arrivi a 3/5.",
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Ripeti la foto dello scatto attuale.",
+      "Impostazioni tecniche dell'immagine.",
+      "Carica un'altra foto dalla galleria.",
+      "Miniature dei cinque scatti, ciascuna con il suo link per ripeterla.",
+      "Invia Valutazione (5/5): invia tutto al team medico."
+     ],
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Ripeti la foto dello scatto attuale.",
+      "Impostazioni tecniche dell'immagine.",
+      "Carica un'altra foto dalla galleria.",
+      "Miniature dei tre scatti, ciascuna con il suo link per ripeterla.",
+      "Invia Valutazione (3/3): invia tutto al team medico."
+     ],
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Conferma: la tua valutazione è stata ricevuta.",
+      "Cosa succede dopo: revisione del caso (fino a 24 giorni lavorativi), contatto via WhatsApp o e-mail e organizzazione della tua visita.",
+      "Torna alla home."
+     ]
+    }
+   ],
+   "key": "submit"
+  },
+  {
+   "id": "1.6",
+   "title": "Il tuo account per vedere i risultati",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Quando il medico chiude la tua diagnosi, la clinica ti invierà un link attraverso il canale che hai scelto (e-mail o WhatsApp). Con quello puoi scaricare il tuo referto in PDF. Se vuoi consultarlo di nuovo più tardi, accedi a «Il mio account» con la tua e-mail e una password personale."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "E-mail con cui ti sei registrato presso la clinica.",
+      "Password (l'occhio permette di mostrarla o nasconderla).",
+      "Accedi.",
+      "Crea o recupera la mia password: ti invia un link per scegliere una nuova password (serve anche se l'hai dimenticata)."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Nuova password (almeno 8 caratteri).",
+      "Ripeti la password.",
+      "Salva password. Se il link è scaduto, richiedine uno nuovo dalla stessa schermata."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "I tuoi risultati: ogni referto della clinica compare con la sua data; toccane uno per aprire il PDF.",
+      "Selettore della lingua. In basso: esci e link all'informativa sulla privacy e ai termini di servizio."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Esempio di referto dei risultati (pagina 1): logo della clinica, dati del paziente, risposta del team medico e foto con le indicazioni disegnate dal medico."
+    },
+    {
+     "t": "note",
+     "text": "Non condividere mai la tua password. La clinica non te la chiederà né per messaggio né per telefono."
+    }
+   ],
+   "key": "account"
+  },
+  {
+   "id": "1.7",
+   "title": "Domande frequenti dei pazienti",
+   "blocks": [
+    {
+     "t": "table",
+     "head": [
+      "Domanda",
+      "Risposta"
+     ],
+     "rows": [
+      [
+       "Posso fare la valutazione dal computer?",
+       "Sì, ma l'esperienza è pensata per il telefono, dove la fotocamera guida ogni scatto."
+      ],
+      [
+       "La fotocamera non si apre.",
+       "Controlla di aver accettato il permesso della fotocamera nel browser. Se non è possibile, usa «Carica un'altra foto» e scegli un'immagine dalla tua galleria."
+      ],
+      [
+       "Ho sbagliato una foto.",
+       "Tocca «Ripeti foto» (o il link sotto la miniatura) e scattala di nuovo prima di inviare."
+      ],
+      [
+       "Quando ricevo una risposta?",
+       "Il team esamina il tuo caso entro un massimo di 24 giorni lavorativi e ti contatta attraverso il canale scelto."
+      ],
+      [
+       "Le mie foto sono private?",
+       "Vengono trasmesse cifrate e le vede solo il personale autorizzato della clinica. Puoi leggere l'informativa sulla privacy direttamente nell'applicazione."
+      ],
+      [
+       "Ho dimenticato la mia password.",
+       "In «Il mio account» tocca «Crea o recupera la mia password» e segui il link che riceverai via e-mail."
+      ]
+     ],
+     "widths": [
+      38,
+      62
+     ]
+    }
+   ],
+   "key": "faq"
+  }
+ ],
+ "staff": [
+  {
+   "id": "2.1",
+   "title": "Ruoli e permessi",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Ogni persona della clinica accede con la propria e-mail e password e ha uno dei due ruoli. Il ruolo definisce cosa può fare; a schermo, ciò che non puoi fare appare semplicemente in sola lettura oppure non viene mostrato."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Funzione",
+      "Medico",
+      "Amministrativo"
+     ],
+     "rows": [
+      [
+       "Vedere la dashboard dei pazienti, le schede e le foto",
+       "✔",
+       "✔"
+      ],
+      [
+       "Cambiare stato, data dell'appuntamento, segnare come contattato, contattare via WhatsApp",
+       "✔",
+       "✔"
+      ],
+      [
+       "Registrare le foto delle fasi gestite dal personale",
+       "✔",
+       "✔"
+      ],
+      [
+       "Aggiungere pazienti e saltare fasi",
+       "✔",
+       "✔"
+      ],
+      {
+       "only": [
+        "capilar"
+       ],
+       "cells": [
+        "Diagnosi: annotare le foto, Norwood, note, risposta, chiudere e riaprire",
+        "✔",
+        "Sola lettura"
+       ]
+      },
+      {
+       "only": [
+        "plastica",
+        "dermatologia"
+       ],
+       "cells": [
+        "Diagnosi: annotare le foto, note, risposta, chiudere e riaprire",
+        "✔",
+        "Sola lettura"
+       ]
+      },
+      [
+       "Inviare i risultati (PDF via e-mail o WhatsApp) ed Evoluzione",
+       "✔",
+       "✔"
+      ],
+      [
+       "Dimissione medica e riapertura del percorso",
+       "✔",
+       "—"
+      ],
+      [
+       "Vedere il Report dei casi in sospeso",
+       "✔",
+       "✔"
+      ],
+      [
+       "Configurare e inviare il Report via e-mail; configurare le Fasi",
+       "Solo rappresentante legale",
+       "Solo rappresentante legale"
+      ],
+      {
+       "only": [
+        "dermatologia"
+       ],
+       "cells": [
+        "Gestire i tipi di visita",
+        "Solo rappresentante legale",
+        "Solo rappresentante legale"
+       ]
+      },
+      [
+       "Modificare i dati degli altri utenti (nome, telefono, ruolo, password)",
+       "Se è rappresentante legale",
+       "✔"
+      ],
+      [
+       "Gestire gli Utenti (creare, bloccare, reimpostare, eliminare)",
+       "Se è rappresentante legale",
+       "✔"
+      ],
+      [
+       "Aprire ticket di supporto e valutarli",
+       "✔",
+       "✔"
+      ]
+     ],
+     "widths": [
+      58,
+      21,
+      21
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Il rappresentante legale è la persona che la clinica designa per amministrare l'account (può essere un medico o un amministrativo): si definisce in Utenti. Per questo, nel menu, Fasi compare solo per il rappresentante legale e Utenti per gli amministrativi e il rappresentante legale."
+    },
+    {
+     "t": "note",
+     "text": "Le schermate di questo manuale appartengono alla clinica fittizia «Clínica Aurora». Le fotografie sono illustrazioni sintetiche, non persone reali."
+    }
+   ],
+   "key": "roles"
+  },
+  {
+   "id": "2.2",
+   "title": "Accedere e recuperare la password",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Accedi dall'indirizzo di accesso del team della tua clinica. Scrivi la tua e-mail e la tua password e premi Invio oppure il pulsante di accesso. Se la password è errata vedrai un avviso e potrai riprovare."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "E-mail del team.",
+      "Password.",
+      "Hai dimenticato la password? Ti inviamo un link via e-mail.",
+      "Pulsante di accesso."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Per recuperarla tocca «Hai dimenticato la password?», scrivi la tua e-mail e riceverai un link per sceglierne una nuova. Il link scade: se è già scaduto, richiedine un altro. Se non hai accesso all'e-mail, un'altra persona con i permessi può reimpostare la tua password da Utenti (sezione {§users})."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "E-mail a cui verrà inviato il link di recupero.",
+      "Invia link."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Nuova password (almeno 8 caratteri; l'occhio la mostra o la nasconde).",
+      "Ripeti la password.",
+      "Salva password. Dopo potrai accedere con la nuova."
+     ],
+     "caption": "Schermata che si apre dal link dell'e-mail."
+    }
+   ],
+   "key": "login"
+  },
+  {
+   "id": "2.3",
+   "key": "clinics",
+   "title": "Più cliniche con la stessa e-mail",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Se lavori in più di una clinica Clinivista, ogni clinica ha un proprio account con la stessa e-mail. Ogni account può avere una propria password e un proprio ruolo (medico o amministrativo) e mostra solo i pazienti di quella clinica."
+    },
+    {
+     "t": "p",
+     "text": "Quando accedi, se la password corrisponde a più account, compare la schermata «In quale clinica vuoi entrare?» con le tue cliniche: scegline una e premi «Entra». Se corrisponde a uno solo, entri direttamente."
+    },
+    {
+     "t": "p",
+     "text": "Per passare a un'altra clinica senza uscire, usa «Cambia clinica» nel menu. Se accedi con un'altra password, entrerai nella clinica corrispondente."
+    },
+    {
+     "t": "note",
+     "text": "Se reimposti la password con «Hai dimenticato la password?», puoi scegliere per quali cliniche applicarla (una casella per clinica); quelle che non selezioni mantengono la password precedente."
+    },
+    {
+     "t": "tip",
+     "text": "I direttori di Clinivista possono entrare in qualsiasi clinica come medico e amministrativo; all'interno vedono l'avviso «Sei dentro … come direttore» con un pulsante per tornare al supra-controllo."
+    }
+   ]
+  },
+  {
+   "id": "2.4",
+   "title": "La dashboard dei pazienti",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Quando accedi arrivi alla «Dashboard Pazienti», la vista generale della tua clinica. A sinistra c'è il menu (Pazienti, Utenti, Report e, per il rappresentante legale, Fasi), il selettore della lingua e l'uscita dall'account."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Pazienti: elenco e schede.",
+      "Utenti: persone della clinica.",
+      "Report dei casi in sospeso.",
+      "Fasi: configurazione del protocollo (solo rappresentante legale).",
+      "Copia link: il link della clinica per invitare i pazienti.",
+      "Ricerca per nome o telefono.",
+      "Filtro per stato.",
+      "Riga del paziente: toccala per aprire la sua scheda."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Le schede in alto contano i pazienti per stato (totale, incompleto, pronto per revisione, pronto da contattare, operato…) e servono da riepilogo rapido. La tabella mostra il nome, il telefono, lo stato, quante foto della pre-valutazione ci sono (per esempio 5/5) e la data di ingresso.",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Le schede in alto contano i pazienti per stato (totale, incompleto, pronto per revisione, pronto da contattare, trattato…) e servono da riepilogo rapido. La tabella mostra il nome, il telefono, lo stato, quante foto della pre-valutazione ci sono (per esempio 3/3) e la data di ingresso.",
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Cercare e filtrare"
+    },
+    {
+     "t": "p",
+     "text": "Scrivi una parte del nome o del telefono nella barra di ricerca per restringere l'elenco. Il filtro degli stati mostra solo i pazienti che si trovano nella fase scelta; per esempio, «Pronto da contattare» raccoglie chi ha già la diagnosi chiusa e aspetta che qualcuno lo chiami."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Elenco degli stati del filtro."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Risultato del filtro «Pronto da contattare»."
+    },
+    {
+     "t": "h3",
+     "text": "Copiare il link della clinica"
+    },
+    {
+     "t": "p",
+     "text": "«Copia link» apre una finestra con il link personale della clinica perché i pazienti facciano la loro pre-valutazione. Copialo per inviarlo via WhatsApp, e-mail o messaggio, oppure mostralo come codice QR alla reception."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Finestra con il link della clinica."
+    }
+   ],
+   "key": "panel"
+  },
+  {
+   "id": "2.5",
+   "key": "addpatient",
+   "title": "Aggiungere un paziente",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Usa «Aggiungi paziente» (pulsante del pannello pazienti) per registrare una persona seguita in clinica senza passare dal link di acquisizione. I dati obbligatori sono «Nome completo», «Documento (RUT)» e «Telefono»; e-mail e città sono facoltative."
+    },
+    {
+     "t": "p",
+     "text": "Devi spuntare che il paziente ha dato il consenso (di persona o per iscritto): vengono registrati chi lo ha confermato e quando, e senza questa casella non si può salvare. Se vuoi, seleziona anche «Invia al paziente via e-mail l'accesso al suo portale»."
+    },
+    {
+     "t": "p",
+     "text": "Se il documento esiste già in clinica, il sistema lo segnala e propone «Apri la scheda esistente» per evitare duplicati. Al salvataggio si apre la scheda, dove il personale registra le foto della pre-valutazione."
+    },
+    {
+     "t": "p",
+     "text": "In dermatologia il modulo include anche «Tipo di visita»: scegli il tipo in base al motivo della visita (predefinito «Visita generale»). Dettagli nella sezione {§consults}.",
+     "only": [
+      "dermatologia"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2.6",
+   "key": "consults",
+   "title": "Tipi di visita e più visite per paziente",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Ogni clinica di dermatologia lavora con tipi di visita. «Visita generale» (la base) esiste sempre; la clinica può inoltre attivare modelli pronti (per esempio lesioni, acne, macchie o biopsia) o creare tipi propri. Ogni tipo ha le proprie fasi e foto, configurate nella sezione {§phasesconfig}."
+    },
+    {
+     "t": "p",
+     "text": "Un paziente ha una sola scheda ma può avere più visite di tipo diverso. Nella scheda, la fascia «Visite di questo paziente» mostra una scheda per ogni visita; con «Aggiungi un'altra visita» scegli il tipo e ne viene creata una nuova."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Ogni visita ha le proprie foto, fasi, diagnosi, stato e dimissione medica.",
+      "L'elenco pazienti mostra una sola riga per persona, con il tipo di visita e quante ce ne sono.",
+      "Le visite aggiuntive non contano come nuovi pazienti nelle statistiche.",
+      "Se elimini la scheda principale, vengono eliminate anche le visite aggiuntive."
+     ]
+    }
+   ],
+   "only": [
+    "dermatologia"
+   ]
+  },
+  {
+   "id": "2.7",
+   "title": "Stati del paziente",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Lo stato di ogni paziente si calcola da solo, in base a ciò che viene completato nel suo percorso. Non devi cambiarlo a mano: devi solo registrare la data dell'appuntamento o segnare che è stato contattato senza appuntamento."
+    },
+    {
+     "t": "table",
+     "head": [
+      "Stato",
+      "Quando viene assegnato"
+     ],
+     "rows": [
+      [
+       "Incompleto",
+       "Il paziente non ha ancora terminato le foto della sua pre-valutazione."
+      ],
+      [
+       "Pronto per revisione",
+       "Pre-valutazione completa; il medico non ha ancora chiuso la diagnosi."
+      ],
+      [
+       "Pronto da contattare",
+       "Diagnosi chiusa; il paziente deve ancora essere contattato."
+      ],
+      [
+       "Pianificato",
+       "È stata registrata una data di appuntamento."
+      ],
+      [
+       "Contattato",
+       "Il paziente è stato contattato ma non è stato fissato alcun appuntamento («Contattato, senza appuntamento»)."
+      ],
+      {
+       "only": [
+        "capilar",
+        "plastica"
+       ],
+       "cells": [
+        "Operato",
+        "Ha completato la fase post-operatoria."
+       ]
+      },
+      {
+       "only": [
+        "dermatologia"
+       ],
+       "cells": [
+        "Trattato",
+        "Ha completato la fase di trattamento."
+       ]
+      },
+      [
+       "Trattamento completato",
+       "Tutte le fasi del protocollo sono complete."
+      ],
+      [
+       "Dimissione medica",
+       "Il medico ha dato la dimissione medica; può essere riaperta."
+      ],
+      [
+       "Chiuso",
+       "Lo segna il personale a mano e viene sempre rispettato."
+      ]
+     ],
+     "widths": [
+      30,
+      70
+     ]
+    }
+   ],
+   "key": "states"
+  },
+  {
+   "id": "2.8",
+   "title": "La scheda del paziente",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Tocca un paziente per aprire la sua scheda in un pannello laterale. In alto ci sono il nome, il telefono e il pulsante per eliminare il record. Subito sotto c'è il riquadro di gestione."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Stato del paziente (si aggiorna da solo quando completi ogni fase).",
+      "Data dell'appuntamento: quando la registri, lo stato passa a «Pianificato».",
+      "Contattato, senza appuntamento: usalo quando hai chiamato il paziente e non è stato fissato alcun appuntamento.",
+      "Contatta via WhatsApp: apre la conversazione con il paziente.",
+      "Elimina record: permanente; chiede conferma."
+     ]
+    },
+    {
+     "t": "warn",
+     "text": "Eliminare un record cancella per sempre i dati del paziente e tutte le sue foto. Non si può annullare."
+    },
+    {
+     "t": "h3",
+     "text": "Registro fotografico"
+    },
+    {
+     "t": "p",
+     "text": "Sotto il riquadro di gestione c'è il Registro Fotografico con le foto della pre-valutazione (quante su quante, per esempio 5/5). Tocca una foto per vederla ingrandita.",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Sotto il riquadro di gestione c'è il Registro Fotografico con le foto della pre-valutazione (quante su quante, per esempio 3/3). Tocca una foto per vederla ingrandita.",
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Registro Fotografico: i cinque scatti del paziente con il loro contatore."
+     ],
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Registro Fotografico: i tre scatti del paziente con il loro contatore."
+     ],
+     "only": [
+      "dermatologia"
+     ]
+    }
+   ],
+   "key": "ficha"
+  },
+  {
+   "id": "2.9",
+   "title": "Percorso per fasi",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Il monitoraggio è organizzato in fasi: pre-valutazione, diagnosi, pre-operatorio, post-operatorio e due controlli medici. Ogni fase si apre quando si completa la precedente, e ciò che manca appare bloccato con un avviso (per esempio «Si apre al completamento di Diagnosi»). I nomi e le foto richieste in ogni fase si configurano nella sezione Fasi ({§phasesconfig}).",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Il follow-up è organizzato in fasi: pre-valutazione, diagnosi, trattamento e due controlli. Ogni fase si apre quando la precedente è completa, e ciò che manca appare bloccato con un avviso (per esempio «Si apre al completamento della Diagnosi»). I nomi e le foto richieste in ogni fase si configurano nella sezione Fasi ({§phasesconfig}); ogni tipo di visita ha le sue.",
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Titolo della sezione e la sua regola: ogni fase si apre al completamento della precedente.",
+      "Pre-valutazione: la scatta il paziente dal link; qui si vede solo l'avanzamento (5/5).",
+      "Diagnosi: la gestisce il medico (sezione {§diagnosis}).",
+      "Stato della fase: Aperto, Chiuso o bloccato."
+     ],
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Titolo della sezione e la sua regola: ogni fase si apre al completamento della precedente.",
+      "Pre-valutazione: la scatta il paziente dal link; qui si vede solo l'avanzamento (3/3).",
+      "Diagnosi: la gestisce il medico (sezione {§diagnosis}).",
+      "Stato della fase: Aperto, Chiuso o bloccato."
+     ],
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Nelle fasi registrate dal personale (pre-operatorio, post-operatorio e controlli) ogni zona ha una scheda con tre azioni: Scatta foto (apre la fotocamera del dispositivo con la cornice guida), Carica (sceglie un'immagine dal dispositivo) e, quando c'è già una foto, Ripeti o Rimuovi. L'avanzamento della fase si mostra come un contatore (0/5, 5/5).",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Nelle fasi registrate dal personale (trattamento e controlli) ogni zona ha una scheda con tre azioni: Scatta foto (apre la fotocamera del dispositivo con la cornice guida), Carica (scegli un'immagine dal dispositivo) e, quando c'è già una foto, Ripeti o Rimuovi. L'avanzamento della fase è mostrato come contatore (0/3, 3/3).",
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Riapri diagnosi.",
+      "Vedi PDF: mostra l'anteprima del referto.",
+      "Invia via e-mail.",
+      "Invia su WhatsApp."
+     ],
+     "caption": "Sotto la diagnosi: invio dei risultati e fase pre-operatorio (0/5) con le sue schede «Scatta foto» / «Carica».",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Riapri diagnosi.",
+      "Vedi PDF: mostra l'anteprima del referto.",
+      "Invia via e-mail.",
+      "Invia su WhatsApp."
+     ],
+     "caption": "Sotto la diagnosi: invio dei risultati e fase di trattamento (0/3) con le schede «Scatta foto» / «Carica».",
+     "only": [
+      "dermatologia"
+     ]
+    }
+   ],
+   "key": "phases"
+  },
+  {
+   "id": "2.10",
+   "key": "skipdischarge",
+   "title": "Saltare fasi e dimissione medica",
+   "blocks": [
+    {
+     "t": "h3",
+     "text": "Salta fase"
+    },
+    {
+     "t": "p",
+     "text": "Quando una fase non è pertinente (per esempio il paziente porta già la valutazione di un'altra clinica), premi «Salta fase» su quella fase. Devi scrivere il «Motivo (obbligatorio)»; la fase viene contrassegnata come «Saltata» e il percorso passa alla successiva. Si può saltare solo la fase aperta non ancora completa."
+    },
+    {
+     "t": "p",
+     "text": "Se sbagli, premi «Annulla» e la fase torna in sospeso."
+    },
+    {
+     "t": "h3",
+     "text": "Dimissione medica"
+    },
+    {
+     "t": "p",
+     "text": "Quando il trattamento termina, il medico preme «Dimissione medica» nella scheda (disponibile dalla diagnosi in poi), con una nota facoltativa. Il paziente passa allo stato «Dimissione medica» e il percorso si chiude. Può farlo solo il medico; gli amministrativi lo vedono in sola lettura."
+    },
+    {
+     "t": "p",
+     "text": "Se occorre riprendere il caso, il medico usa «Riapri percorso» e il paziente torna allo stato corrispondente al suo avanzamento."
+    }
+   ]
+  },
+  {
+   "id": "2.11",
+   "title": "Diagnosi (medici)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Quando il paziente completa la pre-valutazione, la fase Diagnosi si apre nello stato «Aperto / Bozza». Solo il medico può lavorarci; il personale amministrativo la vede in sola lettura (compare l'avviso «Solo il medico può modificare la diagnosi»)."
+    },
+    {
+     "t": "h3",
+     "text": "Passo 1 · Annotare le foto"
+    },
+    {
+     "t": "p",
+     "text": "Sotto ogni foto del paziente c'è il pulsante «Annota». Apre l'editor a schermo intero per disegnare indicazioni sull'immagine."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Annota: apre l'editor di disegno di quella foto."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Strumenti di disegno: matita, linea, freccia, cerchio, testo, gomma e sposta.",
+      "Colori (rosso, giallo, verde, blu, bianco e nero).",
+      "Spessore del tratto: sottile, medio o spesso.",
+      "Ingrandire / ridurre l'immagine (con la percentuale di zoom).",
+      "Annullare e ripristinare gli ultimi tratti.",
+      "Salva disegno (oppure Annulla per uscire senza salvare)."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Per segnare piccoli dettagli, ingrandisci l'immagine con il pulsante + (oppure adattala allo schermo con l'ultimo pulsante) e usa lo strumento «Sposta» per muoverti sulla foto ingrandita. I disegni non alterano la foto originale: vengono salvati a parte e la foto del paziente resta intatta."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Sposta: trascina l'immagine ingrandita.",
+      "Riduci.",
+      "Ingrandisci.",
+      "Adatta allo schermo: torna alla vista completa."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Passo 2 · Norwood, note e risposta",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Scegli la scala Norwood (oppure lascia «Non conclusivo»), scrivi le tue note cliniche (interne) e la risposta che riceverà il paziente (fino a 8.000 caratteri). «Salva bozza» conserva il tuo lavoro senza chiuderlo: puoi riprenderlo più tardi.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Scala Norwood (Valutazione).",
+      "Note cliniche: le vede solo il team.",
+      "Risposta per il paziente: comparirà nel suo referto PDF."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Passo 2 · Note e risposta",
+     "only": [
+      "plastica",
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Scrivi le tue note cliniche (interne) e la risposta che riceverà il paziente (fino a 8.000 caratteri). «Salva bozza» conserva il tuo lavoro senza chiudere: puoi riprendere più tardi.",
+     "only": [
+      "plastica",
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Note cliniche: le vede solo il team.",
+      "Risposta per il paziente: comparirà nel suo referto PDF."
+     ],
+     "only": [
+      "plastica",
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Passo 3 · Chiudere la diagnosi"
+    },
+    {
+     "t": "p",
+     "text": "«Chiudi diagnosi» rende la diagnosi di sola lettura, apre la fase successiva e porta il paziente a «Pronto da contattare». Se devi correggere qualcosa, «Riapri diagnosi» la riabilita (viene registrato nello storico) e blocca le fasi successive finché non la chiudi di nuovo."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Salva bozza.",
+      "Chiudi diagnosi (chiede conferma)."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Diagnosi chiusa: le foto mostrano «con disegno» dove il medico ha annotato."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Vista di un utente amministrativo: la diagnosi in bozza si può solo vedere."
+    }
+   ],
+   "key": "diagnosis"
+  },
+  {
+   "id": "2.12",
+   "title": "Inviare i risultati al paziente",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Con la diagnosi chiusa compare il riquadro «Invia i risultati al paziente». Il paziente riceve un PDF con i disegni del medico e la sua risposta, attraverso il canale che ha scelto al momento della registrazione. Hai tre azioni: «Vedi PDF» (mostra l'anteprima del referto), «Invia via e-mail» (invia il PDF in allegato all'e-mail del paziente) e «Invia su WhatsApp» (apre WhatsApp con un link di download)."
+    },
+    {
+     "t": "p",
+     "text": "Ogni invio viene annotato nello storico sotto il riquadro (data, canale, destinazione, stato e chi lo ha effettuato), così sai sempre se il paziente ha già ricevuto la sua risposta. Se sul server non è ancora configurato l'invio delle e-mail, l'applicazione ti avvisa e nel frattempo puoi usare WhatsApp."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Seconda pagina del referto dei risultati: fotografie con le indicazioni del medico."
+    }
+   ],
+   "key": "results"
+  },
+  {
+   "id": "2.13",
+   "title": "Evoluzione: confrontare le fasi",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Nella scheda, la sezione Evoluzione confronta, fianco a fianco, la stessa zona anatomica del paziente in ogni fase: pre-valutazione, diagnosi, pre-operatorio, post-operatorio e controlli. Nella fase di diagnosi viene mostrata la foto con le indicazioni del medico (contrassegnata «Modificata dal team»); nelle altre, la foto originale.",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Nella scheda, la sezione Evoluzione confronta, affiancate, la stessa zona del paziente in ogni fase: pre-valutazione, diagnosi, trattamento e controlli. Nella fase di diagnosi è mostrata la foto con le indicazioni del medico (contrassegnata «Modificata dal team»); nelle altre, la foto originale.",
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Zone: scegli la zona anatomica (il numero indica in quante fasi c'è una foto).",
+      "Ingrandisci: apre la foto a schermo intero."
+     ],
+     "caption": "Ogni colonna è una fase; si scorre di lato."
+    },
+    {
+     "t": "p",
+     "text": "Tocca l'icona di ingrandimento di una foto per vederla grande e confrontarla nel dettaglio."
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Foto ingrandita."
+    },
+    {
+     "t": "h3",
+     "text": "Esportare e inviare"
+    },
+    {
+     "t": "p",
+     "text": "In «Esporta e invia» scegli tra «Tutte le zone» e «Solo questa zona» e tocca «Esporta PDF» per scaricare il confronto. Per inviarlo, controlla l'«E-mail del destinatario» (per impostazione predefinita quella del paziente; puoi scriverne un'altra, per esempio quella dell'amministrazione) e tocca «Invia per e-mail»."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Tutte le zone / Solo questa zona.",
+      "Esporta PDF.",
+      "E-mail del destinatario (modificabile).",
+      "Invia per e-mail."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Esempio del PDF di Evoluzione (una zona, una fase per colonna)."
+    }
+   ],
+   "key": "evolution"
+  },
+  {
+   "id": "2.14",
+   "title": "Report dei casi in sospeso",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "«Report» elenca i pazienti con la pre-valutazione completa che aspettano ancora la diagnosi del medico e permette di programmare un riepilogo periodico via e-mail per la direzione della clinica (la configurazione e l'invio spettano al rappresentante legale)."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "In attesa di diagnosi, con i giorni di attesa.",
+      "Diagnostica: apre la scheda del paziente.",
+      "Inviare il report automaticamente (attiva l'invio periodico).",
+      "E-mail che lo ricevono: una per riga o separate da virgola (massimo 5).",
+      "Periodicità, giorno e ora (ora del Cile).",
+      "Salva configurazione.",
+      "Invia ora: manda subito il report."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Se sul server non è configurato l'invio delle e-mail, la schermata lo indica e il report non potrà ancora essere inviato."
+    }
+   ],
+   "key": "report"
+  },
+  {
+   "id": "2.15",
+   "title": "Utenti della clinica",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Se sei amministrativo o rappresentante legale, da «Utenti» gestisci le persone che usano il pannello della tua clinica: crearle, bloccare o sbloccare il loro accesso, reimpostare la password, definire chi è il rappresentante legale ed eliminarle. Il tuo utente compare contrassegnato con «Tu» e non ha azioni distruttive su se stesso."
+    },
+    {
+     "t": "p",
+     "text": "Con «Modifica» (sulla riga di ogni persona) cambi nome, telefono e ruolo e, se serve, assegni una nuova password (minimo 8 caratteri). L'e-mail non si può cambiare. Se la persona ha account in altre cliniche, le modifiche di nome e telefono riguardano solo questa clinica."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Aggiungi utente: crea una nuova persona con il suo ruolo (medico o amministrativo).",
+      "Reimposta password: le invia un link per scegliere una nuova password.",
+      "Blocca accesso: le impedisce di entrare senza eliminarla.",
+      "Rendi rappresentante legale.",
+      "Elimina."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Modulo per aggiungere un utente."
+    }
+   ],
+   "key": "users"
+  },
+  {
+   "id": "2.16",
+   "title": "Fasi: configurare il protocollo (rappresentante legale)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "«Fasi» definisce le tappe di registrazione e monitoraggio della tua clinica e le foto richieste in ciascuna. La prima fase è sempre la pre-valutazione che scatta il paziente; la Diagnosi la gestisce il medico e non ha foto proprie; le altre le registra il personale in ordine. Puoi rinominare fasi e foto, riordinarle con le frecce, aggiungerle o rimuoverle e salvare con «Salva fasi»."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Nome della fase e di ciascuna foto (modificabile).",
+      "Aggiungi foto alla fase.",
+      "Aggiungi fase.",
+      "Salva fasi (oppure Scarta modifiche)."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Puoi cambiare la configurazione quando vuoi: le foto già esistenti non vengono cancellate, semplicemente non vengono più richieste."
+    },
+    {
+     "t": "h3",
+     "text": "Tipi di visita (dermatologia)",
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "In dermatologia, Fasi mostra una scheda per tipo di visita, ciascuna configurata separatamente. Dalla barra dei tipi puoi attivare un modello pronto (lesioni, acne, macchie, biopsia), creare un tipo proprio, rinominarlo o disattivarlo. La «Visita generale» esiste sempre e il massimo è 12 tipi. Solo il rappresentante legale può gestirli.",
+     "only": [
+      "dermatologia"
+     ]
+    }
+   ],
+   "key": "phasesconfig"
+  },
+  {
+   "id": "2.17",
+   "title": "Uso da telefono",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Il pannello funziona allo stesso modo sul telefono: il menu si apre dal pulsante con le tre linee, le schede si impilano e la scheda del paziente occupa tutto lo schermo."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Menu.",
+      "Copia link.",
+      "Riepilogo per stato.",
+      "Ricerca e filtro.",
+      "Elenco dei pazienti."
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [],
+     "caption": "Menu laterale aperto."
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Stato.",
+      "Data dell'appuntamento.",
+      "Contattato, senza appuntamento.",
+      "Contatta via WhatsApp."
+     ]
+    }
+   ],
+   "key": "phone"
+  },
+  {
+   "id": "2.18",
+   "key": "support",
+   "title": "Ticket di supporto",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "In Aiuto › Supporto puoi aprire un ticket per chiedere aiuto al team Clinivista. Può farlo qualsiasi utente della clinica: premi «Apri ticket», scrivi l'oggetto e il messaggio. Puoi avere un solo ticket attivo alla volta."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "«In attesa»: il ticket è arrivato e nessuno lo ha ancora preso in carico.",
+      "«In gestione»: una persona di Clinivista lo sta gestendo («Gestito da»); potete scrivervi nello stesso ticket.",
+      "«Risolto · manca la tua valutazione»: il team lo ha risolto; valutalo da 1 a 5 stelle, con un commento facoltativo, e premi «Invia valutazione e chiudi».",
+      "«Chiuso»: il ticket è chiuso con la tua valutazione."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "I ticket precedenti restano in «Ticket precedenti» con la loro valutazione."
+    }
+   ]
+  },
+  {
+   "id": "2.19",
+   "title": "Consigli e risoluzione dei problemi",
+   "blocks": [
+    {
+     "t": "table",
+     "head": [
+      "Situazione",
+      "Cosa fare"
+     ],
+     "rows": [
+      [
+       "Il paziente non compare nell'elenco.",
+       "Controlla la ricerca e il filtro per stato: se ce n'è uno attivo, torna a «Tutti gli stati»."
+      ],
+      {
+       "only": [
+        "capilar",
+        "plastica"
+       ],
+       "cells": [
+        "Non riesco a chiudere la diagnosi.",
+        "Il paziente deve aver completato la sua pre-valutazione (5/5). Solo il ruolo medico può chiuderla."
+       ]
+      },
+      {
+       "only": [
+        "dermatologia"
+       ],
+       "cells": [
+        "Non riesco a chiudere la diagnosi.",
+        "Il paziente deve aver completato la sua pre-valutazione (3/3). Solo il ruolo medico può chiuderla."
+       ]
+      },
+      [
+       "L'e-mail non viene inviata.",
+       "Se compare l'avviso che l'invio non è configurato, avvisa l'amministratore tecnico; nel frattempo usa WhatsApp."
+      ],
+      [
+       "Ho sbagliato ad annotare una foto.",
+       "Nell'editor usa «Annulla», oppure riapri «Annota» e ridisegna prima di chiudere la diagnosi."
+      ],
+      [
+       "Voglio che il paziente ripeta una foto.",
+       "Contattalo via WhatsApp dalla scheda e invia di nuovo il link della clinica."
+      ],
+      [
+       "Ho dimenticato la mia password.",
+       "Usa «Hai dimenticato la password?» nella schermata di accesso oppure chiedi a un'altra persona con i permessi di reimpostarla."
+      ],
+      [
+       "Non vedo tutte le mie cliniche, o vedo pazienti di un'altra.",
+       "Ogni clinica è un account distinto: usa «Cambia clinica» nel menu o accedi con la password di quella clinica."
+      ],
+      [
+       "Non trovo come dare la dimissione medica.",
+       "Solo il ruolo medico la vede attiva, dal momento in cui la diagnosi è disponibile: cerca «Dimissione medica» nella scheda."
+      ]
+     ],
+     "widths": [
+      38,
+      62
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "Esci sempre dall'account sui dispositivi condivisi e non condividere la tua password: ogni azione viene registrata con il tuo nome."
+    }
+   ],
+   "key": "tips"
+  }
+ ]
 }

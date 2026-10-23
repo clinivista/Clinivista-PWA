@@ -1,19 +1,74 @@
 import type { LangCode } from "@/lib/language";
 
-export type HelpBlock =
+/** Especialidades con manual propio. Un bloque o sección sin `only` vale para todas. */
+export type ManualSpecialty = "capilar" | "plastica" | "dermatologia";
+export const MANUAL_SPECIALTIES: ReadonlyArray<ManualSpecialty> = ["capilar", "plastica", "dermatologia"];
+type Scope = { only?: ManualSpecialty[]; directorOnly?: boolean };
+
+export type HelpBlock = Scope & (
   | { t: "p" | "note" | "tip" | "warn" | "h3"; text: string }
   | { t: "ul"; items: string[] }
   | { t: "legend"; items: string[]; caption?: string }
-  | { t: "table"; head: string[]; rows: string[][]; widths?: number[] };
-export type HelpSection = { id: string; title: string; blocks: HelpBlock[] };
+  | { t: "table"; head: string[]; rows: Array<string[] | { only: ManualSpecialty[]; cells: string[] }>; widths?: number[] });
+/** `key` identifica la sección para las referencias «{§clave}»; `titles` cambia el título según la especialidad. */
+export type HelpSection = Scope & { id: string; key?: string; title: string; titles?: Partial<Record<ManualSpecialty, string>>; blocks: HelpBlock[] };
 export type HelpManual = { patient: HelpSection[]; staff: HelpSection[] };
 
 // Cada idioma se carga solo cuando se abre la ayuda (no pesa en el resto de la app).
 const loaders = import.meta.glob<{ default: HelpManual }>("./help/manual-*.json");
 
-export async function loadManual(lang: LangCode): Promise<HelpManual> {
+/** Cuántas fotografías pide el proceso inicial de cada especialidad (sustituye «{n}» en el texto). */
+export const MANUAL_PHOTO_COUNT: Record<ManualSpecialty, number> = { capilar: 5, plastica: 5, dermatologia: 3 };
+
+type Unscoped<T> = T extends unknown ? Omit<T, "only"> : never;
+const withoutScope = <T extends Scope>({ only: _only, ...rest }: T): Unscoped<T> => rest as Unscoped<T>;
+const inScope = (scope: Scope, specialty: ManualSpecialty) => !scope.only || scope.only.includes(specialty);
+
+/**
+ * El manual de una especialidad: deja solo lo que le corresponde, vuelve a numerar
+ * las secciones y resuelve las referencias «{§clave}» y «{n}».
+ */
+export function manualFor(manual: HelpManual, specialty: ManualSpecialty): HelpManual {
+  const photos = String(MANUAL_PHOTO_COUNT[specialty]);
+  const build = (sections: HelpSection[]): HelpSection[] => {
+    const kept = sections.filter((section) => inScope(section, specialty));
+    const numbers = new Map(kept.map((section, index) => [section.key ?? "", `${section.id.split(".")[0]}.${index + 1}`]));
+    const fix = (text: string) => text.replace(/\{§([\w-]+)\}/g, (_, key: string) => numbers.get(key) ?? "").replaceAll("{n}", photos);
+    return kept.map((section, index): HelpSection => ({
+      ...withoutScope(section),
+      id: `${section.id.split(".")[0]}.${index + 1}`,
+      title: fix(section.titles?.[specialty] ?? section.title),
+      blocks: section.blocks.filter((block) => inScope(block, specialty)).map((raw): HelpBlock => {
+        const block = withoutScope(raw);
+        switch (block.t) {
+          case "ul": return { ...block, items: block.items.map(fix) };
+          case "legend": return { ...block, items: block.items.map(fix), ...(block.caption ? { caption: fix(block.caption) } : {}) };
+          case "table": return {
+            ...block,
+            head: block.head.map(fix),
+            rows: block.rows.flatMap((row) => Array.isArray(row) ? [row.map(fix)] : inScope(row, specialty) ? [row.cells.map(fix)] : []),
+          };
+          default: return { ...block, text: fix(block.text) };
+        }
+      }),
+    }));
+  };
+  return { patient: build(manual.patient), staff: build(manual.staff) };
+}
+
+export async function loadManual(lang: LangCode, specialty: ManualSpecialty = "capilar"): Promise<HelpManual> {
   const load = loaders[`./help/manual-${lang}.json`] ?? loaders["./help/manual-es.json"];
-  return (await load!()).default;
+  return manualFor((await load!()).default, specialty);
+}
+
+/** Manual de supra-control (solo en español). Lo marcado «directorOnly» solo lo puede hacer el director. */
+export async function loadSupraManual(): Promise<HelpSection[]> {
+  return (await import("./help/supra-es.json")).default.sections as HelpSection[];
+}
+
+/** Manual sin filtrar (para las pruebas de paridad entre idiomas). */
+export async function loadRawManual(lang: LangCode): Promise<HelpManual> {
+  return (await loaders[`./help/manual-${lang}.json`]!()).default;
 }
 
 export type HelpText = {
