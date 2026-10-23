@@ -198,7 +198,7 @@ router.patch("/leads/:id", async (req, res): Promise<void> => {
     updatedAt: new Date(),
   };
 
-  if (body.data.status && ALLOWED_STATUSES.includes(body.data.status)) {
+  if (body.data.status && ALLOWED_STATUSES.includes(body.data.status) && String(body.data.status) !== "alta") {
     updates.status = body.data.status;
   }
   if (body.data.notes !== undefined) updates.notes = clean(body.data.notes, 1200);
@@ -208,6 +208,11 @@ router.patch("/leads/:id", async (req, res): Promise<void> => {
   const [existing] = await db.select().from(leadsTable).where(eq(leadsTable.id, params.data.id));
   if (!existing || (existing.centerId ?? DEFAULT_CENTER_ID) !== context.centerId) {
     res.status(404).json({ error: "Caso no encontrado." });
+    return;
+  }
+  // El alta médica la reabre solo un médico, con su propio botón.
+  if (existing.status === "alta" && updates.status && updates.status !== "alta") {
+    res.status(409).json({ error: "El paciente tiene alta médica. Un médico debe reabrirla primero." });
     return;
   }
   // Booking an appointment after contacting the patient is what makes them "agendado".

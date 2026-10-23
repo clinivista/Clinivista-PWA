@@ -22,6 +22,7 @@ import * as mockedDb from "@workspace/db";
 import patientsRouter from "./patients";
 import leadsRouter from "./leads";
 import leadPhasesRouter from "./lead-phases";
+import staffPatientsRouter from "./staff-patients";
 import diagnosisRouter from "./diagnosis";
 import resultsRouter from "./results";
 import evolutionRouter from "./evolution";
@@ -44,6 +45,7 @@ app.use(express.json({ limit: "20mb" }));
 app.use("/api", patientsRouter);
 app.use("/api", leadsRouter);
 app.use("/api", leadPhasesRouter);
+app.use("/api", staffPatientsRouter);
 app.use("/api", diagnosisRouter);
 app.use("/api", resultsRouter);
 app.use("/api", evolutionRouter);
@@ -92,7 +94,7 @@ beforeAll(async () => {
        delivery_channel text DEFAULT '',
        language text DEFAULT '',
        patient_account_id text,
-       clinical_data jsonb NOT NULL DEFAULT '{}'
+       clinical_data jsonb NOT NULL DEFAULT '{}', consent_recorded_by text DEFAULT '', consent_recorded_at timestamptz, skipped_phases jsonb NOT NULL DEFAULT '[]', discharged_at timestamptz, discharged_by_name text DEFAULT '', discharge_note text DEFAULT ''
     );
     CREATE UNIQUE INDEX IF NOT EXISTS leads_center_document_unique
       ON leads (center_id, document_normalized)
@@ -1780,5 +1782,141 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
       // ningún intento llegó al servicio de correo con un adjunto (el aviso de cuenta del paciente nuevo es otro correo)
       expect(calls.filter((call) => call.attachments)).toHaveLength(0);
     });
+  });
+});
+
+describe("Personal: agregar paciente, omitir etapa y alta médica", () => {
+  const JPEG = Buffer.from(
+    "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AVN//2Q==",
+    "base64",
+  );
+  const staff = (role: "medico" | "administrativo" = "administrativo", centerId = DEFAULT_CENTER_ID) =>
+    `clinivista_session=${createSession({ userId: "staff-1", centerId, role })}`;
+  const NEW_PATIENT = { name: "Paciente Del Personal", phone: "+56922222222", documentId: "12.345.678-5", email: "personal@example.com", consentConfirmed: true };
+  type PhaseRow = {
+    id: string; name: string; kind: string; enabled: boolean; complete: boolean; skipped: boolean;
+    staffCanCapture: boolean; skip: { reason: string; byName: string } | null;
+    views: Array<{ id: string; required: boolean; photo: { id: string } | null }>;
+  };
+  const phases = async (leadId: string) =>
+    (await request(app).get(`/api/leads/${leadId}/phases`).set("Cookie", staff()).expect(200)).body.phases as PhaseRow[];
+  const statusOf = async (leadId: string) =>
+    (await request(app).get(`/api/leads/${leadId}`).set("Cookie", staff()).expect(200)).body.status as string;
+  const skip = (leadId: string, phaseId: string, reason: unknown = "Ya traía su evaluación", role: "medico" | "administrativo" = "administrativo") =>
+    request(app).put(`/api/leads/${leadId}/phases/${phaseId}/skip`).set("Cookie", staff(role)).send({ reason });
+  async function newPatient(overrides: Record<string, unknown> = {}, role: "medico" | "administrativo" = "administrativo") {
+    const res = await request(app).post("/api/leads").set("Cookie", staff(role)).send({ ...NEW_PATIENT, ...overrides });
+    expect(res.status).toBe(201);
+    return res.body.lead as { id: string; token: string };
+  }
+
+  it("médicos y administrativos agregan pacientes, con constancia de consentimiento (quién y cuándo)", async () => {
+    const lead = await newPatient();
+    const full = (await request(app).get(`/api/leads/${lead.id}`).set("Cookie", staff()).expect(200)).body;
+    expect(full.consent).toBe(true);
+    expect(full.status).toBe("incompleto");
+    expect(full.consentRecordedBy).toBe("staff-1");
+    expect(full.consentRecordedAt).toBeTruthy();
+    const doctor = await newPatient({ documentId: "11.111.111-1", phone: "+56933333333", email: "otro@example.com" }, "medico");
+    expect(doctor.id).not.toBe(lead.id);
+  });
+
+  it("no guarda sin la constancia de consentimiento, sin sesión o con datos repetidos", async () => {
+    await request(app).post("/api/leads").set("Cookie", staff()).send({ ...NEW_PATIENT, consentConfirmed: false }).expect(422);
+    await request(app).post("/api/leads").send(NEW_PATIENT).expect(401);
+    await request(app).post("/api/leads").set("Cookie", staff()).send({ ...NEW_PATIENT, documentId: "12.345.678-9" }).expect(400);
+    await request(app).post("/api/leads").set("Cookie", staff()).send({ ...NEW_PATIENT, name: "" }).expect(422);
+    await newPatient();
+    const again = await request(app).post("/api/leads").set("Cookie", staff()).send({ ...NEW_PATIENT, phone: "+56944444444", email: "x@example.com" });
+    expect(again.status).toBe(409);
+    expect(again.body.duplicate).toBe(true);
+    const samePhone = await request(app).post("/api/leads").set("Cookie", staff()).send({ ...NEW_PATIENT, documentId: "11.111.111-1" });
+    expect(samePhone.status).toBe(409);
+  });
+
+  it("el personal registra las vistas de la pre-evaluación de un paciente que agregó, pero no las de uno que se registró solo", async () => {
+    const lead = await newPatient();
+    const list = await phases(lead.id);
+    expect(list[0].staffCanCapture).toBe(true);
+    for (const view of list[0].views) {
+      await request(app).post(`/api/leads/${lead.id}/views/${view.id}/photo`).set("Cookie", staff()).set("Content-Type", "image/jpeg").send(JPEG).expect(201);
+    }
+    expect((await phases(lead.id))[0].complete).toBe(true);
+    expect(await statusOf(lead.id)).toBe("listo");
+
+    const own = (await request(app).post("/api/patients").send({ ...VALID_BODY, documentId: "11.111.111-1", phone: "+56955555555", email: "solo@example.com" }).expect(201)).body.lead as { id: string };
+    const ownList = await phases(own.id);
+    expect(ownList[0].staffCanCapture).toBe(false);
+    expect((await request(app).post(`/api/leads/${own.id}/views/${ownList[0].views[0].id}/photo`).set("Cookie", staff()).set("Content-Type", "image/jpeg").send(JPEG)).status).toBe(400);
+  });
+
+  it("omitir una etapa exige motivo, deja avanzar a la siguiente y se puede deshacer", async () => {
+    const lead = await newPatient();
+    const [pre, diagnosis, preop] = await phases(lead.id);
+    expect(preop.enabled).toBe(false);
+    expect((await skip(lead.id, pre.id, "")).status).toBe(422);
+    expect((await skip(lead.id, diagnosis.id)).status).toBe(409); // aún no está abierta
+    await skip(lead.id, pre.id, "Trae fotos de otra clínica").expect(200);
+
+    let list = await phases(lead.id);
+    expect(list[0]).toMatchObject({ skipped: true, complete: false, skip: { reason: "Trae fotos de otra clínica", byName: "staff-1" } });
+    expect(list[1].enabled).toBe(true);
+    expect(await statusOf(lead.id)).toBe("listo");
+
+    await skip(lead.id, diagnosis.id, "Diagnóstico previo en papel").expect(200);
+    list = await phases(lead.id);
+    expect(list[2].enabled).toBe(true);
+    expect(await statusOf(lead.id)).toBe("contactar");
+
+    // Con la pre-evaluación omitida el médico igual puede cerrar un diagnóstico propio.
+    await request(app).delete(`/api/leads/${lead.id}/phases/${diagnosis.id}/skip`).set("Cookie", staff()).expect(204);
+    await request(app).put(`/api/leads/${lead.id}/diagnosis`).set("Cookie", staff("medico")).send({ responseText: "Candidato." }).expect(200);
+    await request(app).post(`/api/leads/${lead.id}/diagnosis/close`).set("Cookie", staff("medico")).send({}).expect(200);
+    expect((await phases(lead.id))[1].complete).toBe(true);
+
+    await request(app).delete(`/api/leads/${lead.id}/phases/${pre.id}/skip`).set("Cookie", staff()).expect(204);
+    expect((await phases(lead.id))[0].skipped).toBe(false);
+    await request(app).delete(`/api/leads/${lead.id}/phases/${pre.id}/skip`).set("Cookie", staff()).expect(404);
+  });
+
+  it("omitir una etapa solo vale para el personal de la misma clínica", async () => {
+    const lead = await newPatient();
+    const [pre] = await phases(lead.id);
+    expect((await request(app).put(`/api/leads/${lead.id}/phases/${pre.id}/skip`).set("Cookie", staff("medico", "otra-clinica")).send({ reason: "x".repeat(10) })).status).toBe(404);
+    expect((await request(app).put(`/api/leads/${lead.id}/phases/${pre.id}/skip`).send({ reason: "motivo" })).status).toBe(401);
+  });
+
+  it("alta médica: solo médicos, después del diagnóstico, estado propio y reabrible", async () => {
+    const lead = await newPatient();
+    const [pre, diagnosis] = await phases(lead.id);
+    expect((await request(app).post(`/api/leads/${lead.id}/discharge`).set("Cookie", staff("administrativo")).send({})).status).toBe(403);
+    expect((await request(app).post(`/api/leads/${lead.id}/discharge`).set("Cookie", staff("medico")).send({})).status).toBe(409); // antes del diagnóstico
+
+    await skip(lead.id, pre.id).expect(200);
+    await skip(lead.id, diagnosis.id).expect(200);
+    const done = await request(app).post(`/api/leads/${lead.id}/discharge`).set("Cookie", staff("medico")).send({ note: "Evolución favorable" });
+    expect(done.status).toBe(200);
+    expect(await statusOf(lead.id)).toBe("alta");
+    const full = (await request(app).get(`/api/leads/${lead.id}`).set("Cookie", staff()).expect(200)).body;
+    expect(full.dischargeNote).toBe("Evolución favorable");
+    expect(full.dischargedAt).toBeTruthy();
+
+    // El estado "alta" gana sobre el calculado y no se cambia a mano ni por la lista.
+    expect((await request(app).patch(`/api/leads/${lead.id}`).set("Cookie", staff("administrativo")).send({ status: "listo" })).status).toBe(409);
+    expect((await skip(lead.id, (await phases(lead.id))[2].id)).status).toBe(409);
+    const inFilter = (await request(app).get("/api/leads?status=alta").set("Cookie", staff()).expect(200)).body.leads as Array<{ id: string }>;
+    expect(inFilter.map((l) => l.id)).toEqual([lead.id]);
+    expect((await request(app).get("/api/leads/stats").set("Cookie", staff()).expect(200)).body.counts).toMatchObject({ alta: 1 });
+
+    expect((await request(app).delete(`/api/leads/${lead.id}/discharge`).set("Cookie", staff("administrativo"))).status).toBe(403);
+    const reopened = await request(app).delete(`/api/leads/${lead.id}/discharge`).set("Cookie", staff("medico")).expect(200);
+    expect(reopened.body.status).toBe("contactar");
+    expect(await statusOf(lead.id)).toBe("contactar");
+  });
+
+  it("nadie puede poner el estado alta con el selector de estado", async () => {
+    const lead = await newPatient();
+    await request(app).patch(`/api/leads/${lead.id}`).set("Cookie", staff("medico")).send({ status: "alta" });
+    expect(await statusOf(lead.id)).not.toBe("alta");
   });
 });

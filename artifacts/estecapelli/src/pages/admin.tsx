@@ -5,7 +5,7 @@ import { es as dateFnsEs } from "date-fns/locale";
 import {
   Users, UserCog, Layers, LogOut,
   Search, ChevronRight, X, Phone, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu, Copy,
-  ClipboardList, LifeBuoy,
+  ClipboardList, LifeBuoy, UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,8 @@ import { ReportPanel } from "./report-panel";
 import { HelpPanel } from "./help-panel";
 import { HELP_TEXT } from "@/lib/help-i18n";
 import { LeadPhases } from "@/components/lead-phases";
+import { AddPatientDialog } from "@/components/add-patient-dialog";
+import { STAFF_FLOW_TEXT } from "@/lib/staff-flow-i18n";
 import { LeadEvolution } from "@/components/lead-evolution";
 import { NAV_TEXT } from "@/lib/phases-i18n";
 
@@ -45,6 +47,7 @@ const STATUS_COLORS: Record<string, string> = {
   contactado: "bg-sky-100 text-sky-700",
   operado: "bg-teal-100 text-teal-700",
   completado: "bg-green-200 text-green-800",
+  alta: "bg-cyan-100 text-cyan-800",
   cerrado: "bg-gray-100 text-gray-500"
 };
 
@@ -68,6 +71,7 @@ export default function Admin() {
     operado: t.statusOperado,
     completado: t.statusCompletado,
     cerrado: t.statusCerrado,
+    alta: t.statusAlta,
   };
 
   const [search, setSearch] = useState("");
@@ -76,6 +80,7 @@ export default function Admin() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [addPatientOpen, setAddPatientOpen] = useState(false);
 
   const { data: authStatus, isLoading: isAuthLoading } = useGetAuthMe();
   const logoutMutation = useAdminLogout();
@@ -339,14 +344,26 @@ export default function Admin() {
             <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">{t.adminDashTitle}</h1>
             <p className="text-sm text-muted-foreground font-medium mt-1">{t.adminDashSub}</p>
           </div>
-          <Button
-            onClick={handleCopyGenericLink}
-            className={`gap-2 h-12 px-6 rounded-full font-bold shadow-lg transition-all shrink-0 w-full md:w-auto ${linkCopied ? "bg-emerald-600 hover:bg-emerald-600 shadow-emerald-600/20" : "shadow-primary/20"}`}
-          >
-            {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            {linkCopied ? t.adminInviteLinkCopied : t.adminInviteCopyLink}
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+            <Button
+              onClick={() => setAddPatientOpen(true)}
+              className="gap-2 h-12 px-6 rounded-full font-bold shadow-lg shadow-primary/20 w-full md:w-auto"
+              data-testid="add-patient"
+            >
+              <UserPlus className="w-4 h-4" />
+              {STAFF_FLOW_TEXT[lang].addPatient}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleCopyGenericLink}
+              className={`gap-2 h-12 px-6 rounded-full font-bold transition-all w-full md:w-auto ${linkCopied ? "border-emerald-600 text-emerald-700" : ""}`}
+            >
+              {linkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {linkCopied ? t.adminInviteLinkCopied : t.adminInviteCopyLink}
+            </Button>
+          </div>
         </header>
+        <AddPatientDialog open={addPatientOpen} onOpenChange={setAddPatientOpen} onCreated={(id) => { setStatusFilter("all"); setSearch(""); setSelectedLeadId(id); }} />
 
         {/* Stats Strip — floating cards on bg */}
         <div className="px-4 sm:px-6 md:px-10 py-4 sm:py-6 shrink-0 grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 bg-[#F5F2EE]">
@@ -536,7 +553,7 @@ export default function Admin() {
                             </SelectTrigger>
                             <SelectContent className="rounded-2xl">
                               {Object.entries(STATUS_LABELS).map(([k, v]) => (
-                                <SelectItem key={k} value={k}>{v}</SelectItem>
+                                <SelectItem key={k} value={k} disabled={k === "alta"}>{v}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -626,6 +643,13 @@ export default function Admin() {
                         notes: fullLead.notes,
                         showNorwood: myClinic?.specialty !== "plastica",
                         onPatch: (data) => handlePatch(fullLead.id, data),
+                      }}
+                      process={{
+                        status: fullLead.status,
+                        isDoctor: authStatus.user?.role === "medico",
+                        dischargedByName: (fullLead as { dischargedByName?: string | null }).dischargedByName,
+                        dischargedAt: (fullLead as { dischargedAt?: string | null }).dischargedAt,
+                        dischargeNote: (fullLead as { dischargeNote?: string | null }).dischargeNote,
                       }}
                     />
 

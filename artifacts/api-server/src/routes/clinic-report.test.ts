@@ -49,7 +49,7 @@ beforeAll(async () => {
       notes text DEFAULT '', norwood text DEFAULT '', appointment_at text DEFAULT '',
       is_demo boolean DEFAULT false, center_id text DEFAULT 'default-center',
       protocol_id text DEFAULT 'capillary-initial', delivery_channel text DEFAULT '',
-      language text DEFAULT '', patient_account_id text, clinical_data jsonb NOT NULL DEFAULT '{}'
+      language text DEFAULT '', patient_account_id text, clinical_data jsonb NOT NULL DEFAULT '{}', consent_recorded_by text DEFAULT '', consent_recorded_at timestamptz, skipped_phases jsonb NOT NULL DEFAULT '[]', discharged_at timestamptz, discharged_by_name text DEFAULT '', discharge_note text DEFAULT ''
     );
     CREATE TABLE IF NOT EXISTS clinical_evaluations (
       id text PRIMARY KEY, lead_id text NOT NULL UNIQUE, center_id text NOT NULL DEFAULT 'default-center',

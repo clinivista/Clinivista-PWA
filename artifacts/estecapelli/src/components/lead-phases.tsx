@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Camera, CheckCircle2, Loader2, Lock, Trash2, Upload } from "lucide-react";
+import { Camera, CheckCircle2, Loader2, Lock, SkipForward, Trash2, Upload } from "lucide-react";
 import {
   useDeleteLeadPhasePhoto,
   useGetLeadPhases,
@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { DiagnosisPanel, type DiagnosisLeadData } from "@/components/diagnosis-panel";
 import { useLanguage } from "@/lib/language";
 import { PHASES_TEXT, phaseName, refreshLeadViews, viewLabel } from "@/lib/phases-i18n";
+import { STAFF_FLOW_TEXT } from "@/lib/staff-flow-i18n";
+import { DischargeControl, SkipPhaseButton, SkippedNote } from "@/components/phase-actions";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const MAX_SIDE = 2400;
@@ -144,11 +146,24 @@ function ViewSlot({ leadId, phase, view, disabled, onExpand }: {
 // El proceso del paciente fase por fase: la pre-evaluación la toma el paciente;
 // las siguientes las registra el personal, en orden (cada una se abre al
 // completar la anterior).
-export function LeadPhases({ leadId, onExpand, diagnosisLead }: { leadId: string; onExpand: (url: string) => void; diagnosisLead?: DiagnosisLeadData }) {
+export type LeadPhasesProcess = {
+  status: string;
+  isDoctor: boolean;
+  dischargedByName?: string | null;
+  dischargedAt?: string | null;
+  dischargeNote?: string | null;
+};
+
+export function LeadPhases({ leadId, onExpand, diagnosisLead, process }: { leadId: string; onExpand: (url: string) => void; diagnosisLead?: DiagnosisLeadData; process?: LeadPhasesProcess }) {
   const { lang } = useLanguage();
   const p = PHASES_TEXT[lang];
+  const s = STAFF_FLOW_TEXT[lang];
   const { data, isLoading, isError } = useGetLeadPhases(leadId);
   const phases = data?.phases ?? [];
+  // El proceso se cierra con el alta médica (o "cerrado"): ahí ya no se omite nada.
+  const processOpen = !!process && process.status !== "alta" && process.status !== "cerrado";
+  const diagnosisIndex = phases.findIndex((phase) => phase.kind === "diagnosis");
+  const afterDiagnosis = diagnosisIndex < 0 || phases[diagnosisIndex].complete || phases[diagnosisIndex].skipped;
 
   return (
     <div className="bg-white p-6 rounded-[1.75rem] shadow-sm">
@@ -166,11 +181,13 @@ export function LeadPhases({ leadId, onExpand, diagnosisLead }: { leadId: string
                 <span className="shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-extrabold flex items-center justify-center">{index + 1}</span>
                 <h4 className="font-bold text-foreground min-w-0 break-words">{phaseName(phase, lang)}</h4>
                 <span className="ml-auto shrink-0 flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
-                  {phase.complete ? <CheckCircle2 className="w-4 h-4 text-primary" /> : !phase.enabled ? <Lock className="w-4 h-4" /> : null}
-                  {phase.kind === "diagnosis" ? (phase.complete ? p.closed : p.open) : `${taken}/${phase.views.length}`}
+                  {phase.complete ? <CheckCircle2 className="w-4 h-4 text-primary" /> : phase.skipped ? <SkipForward className="w-4 h-4" /> : !phase.enabled ? <Lock className="w-4 h-4" /> : null}
+                  {phase.skipped ? s.skippedBadge : phase.kind === "diagnosis" ? (phase.complete ? p.closed : p.open) : `${taken}/${phase.views.length}`}
                 </span>
               </div>
-              {phase.patientCaptured ? (
+              {phase.skipped ? (
+                <SkippedNote leadId={leadId} phase={phase} canUndo={processOpen} />
+              ) : phase.patientCaptured && !phase.staffCanCapture ? (
                 <p className="text-xs text-muted-foreground mt-2">
                   {p.patientTakes}{phase.complete ? p.patientDone : p.patientPending}
                 </p>
@@ -181,16 +198,33 @@ export function LeadPhases({ leadId, onExpand, diagnosisLead }: { leadId: string
               ) : phase.kind === "diagnosis" ? (
                 <DiagnosisPanel leadId={leadId} onExpand={onExpand} lead={diagnosisLead} />
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
-                  {phase.views.map((view) => (
-                    <ViewSlot key={view.id} leadId={leadId} phase={phase} view={view} disabled={false} onExpand={onExpand} />
-                  ))}
-                </div>
+                <>
+                  {phase.patientCaptured && <p className="text-xs text-muted-foreground mt-2">{s.staffTakes}</p>}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
+                    {phase.views.map((view) => (
+                      <ViewSlot key={view.id} leadId={leadId} phase={phase} view={view} disabled={false} onExpand={onExpand} />
+                    ))}
+                  </div>
+                </>
+              )}
+              {processOpen && phase.enabled && !phase.complete && !phase.skipped && (
+                <div className="mt-3 flex justify-end"><SkipPhaseButton leadId={leadId} phase={phase} /></div>
               )}
             </li>
           );
         })}
       </ol>
+      {process && (
+        <DischargeControl
+          leadId={leadId}
+          status={process.status}
+          isDoctor={process.isDoctor}
+          afterDiagnosis={afterDiagnosis}
+          dischargedByName={process.dischargedByName}
+          dischargedAt={process.dischargedAt}
+          dischargeNote={process.dischargeNote}
+        />
+      )}
     </div>
   );
 }

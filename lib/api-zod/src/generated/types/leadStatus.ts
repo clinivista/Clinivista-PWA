@@ -19,4 +19,5 @@ export const LeadStatus = {
   operado: 'operado',
   completado: 'completado',
   cerrado: 'cerrado',
+  alta: 'alta',
 } as const;

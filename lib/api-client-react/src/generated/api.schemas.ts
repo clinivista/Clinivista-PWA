@@ -731,6 +731,12 @@ export const LeadPhaseKind = {
   diagnosis: 'diagnosis',
 } as const;
 
+export type LeadPhaseSkip = {
+  reason: string;
+  byName: string;
+  at: string;
+} | null;
+
 export interface LeadPhase {
   id: string;
   key: string;
@@ -738,8 +744,11 @@ export interface LeadPhase {
   position: number;
   kind: LeadPhaseKind;
   patientCaptured: boolean;
+  staffCanCapture: boolean;
   enabled: boolean;
   complete: boolean;
+  skipped: boolean;
+  skip: LeadPhaseSkip;
   views: LeadPhaseView[];
 }
 
@@ -773,6 +782,7 @@ export const LeadStatus = {
   operado: 'operado',
   completado: 'completado',
   cerrado: 'cerrado',
+  alta: 'alta',
 } as const;
 
 export type LeadSummaryClinicalData = {[key: string]: string};

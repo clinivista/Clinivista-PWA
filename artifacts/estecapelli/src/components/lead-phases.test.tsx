@@ -90,4 +90,61 @@ describe("LeadPhases", () => {
     expect(within(item).getByText("Abierto")).toBeInTheDocument();
     expect(within(item).queryByRole("button", { name: /Tomar foto/ })).not.toBeInTheDocument();
   });
+
+  it("ofrece omitir la etapa abierta (con motivo obligatorio) y muestra la omitida con quién y por qué", async () => {
+    const user = userEvent.setup();
+    api.phases = [
+      phase("p1", "Pre-evaluación", { patientCaptured: true, enabled: true, skipped: true, skip: { reason: "Trae fotos de otra clínica", byName: "Ana", at: "2026-10-01T12:00:00.000Z" } }),
+      phase("p2", "Diagnóstico", { enabled: true, views: [view("p2-a", "Frontal"), view("p2-b", "Vértex")] }),
+    ];
+    render(<LeadPhases leadId="lead-1" onExpand={vi.fn()} process={{ status: "listo", isDoctor: false }} />);
+    const skipped = screen.getByRole("listitem", { name: "Fase 1: Pre-evaluación" });
+    expect(within(skipped).getAllByText("Omitida").length).toBeGreaterThan(0);
+    expect(within(skipped).getByText(/Ana/)).toHaveTextContent("Trae fotos de otra clínica");
+    expect(within(skipped).getByRole("button", { name: /Deshacer omisión/ })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Omitir etapa/ }));
+    const confirm = screen.getByRole("button", { name: "Omitir etapa" });
+    expect(confirm).toBeDisabled();
+    await user.type(screen.getByLabelText(/Motivo/), "Diagnóstico previo en papel");
+    await user.click(confirm);
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
+    const [url, init] = fetchSpy.mock.calls[0];
+    expect(url).toBe("/api/leads/lead-1/phases/p2/skip");
+    expect(init).toMatchObject({ method: "PUT" });
+    expect(JSON.parse(String((init as RequestInit).body))).toEqual({ reason: "Diagnóstico previo en papel" });
+  });
+
+  it("el alta médica solo la da un médico, después del diagnóstico, y se puede reabrir", async () => {
+    const user = userEvent.setup();
+    api.phases = [
+      phase("p1", "Pre-evaluación", { patientCaptured: true, enabled: true, complete: true }),
+      phase("p2", "Diagnóstico", { enabled: true, kind: "diagnosis", complete: true }),
+      phase("p3", "Pre-operatorio", { enabled: true }),
+    ];
+    const { rerender } = render(<LeadPhases leadId="lead-1" onExpand={vi.fn()} process={{ status: "contactar", isDoctor: false }} />);
+    expect(screen.queryByRole("button", { name: /Dar alta médica/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/Solo un médico/)).toBeInTheDocument();
+
+    rerender(<LeadPhases leadId="lead-1" onExpand={vi.fn()} process={{ status: "contactar", isDoctor: true }} />);
+    await user.click(screen.getByRole("button", { name: /Dar alta médica/ }));
+    await user.type(screen.getByLabelText(/Nota/), "Evolución favorable");
+    await user.click(screen.getByRole("button", { name: "Confirmar alta médica" }));
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
+    expect(fetchSpy.mock.calls[0][0]).toBe("/api/leads/lead-1/discharge");
+    expect(JSON.parse(String((fetchSpy.mock.calls[0][1] as RequestInit).body))).toEqual({ note: "Evolución favorable" });
+
+    rerender(<LeadPhases leadId="lead-1" onExpand={vi.fn()} process={{ status: "alta", isDoctor: true, dischargedByName: "Dra. Paz", dischargedAt: "2026-10-05T12:00:00.000Z" }} />);
+    expect(screen.getByRole("button", { name: /Reabrir proceso/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Omitir etapa/ })).not.toBeInTheDocument();
+  });
+
+  it("antes del diagnóstico no ofrece el alta médica", () => {
+    api.phases = [
+      phase("p1", "Pre-evaluación", { patientCaptured: true, enabled: true, complete: true }),
+      phase("p2", "Diagnóstico", { enabled: true, kind: "diagnosis" }),
+    ];
+    render(<LeadPhases leadId="lead-1" onExpand={vi.fn()} process={{ status: "listo", isDoctor: true }} />);
+    expect(screen.queryByTestId("discharge-control")).not.toBeInTheDocument();
+  });
 });
