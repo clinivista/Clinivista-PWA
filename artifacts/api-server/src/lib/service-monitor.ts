@@ -19,6 +19,7 @@ export const CHECK_LABELS: Record<string, string> = {
   dns: "Dominio y DNS",
   https: "Aplicación y certificado HTTPS",
   github: "Código y despliegue (GitHub)",
+  claude: "Cuenta de Claude (Anthropic)",
 };
 export const CHECK_KEYS = Object.keys(CHECK_LABELS);
 
@@ -156,8 +157,38 @@ async function checkGithub(): Promise<CheckResult> {
   } catch (e) { return { key: "github", status: "unknown", detail: `No se pudo consultar GitHub: ${errText(e)}` }; }
 }
 
+/**
+ * Cuenta de Claude (Anthropic). Con ANTHROPIC_API_KEY se consulta la lista de modelos
+ * (no consume saldo) para comprobar que la clave y la cuenta sigan activas; sin ella
+ * solo se mira el estado público de Claude. Ojo: la lista de modelos no revela si el
+ * saldo se agotó; eso solo aparece al generar texto.
+ */
+export async function checkClaude(): Promise<CheckResult> {
+  const key = process.env.ANTHROPIC_API_KEY?.trim();
+  try {
+    if (key) {
+      const response = await fetch("https://api.anthropic.com/v1/models?limit=1", {
+        headers: { "x-api-key": key, "anthropic-version": "2023-06-01" },
+        signal: AbortSignal.timeout(TIMEOUT),
+      });
+      if (response.ok) return { key: "claude", status: "ok", detail: "La API de Claude responde y la clave es válida." };
+      if (response.status === 401) return { key: "claude", status: "fail", detail: "Anthropic rechazó la clave (¿revocada o incorrecta?)." };
+      if (response.status === 403) return { key: "claude", status: "fail", detail: "Anthropic negó el acceso (¿cuenta suspendida o sin permisos?)." };
+      if (response.status === 429) return { key: "claude", status: "warn", detail: "Anthropic informa límite de uso alcanzado." };
+      return { key: "claude", status: "fail", detail: `Anthropic respondió ${response.status}.` };
+    }
+    const response = await fetch("https://status.claude.com/api/v2/status.json", { signal: AbortSignal.timeout(TIMEOUT) });
+    if (!response.ok) return { key: "claude", status: "unknown", detail: "No se pudo consultar el estado público de Claude." };
+    const body = (await response.json()) as { status?: { indicator?: string; description?: string } };
+    const hint = " Para vigilar también tu cuenta, define ANTHROPIC_API_KEY en el servidor.";
+    return body.status?.indicator === "none"
+      ? { key: "claude", status: "ok", detail: `Claude operativo.${hint}` }
+      : { key: "claude", status: "warn", detail: `Claude informa: ${body.status?.description ?? "incidente"}.${hint}` };
+  } catch (e) { return { key: "claude", status: "unknown", detail: `No se pudo consultar Claude: ${errText(e)}` }; }
+}
+
 export async function runAllChecks(): Promise<CheckResult[]> {
-  return Promise.all([checkDatabase(), checkStorage(), checkEmail(), checkGoogle(), checkDns(), checkHttps(), checkGithub()]);
+  return Promise.all([checkDatabase(), checkStorage(), checkEmail(), checkGoogle(), checkDns(), checkHttps(), checkGithub(), checkClaude()]);
 }
 
 // ── Destinatarios de las alertas ─────────────────────────────────────────

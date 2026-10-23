@@ -113,6 +113,7 @@ const DEFAULT_SERVICES = [
   { name: "Neon", provider: "Neon", plan: "", notes: "Base de datos PostgreSQL.", currency: "USD" },
   { name: "Cloudflare (R2 y DNS)", provider: "Cloudflare", plan: "", notes: "Fotos clínicas (R2) y DNS de clinivista.cl.", currency: "USD" },
   { name: "GitHub", provider: "GitHub", plan: "", notes: "Código fuente y despliegues automáticos.", currency: "USD" },
+  { name: "Claude", provider: "Anthropic", plan: "", notes: "Cuenta de Claude (asistente y API).", currency: "USD" },
   { name: "Resend", provider: "Resend", plan: "", notes: "Correos transaccionales de la app.", currency: "USD" },
   { name: "Google (ingreso con Google)", provider: "Google Cloud", plan: "Gratis", notes: "OAuth de pacientes.", currency: "USD", billingCycle: "none" as const },
   { name: "Dominio clinivista.cl", provider: "NIC Chile", plan: "", notes: "Registro del dominio.", currency: "CLP", billingCycle: "yearly" as const, renewalDate: "2028-09-15" },
