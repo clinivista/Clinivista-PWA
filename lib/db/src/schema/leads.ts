@@ -11,6 +11,14 @@ export const photoEntrySchema = z.object({
   createdAt: z.string(),
 });
 
+export type SkippedPhase = {
+  phaseId: string;
+  reason: string;
+  byUserId: string;
+  byName: string;
+  at: string;
+};
+
 export type PhotoEntry = z.infer<typeof photoEntrySchema>;
 
 export const leadsTable = pgTable("leads", {
@@ -59,6 +67,17 @@ export const leadsTable = pgTable("leads", {
   // Respuestas a las preguntas propias de la especialidad de la clínica (todas
   // menos capilar, que conserva sus columnas históricas de arriba).
   clinicalData: jsonb("clinical_data").notNull().default({}),
+  // Paciente agregado por el personal: quién marcó la constancia del
+  // consentimiento (dado en persona o por escrito) y cuándo. Vacío cuando el
+  // propio paciente se registró desde su enlace.
+  consentRecordedBy: text("consent_recorded_by").default(""),
+  consentRecordedAt: timestamp("consent_recorded_at", { withTimezone: true }),
+  // Etapas que el personal omitió: [{ phaseId, reason, byUserId, byName, at }].
+  skippedPhases: jsonb("skipped_phases").notNull().default([]),
+  // Alta médica: quién la dio, cuándo y la nota. Solo la dan los médicos.
+  dischargedAt: timestamp("discharged_at", { withTimezone: true }),
+  dischargedByName: text("discharged_by_name").default(""),
+  dischargeNote: text("discharge_note").default(""),
 }, (table) => [
   // Per-clinic uniqueness: the same RUT is only a duplicate within one center.
   uniqueIndex("leads_center_document_unique")

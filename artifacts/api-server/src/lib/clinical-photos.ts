@@ -17,6 +17,7 @@ import {
   resultDeliveriesTable,
   type ClinicalPhoto,
   type Lead,
+  type SkippedPhase,
 } from "@workspace/db";
 import { uid } from "./helpers";
 import { createObjectKey, privatePhotoStorage } from "./clinical-photo-storage";
@@ -715,9 +716,14 @@ export type LeadPhase = {
   /** "diagnosis": the doctor marks up the patient's photos and writes the answer. */
   kind: "capture" | "diagnosis";
   patientCaptured: boolean;
+  /** El personal puede fotografiar sus vistas: siempre, salvo la pre-evaluación de un paciente que se registró solo (esa la toma él). */
+  staffCanCapture: boolean;
   /** Phases open in order: a phase is enabled once the previous one is complete. */
   enabled: boolean;
   complete: boolean;
+  /** El personal omitió esta etapa (con motivo): deja avanzar a la siguiente sin completarla. */
+  skipped: boolean;
+  skip: { reason: string; byName: string; at: string } | null;
   views: LeadPhaseView[];
 };
 
@@ -741,6 +747,7 @@ export async function getLeadPhases(lead: Lead): Promise<LeadPhase[]> {
 
   const [diagnosis] = await db.select().from(diagnosesTable).where(eq(diagnosesTable.evaluationId, evaluation.id));
 
+  const skips = new Map((Array.isArray(lead.skippedPhases) ? lead.skippedPhases as SkippedPhase[] : []).map((skip) => [skip.phaseId, skip]));
   let previousComplete = true;
   return phases.map((phase, index) => {
     const phaseViews = views
@@ -761,6 +768,7 @@ export async function getLeadPhases(lead: Lead): Promise<LeadPhase[]> {
     const complete = isDiagnosis
       ? diagnosis?.status === "closed"
       : phaseViews.length > 0 && phaseViews.filter((view) => view.required).every((view) => view.photo !== null);
+    const skip = complete ? undefined : skips.get(phase.id);
     const result: LeadPhase = {
       id: phase.id,
       key: phase.key,
@@ -768,11 +776,14 @@ export async function getLeadPhases(lead: Lead): Promise<LeadPhase[]> {
       position: index,
       kind: isDiagnosis ? "diagnosis" : "capture",
       patientCaptured: index === 0,
+      staffCanCapture: index !== 0 || Boolean(lead.consentRecordedBy),
       enabled: index === 0 || previousComplete,
       complete,
+      skipped: skip !== undefined,
+      skip: skip ? { reason: skip.reason, byName: skip.byName, at: skip.at } : null,
       views: phaseViews,
     };
-    previousComplete = complete;
+    previousComplete = complete || skip !== undefined;
     return result;
   });
 }
@@ -801,7 +812,7 @@ export async function createStaffPhasePhoto(input: {
   const phase = phases.find((candidate) => candidate.views.some((view) => view.id === input.viewId));
   const view = phase?.views.find((candidate) => candidate.id === input.viewId);
   if (!phase || !view) throw new PhaseCaptureError("Esa fotografía no existe en este proceso.", 404);
-  if (phase.patientCaptured) throw new PhaseCaptureError("La pre-evaluación la toma el paciente desde su enlace.");
+  if (!phase.staffCanCapture) throw new PhaseCaptureError("La pre-evaluación la toma el paciente desde su enlace.");
   if (!phase.enabled) throw new PhaseCaptureError("Completa la fase anterior antes de registrar esta.", 409);
 
   const hash = crypto.createHash("sha256").update(input.bytes).digest("hex");
@@ -850,7 +861,7 @@ export async function discardStaffPhasePhoto(lead: Lead, photoId: string, staffU
   if (!located || !isVisible(located.photo.status)) return false;
   const evaluation = await ensureEvaluationForLead(lead);
   const inPreEvaluation = await patientPhaseViewIds(evaluation.protocolId);
-  if (inPreEvaluation.has(located.photo.viewId)) {
+  if (inPreEvaluation.has(located.photo.viewId) && !lead.consentRecordedBy) {
     throw new PhaseCaptureError("Las fotografías de la pre-evaluación son del paciente.");
   }
   await privatePhotoStorage.remove(located.photo.originalObjectPath);

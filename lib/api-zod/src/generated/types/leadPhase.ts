@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { LeadPhaseKind } from './leadPhaseKind';
+import type { LeadPhaseSkip } from './leadPhaseSkip';
 import type { LeadPhaseView } from './leadPhaseView';
 
 export interface LeadPhase {
@@ -15,7 +16,10 @@ export interface LeadPhase {
   position: number;
   kind: LeadPhaseKind;
   patientCaptured: boolean;
+  staffCanCapture: boolean;
   enabled: boolean;
   complete: boolean;
+  skipped: boolean;
+  skip: LeadPhaseSkip;
   views: LeadPhaseView[];
 }

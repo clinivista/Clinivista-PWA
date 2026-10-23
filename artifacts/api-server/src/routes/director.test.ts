@@ -88,7 +88,7 @@ beforeAll(async () => {
        delivery_channel text DEFAULT '',
        language text DEFAULT '',
        patient_account_id text,
-       clinical_data jsonb NOT NULL DEFAULT '{}'
+       clinical_data jsonb NOT NULL DEFAULT '{}', consent_recorded_by text DEFAULT '', consent_recorded_at timestamptz, skipped_phases jsonb NOT NULL DEFAULT '[]', discharged_at timestamptz, discharged_by_name text DEFAULT '', discharge_note text DEFAULT ''
     );
     CREATE TABLE IF NOT EXISTS users (
       id text PRIMARY KEY,

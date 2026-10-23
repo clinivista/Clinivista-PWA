@@ -45,9 +45,9 @@ import { cleanIntake, getSpecialty } from "../lib/specialties";
 import { ALLOWED_IMAGE_TYPES, MAX_PHOTO_BYTES, parseImageRequest, parseOptionalPixelDimension } from "../lib/image-upload";
 
 const router: IRouter = Router();
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function buildLead(payload: Record<string, unknown>, existing: Partial<typeof leadsTable.$inferInsert> = {}, clinicalData?: Record<string, string>) {
+export function buildLead(payload: Record<string, unknown>, existing: Partial<typeof leadsTable.$inferInsert> = {}, clinicalData?: Record<string, string>) {
   return {
     ...existing,
     ...(clinicalData ? { clinicalData } : {}),
@@ -209,7 +209,7 @@ function completedRequiredViews(
  * validated against its question list (unknown keys and unlisted options are
  * dropped). An update that omits them keeps what was saved.
  */
-async function specialtyAnswers(centerId: string, payload: Record<string, unknown>, existing?: unknown): Promise<Record<string, string> | undefined> {
+export async function specialtyAnswers(centerId: string, payload: Record<string, unknown>, existing?: unknown): Promise<Record<string, string> | undefined> {
   const [center] = await db.select({ specialty: centersTable.specialty }).from(centersTable).where(eq(centersTable.id, centerId));
   const intake = getSpecialty(center?.specialty).intake;
   if (!intake) return undefined;

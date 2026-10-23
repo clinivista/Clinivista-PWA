@@ -122,7 +122,7 @@ export async function getDiagnosisState(lead: Lead): Promise<DiagnosisState> {
     responseText: diagnosis?.responseText ?? "",
     closedAt: diagnosis?.closedAt ?? null,
     closedByName: diagnosis?.closedByName ?? null,
-    readyToDiagnose: preEvaluation?.complete === true,
+    readyToDiagnose: preEvaluation?.complete === true || preEvaluation?.skipped === true,
     photos: withPhoto.map((view) => {
       const photo = view.photo as PhotoStatus;
       const annotation = annotations.get(photo.id);
@@ -160,7 +160,7 @@ export async function closeDiagnosis(lead: Lead, userId: string, text?: string) 
   const { diagnosis } = await editableDiagnosis(lead);
   const phases = await getLeadPhases(lead);
   if (!phases.some((phase) => phase.kind === "diagnosis")) throw new DiagnosisError("Esta clínica no tiene fase de diagnóstico.");
-  if (phases[0]?.complete !== true) throw new DiagnosisError("El paciente aún no completa su pre-evaluación.", 409);
+  if (phases[0]?.complete !== true && phases[0]?.skipped !== true) throw new DiagnosisError("El paciente aún no completa su pre-evaluación.", 409);
   const responseText = (text ?? diagnosis.responseText).trim();
   if (!responseText) throw new DiagnosisError("Escribe la respuesta para el paciente antes de cerrar el diagnóstico.");
   if (responseText.length > MAX_RESPONSE_LENGTH) throw new DiagnosisError(`La respuesta no puede superar ${MAX_RESPONSE_LENGTH} caracteres.`);

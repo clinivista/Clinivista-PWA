@@ -1,13 +1,18 @@
+/**
+ * `complete` aquí significa "superada": la etapa se completó o el personal la
+ * omitió. Así omitir una etapa deja avanzar el estado igual que completarla.
+ */
 export type PhaseFacts = { key: string; kind: "capture" | "diagnosis"; complete: boolean };
 
 /**
  * Estados del paciente, en el orden del proceso:
  *  incompleto → listo (para revisión) → contactar (listo para contactar) →
  *  agendado | contactado → operado → completado (tratamiento completado).
- * "cerrado" y "nuevo" no se calculan: "cerrado" lo pone el personal a mano y
- * se respeta siempre.
+ * "cerrado", "alta" y "nuevo" no se calculan: "cerrado" lo pone el personal a
+ * mano y "alta" (alta médica) solo un médico; ambos se respetan siempre hasta
+ * que se reabren.
  */
-export const LEAD_STATUSES = ["nuevo", "incompleto", "listo", "contactar", "agendado", "contactado", "operado", "completado", "cerrado"] as const;
+export const LEAD_STATUSES = ["nuevo", "incompleto", "listo", "contactar", "agendado", "contactado", "operado", "completado", "cerrado", "alta"] as const;
 
 /** The phase after which a patient counts as "operado": the post-operatorio (the fourth phase of the starting protocol). */
 const POSTOP_KEY = "postoperatorio";
@@ -19,7 +24,7 @@ const POSTOP_FALLBACK_POSITION = 3;
  * which is not a photographic fact the phases can tell.
  */
 export function deriveStatus(current: string, appointmentAt: string | null | undefined, phases: ReadonlyArray<PhaseFacts>): string {
-  if (current === "cerrado" || phases.length === 0) return current;
+  if (current === "cerrado" || current === "alta" || phases.length === 0) return current;
   const preEvaluation = phases[0].complete;
   const diagnosisDone = phases.some((phase) => phase.kind === "diagnosis" && phase.complete);
   const postop = phases.find((phase) => phase.key === POSTOP_KEY) ?? phases[POSTOP_FALLBACK_POSITION];

@@ -3294,7 +3294,7 @@ components:
 
     LeadPhase:
       type: object
-      required: [id, key, name, position, kind, patientCaptured, enabled, complete, views]
+      required: [id, key, name, position, kind, patientCaptured, staffCanCapture, enabled, complete, skipped, skip, views]
       properties:
         id: {type: string}
         key: {type: string}
@@ -3304,8 +3304,19 @@ components:
           type: string
           enum: [capture, diagnosis]
         patientCaptured: {type: boolean}
+        staffCanCapture: {type: boolean}
         enabled: {type: boolean}
         complete: {type: boolean}
+        skipped: {type: boolean}
+        skip:
+          oneOf:
+            - type: object
+              required: [reason, byName, at]
+              properties:
+                reason: {type: string}
+                byName: {type: string}
+                at: {type: string}
+            - type: "null"
         views:
           type: array
           items:
@@ -3340,7 +3351,7 @@ components:
 
     LeadStatus:
       type: string
-      enum: [nuevo, incompleto, listo, contactar, agendado, contactado, operado, completado, cerrado]
+      enum: [nuevo, incompleto, listo, contactar, agendado, contactado, operado, completado, cerrado, alta]
 
     LeadSummary:
       type: object
