@@ -61,7 +61,7 @@ async function centerSummaries() {
       const center = centerById.get(id);
       const [{ patientCount }] = await db.select({ patientCount: sql<number>`count(*)::int` })
         .from(leadsTable)
-        .where(sql`coalesce(${leadsTable.centerId}, ${DEFAULT_CENTER_ID}) = ${id}`);
+        .where(sql`coalesce(${leadsTable.centerId}, ${DEFAULT_CENTER_ID}) = ${id} and ${leadsTable.parentLeadId} is null`);
       const [{ staffCount }] = await db.select({ staffCount: sql<number>`count(*)::int` })
         .from(usersTable)
         .where(eq(usersTable.centerId, id));

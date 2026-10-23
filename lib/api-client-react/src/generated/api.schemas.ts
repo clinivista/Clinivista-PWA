@@ -925,6 +925,17 @@ export type LeadSummaryClinicalData = {[key: string]: string};
 
 export interface LeadSummary {
   id: string;
+  /**
+     * Set on an additional consultation; points to the patient's main file.
+     * @nullable
+     */
+  parentLeadId?: string | null;
+  /** @nullable */
+  protocolId?: string | null;
+  /** Name of the consultation type (dermatology centers); empty otherwise. */
+  consultTypeName?: string;
+  /** Consultations on this patient's file, including this one (dermatology centers). */
+  consultCount?: number;
   token: string;
   createdAt: string;
   updatedAt: string;
@@ -963,6 +974,17 @@ export type LeadClinicalData = {[key: string]: string};
 
 export interface Lead {
   id: string;
+  /**
+     * Set on an additional consultation; points to the patient's main file.
+     * @nullable
+     */
+  parentLeadId?: string | null;
+  /** @nullable */
+  protocolId?: string | null;
+  /** Name of the consultation type (dermatology centers); empty otherwise. */
+  consultTypeName?: string;
+  /** Consultations on this patient's file, including this one (dermatology centers). */
+  consultCount?: number;
   token: string;
   createdAt: string;
   updatedAt: string;
@@ -1072,5 +1094,19 @@ export type GetDirectorCenterUsers200 = {
 
 export type GetDirectorTeam200 = {
   users: DirectorTeamMember[];
+};
+
+export type GetClinicProtocolParams = {
+/**
+ * A consultation type of the clinic; omitted means the clinic's base process.
+ */
+typeId?: string;
+};
+
+export type UpdateClinicProtocolParams = {
+/**
+ * A consultation type of the clinic; omitted means the clinic's base process.
+ */
+typeId?: string;
 };
 

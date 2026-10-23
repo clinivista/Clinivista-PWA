@@ -10,6 +10,8 @@ import { useLanguage } from "@/lib/language";
 import { formatRut } from "@/lib/rut";
 import { refreshLeadViews } from "@/lib/phases-i18n";
 import { STAFF_FLOW_TEXT } from "@/lib/staff-flow-i18n";
+import { CONSULT_TEXT } from "@/lib/consult-types-i18n";
+import { selectableTypes, useConsultTypes } from "@/lib/consult-types";
 
 const EMPTY = { name: "", documentId: "", phone: "", email: "", city: "" };
 
@@ -21,6 +23,10 @@ export function AddPatientDialog({ open, onOpenChange, onCreated }: {
 }) {
   const { lang } = useLanguage();
   const s = STAFF_FLOW_TEXT[lang];
+  const c = CONSULT_TEXT[lang];
+  const { data: consultData } = useConsultTypes();
+  const types = selectableTypes(consultData);
+  const [consultTypeId, setConsultTypeId] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY);
@@ -44,7 +50,7 @@ export function AddPatientDialog({ open, onOpenChange, onCreated }: {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, language: lang, consentConfirmed: consent, sendPortalAccess: sendPortal && !!form.email.trim() }),
+        body: JSON.stringify({ ...form, language: lang, consentConfirmed: consent, ...(types.length > 1 && consultTypeId ? { consultTypeId } : {}), sendPortalAccess: sendPortal && !!form.email.trim() }),
       });
       const body = (await response.json().catch(() => null)) as { error?: string; leadId?: string; lead?: { id: string } } | null;
       if (!response.ok || !body?.lead) {
@@ -56,6 +62,7 @@ export function AddPatientDialog({ open, onOpenChange, onCreated }: {
       await refreshLeadViews(queryClient);
       queryClient.invalidateQueries({ queryKey: ["/api/leads/stats"] });
       setForm(EMPTY);
+      setConsultTypeId("");
       setConsent(false);
       setSendPortal(false);
       onOpenChange(false);
@@ -90,6 +97,18 @@ export function AddPatientDialog({ open, onOpenChange, onCreated }: {
           <label className="block text-sm font-semibold">{s.fCity}
             <Input value={form.city} onChange={set("city")} maxLength={80} autoComplete="off" className="mt-1 h-11 rounded-2xl" />
           </label>
+          {types.length > 1 && (
+            <label className="block text-sm font-semibold">{c.typeLabel}
+              <select
+                value={consultTypeId || types.find((type) => type.isBase)?.id || ""}
+                onChange={(event) => setConsultTypeId(event.target.value)}
+                data-testid="add-consult-type"
+                className="mt-1 h-11 w-full rounded-2xl border border-input bg-background px-3 text-base"
+              >
+                {types.map((type) => <option key={type.id} value={type.id}>{type.name}</option>)}
+              </select>
+            </label>
+          )}
           {form.email.trim() && (
             <div className="flex items-start gap-3">
               <Checkbox id="add-portal" checked={sendPortal} onCheckedChange={(value) => setSendPortal(value === true)} className="mt-0.5" />

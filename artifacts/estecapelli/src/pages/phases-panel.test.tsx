@@ -12,7 +12,7 @@ vi.mock("@workspace/api-client-react", () => ({
   useGetClinicProtocol: () => ({ data: api.protocol, isLoading: false, isError: false }),
   useUpdateClinicProtocol: () => ({ mutate: api.save, isPending: false }),
 }));
-vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ setQueryData: vi.fn() }) }));
+vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ setQueryData: vi.fn() }), useQuery: () => ({ data: undefined }) }));
 const toast = vi.hoisted(() => vi.fn());
 vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast }) }));
 

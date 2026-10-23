@@ -121,6 +121,10 @@ export const GetLeadsQueryParams = zod.object({
 export const GetLeadsResponse = zod.object({
   "leads": zod.array(zod.object({
   "id": zod.string(),
+  "parentLeadId": zod.string().nullish().describe('Set on an additional consultation; points to the patient\'s main file.'),
+  "protocolId": zod.string().nullish(),
+  "consultTypeName": zod.string().optional().describe('Name of the consultation type (dermatology centers); empty otherwise.'),
+  "consultCount": zod.number().optional().describe('Consultations on this patient\'s file, including this one (dermatology centers).'),
   "token": zod.string(),
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
@@ -164,6 +168,10 @@ export const GetLeadByIdParams = zod.object({
 
 export const GetLeadByIdResponse = zod.object({
   "id": zod.string(),
+  "parentLeadId": zod.string().nullish().describe('Set on an additional consultation; points to the patient\'s main file.'),
+  "protocolId": zod.string().nullish(),
+  "consultTypeName": zod.string().optional().describe('Name of the consultation type (dermatology centers); empty otherwise.'),
+  "consultCount": zod.number().optional().describe('Consultations on this patient\'s file, including this one (dermatology centers).'),
   "token": zod.string(),
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
@@ -234,6 +242,10 @@ export const PatchLeadBody = zod.object({
 
 export const PatchLeadResponse = zod.object({
   "id": zod.string(),
+  "parentLeadId": zod.string().nullish().describe('Set on an additional consultation; points to the patient\'s main file.'),
+  "protocolId": zod.string().nullish(),
+  "consultTypeName": zod.string().optional().describe('Name of the consultation type (dermatology centers); empty otherwise.'),
+  "consultCount": zod.number().optional().describe('Consultations on this patient\'s file, including this one (dermatology centers).'),
   "token": zod.string(),
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
@@ -765,6 +777,10 @@ export const CreateInvitationResponse = zod.object({
   "ok": zod.boolean(),
   "lead": zod.object({
   "id": zod.string(),
+  "parentLeadId": zod.string().nullish().describe('Set on an additional consultation; points to the patient\'s main file.'),
+  "protocolId": zod.string().nullish(),
+  "consultTypeName": zod.string().optional().describe('Name of the consultation type (dermatology centers); empty otherwise.'),
+  "consultCount": zod.number().optional().describe('Consultations on this patient\'s file, including this one (dermatology centers).'),
   "token": zod.string(),
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
@@ -1180,6 +1196,10 @@ export const CreatePatientResponse = zod.object({
   "ok": zod.boolean(),
   "lead": zod.object({
   "id": zod.string(),
+  "parentLeadId": zod.string().nullish().describe('Set on an additional consultation; points to the patient\'s main file.'),
+  "protocolId": zod.string().nullish(),
+  "consultTypeName": zod.string().optional().describe('Name of the consultation type (dermatology centers); empty otherwise.'),
+  "consultCount": zod.number().optional().describe('Consultations on this patient\'s file, including this one (dermatology centers).'),
   "token": zod.string(),
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
@@ -1250,6 +1270,10 @@ export const CreateClinicPatientResponse = zod.object({
   "ok": zod.boolean(),
   "lead": zod.object({
   "id": zod.string(),
+  "parentLeadId": zod.string().nullish().describe('Set on an additional consultation; points to the patient\'s main file.'),
+  "protocolId": zod.string().nullish(),
+  "consultTypeName": zod.string().optional().describe('Name of the consultation type (dermatology centers); empty otherwise.'),
+  "consultCount": zod.number().optional().describe('Consultations on this patient\'s file, including this one (dermatology centers).'),
   "token": zod.string(),
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
@@ -1410,6 +1434,10 @@ export const GetMyClinicResponse = zod.object({
 /**
  * @summary Phases and photos configured for the signed-in clinic
  */
+export const GetClinicProtocolQueryParams = zod.object({
+  "typeId": zod.coerce.string().optional().describe('A consultation type of the clinic; omitted means the clinic\'s base process.')
+})
+
 export const GetClinicProtocolResponse = zod.object({
   "canEdit": zod.boolean(),
   "phases": zod.array(zod.object({
@@ -1433,6 +1461,10 @@ export const GetClinicProtocolResponse = zod.object({
 /**
  * @summary Replace the clinic's phases and photos (legal representative only)
  */
+export const UpdateClinicProtocolQueryParams = zod.object({
+  "typeId": zod.coerce.string().optional().describe('A consultation type of the clinic; omitted means the clinic\'s base process.')
+})
+
 export const UpdateClinicProtocolBody = zod.object({
   "phases": zod.array(zod.object({
   "id": zod.string().optional(),
@@ -1506,6 +1538,10 @@ export const GetPatientResponse = zod.object({
   "ok": zod.boolean(),
   "lead": zod.object({
   "id": zod.string(),
+  "parentLeadId": zod.string().nullish().describe('Set on an additional consultation; points to the patient\'s main file.'),
+  "protocolId": zod.string().nullish(),
+  "consultTypeName": zod.string().optional().describe('Name of the consultation type (dermatology centers); empty otherwise.'),
+  "consultCount": zod.number().optional().describe('Consultations on this patient\'s file, including this one (dermatology centers).'),
   "token": zod.string(),
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
@@ -1562,6 +1598,10 @@ export const UpdatePatientResponse = zod.object({
   "ok": zod.boolean(),
   "lead": zod.object({
   "id": zod.string(),
+  "parentLeadId": zod.string().nullish().describe('Set on an additional consultation; points to the patient\'s main file.'),
+  "protocolId": zod.string().nullish(),
+  "consultTypeName": zod.string().optional().describe('Name of the consultation type (dermatology centers); empty otherwise.'),
+  "consultCount": zod.number().optional().describe('Consultations on this patient\'s file, including this one (dermatology centers).'),
   "token": zod.string(),
   "createdAt": zod.string(),
   "updatedAt": zod.string(),
@@ -1665,6 +1705,10 @@ export const DiscardPatientPhotosResponse = zod.object({
   "ok": zod.boolean(),
   "lead": zod.object({
   "id": zod.string(),
+  "parentLeadId": zod.string().nullish().describe('Set on an additional consultation; points to the patient\'s main file.'),
+  "protocolId": zod.string().nullish(),
+  "consultTypeName": zod.string().optional().describe('Name of the consultation type (dermatology centers); empty otherwise.'),
+  "consultCount": zod.number().optional().describe('Consultations on this patient\'s file, including this one (dermatology centers).'),
   "token": zod.string(),
   "createdAt": zod.string(),
   "updatedAt": zod.string(),

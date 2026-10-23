@@ -34,6 +34,9 @@ export const protocolsTable = pgTable("clinical_protocols", {
   // without every protocol query needing to guess.
   specialty: text("specialty").notNull().default("capilar"),
   active: boolean("active").notNull().default(true),
+  // Tipo de consulta (dermatología): clave de la plantilla de la que partió,
+  // "custom" si lo creó el centro, "" para el proceso base de la clínica.
+  templateKey: text("template_key").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   uniqueIndex("clinical_protocols_center_slug_unique").on(table.centerId, table.id),

@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { ConsultTypesBar } from "./consult-types-bar";
 
 const MAX_PHASES = 12;
 const MAX_VIEWS = 12;
@@ -53,9 +54,13 @@ function move<T>(items: T[], from: number, to: number): T[] {
 export function PhasesPanel() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { data, isLoading, isError } = useGetClinicProtocol();
+  const [typeId, setTypeId] = useState("");
+  const params = typeId ? { typeId } : undefined;
+  const { data, isLoading, isError } = useGetClinicProtocol(params);
   const save = useUpdateClinicProtocol();
   const [draft, setDraft] = useState<DraftPhase[] | null>(null);
+
+  useEffect(() => { setDraft(null); }, [typeId]);
 
   useEffect(() => {
     if (data && draft === null) setDraft(toDraft(data));
@@ -73,10 +78,10 @@ export function PhasesPanel() {
   const handleSave = () => {
     if (!draft) return;
     save.mutate(
-      { data: { phases: payload(draft) } },
+      { data: { phases: payload(draft) }, params },
       {
         onSuccess: (saved) => {
-          queryClient.setQueryData(getGetClinicProtocolQueryKey(), saved);
+          queryClient.setQueryData(getGetClinicProtocolQueryKey(params), saved);
           setDraft(toDraft(saved));
           toast({ title: "Fases guardadas", description: "Los pacientes nuevos ya verán estas fotografías." });
         },
@@ -115,6 +120,7 @@ export function PhasesPanel() {
       </header>
 
       <div className="px-4 sm:px-6 md:px-10 py-4 sm:py-6 flex flex-col gap-4 max-w-4xl">
+        <ConsultTypesBar typeId={typeId} onSelect={setTypeId} />
         {isLoading && <p className="text-sm text-muted-foreground">Cargando…</p>}
         {isError && <p className="text-sm text-destructive">No pudimos cargar las fases.</p>}
         {data && !canEdit && (

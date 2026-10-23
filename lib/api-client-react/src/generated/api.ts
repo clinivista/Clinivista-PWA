@@ -49,6 +49,7 @@ import type {
   Evolution,
   EvolutionSendInput,
   EvolutionSent,
+  GetClinicProtocolParams,
   GetDirectorCenterUsers200,
   GetDirectorCenters200,
   GetDirectorTeam200,
@@ -83,7 +84,8 @@ import type {
   ResultsState,
   SimpleOk,
   StaffForgotInput,
-  StaffResetInput
+  StaffResetInput,
+  UpdateClinicProtocolParams
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -4097,20 +4099,27 @@ export function useGetMyClinic<TData = Awaited<ReturnType<typeof getMyClinic>>, 
 
 
 
-export const getGetClinicProtocolUrl = () => {
+export const getGetClinicProtocolUrl = (params?: GetClinicProtocolParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/clinic/protocol`
+  return stringifiedParams.length > 0 ? `/api/clinic/protocol?${stringifiedParams}` : `/api/clinic/protocol`
 }
 
 /**
  * @summary Phases and photos configured for the signed-in clinic
  */
-export const getClinicProtocol = async ( options?: Parameters<typeof customFetch>[1]): Promise<ClinicProtocol> => {
+export const getClinicProtocol = async (params?: GetClinicProtocolParams, options?: Parameters<typeof customFetch>[1]): Promise<ClinicProtocol> => {
 
-  return customFetch<ClinicProtocol>(getGetClinicProtocolUrl(),
+  return customFetch<ClinicProtocol>(getGetClinicProtocolUrl(params),
   {
     ...options,
     method: 'GET'
@@ -4123,23 +4132,23 @@ export const getClinicProtocol = async ( options?: Parameters<typeof customFetch
 
 
 
-export const getGetClinicProtocolQueryKey = () => {
+export const getGetClinicProtocolQueryKey = (params?: GetClinicProtocolParams,) => {
     return [
-    `/api/clinic/protocol`
+    `/api/clinic/protocol`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetClinicProtocolQueryOptions = <TData = Awaited<ReturnType<typeof getClinicProtocol>>, TError = ErrorType<ErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClinicProtocol>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetClinicProtocolQueryOptions = <TData = Awaited<ReturnType<typeof getClinicProtocol>>, TError = ErrorType<ErrorResponse>>(params?: GetClinicProtocolParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClinicProtocol>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetClinicProtocolQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetClinicProtocolQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getClinicProtocol>>> = ({ signal }) => getClinicProtocol({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getClinicProtocol>>> = ({ signal }) => getClinicProtocol(params, { signal, ...requestOptions });
 
 
 
@@ -4157,11 +4166,11 @@ export type GetClinicProtocolQueryError = ErrorType<ErrorResponse>
  */
 
 export function useGetClinicProtocol<TData = Awaited<ReturnType<typeof getClinicProtocol>>, TError = ErrorType<ErrorResponse>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClinicProtocol>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ params?: GetClinicProtocolParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClinicProtocol>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetClinicProtocolQueryOptions(options)
+  const queryOptions = getGetClinicProtocolQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -4174,20 +4183,28 @@ export function useGetClinicProtocol<TData = Awaited<ReturnType<typeof getClinic
 
 
 
-export const getUpdateClinicProtocolUrl = () => {
+export const getUpdateClinicProtocolUrl = (params?: UpdateClinicProtocolParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/clinic/protocol`
+  return stringifiedParams.length > 0 ? `/api/clinic/protocol?${stringifiedParams}` : `/api/clinic/protocol`
 }
 
 /**
  * @summary Replace the clinic's phases and photos (legal representative only)
  */
-export const updateClinicProtocol = async (clinicProtocolUpdate: ClinicProtocolUpdate, options?: Parameters<typeof customFetch>[1]): Promise<ClinicProtocol> => {
+export const updateClinicProtocol = async (clinicProtocolUpdate: ClinicProtocolUpdate,
+    params?: UpdateClinicProtocolParams, options?: Parameters<typeof customFetch>[1]): Promise<ClinicProtocol> => {
 
-  return customFetch<ClinicProtocol>(getUpdateClinicProtocolUrl(),
+  return customFetch<ClinicProtocol>(getUpdateClinicProtocolUrl(params),
   {
     ...options,
     method: 'PUT',
@@ -4201,8 +4218,8 @@ export const updateClinicProtocol = async (clinicProtocolUpdate: ClinicProtocolU
 
 
 export const getUpdateClinicProtocolMutationOptions = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateClinicProtocol>>, TError,{data: BodyType<ClinicProtocolUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateClinicProtocol>>, TError,{data: BodyType<ClinicProtocolUpdate>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateClinicProtocol>>, TError,{data: BodyType<ClinicProtocolUpdate>;params?: UpdateClinicProtocolParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateClinicProtocol>>, TError,{data: BodyType<ClinicProtocolUpdate>;params?: UpdateClinicProtocolParams}, TContext> => {
 
 const mutationKey = ['updateClinicProtocol'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -4214,10 +4231,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateClinicProtocol>>, {data: BodyType<ClinicProtocolUpdate>}> = (props) => {
-          const {data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateClinicProtocol>>, {data: BodyType<ClinicProtocolUpdate>;params?: UpdateClinicProtocolParams}> = (props) => {
+          const {data,params} = props ?? {};
 
-          return  updateClinicProtocol(data,requestOptions)
+          return  updateClinicProtocol(data,params,requestOptions)
         }
 
 
@@ -4235,11 +4252,11 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  * @summary Replace the clinic's phases and photos (legal representative only)
  */
 export const useUpdateClinicProtocol = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateClinicProtocol>>, TError,{data: BodyType<ClinicProtocolUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateClinicProtocol>>, TError,{data: BodyType<ClinicProtocolUpdate>;params?: UpdateClinicProtocolParams}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof updateClinicProtocol>>,
         TError,
-        {data: BodyType<ClinicProtocolUpdate>},
+        {data: BodyType<ClinicProtocolUpdate>;params?: UpdateClinicProtocolParams},
         TContext
       > => {
       return useMutation(getUpdateClinicProtocolMutationOptions(options));
