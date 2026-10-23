@@ -17,8 +17,16 @@ import { UserRow } from "./user-row";
 // Solo para directores. Los directores aparecen en la lista pero sin acciones
 // (nadie puede bloquear ni resetear a un director desde aquí); los
 // administrativos de supra-control sí se pueden crear, bloquear y resetear.
-export function SupraTeam() {
+export function SupraTeam({ embedded = false }: { embedded?: boolean }) {
   const [open, setOpen] = useState(false);
+  if (embedded) {
+    return (
+      <div className="bg-white rounded-[1.75rem] shadow-sm border border-[#E8E4DE] p-6 flex flex-col gap-4" data-testid="supra-team">
+        <p className="text-sm text-muted-foreground">Directores y administrativos del panel: crear, bloquear y restablecer contraseñas.</p>
+        <SupraTeamBody />
+      </div>
+    );
+  }
   return (
     <div className="bg-white rounded-[1.75rem] shadow-sm border border-[#E8E4DE] p-6 mb-4 flex flex-col gap-4">
       <button

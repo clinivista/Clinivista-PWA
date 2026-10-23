@@ -204,17 +204,20 @@ function FinanceTab() {
   );
 }
 
-export function SupraAdmin() {
-  const [open, setOpen] = useState(false);
+export function SupraAdmin({ embedded = false }: { embedded?: boolean }) {
+  const [openState, setOpen] = useState(false);
+  const open = embedded || openState;
   const [tab, setTab] = useState<"services" | "finance">("services");
   return (
-    <section className="mb-6 rounded-3xl bg-white shadow-sm" data-testid="supra-admin">
-      <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex w-full items-center justify-between gap-3 px-6 py-4 text-left">
-        <span className="flex items-center gap-3 font-bold"><BriefcaseBusiness className="h-5 w-5 text-[#00A9A5]" />Administración: servicios y finanzas</span>
-        <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
+    <section className={`${embedded ? "" : "mb-6 "}rounded-3xl bg-white shadow-sm`} data-testid="supra-admin">
+      {!embedded && (
+        <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex w-full items-center justify-between gap-3 px-6 py-4 text-left">
+          <span className="flex items-center gap-3 font-bold"><BriefcaseBusiness className="h-5 w-5 text-[#00A9A5]" />Administración: servicios y finanzas</span>
+          <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+        </button>
+      )}
       {open && (
-        <div className="space-y-4 border-t border-[#E8E4DE] p-4 md:p-6">
+        <div className={`space-y-4 p-4 md:p-6 ${embedded ? "" : "border-t border-[#E8E4DE]"}`}>
           <div className="flex gap-1 rounded-full bg-[#F5F2EE] p-1 md:w-fit">
             {([["services", "Servicios"], ["finance", "Ingresos y gastos"]] as const).map(([k, label]) => (
               <button key={k} type="button" onClick={() => setTab(k)} data-testid={`admin-tab-${k}`} className={`rounded-full px-5 py-2 text-sm font-bold ${tab === k ? "bg-white text-[#007f7c] shadow-sm" : "text-muted-foreground"}`}>{label}</button>

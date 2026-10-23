@@ -34,7 +34,7 @@ export function ago(iso: string, now = Date.now()): string {
 const Badge = ({ status }: { status: Status }) => <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${STATUS[status].cls}`}>{STATUS[status].text}</span>;
 
 // Bandeja de soporte de supra-control: cola compartida de tickets (cualquiera puede atender) e historial valorado.
-export function SupraInbox() {
+export function SupraInbox({ embedded = false, openTicketId = null }: { embedded?: boolean; openTicketId?: string | null }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"open" | "history">("open");
@@ -42,6 +42,10 @@ export function SupraInbox() {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (openTicketId) { setOpen(true); setTab("open"); setActiveId(openTicketId); }
+  }, [openTicketId]);
 
   useEffect(() => {
     const onOpen = (event: Event) => {
@@ -84,6 +88,15 @@ export function SupraInbox() {
 
   return (
     <section className="mb-6 rounded-3xl bg-white shadow-sm" data-testid="supra-inbox">
+      {embedded ? (
+        <div className="flex w-full items-center justify-between gap-3 px-6 py-4">
+          <span className="flex flex-wrap items-center gap-3 font-bold"><Headphones className="h-5 w-5 text-[#00A9A5]" />Tickets
+          {counts.waiting > 0 && <span className="rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-white" data-testid="inbox-waiting">{counts.waiting} en espera</span>}
+          {counts.attending > 0 && <span className="rounded-full bg-sky-600 px-2 py-0.5 text-xs font-bold text-white">{counts.attending} en atención</span>}
+          {unread > 0 && <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white" data-testid="inbox-unread">{unread} sin leer</span>}
+        </span>
+        </div>
+      ) : (
       <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex w-full items-center justify-between gap-3 px-6 py-4 text-left">
         <span className="flex flex-wrap items-center gap-3 font-bold"><Headphones className="h-5 w-5 text-[#00A9A5]" />Soporte (tickets de las clínicas)
           {counts.waiting > 0 && <span className="rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-white" data-testid="inbox-waiting">{counts.waiting} en espera</span>}
@@ -92,7 +105,8 @@ export function SupraInbox() {
         </span>
         <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
-      {open && (
+      )}
+      {(embedded || open) && (
         <div className="border-t border-[#E8E4DE] p-4 md:p-6">
           {active ? (
             <div className="space-y-3">
