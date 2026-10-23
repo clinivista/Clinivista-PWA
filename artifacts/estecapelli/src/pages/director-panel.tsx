@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { LogOut, LogIn, Building2, Users, Download, ShieldOff, ShieldCheck, Loader2, CreditCard, Plus, ChevronDown, Palette } from "lucide-react";
+import { useEffect, useState } from "react";
+import { LogOut, LogIn, Building2, Users, Download, ShieldOff, ShieldCheck, Loader2, CreditCard, Plus, ChevronDown, Palette, LayoutDashboard, Headphones, UserCog, BriefcaseBusiness, Menu, X, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   useGetDirectorCenters,
   getGetAuthMeQueryKey,
@@ -18,7 +18,8 @@ import { selectClinic } from "@/components/clinic-chooser";
 import { CreateCenterForm } from "./create-center-form";
 import { CenterUsers } from "./center-users";
 import { SupraTeam } from "./supra-team";
-import { SupraInbox } from "./supra-inbox";
+import { SupraInbox, OPEN_SUPPORT_INBOX_EVENT } from "./supra-inbox";
+import { SupraDashboard } from "./supra-dashboard";
 import { SupportAlerts } from "@/components/support-alerts";
 import { SupraAdmin, AdminBanner } from "./supra-admin";
 import { ClinicIdentityEditor } from "./clinic-identity-editor";
@@ -63,9 +64,14 @@ function chileEndOfDayIso(dateValue: string): string {
 
 // Un director gestiona además a las personas (usuarios de clínica y equipo de
 // supra-control); un administrativo de supra-control solo opera el panel.
+type SupraView = "dashboard" | "clinics" | "support" | "team" | "admin";
+
 export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: () => void; canManageUsers?: boolean }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [view, setView] = useState<SupraView>("dashboard");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [openTicketId, setOpenTicketId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [usersOpenId, setUsersOpenId] = useState<string | null>(null);
@@ -119,48 +125,115 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
 
   const centers = data?.centers ?? [];
 
+  // "Atender ahora" (aviso de tickets): lleva a Soporte y abre ese ticket.
+  useEffect(() => {
+    const onOpen = (event: Event) => {
+      setView("support");
+      setOpenTicketId((event as CustomEvent<{ ticketId?: string }>).detail?.ticketId ?? null);
+    };
+    window.addEventListener(OPEN_SUPPORT_INBOX_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_SUPPORT_INBOX_EVENT, onOpen);
+  }, []);
+
+  const { data: queue } = useQuery({
+    queryKey: ["support-queue", "open"], refetchInterval: 20_000, retry: false,
+    queryFn: async () => {
+      const response = await fetch("/api/support/queue?view=open", { credentials: "same-origin" });
+      if (!response.ok) throw new Error("queue");
+      return (await response.json()) as { counts: { waiting: number } };
+    },
+  });
+  const waiting = queue?.counts.waiting ?? 0;
+
+  const navItems: { id: SupraView; label: string; Icon: typeof Users; show: boolean; badge?: number }[] = [
+    { id: "dashboard", label: "Inicio", Icon: LayoutDashboard, show: true },
+    { id: "clinics", label: "Clínicas", Icon: Building2, show: true },
+    { id: "support", label: "Soporte", Icon: Headphones, show: true, badge: waiting },
+    { id: "team", label: "Equipo de supra-control", Icon: UserCog, show: canManageUsers },
+    { id: "admin", label: "Servicios y finanzas", Icon: BriefcaseBusiness, show: canManageUsers },
+  ];
+  const go = (next: SupraView) => { setView(next); setMobileNavOpen(false); if (next !== "support") setOpenTicketId(null); };
+  const titles: Record<SupraView, string> = { dashboard: "Resumen de la plataforma", clinics: "Clínicas", support: "Soporte (tickets de las clínicas)", team: "Equipo de supra-control", admin: "Administración: servicios y finanzas" };
+
   return (
-    <div className="min-h-[100dvh] bg-[#F5F2EE] flex flex-col">
-      <header className="bg-[#0B1F33] text-white px-6 py-5 flex items-center justify-between shrink-0">
+    <div className="h-[100dvh] bg-[#F5F2EE] flex flex-col md:flex-row font-sans">
+      <div className="md:hidden bg-[#0B1F33] text-white px-4 py-3 flex items-center justify-between shrink-0 z-30">
         <div className="flex items-center gap-3">
           <BrandLogo className="h-10 w-10 rounded-lg" />
-          <div>
-            <h1 className="text-lg font-bold tracking-tight">Panel de supra-control</h1>
-            <p className="text-xs text-white/60 font-medium">Todas las clínicas de Clinivista</p>
-          </div>
+          <span className="font-bold">Supra-control</span>
         </div>
-        <div className="flex items-center gap-1">
+        <button type="button" onClick={() => setMobileNavOpen(true)} aria-label="Abrir menú" aria-expanded={mobileNavOpen} data-testid="supra-menu-open" className="w-11 h-11 rounded-2xl bg-white/10 hover:bg-white/20 flex items-center justify-center">
+          <Menu className="w-6 h-6" />
+        </button>
+      </div>
+      {mobileNavOpen && <div className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setMobileNavOpen(false)} />}
+
+      <aside className={`fixed inset-y-0 left-0 w-72 max-w-[85vw] z-50 transition-transform duration-300 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} md:static md:translate-x-0 md:max-w-none md:z-30 bg-[#0B1F33] text-white flex-shrink-0 flex flex-col md:min-h-[100dvh] shadow-2xl rounded-r-[2rem] md:rounded-r-[2.5rem] overflow-y-auto`} data-testid="supra-sidebar">
+        <div className="p-7 flex items-center justify-between gap-3 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <BrandLogo className="h-14 w-14 rounded-xl" />
+            <div>
+              <p className="font-bold tracking-tight leading-tight">Supra-control</p>
+              <p className="text-xs text-white/60 font-medium">Todas las clínicas</p>
+            </div>
+          </div>
+          <button type="button" onClick={() => setMobileNavOpen(false)} aria-label="Cerrar menú" className="md:hidden w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="p-6 flex-1">
+          <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">Panel</p>
+          <nav className="space-y-2">
+            {navItems.filter((item) => item.show).map(({ id, label, Icon, badge }) => (
+              <Button
+                key={id}
+                variant="ghost"
+                data-testid={`supra-nav-${id}`}
+                aria-current={view === id ? "page" : undefined}
+                onClick={() => go(id)}
+                className={`w-full justify-start text-white hover:bg-white/20 hover:text-white font-medium rounded-2xl h-12 ${view === id ? "bg-white/10" : "bg-transparent"}`}
+              >
+                <Icon className="w-5 h-5 mr-3" />
+                {label}
+                {badge ? <span className="ml-auto rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-white" data-testid="supra-nav-badge">{badge}</span> : null}
+              </Button>
+            ))}
+          </nav>
+        </div>
+        <div className="p-6 border-t border-white/10 space-y-2">
           {canManageUsers && (
             <Button
               variant="ghost"
-              className="text-white/70 hover:text-white hover:bg-white/10 font-medium rounded-2xl"
+              className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10 font-medium rounded-2xl h-12"
               data-testid="director-choose-clinic"
               onClick={async () => {
                 await selectClinic(null);
                 queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() });
               }}
             >
-              <Building2 className="w-4 h-4 mr-2" />
+              <Repeat className="w-5 h-5 mr-3" />
               Cambiar de clínica
             </Button>
           )}
-          <Button
-            variant="ghost"
-            className="text-white/70 hover:text-white hover:bg-white/10 font-medium rounded-2xl"
-            onClick={onLogout}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
+          <Button variant="ghost" className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10 font-medium rounded-2xl h-12" data-testid="supra-logout" onClick={onLogout}>
+            <LogOut className="w-5 h-5 mr-3" />
             Salir
           </Button>
         </div>
-      </header>
-      {canManageUsers && <SupportAlerts />}
-      {canManageUsers && <AdminBanner />}
+      </aside>
 
-      <main className="flex-1 p-6 md:p-10 max-w-5xl w-full mx-auto">
-        {canManageUsers && <SupraAdmin />}
-        <SupraInbox />
-        {canManageUsers && <SupraTeam />}
+      <div className="flex-1 min-w-0 flex flex-col md:h-[100dvh] overflow-hidden">
+        {canManageUsers && <SupportAlerts />}
+        {canManageUsers && <AdminBanner />}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10">
+          <div className="max-w-5xl w-full mx-auto">
+            <h1 className="text-2xl font-bold tracking-tight mb-6" data-testid="supra-title">{titles[view]}</h1>
+            {view === "dashboard" && <SupraDashboard onNavigate={(next) => go(next === "support" ? "support" : next === "admin" && canManageUsers ? "admin" : "clinics")} />}
+            {view === "support" && <SupraInbox embedded openTicketId={openTicketId} />}
+            {view === "team" && canManageUsers && <SupraTeam embedded />}
+            {view === "admin" && canManageUsers && <SupraAdmin embedded />}
+            {view === "clinics" && (
+              <>
         {creating ? (
           <CreateCenterForm onClose={() => setCreating(false)} />
         ) : (
@@ -319,7 +392,11 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
             </div>
           ))}
         </div>
-      </main>
+              </>
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
