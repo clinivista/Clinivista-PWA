@@ -3,7 +3,7 @@ import { BookOpen, Info, LifeBuoy, Lightbulb, Loader2, MessageCircle, Search, Tr
 import { useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/language";
 import { HELP_TEXT, loadManual, type HelpBlock, type HelpManual, type HelpSection } from "@/lib/help-i18n";
-import { ChatThread } from "@/components/support-chat";
+import { SupportTickets } from "@/components/support-tickets";
 
 const CALLOUT = {
   note: { icon: Info, cls: "bg-sky-50 text-sky-900 border-sky-200" },
@@ -119,13 +119,7 @@ export function HelpPanel({ initialTab = "manual" }: { initialTab?: "manual" | "
           </div>
         </div>
         {tab === "manual" ? <ManualView /> : (
-          <div className="space-y-3">
-            <div><h3 className="font-bold">{h.chatTitle}</h3><p className="text-sm text-muted-foreground">{h.chatIntro}</p></div>
-            <div className="h-[60vh]">
-              <ChatThread onChanged={() => void queryClient.invalidateQueries({ queryKey: ["support-unread"] })} listUrl="/api/support/messages" postUrl="/api/support/messages" own="staff" dir={lang === "ar" ? "rtl" : "ltr"}
-                labels={{ you: h.you, team: h.team, empty: h.chatEmpty, placeholder: h.chatPlaceholder, send: h.send, sendError: h.sendError, loadError: h.loadError, hint: h.hint }} />
-            </div>
-          </div>
+          <SupportTickets onChanged={() => void queryClient.invalidateQueries({ queryKey: ["support-unread"] })} />
         )}
       </div>
     </div>
