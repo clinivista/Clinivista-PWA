@@ -965,6 +965,14 @@
      "only": [
       "dermatologia"
      ]
+    },
+    {
+     "t": "h3",
+     "text": "Appointment date and ID"
+    },
+    {
+     "t": "p",
+     "text": "From the diagnosis onwards, each phase shows the «Appointment» box with «Appointment date» and «Appointment ID». The date is required: without it the diagnosis cannot be closed and the phase's photos cannot be uploaded. The ID is optional and is used to note the number of that appointment in the clinic's own scheduling system. Enter the details and press «Save appointment»; you can correct them later while the process is still open. The patient's pre-evaluation does not ask for it."
     }
    ],
    "key": "phases"
@@ -1418,6 +1426,10 @@
       [
        "I can't find how to give a medical discharge.",
        "Only the doctor role sees it active, once the diagnosis is available: look for «Medical discharge» in the file."
+      ],
+      [
+       "I can't close the diagnosis or upload a phase's photos.",
+       "The appointment date for that phase is missing: enter it in the phase's «Appointment» box and try again."
       ]
      ],
      "widths": [

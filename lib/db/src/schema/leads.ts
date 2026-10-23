@@ -11,6 +11,14 @@ export const photoEntrySchema = z.object({
   createdAt: z.string(),
 });
 
+export type PhaseAttention = {
+  date: string;
+  agendaId: string;
+  byUserId: string;
+  byName: string;
+  at: string;
+};
+
 export type SkippedPhase = {
   phaseId: string;
   reason: string;
@@ -74,6 +82,10 @@ export const leadsTable = pgTable("leads", {
   consentRecordedAt: timestamp("consent_recorded_at", { withTimezone: true }),
   // Etapas que el personal omitió: [{ phaseId, reason, byUserId, byName, at }].
   skippedPhases: jsonb("skipped_phases").notNull().default([]),
+  // Atención de cada fase desde el diagnóstico: { [phaseId]: { date, agendaId, byUserId, byName, at } }.
+  // «date» es el día de la atención; «agendaId» es el número de esa atención en la
+  // agenda propia de la clínica (opcional).
+  phaseAttentions: jsonb("phase_attentions").notNull().default({}),
   // Alta médica: quién la dio, cuándo y la nota. Solo la dan los médicos.
   dischargedAt: timestamp("discharged_at", { withTimezone: true }),
   dischargedByName: text("discharged_by_name").default(""),

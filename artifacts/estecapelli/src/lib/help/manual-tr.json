@@ -965,6 +965,14 @@
      "only": [
       "dermatologia"
      ]
+    },
+    {
+     "t": "h3",
+     "text": "Randevu tarihi ve kimliği"
+    },
+    {
+     "t": "p",
+     "text": "Teşhisten itibaren her aşamada «Randevu tarihi» ve «Randevu kimliği» alanlarını içeren «Randevu» kutusu görünür. Tarih zorunludur: tarih olmadan teşhis kapatılamaz ve aşamanın fotoğrafları yüklenemez. Kimlik isteğe bağlıdır ve o randevunun kliniğin kendi ajandasındaki numarasını not etmeye yarar. Bilgileri yaz ve «Randevuyu kaydet» düğmesine bas; süreç açık olduğu sürece sonradan düzeltebilirsin. Hastanın ön değerlendirmesi bunu istemez."
     }
    ],
    "key": "phases"
@@ -1418,6 +1426,10 @@
       [
        "Tıbbi taburcuyu nasıl vereceğimi bulamıyorum.",
        "Yalnızca doktor rolü bunu etkin görür, tanı hazır olduktan sonra: dosyada «Tıbbi taburcu» seçeneğini ara."
+      ],
+      [
+       "Teşhisi kapatamıyorum ve bir aşamanın fotoğraflarını yükleyemiyorum.",
+       "O aşamanın randevu tarihi eksik: aşamanın «Randevu» kutusuna gir ve tekrar dene."
       ]
      ],
      "widths": [

@@ -965,6 +965,14 @@
      "only": [
       "dermatologia"
      ]
+    },
+    {
+     "t": "h3",
+     "text": "Termindatum und Termin-ID"
+    },
+    {
+     "t": "p",
+     "text": "Ab der Diagnose zeigt jede Phase das Feld «Termin» mit «Termindatum» und «Termin-ID». Das Datum ist Pflicht: Ohne es lässt sich die Diagnose nicht abschließen und können die Fotos der Phase nicht hochgeladen werden. Die ID ist optional und dient dazu, die Nummer dieses Termins im eigenen Terminsystem der Klinik zu vermerken. Geben Sie die Daten ein und tippen Sie auf «Termin speichern»; solange der Ablauf offen ist, können Sie sie später korrigieren. Die Voruntersuchung des Patienten verlangt das nicht."
     }
    ],
    "key": "phases"
@@ -1418,6 +1426,10 @@
       [
        "Ich finde die ärztliche Entlassung nicht.",
        "Nur die Arztrolle sieht sie aktiv, sobald die Diagnose verfügbar ist: Suchen Sie «Ärztliche Entlassung» in der Akte."
+      ],
+      [
+       "Ich kann die Diagnose nicht abschließen und keine Fotos einer Phase hochladen.",
+       "Das Termindatum dieser Phase fehlt: Tragen Sie es im Feld «Termin» der Phase ein und versuchen Sie es erneut."
       ]
      ],
      "widths": [

@@ -164,6 +164,7 @@ export async function closeDiagnosis(lead: Lead, userId: string, text?: string) 
   const responseText = (text ?? diagnosis.responseText).trim();
   if (!responseText) throw new DiagnosisError("Escribe la respuesta para el paciente antes de cerrar el diagnóstico.");
   if (responseText.length > MAX_RESPONSE_LENGTH) throw new DiagnosisError(`La respuesta no puede superar ${MAX_RESPONSE_LENGTH} caracteres.`);
+  if (!phases.find((phase) => phase.kind === "diagnosis")?.attention) throw new DiagnosisError("Registra la fecha de atención del diagnóstico antes de cerrarlo.", 409);
   await db.update(diagnosesTable).set({
     responseText,
     status: "closed",

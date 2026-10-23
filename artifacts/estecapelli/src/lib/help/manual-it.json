@@ -965,6 +965,14 @@
      "only": [
       "dermatologia"
      ]
+    },
+    {
+     "t": "h3",
+     "text": "Data e ID dell'appuntamento"
+    },
+    {
+     "t": "p",
+     "text": "Dalla diagnosi in poi, ogni fase mostra il riquadro «Appuntamento» con «Data dell'appuntamento» e «ID dell'appuntamento». La data è obbligatoria: senza di essa non si può chiudere la diagnosi né caricare le foto della fase. L'ID è facoltativo e serve per annotare il numero di quell'appuntamento nell'agenda propria della clinica. Inserisci i dati e premi «Salva appuntamento»; puoi correggerli in seguito finché il percorso resta aperto. La pre-valutazione del paziente non lo richiede."
     }
    ],
    "key": "phases"
@@ -1418,6 +1426,10 @@
       [
        "Non trovo come dare la dimissione medica.",
        "Solo il ruolo medico la vede attiva, dal momento in cui la diagnosi è disponibile: cerca «Dimissione medica» nella scheda."
+      ],
+      [
+       "Non riesco a chiudere la diagnosi né a caricare le foto di una fase.",
+       "Manca la data dell'appuntamento di quella fase: registrala nel riquadro «Appuntamento» della fase e riprova."
       ]
      ],
      "widths": [

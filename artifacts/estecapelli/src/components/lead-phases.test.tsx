@@ -46,6 +46,44 @@ describe("LeadPhases", () => {
     expect(within(locked).queryByRole("button")).not.toBeInTheDocument();
   });
 
+  it("pide la fecha y el ID de la atención en la fase abierta y los guarda", async () => {
+    const user = userEvent.setup();
+    api.phases = [
+      phase("p1", "Pre-evaluación", { patientCaptured: true, enabled: true, complete: true, attentionRequired: false, attention: null, views: [view("p1-a", "Frontal", "f1")] }),
+      phase("p2", "Diagnóstico", { enabled: true, attentionRequired: true, attention: null }),
+      phase("p3", "Pre-operatorio", { attentionRequired: true, attention: null }),
+    ];
+    render(<LeadPhases leadId="lead-1" onExpand={vi.fn()} />);
+    expect(screen.queryByTestId("attention-p1")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("attention-p3")).not.toBeInTheDocument();
+    const form = screen.getByTestId("attention-p2");
+    expect(within(form).getByText("Obligatoria para subir las fotografías de esta fase.")).toBeInTheDocument();
+    const save = within(form).getByRole("button", { name: "Guardar atención" });
+    expect(save).toBeDisabled();
+    fetchSpy.mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    await user.type(within(form).getByLabelText("Fecha de la atención"), "2026-02-10");
+    await user.type(within(form).getByLabelText("ID de la atención"), "AG-4587");
+    await user.click(save);
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
+    const [url, init] = fetchSpy.mock.calls[0];
+    expect(url).toBe("/api/leads/lead-1/phases/p2/attention");
+    expect(init).toMatchObject({ method: "PUT", body: JSON.stringify({ date: "2026-02-10", agendaId: "AG-4587" }) });
+    await waitFor(() => expect(api.invalidate).toHaveBeenCalled());
+  });
+
+  it("muestra lo ya registrado y quién lo hizo", () => {
+    api.phases = [
+      phase("p1", "Pre-evaluación", { patientCaptured: true, enabled: true, complete: true, attentionRequired: false, attention: null, views: [view("p1-a", "Frontal", "f1")] }),
+      phase("p2", "Diagnóstico", { enabled: true, attentionRequired: true, attention: { date: "2026-02-10", agendaId: "AG-4587", byName: "Dra. Soto", at: "2026-02-10T12:00:00Z" } }),
+    ];
+    render(<LeadPhases leadId="lead-1" onExpand={vi.fn()} />);
+    const form = screen.getByTestId("attention-p2");
+    expect(within(form).getByLabelText("Fecha de la atención")).toHaveValue("2026-02-10");
+    expect(within(form).getByLabelText("ID de la atención")).toHaveValue("AG-4587");
+    expect(within(form).getByText("Registrado por Dra. Soto")).toBeInTheDocument();
+    expect(within(form).getByRole("button", { name: "Guardar atención" })).toBeDisabled();
+  });
+
   it("uploads a chosen photo to the view and refreshes the phases", async () => {
     const user = userEvent.setup();
     render(<LeadPhases leadId="lead-1" onExpand={vi.fn()} />);

@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, eq, or } from "drizzle-orm";
-import { db, leadsTable, usersTable, centersTable, type SkippedPhase } from "@workspace/db";
+import { db, leadsTable, usersTable, centersTable, type SkippedPhase, type PhaseAttention } from "@workspace/db";
 import { requireStaffAuth, type StaffAuthContext } from "./auth";
 import { uid, clean } from "../lib/helpers";
 import { validateRut } from "../lib/rut";
@@ -287,6 +287,68 @@ router.delete("/leads/:id/phases/:phaseId/skip", async (req, res): Promise<void>
     .where(eq(leadsTable.id, lead.id));
   await syncLeadStatus(lead.id);
   res.status(204).end();
+});
+
+// Atención de una fase (desde el diagnóstico): el día en que se atendió al
+// paciente (obligatorio) y, si la clínica lo usa, el número de esa atención en
+// su agenda. Sin la fecha no se cierra el diagnóstico ni se suben fotos de la fase.
+const ATTENTION_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const MAX_AGENDA_ID = 60;
+router.put("/leads/:id/phases/:phaseId/attention", async (req, res): Promise<void> => {
+  const staff = requireStaffAuth(req, res);
+  if (!staff) return;
+  const lead = await ownLead(staff.centerId, req.params.id);
+  if (!lead) {
+    res.status(404).json({ error: "Caso no encontrado." });
+    return;
+  }
+  if (lead.status === "alta" || lead.status === "cerrado") {
+    res.status(409).json({ error: "El proceso de este paciente está cerrado." });
+    return;
+  }
+  const body = (req.body ?? {}) as { date?: unknown; agendaId?: unknown };
+  const date = typeof body.date === "string" ? body.date.trim() : "";
+  const parsed = ATTENTION_DATE.test(date) ? new Date(`${date}T00:00:00.000Z`) : null;
+  const tomorrow = Date.now() + 36 * 60 * 60 * 1000;
+  if (!parsed || Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date || date < "2000-01-01" || parsed.getTime() > tomorrow) {
+    res.status(422).json({ error: "Indica una fecha de atención válida (no puede ser futura)." });
+    return;
+  }
+  if (body.agendaId !== undefined && body.agendaId !== null && typeof body.agendaId !== "string") {
+    res.status(422).json({ error: "El ID de la atención no es válido." });
+    return;
+  }
+  const agendaId = clean(body.agendaId, MAX_AGENDA_ID + 1);
+  if (agendaId.length > MAX_AGENDA_ID) {
+    res.status(422).json({ error: `El ID de la atención admite hasta ${MAX_AGENDA_ID} caracteres.` });
+    return;
+  }
+  const phases = await getLeadPhases(lead);
+  const phase = phases.find((candidate) => candidate.id === req.params.phaseId);
+  if (!phase) {
+    res.status(404).json({ error: "Etapa no encontrada." });
+    return;
+  }
+  if (!phase.attentionRequired) {
+    res.status(409).json({ error: "Esta etapa no lleva fecha de atención." });
+    return;
+  }
+  if (!phase.enabled) {
+    res.status(409).json({ error: "Completa la fase anterior antes de registrar esta." });
+    return;
+  }
+  const current = (lead.phaseAttentions && typeof lead.phaseAttentions === "object" && !Array.isArray(lead.phaseAttentions) ? lead.phaseAttentions : {}) as Record<string, PhaseAttention>;
+  const entry: PhaseAttention = {
+    date,
+    agendaId,
+    byUserId: staff.userId,
+    byName: (await staffName(staff.userId)) || staff.userId,
+    at: new Date().toISOString(),
+  };
+  await db.update(leadsTable)
+    .set({ phaseAttentions: { ...current, [phase.id]: entry }, updatedAt: new Date() })
+    .where(eq(leadsTable.id, lead.id));
+  res.json({ ok: true, attention: { date: entry.date, agendaId: entry.agendaId, byName: entry.byName, at: entry.at } });
 });
 
 // Alta médica: solo un médico, en cualquier etapa posterior al diagnóstico

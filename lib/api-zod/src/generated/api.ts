@@ -312,6 +312,13 @@ export const GetLeadPhasesResponse = zod.object({
   "byName": zod.string(),
   "at": zod.string()
 }),zod.null()]),
+  "attentionRequired": zod.boolean(),
+  "attention": zod.union([zod.object({
+  "date": zod.string(),
+  "agendaId": zod.string(),
+  "byName": zod.string(),
+  "at": zod.string()
+}),zod.null()]),
   "views": zod.array(zod.object({
   "id": zod.string(),
   "key": zod.string(),

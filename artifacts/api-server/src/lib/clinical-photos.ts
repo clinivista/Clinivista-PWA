@@ -18,6 +18,7 @@ import {
   type ClinicalPhoto,
   type Lead,
   type SkippedPhase,
+  type PhaseAttention,
 } from "@workspace/db";
 import { uid } from "./helpers";
 import { createObjectKey, privatePhotoStorage } from "./clinical-photo-storage";
@@ -724,6 +725,9 @@ export type LeadPhase = {
   /** El personal omitió esta etapa (con motivo): deja avanzar a la siguiente sin completarla. */
   skipped: boolean;
   skip: { reason: string; byName: string; at: string } | null;
+  /** Desde el diagnóstico, cada fase pide la fecha de la atención y, opcionalmente, su número en la agenda de la clínica. */
+  attentionRequired: boolean;
+  attention: { date: string; agendaId: string; byName: string; at: string } | null;
   views: LeadPhaseView[];
 };
 
@@ -747,6 +751,10 @@ export async function getLeadPhases(lead: Lead): Promise<LeadPhase[]> {
 
   const [diagnosis] = await db.select().from(diagnosesTable).where(eq(diagnosesTable.evaluationId, evaluation.id));
 
+  const attentions = (lead.phaseAttentions && typeof lead.phaseAttentions === "object" && !Array.isArray(lead.phaseAttentions) ? lead.phaseAttentions : {}) as Record<string, PhaseAttention>;
+  // La atención se registra desde la fase de diagnóstico en adelante (si no hay, desde la segunda fase).
+  const diagnosisIndex = phases.findIndex((phase, index) => phase.kind === "diagnosis" && index > 0);
+  const firstAttentionIndex = diagnosisIndex === -1 ? 1 : diagnosisIndex;
   const skips = new Map((Array.isArray(lead.skippedPhases) ? lead.skippedPhases as SkippedPhase[] : []).map((skip) => [skip.phaseId, skip]));
   let previousComplete = true;
   return phases.map((phase, index) => {
@@ -781,6 +789,8 @@ export async function getLeadPhases(lead: Lead): Promise<LeadPhase[]> {
       complete,
       skipped: skip !== undefined,
       skip: skip ? { reason: skip.reason, byName: skip.byName, at: skip.at } : null,
+      attentionRequired: index >= firstAttentionIndex,
+      attention: attentions[phase.id] ? { date: attentions[phase.id]!.date, agendaId: attentions[phase.id]!.agendaId ?? "", byName: attentions[phase.id]!.byName, at: attentions[phase.id]!.at } : null,
       views: phaseViews,
     };
     previousComplete = complete || skip !== undefined;
@@ -814,6 +824,7 @@ export async function createStaffPhasePhoto(input: {
   if (!phase || !view) throw new PhaseCaptureError("Esa fotografía no existe en este proceso.", 404);
   if (!phase.staffCanCapture) throw new PhaseCaptureError("La pre-evaluación la toma el paciente desde su enlace.");
   if (!phase.enabled) throw new PhaseCaptureError("Completa la fase anterior antes de registrar esta.", 409);
+  if (phase.attentionRequired && !phase.attention) throw new PhaseCaptureError("Registra la fecha de atención de esta fase antes de subir sus fotografías.", 409);
 
   const hash = crypto.createHash("sha256").update(input.bytes).digest("hex");
   const stored = await privatePhotoStorage.put({

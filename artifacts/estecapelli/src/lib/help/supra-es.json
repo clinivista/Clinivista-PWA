@@ -395,7 +395,8 @@
       "Omitir etapa (con motivo obligatorio) y deshacer la omisión.",
       "Alta médica, solo por el médico, y reabrir el proceso.",
       "Editar los datos de los usuarios (nombre, teléfono, rol y contraseña).",
-      "Tickets de soporte con valoración."
+      "Tickets de soporte con valoración.",
+      "Fecha e ID de la atención en cada fase desde el diagnóstico (la fecha es obligatoria; el ID es el número de la agenda propia de la clínica)."
      ]
     }
    ]

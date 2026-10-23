@@ -3404,7 +3404,7 @@ components:
 
     LeadPhase:
       type: object
-      required: [id, key, name, position, kind, patientCaptured, staffCanCapture, enabled, complete, skipped, skip, views]
+      required: [id, key, name, position, kind, patientCaptured, staffCanCapture, enabled, complete, skipped, skip, attentionRequired, attention, views]
       properties:
         id: {type: string}
         key: {type: string}
@@ -3424,6 +3424,17 @@ components:
               required: [reason, byName, at]
               properties:
                 reason: {type: string}
+                byName: {type: string}
+                at: {type: string}
+            - type: "null"
+        attentionRequired: {type: boolean}
+        attention:
+          oneOf:
+            - type: object
+              required: [date, agendaId, byName, at]
+              properties:
+                date: {type: string}
+                agendaId: {type: string}
                 byName: {type: string}
                 at: {type: string}
             - type: "null"

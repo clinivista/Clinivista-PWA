@@ -5,6 +5,7 @@
  * Estecapelli API — Preevaluación capilar
  * OpenAPI spec version: 0.1.0
  */
+import type { LeadPhaseAttention } from './leadPhaseAttention';
 import type { LeadPhaseKind } from './leadPhaseKind';
 import type { LeadPhaseSkip } from './leadPhaseSkip';
 import type { LeadPhaseView } from './leadPhaseView';
@@ -21,5 +22,7 @@ export interface LeadPhase {
   complete: boolean;
   skipped: boolean;
   skip: LeadPhaseSkip;
+  attentionRequired: boolean;
+  attention: LeadPhaseAttention;
   views: LeadPhaseView[];
 }
