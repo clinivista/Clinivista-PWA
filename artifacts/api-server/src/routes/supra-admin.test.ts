@@ -15,7 +15,7 @@ vi.mock("@workspace/db", async () => {
 import * as mockedDb from "@workspace/db";
 import supraAdminRouter from "./supra-admin";
 import { createSession } from "../lib/sessions";
-import { applyResults, alertRenewals, type CheckResult } from "../lib/service-monitor";
+import { applyResults, alertRenewals, checkClaude, type CheckResult } from "../lib/service-monitor";
 
 const pglite = (mockedDb as unknown as { __pglite: { exec(sql: string): Promise<unknown> } }).__pglite;
 const app = express();
@@ -93,11 +93,11 @@ describe("finanzas", () => {
 describe("servicios", () => {
   it("carga los habituales una sola vez y permite editar", async () => {
     const seed = await request(app).post("/api/supra/admin/services/seed").set("Cookie", supra()).expect(200);
-    expect(seed.body.added).toBe(7);
+    expect(seed.body.added).toBe(8);
     expect((await request(app).post("/api/supra/admin/services/seed").set("Cookie", supra())).body.added).toBe(0);
     const list = (await request(app).get("/api/supra/admin/services").set("Cookie", supra())).body;
-    expect(list.services).toHaveLength(7);
-    expect(list.checks.map((c: { key: string }) => c.key)).toEqual(["database", "storage", "email", "google", "dns", "https", "github"]);
+    expect(list.services).toHaveLength(8);
+    expect(list.checks.map((c: { key: string }) => c.key)).toEqual(["database", "storage", "email", "google", "dns", "https", "github", "claude"]);
     const render = list.services.find((s: { name: string }) => s.name === "Render");
     const patched = (await request(app).patch(`/api/supra/admin/services/${render.id}`).set("Cookie", supra()).send({ cost: 7, plan: "Starter", renewalDate: "2026-11-01" }).expect(200)).body;
     expect(patched).toMatchObject({ cost: 7, plan: "Starter", renewalDate: "2026-11-01" });
@@ -155,5 +155,30 @@ describe("alertas del monitor", () => {
     const banner = (await request(app).get("/api/supra/admin/banner").set("Cookie", supra())).body;
     expect(Array.isArray(banner.problems)).toBe(true);
     expect(Array.isArray(banner.renewals)).toBe(true);
+  });
+});
+
+describe("cuenta de Claude", () => {
+  const withFetch = (status: number, body: unknown = {}) => vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(body), { status })));
+  const restore = () => { vi.unstubAllGlobals(); delete process.env.ANTHROPIC_API_KEY; };
+
+  it("con clave: válida, rechazada, límite y caída", async () => {
+    process.env.ANTHROPIC_API_KEY = "sk-ant-test";
+    withFetch(200); expect((await checkClaude()).status).toBe("ok");
+    withFetch(401); expect((await checkClaude()).status).toBe("fail");
+    withFetch(403); expect((await checkClaude()).status).toBe("fail");
+    withFetch(429); expect((await checkClaude()).status).toBe("warn");
+    withFetch(500); expect((await checkClaude()).status).toBe("fail");
+    restore();
+  });
+
+  it("sin clave usa el estado público", async () => {
+    withFetch(200, { status: { indicator: "none" } });
+    const ok = await checkClaude();
+    expect(ok.status).toBe("ok");
+    expect(ok.detail).toContain("ANTHROPIC_API_KEY");
+    withFetch(200, { status: { indicator: "major", description: "Partial outage" } });
+    expect((await checkClaude()).status).toBe("warn");
+    restore();
   });
 });
