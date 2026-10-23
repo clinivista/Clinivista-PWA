@@ -19,6 +19,22 @@
       "İlerleme çubuğu: Başlangıç → Veriler → Fotoğraflar. Hangi aşamada olduğunu her zaman görürsün.",
       "Süreç için tahmini süre (4 – 6 dakika).",
       "Neleri içerir: kişisel veriler, beş yönlendirmeli fotoğraf ve gizli tıbbi inceleme."
+     ],
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Dil seçici.",
+      "İlerleme çubuğu: Başlangıç → Veriler → Fotoğraflar. Hangi aşamada olduğunu her zaman görürsün.",
+      "Süreç için tahmini süre (4 – 6 dakika).",
+      "Neleri içerir: kişisel veriler, üç yönlendirmeli fotoğraf ve gizli tıbbi inceleme."
+     ],
+     "only": [
+      "dermatologia"
      ]
     },
     {
@@ -29,7 +45,8 @@
      ],
      "caption": "Dil değiştirme."
     }
-   ]
+   ],
+   "key": "entry"
   },
   {
    "id": "1.2",
@@ -54,7 +71,8 @@
      "t": "note",
      "text": "Bu kılavuzdaki örnek veriler tamamen kurgusaldır."
     }
-   ]
+   ],
+   "key": "data"
   },
   {
    "id": "1.3",
@@ -62,7 +80,10 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Geçmişini kısaca anlat: saç kaybını ne zamandır fark ettiğin, nerede yoğunlaştığı, hangi tedavileri kullandığın, bir belirti olup olmadığı ve daha önce saç ekimi yaptırıp yaptırmadığın. Bunlar tıbbi ekibin durumunu anlaması için temel bilgilerdir; isteğe bağlı alanlar boş bırakılabilir."
+     "text": "Geçmişini kısaca anlat: saç kaybını ne zamandır fark ettiğin, nerede yoğunlaştığı, hangi tedavileri kullandığın, bir belirti olup olmadığı ve daha önce saç ekimi yaptırıp yaptırmadığın. Bunlar tıbbi ekibin durumunu anlaması için temel bilgilerdir; isteğe bağlı alanlar boş bırakılabilir.",
+     "only": [
+      "capilar"
+     ]
     },
     {
      "t": "legend",
@@ -72,6 +93,54 @@
       "Saç dökülmesi için kullandığın tedaviler.",
       "İlişkili belirtiler (isteğe bağlı, serbest metin).",
       "Önceki saç ekimi ameliyatları (isteğe bağlı)."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Bize kısaca hangi işlemle ilgilendiğini, neyi iyileştirmek istediğini, ne zaman ameliyat olmak istediğini, önceki ameliyatlarını, hastalıklarını, ilaçlarını veya alerjilerini ve sigara içip içmediğini anlat. Bunlar tıbbi ekibin durumunu anlaması için temel bilgilerdir; isteğe bağlı alanlar boş bırakılabilir.",
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Hangi işlemle ilgileniyorsunuz?",
+      "Neyi iyileştirmek istersiniz?",
+      "Ameliyatı ne zaman olmak istersiniz?",
+      "Geçirilmiş ameliyatlar",
+      "Hastalıklar veya tıbbi durumlar",
+      "İlaçlar ve alerjiler",
+      "Sigara içiyor musunuz?"
+     ],
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Bize kısaca seni neyin endişelendirdiğini, vücudun hangi bölgesinde olduğunu, ne zaman ortaya çıktığını, değişip değişmediğini, geçmiş hastalıklarını, önceki ilaç veya tedavilerini, güneşe maruziyetini ve cilt tipini anlat. Bunlar tıbbi ekibin durumunu anlaması için temel bilgilerdir; isteğe bağlı alanlar boş bırakılabilir.",
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Sizi ne endişelendiriyor?",
+      "Vücudun hangi bölgesinde?",
+      "Ne zaman ortaya çıktı?",
+      "Yakın zamanda değişti mi?",
+      "Öykü",
+      "İlaçlar ve önceki tedaviler",
+      "Güneşe maruz kalma",
+      "Cilt tipi"
+     ],
+     "only": [
+      "dermatologia"
      ]
     },
     {
@@ -87,7 +156,8 @@
       "Fotoğraflara devam et (onayı verince etkinleşir)."
      ]
     }
-   ]
+   ],
+   "key": "history"
   },
   {
    "id": "1.4",
@@ -95,7 +165,24 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Beş standart çekim gerekir: ön görünüm, tepe (vertex), sağ şakak, sol şakak ve donör bölge (ense). Her çekimin; yönlendirme, ışık, mesafe ve arka plan önerilerini içeren bir konum rehberi vardır. Çekmeden önce oku; kendin çekmekte zorlanırsan başka birinden yardım iste."
+     "text": "Beş standart çekim gerekir: ön görünüm, tepe (vertex), sağ şakak, sol şakak ve donör bölge (ense). Her çekimin; yönlendirme, ışık, mesafe ve arka plan önerilerini içeren bir konum rehberi vardır. Çekmeden önce oku; kendin çekmekte zorlanırsan başka birinden yardım iste.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Beş standart çekime ihtiyacımız var: önden görünüm, sağ profil, sol profil, sağ oblik ve sol oblik. Her çekimin önerilen yönlendirme, ışık, mesafe ve arka planı gösteren bir konum rehberi vardır. Fotoğraf çekmeden önce oku; kendin çekmekte zorlanırsan birinden yardım iste.",
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Üç standart çekime ihtiyacımız var: bölgenin genel görünümü, boyut referanslı yakın çekim ve dermatoskopi (kliniğin kullanıyorsa). Her çekimin önerilen yönlendirme, ışık, mesafe ve arka planı gösteren bir konum rehberi vardır. Fotoğraf çekmeden önce oku; kendin çekmekte zorlanırsan birinden yardım iste.",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "legend",
@@ -105,6 +192,23 @@
       "İlerleme: 5 fotoğraftan 1.'si ve ilerleme çubuğu.",
       "Konum rehberi: yönelim, ışık, mesafe ve arka plan.",
       "Çekimin açıklaması ve fotoğraf çekme / yükleme alanı."
+     ],
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Geri: bilgilerine döner.",
+      "Çık: çekimi bırakır (ilerlemen kaydedilir).",
+      "İlerleme: 3 fotoğraftan 1.'si ve ilerleme çubuğu.",
+      "Konum rehberi: yönelim, ışık, mesafe ve arka plan.",
+      "Çekimin açıklaması ve fotoğraf çekme / yükleme alanı."
+     ],
+     "only": [
+      "dermatologia"
      ]
     },
     {
@@ -113,7 +217,18 @@
     },
     {
      "t": "p",
-     "text": "«Tomar foto» düğmesine bas. Telefon kamera izni isteyecek: kabul et. Referans çerçeveli bir önizleme göreceksin; başını rehberin gösterdiği gibi çerçevenin içine yerleştir ve beyaz yuvarlak düğmeye bas. «Cancelar» ile çekmeden çıkabilir, çevirme simgesiyle ön ve arka kamera arasında geçiş yapabilirsin."
+     "text": "«Tomar foto» düğmesine bas. Telefon kamera izni isteyecek: kabul et. Referans çerçeveli bir önizleme göreceksin; başını rehberin gösterdiği gibi çerçevenin içine yerleştir ve beyaz yuvarlak düğmeye bas. «Cancelar» ile çekmeden çıkabilir, çevirme simgesiyle ön ve arka kamera arasında geçiş yapabilirsin.",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "«Tomar foto» düğmesine bas. Telefon kamera izni isteyecek: kabul et. Referans çerçeveli bir önizleme göreceksin; bölgeyi rehberin gösterdiği gibi çerçevenin içine yerleştir ve beyaz yuvarlak düğmeye bas. «Cancelar» ile çekmeden çıkabilir, çevirme simgesiyle ön ve arka kamera arasında geçiş yapabilirsin.",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "legend",
@@ -130,7 +245,24 @@
     },
     {
      "t": "p",
-     "text": "Fotoğraf çekildiğinde uygulama kalitesini (çözünürlük, pozlama, kontrast ve netlik) kontrol eder ve iyileştirilebilecek bir şey varsa öneriler gösterir. Bunlar teknik yönlendirmelerdir, tıbbi bulguları yorumlamaz. En fazla 500 karakterlik isteğe bağlı bir açıklama yazabilirsin (örneğin «alın bölgesinde saçım azaldı gibi»). Fotoğrafı beğendiysen «Usar esta foto» düğmesine bas; beğenmediysen tekrar çek."
+     "text": "Fotoğraf çekildiğinde uygulama kalitesini (çözünürlük, pozlama, kontrast ve netlik) kontrol eder ve iyileştirilebilecek bir şey varsa öneriler gösterir. Bunlar teknik yönlendirmelerdir, tıbbi bulguları yorumlamaz. En fazla 500 karakterlik isteğe bağlı bir açıklama yazabilirsin (örneğin «alın bölgesinde saçım azaldı gibi»). Fotoğrafı beğendiysen «Usar esta foto» düğmesine bas; beğenmediysen tekrar çek.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Fotoğraf çekildiğinde uygulama kalitesini (çözünürlük, pozlama, kontrast ve netlik) kontrol eder ve iyileştirilebilecek bir şey varsa öneriler gösterir. Bunlar teknik yönlendirmelerdir, tıbbi bulguları yorumlamaz. En fazla 500 karakterlik isteğe bağlı bir açıklama yazabilirsin (örneğin «burnumun yüzümle daha uyumlu olmasını istiyorum»). Fotoğrafı beğendiysen «Usar esta foto» düğmesine bas; beğenmediysen tekrar çek.",
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Fotoğraf çekildiğinde uygulama kalitesini (çözünürlük, pozlama, kontrast ve netlik) kontrol eder ve iyileştirilebilecek bir şey varsa öneriler gösterir. Bunlar teknik yönlendirmelerdir, tıbbi bulguları yorumlamaz. En fazla 500 karakterlik isteğe bağlı bir açıklama yazabilirsin (örneğin «kaşınıyor ve son haftalarda büyüdü»). Fotoğrafı beğendiysen «Usar esta foto» düğmesine bas; beğenmediysen tekrar çek.",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "legend",
@@ -147,7 +279,11 @@
      "t": "tip",
      "text": "O anda kamerayı kullanmak istemezsen «Subir otra foto» ile galerinden bir görüntü seçebilirsin. Orijinal dosya küçültülmeden saklanır."
     }
-   ]
+   ],
+   "key": "photos",
+   "titles": {
+    "dermatologia": "Üç yönlendirmeli fotoğraf"
+   }
   },
   {
    "id": "1.5",
@@ -155,7 +291,18 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Her fotoğraftan sonra «İlerleme kaydedildi» uyarısı görünür: ilerlemen otomatik kaydedilir. Beşini tamamlayana kadar çekimleri sırayla yap. Bitirdiğinde özet küçük resimleri gösterir; her birinden fotoğrafı yineleyebilir, görüntü teknik ayarlarını açabilir veya başka bir fotoğraf yükleyebilirsin. Gönderme düğmesi 5/5'e ulaşınca etkinleşir."
+     "text": "Her fotoğraftan sonra «İlerleme kaydedildi» uyarısı görünür: ilerlemen otomatik kaydedilir. Beşini tamamlayana kadar çekimleri sırayla yap. Bitirdiğinde özet küçük resimleri gösterir; her birinden fotoğrafı yineleyebilir, görüntü teknik ayarlarını açabilir veya başka bir fotoğraf yükleyebilirsin. Gönderme düğmesi 5/5'e ulaşınca etkinleşir.",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Her fotoğraftan sonra «İlerleme kaydedildi» uyarısı görünür: ilerlemen otomatik kaydedilir. Üçünü tamamlayana kadar çekimleri sırayla yap. Bitirdiğinde özet küçük resimleri gösterir; her birinden fotoğrafı yineleyebilir, görüntü teknik ayarlarını açabilir veya başka bir fotoğraf yükleyebilirsin. Gönderme düğmesi 3/3'e ulaşınca etkinleşir.",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "legend",
@@ -165,6 +312,23 @@
       "Galeriden başka fotoğraf yükle.",
       "Beş çekimin küçük resimleri; her birinin yinelemek için bağlantısı var.",
       "Değerlendirmeyi gönder (5/5): her şeyi tıbbi ekibe iletir."
+     ],
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Mevcut çekim için fotoğrafı yinele.",
+      "Görüntü teknik ayarları.",
+      "Galeriden başka fotoğraf yükle.",
+      "Üç çekimin küçük resimleri; her birinin yinelemek için bağlantısı var.",
+      "Değerlendirmeyi gönder (3/3): her şeyi tıbbi ekibe iletir."
+     ],
+     "only": [
+      "dermatologia"
      ]
     },
     {
@@ -175,7 +339,8 @@
       "Başlangıca dön."
      ]
     }
-   ]
+   ],
+   "key": "submit"
   },
   {
    "id": "1.6",
@@ -218,7 +383,8 @@
      "t": "note",
      "text": "Şifreni kimseyle paylaşma. Klinik şifreni mesajla veya telefonla asla istemez."
     }
-   ]
+   ],
+   "key": "account"
   },
   {
    "id": "1.7",
@@ -261,7 +427,8 @@
       62
      ]
     }
-   ]
+   ],
+   "key": "faq"
   }
  ],
  "staff": [
@@ -297,14 +464,40 @@
        "✔"
       ],
       [
-       "Teşhis: fotoğraf işaretleme, Norwood, notlar, yanıt, kapatma ve yeniden açma",
+       "Hasta ekleme ve aşama atlama",
        "✔",
-       "Salt okunur"
+       "✔"
       ],
+      {
+       "only": [
+        "capilar"
+       ],
+       "cells": [
+        "Teşhis: fotoğraf işaretleme, Norwood, notlar, yanıt, kapatma ve yeniden açma",
+        "✔",
+        "Salt okunur"
+       ]
+      },
+      {
+       "only": [
+        "plastica",
+        "dermatologia"
+       ],
+       "cells": [
+        "Teşhis: fotoğraf işaretleme, notlar, yanıt, kapatma ve yeniden açma",
+        "✔",
+        "Salt okunur"
+       ]
+      },
       [
        "Sonuçları gönderme (e-posta/WhatsApp ile PDF) ve Gelişim",
        "✔",
        "✔"
+      ],
+      [
+       "Tıbbi taburcu ve süreci yeniden açma",
+       "✔",
+       "—"
       ],
       [
        "Bekleyenler raporunu görme",
@@ -316,9 +509,29 @@
        "Yalnızca yasal temsilci",
        "Yalnızca yasal temsilci"
       ],
+      {
+       "only": [
+        "dermatologia"
+       ],
+       "cells": [
+        "Muayene türlerini yönetme",
+        "Yalnızca yasal temsilci",
+        "Yalnızca yasal temsilci"
+       ]
+      },
+      [
+       "Diğer kullanıcıların bilgilerini düzenleme (ad, telefon, rol, şifre)",
+       "Yasal temsilciyse",
+       "✔"
+      ],
       [
        "Kullanıcıları yönetme (oluşturma, engelleme, sıfırlama, silme)",
        "Yasal temsilciyse",
+       "✔"
+      ],
+      [
+       "Destek bileti açma ve değerlendirme",
+       "✔",
        "✔"
       ]
      ],
@@ -336,7 +549,8 @@
      "t": "note",
      "text": "Bu kılavuzdaki ekran görüntüleri kurgusal «Clínica Aurora» kliniğine aittir. Fotoğraflar sentetik illüstrasyonlardır, gerçek kişiler değildir."
     }
-   ]
+   ],
+   "key": "roles"
   },
   {
    "id": "2.2",
@@ -357,7 +571,7 @@
     },
     {
      "t": "p",
-     "text": "Kurtarmak için «Şifrenizi mi unuttunuz?» seçeneğine bas, e-postanı yaz; yeni bir şifre seçmen için bağlantı alırsın. Bağlantının süresi dolar: dolduysa yenisini iste. E-postana erişemiyorsan yetkili başka biri şifreni Kullanıcılar bölümünden sıfırlayabilir (bölüm 2.11)."
+     "text": "Kurtarmak için «Şifrenizi mi unuttunuz?» seçeneğine bas, e-postanı yaz; yeni bir şifre seçmen için bağlantı alırsın. Bağlantının süresi dolar: dolduysa yenisini iste. E-postana erişemiyorsan yetkili başka biri şifreni Kullanıcılar bölümünden sıfırlayabilir (bölüm {§users})."
     },
     {
      "t": "legend",
@@ -375,10 +589,38 @@
      ],
      "caption": "E-postadaki bağlantıdan açılan ekran."
     }
-   ]
+   ],
+   "key": "login"
   },
   {
    "id": "2.3",
+   "key": "clinics",
+   "title": "Aynı e-postayla birden fazla klinik",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Birden fazla Clinivista kliniğinde çalışıyorsan, her klinikte aynı e-postayla ayrı bir hesabın olur. Her hesabın kendi şifresi ve kendi rolü (doktor veya idari) olabilir ve yalnızca o kliniğin hastalarını gösterir."
+    },
+    {
+     "t": "p",
+     "text": "Giriş yaptığında şifre birden fazla hesapla eşleşirse «Hangi kliniğe girmek istiyorsunuz?» ekranı kliniklerini listeler: birini seç ve «Gir» düğmesine bas. Yalnızca bir hesapla eşleşirse doğrudan girersin."
+    },
+    {
+     "t": "p",
+     "text": "Oturumu kapatmadan başka bir kliniğe geçmek için menüdeki «Klinik değiştir» seçeneğini kullan. Başka bir şifreyle girersen, o şifrenin ait olduğu kliniğe girersin."
+    },
+    {
+     "t": "note",
+     "text": "«Şifreni mi unuttun?» ile şifreni sıfırlarsan hangi kliniklerde geçerli olacağını seçebilirsin (klinik başına bir kutu); işaretlemediklerin eski şifresini korur."
+    },
+    {
+     "t": "tip",
+     "text": "Clinivista yöneticileri herhangi bir kliniğe doktor ve idari olarak girebilir; içeride «… kliniğinde yönetici olarak bulunuyorsun» uyarısını ve süpra-kontrole dönme düğmesini görürler."
+    }
+   ]
+  },
+  {
+   "id": "2.4",
    "title": "Hasta paneli",
    "blocks": [
     {
@@ -400,7 +642,18 @@
     },
     {
      "t": "p",
-     "text": "Üstteki kartlar hastaları duruma göre sayar (toplam, eksik, incelemeye hazır, iletişime hazır, ameliyat edildi…) ve hızlı bir özet sunar. Tabloda ad, telefon, durum, ön değerlendirme fotoğraf sayısı (örneğin 5/5) ve kayıt tarihi görünür."
+     "text": "Üstteki kartlar hastaları duruma göre sayar (toplam, eksik, incelemeye hazır, iletişime hazır, ameliyat edildi…) ve hızlı bir özet sunar. Tabloda ad, telefon, durum, ön değerlendirme fotoğraf sayısı (örneğin 5/5) ve kayıt tarihi görünür.",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Üstteki kartlar hastaları duruma göre sayar (toplam, eksik, incelemeye hazır, iletişime hazır, tedavi edildi…) ve hızlı bir özet sunar. Tabloda ad, telefon, durum, ön değerlendirme fotoğraf sayısı (örneğin 3/3) ve kayıt tarihi görünür.",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "h3",
@@ -433,10 +686,64 @@
      "items": [],
      "caption": "Kliniğin bağlantısını gösteren pencere."
     }
+   ],
+   "key": "panel"
+  },
+  {
+   "id": "2.5",
+   "key": "addpatient",
+   "title": "Hasta ekleme",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Klinikte ilgilendiğin birini yakalama bağlantısından geçirmeden kaydetmek için «Hasta ekle» düğmesini (hasta panelinde) kullan. Zorunlu alanlar «Ad soyad», «Kimlik no (RUT)» ve «Telefon»; e-posta ve şehir isteğe bağlıdır."
+    },
+    {
+     "t": "p",
+     "text": "Hastanın onayını (yüz yüze veya yazılı) verdiğini işaretlemelisin: kimin ve ne zaman onayladığı kaydedilir, bu kutu olmadan kaydedilemez. İstersen «Hastaya portal erişimini e-postayla gönder» kutusunu da işaretle."
+    },
+    {
+     "t": "p",
+     "text": "Kimlik numarası klinikte zaten varsa sistem uyarır ve mükerrer kaydı önlemek için «Mevcut dosyayı aç» seçeneğini sunar. Kaydedince dosya açılır ve personel ön değerlendirme fotoğraflarını orada kaydeder."
+    },
+    {
+     "t": "p",
+     "text": "Dermatolojide formda ayrıca «Muayene türü» bulunur: türü ziyaret nedenine göre seç (varsayılan «Genel muayene»). Ayrıntılar {§consults} numaralı bölümde.",
+     "only": [
+      "dermatologia"
+     ]
+    }
    ]
   },
   {
-   "id": "2.4",
+   "id": "2.6",
+   "key": "consults",
+   "title": "Muayene türleri ve hasta başına birden fazla muayene",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Her dermatoloji kliniği muayene türleriyle çalışır. «Genel muayene» (temel) her zaman vardır; klinik ayrıca hazır şablonları (örneğin lezyonlar, akne, lekeler veya biyopsi) açabilir ya da kendi türlerini oluşturabilir. Her türün kendi aşamaları ve fotoğrafları vardır ve {§phasesconfig} numaralı bölümde ayarlanır."
+    },
+    {
+     "t": "p",
+     "text": "Bir hastanın tek dosyası vardır ama farklı türlerde birden fazla muayenesi olabilir. Dosyada «Bu hastanın muayeneleri» şeridi her muayene için bir sekme gösterir; «Başka bir muayene ekle» ile türü seçersin ve yenisi oluşturulur."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Her muayenenin kendi fotoğrafları, aşamaları, teşhisi, durumu ve tıbbi taburcusu vardır.",
+      "Hasta listesinde kişi başına tek satır görünür; muayene türü ve sayısı belirtilir.",
+      "Ek muayeneler istatistiklerde yeni hasta sayılmaz.",
+      "Ana dosyayı silersen ek muayeneleri de silinir."
+     ]
+    }
+   ],
+   "only": [
+    "dermatologia"
+   ]
+  },
+  {
+   "id": "2.7",
    "title": "Hasta durumları",
    "blocks": [
     {
@@ -470,13 +777,32 @@
        "İletişime geçildi",
        "Hastayla görüşüldü ancak randevu verilmedi («İletişime geçildi, randevu yok»)."
       ],
-      [
-       "Ameliyat edildi",
-       "Ameliyat sonrası aşamayı tamamladı."
-      ],
+      {
+       "only": [
+        "capilar",
+        "plastica"
+       ],
+       "cells": [
+        "Ameliyat edildi",
+        "Ameliyat sonrası aşamayı tamamladı."
+       ]
+      },
+      {
+       "only": [
+        "dermatologia"
+       ],
+       "cells": [
+        "Tedavi edildi",
+        "Tedavi aşamasını tamamladı."
+       ]
+      },
       [
        "Tedavi tamamlandı",
        "Protokolün tüm aşamaları tamamlandı."
+      ],
+      [
+       "Tıbbi taburcu",
+       "Doktor tıbbi taburcu verdi; yeniden açılabilir."
       ],
       [
        "Kapalı",
@@ -488,10 +814,11 @@
       70
      ]
     }
-   ]
+   ],
+   "key": "states"
   },
   {
-   "id": "2.5",
+   "id": "2.8",
    "title": "Hasta dosyası",
    "blocks": [
     {
@@ -518,36 +845,99 @@
     },
     {
      "t": "p",
-     "text": "Yönetim kutusunun altında ön değerlendirme fotoğraflarını gösteren Fotoğraf Kaydı bulunur (örneğin 5/5). Büyütmek için bir fotoğrafa dokun."
+     "text": "Yönetim kutusunun altında ön değerlendirme fotoğraflarını gösteren Fotoğraf Kaydı bulunur (örneğin 5/5). Büyütmek için bir fotoğrafa dokun.",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Yönetim kutusunun altında ön değerlendirme fotoğraflarını gösteren Fotoğraf Kaydı bulunur (örneğin 3/3). Büyütmek için bir fotoğrafa dokun.",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "legend",
      "items": [
       "Fotoğraf Kaydı: hastanın beş çekimi ve sayacı."
+     ],
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Fotoğraf Kaydı: hastanın üç çekimi ve sayacı."
+     ],
+     "only": [
+      "dermatologia"
      ]
     }
-   ]
+   ],
+   "key": "ficha"
   },
   {
-   "id": "2.6",
+   "id": "2.9",
    "title": "Aşamalara göre süreç",
    "blocks": [
     {
      "t": "p",
-     "text": "Takip aşamalara göre düzenlenir: ön değerlendirme, teşhis, ameliyat öncesi, ameliyat sonrası ve iki tıbbi kontrol. Her aşama bir öncekinin tamamlanmasıyla açılır; eksik olanlar bir uyarıyla kilitli görünür (örneğin «Teşhis tamamlandığında açılır»). Her aşamadaki adlar ve istenen fotoğraflar Aşamalar bölümünde (2.12) yapılandırılır."
+     "text": "Takip aşamalara göre düzenlenir: ön değerlendirme, teşhis, ameliyat öncesi, ameliyat sonrası ve iki tıbbi kontrol. Her aşama bir öncekinin tamamlanmasıyla açılır; eksik olanlar bir uyarıyla kilitli görünür (örneğin «Teşhis tamamlandığında açılır»). Her aşamadaki adlar ve istenen fotoğraflar Aşamalar bölümünde ({§phasesconfig}) yapılandırılır.",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Takip aşamalara ayrılır: ön değerlendirme, teşhis, tedavi ve iki kontrol. Her aşama bir öncekinin tamamlanmasıyla açılır; eksik olanlar uyarıyla kilitli görünür (örneğin «Teşhis tamamlanınca açılır»). Her aşamada istenen adlar ve fotoğraflar Aşamalar bölümünde ({§phasesconfig}) ayarlanır; her muayene türünün kendi aşamaları vardır.",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "legend",
      "items": [
       "Bölüm başlığı ve kuralı: her aşama bir öncekinin tamamlanmasıyla açılır.",
       "Ön değerlendirme: hasta bağlantıdan çeker; burada yalnızca ilerleme görülür (5/5).",
-      "Teşhis: doktor tarafından yürütülür (bölüm 2.7).",
+      "Teşhis: doktor tarafından yürütülür (bölüm {§diagnosis}).",
       "Aşama durumu: Açık, Kapalı veya kilitli."
+     ],
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Bölüm başlığı ve kuralı: her aşama bir öncekinin tamamlanmasıyla açılır.",
+      "Ön değerlendirme: hasta bağlantıdan çeker; burada yalnızca ilerleme görülür (3/3).",
+      "Teşhis: doktor tarafından yürütülür (bölüm {§diagnosis}).",
+      "Aşama durumu: Açık, Kapalı veya kilitli."
+     ],
+     "only": [
+      "dermatologia"
      ]
     },
     {
      "t": "p",
-     "text": "Personelin kaydettiği aşamalarda (ameliyat öncesi, ameliyat sonrası ve kontroller) her bölgenin üç işlemli bir kartı vardır: Fotoğraf çek (cihazın kamerasını rehber çerçeveyle açar), Yükle (cihazdan bir görüntü seçer) ve fotoğraf varsa Yinele veya Kaldır. Aşama ilerlemesi sayaç olarak gösterilir (0/5, 5/5)."
+     "text": "Personelin kaydettiği aşamalarda (ameliyat öncesi, ameliyat sonrası ve kontroller) her bölgenin üç işlemli bir kartı vardır: Fotoğraf çek (cihazın kamerasını rehber çerçeveyle açar), Yükle (cihazdan bir görüntü seçer) ve fotoğraf varsa Yinele veya Kaldır. Aşama ilerlemesi sayaç olarak gösterilir (0/5, 5/5).",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Personelin kaydettiği aşamalarda (tedavi ve kontroller) her bölgenin üç işlemli bir kartı vardır: Fotoğraf çek (cihaz kamerasını kılavuz çerçeveyle açar), Yükle (cihazdan görüntü seç) ve fotoğraf varsa Tekrarla veya Kaldır. Aşama ilerlemesi bir sayaç olarak gösterilir (0/3, 3/3).",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "legend",
@@ -557,12 +947,61 @@
       "E-posta ile gönder.",
       "WhatsApp ile gönder."
      ],
-     "caption": "Teşhisin altında: sonuç gönderimi ve «Fotoğraf çek» / «Yükle» kartlarıyla ameliyat öncesi aşaması (0/5)."
+     "caption": "Teşhisin altında: sonuç gönderimi ve «Fotoğraf çek» / «Yükle» kartlarıyla ameliyat öncesi aşaması (0/5).",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Teşhisi yeniden aç.",
+      "PDF'yi görüntüle: raporu önizler.",
+      "E-posta ile gönder.",
+      "WhatsApp ile gönder."
+     ],
+     "caption": "Teşhisin altında: sonuçların gönderimi ve «Fotoğraf çek» / «Yükle» kartlı tedavi aşaması (0/3).",
+     "only": [
+      "dermatologia"
+     ]
+    }
+   ],
+   "key": "phases"
+  },
+  {
+   "id": "2.10",
+   "key": "skipdischarge",
+   "title": "Aşamaları atlama ve tıbbi taburcu",
+   "blocks": [
+    {
+     "t": "h3",
+     "text": "Aşamayı atla"
+    },
+    {
+     "t": "p",
+     "text": "Bir aşama geçerli değilse (örneğin hasta başka bir klinikten değerlendirme getirdiyse) o aşamada «Aşamayı atla» düğmesine bas. «Neden (zorunlu)» yazmalısın; aşama «Atlandı» olarak işaretlenir ve süreç bir sonrakine geçer. Yalnızca açık ve henüz tamamlanmamış aşama atlanabilir."
+    },
+    {
+     "t": "p",
+     "text": "Yanlışlıkla yaptıysan «Geri al» düğmesine bas; aşama yeniden beklemede olur."
+    },
+    {
+     "t": "h3",
+     "text": "Tıbbi taburcu"
+    },
+    {
+     "t": "p",
+     "text": "Tedavi bittiğinde doktor dosyada «Tıbbi taburcu» düğmesine basar (tanıdan itibaren kullanılabilir); isteğe bağlı bir not ekleyebilir. Hasta «Tıbbi taburcu» durumuna geçer ve süreç kapanır. Bunu yalnızca doktor yapabilir; idari personel salt okunur görür."
+    },
+    {
+     "t": "p",
+     "text": "Vakaya yeniden dönmek gerekirse doktor «Süreci yeniden aç» seçeneğini kullanır ve hasta ilerlemesine uygun duruma geri döner."
     }
    ]
   },
   {
-   "id": "2.7",
+   "id": "2.11",
    "title": "Teşhis (doktorlar)",
    "blocks": [
     {
@@ -609,11 +1048,17 @@
     },
     {
      "t": "h3",
-     "text": "Adım 2 · Norwood, notlar ve yanıt"
+     "text": "Adım 2 · Norwood, notlar ve yanıt",
+     "only": [
+      "capilar"
+     ]
     },
     {
      "t": "p",
-     "text": "Norwood skalasını seç (veya «Sonuçsuz» bırak), klinik notlarını (dahili) ve hastanın alacağı yanıtı yaz (en fazla 8.000 karakter). «Taslağı kaydet» çalışmanı kapatmadan saklar: daha sonra devam edebilirsin."
+     "text": "Norwood skalasını seç (veya «Sonuçsuz» bırak), klinik notlarını (dahili) ve hastanın alacağı yanıtı yaz (en fazla 8.000 karakter). «Taslağı kaydet» çalışmanı kapatmadan saklar: daha sonra devam edebilirsin.",
+     "only": [
+      "capilar"
+     ]
     },
     {
      "t": "legend",
@@ -621,6 +1066,36 @@
       "Norwood skalası (Değerlendirme).",
       "Klinik notlar: yalnızca ekip görür.",
       "Hasta için yanıt: PDF raporunda görünür."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "2. Adım · Notlar ve yanıt",
+     "only": [
+      "plastica",
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Klinik notlarını (dahili) ve hastanın alacağı yanıtı yaz (en fazla 8.000 karakter). «Taslağı kaydet» çalışmanı kapatmadan saklar: daha sonra devam edebilirsin.",
+     "only": [
+      "plastica",
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Klinik notlar: yalnızca ekip görür.",
+      "Hasta için yanıt: PDF raporunda görünür."
+     ],
+     "only": [
+      "plastica",
+      "dermatologia"
      ]
     },
     {
@@ -648,10 +1123,11 @@
      "items": [],
      "caption": "İdari kullanıcı görünümü: taslak teşhis yalnızca görüntülenebilir."
     }
-   ]
+   ],
+   "key": "diagnosis"
   },
   {
-   "id": "2.8",
+   "id": "2.12",
    "title": "Sonuçları hastaya gönderme",
    "blocks": [
     {
@@ -667,15 +1143,27 @@
      "items": [],
      "caption": "Sonuç raporunun ikinci sayfası: doktorun işaretleriyle fotoğraflar."
     }
-   ]
+   ],
+   "key": "results"
   },
   {
-   "id": "2.9",
+   "id": "2.13",
    "title": "Gelişim: aşamaları karşılaştırma",
    "blocks": [
     {
      "t": "p",
-     "text": "Dosyadaki Gelişim bölümü, hastanın aynı anatomik bölgesini her aşamada yan yana karşılaştırır: ön değerlendirme, teşhis, ameliyat öncesi, ameliyat sonrası ve kontroller. Teşhis aşamasında doktorun işaretli fotoğrafı gösterilir («Ekip tarafından düzenlendi» etiketiyle); diğerlerinde orijinal fotoğraf."
+     "text": "Dosyadaki Gelişim bölümü, hastanın aynı anatomik bölgesini her aşamada yan yana karşılaştırır: ön değerlendirme, teşhis, ameliyat öncesi, ameliyat sonrası ve kontroller. Teşhis aşamasında doktorun işaretli fotoğrafı gösterilir («Ekip tarafından düzenlendi» etiketiyle); diğerlerinde orijinal fotoğraf.",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Dosyada Evrim bölümü, hastanın aynı bölgesini her aşamada yan yana karşılaştırır: ön değerlendirme, teşhis, tedavi ve kontroller. Teşhis aşamasında fotoğraf doktorun işaretlemeleriyle gösterilir («Ekip tarafından düzenlendi» etiketiyle); diğerlerinde orijinal fotoğraf gösterilir.",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "legend",
@@ -716,10 +1204,11 @@
      "items": [],
      "caption": "Gelişim PDF örneği (bir bölge, sütun başına bir aşama)."
     }
-   ]
+   ],
+   "key": "evolution"
   },
   {
-   "id": "2.10",
+   "id": "2.14",
    "title": "Bekleyenler raporu",
    "blocks": [
     {
@@ -742,15 +1231,20 @@
      "t": "note",
      "text": "Bu ekran (Rapor, Kullanıcılar ve Aşamalar) uygulamada şu anda yalnızca İspanyolca etiketlerle görüntülenir; kılavuzdaki açıklamalar Türkçedir."
     }
-   ]
+   ],
+   "key": "report"
   },
   {
-   "id": "2.11",
+   "id": "2.15",
    "title": "Klinik kullanıcıları",
    "blocks": [
     {
      "t": "p",
      "text": "İdari personel veya yasal temsilciysen «Kullanıcılar» bölümünden kliniğinin paneli kullanan kişileri yönetirsin: oluşturma, erişimi engelleme/açma, şifre sıfırlama, yasal temsilciyi belirleme ve silme. Kendi kullanıcın «Tú» (Sen) ile işaretlenir ve kendi üzerinde yıkıcı işlemleri yoktur."
+    },
+    {
+     "t": "p",
+     "text": "Her kişinin satırındaki «Düzenle» ile ad, telefon ve rolü değiştirir, gerekirse yeni bir şifre atarsın (en az 8 karakter). E-posta değiştirilemez. Kişinin başka kliniklerde hesapları varsa ad ve telefon değişiklikleri yalnızca bu kliniği etkiler."
     },
     {
      "t": "legend",
@@ -767,10 +1261,11 @@
      "items": [],
      "caption": "Kullanıcı ekleme formu."
     }
-   ]
+   ],
+   "key": "users"
   },
   {
-   "id": "2.12",
+   "id": "2.16",
    "title": "Aşamalar: protokolü yapılandırma (yasal temsilci)",
    "blocks": [
     {
@@ -789,11 +1284,26 @@
     {
      "t": "note",
      "text": "Yapılandırmayı istediğin zaman değiştirebilirsin: mevcut fotoğraflar silinmez, yalnızca artık istenmezler."
+    },
+    {
+     "t": "h3",
+     "text": "Muayene türleri (dermatoloji)",
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Dermatolojide Aşamalar, her muayene türü için ayrı yapılandırılan bir sekme gösterir. Tür çubuğundan hazır bir şablonu (lezyonlar, akne, lekeler, biyopsi) açabilir, kendi türünü oluşturabilir, yeniden adlandırabilir veya devre dışı bırakabilirsin. «Genel muayene» her zaman vardır ve en fazla 12 tür olabilir. Bunları yalnızca yasal temsilci yönetebilir.",
+     "only": [
+      "dermatologia"
+     ]
     }
-   ]
+   ],
+   "key": "phasesconfig"
   },
   {
-   "id": "2.13",
+   "id": "2.17",
    "title": "Telefondan kullanım",
    "blocks": [
     {
@@ -824,10 +1334,35 @@
       "WhatsApp ile iletişim."
      ]
     }
+   ],
+   "key": "phone"
+  },
+  {
+   "id": "2.18",
+   "key": "support",
+   "title": "Destek biletleri",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Yardım › Destek bölümünde Clinivista ekibinden yardım istemek için bilet açabilirsin. Kliniğin her kullanıcısı bunu yapabilir: «Bilet aç» düğmesine bas, konuyu ve mesajını yaz. Aynı anda yalnızca bir aktif biletin olabilir."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "«Beklemede»: bilet ulaştı ve henüz kimse ilgilenmiyor.",
+      "«İlgileniliyor»: Clinivista'dan biri ilgileniyor («İlgilenen»); aynı bilet üzerinden yazışabilirsiniz.",
+      "«Çözüldü · değerlendirmeniz bekleniyor»: ekip çözdü; 1 ile 5 yıldız arasında puanla, isteğe bağlı yorum ekle ve «Değerlendirmeyi gönder ve kapat» düğmesine bas.",
+      "«Kapalı»: bilet, değerlendirmenle birlikte kapanır."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Önceki biletler değerlendirmeleriyle birlikte «Önceki biletler» bölümünde kalır."
+    }
    ]
   },
   {
-   "id": "2.14",
+   "id": "2.19",
    "title": "İpuçları ve sorun giderme",
    "blocks": [
     {
@@ -841,10 +1376,25 @@
        "Hasta listede görünmüyor.",
        "Aramayı ve durum filtresini kontrol et: biri etkinse «Todos los estados»e dön."
       ],
-      [
-       "Teşhisi kapatamıyorum.",
-       "Hastanın ön değerlendirmesini (5/5) tamamlamış olması gerekir. Yalnızca doktor rolü kapatabilir."
-      ],
+      {
+       "only": [
+        "capilar",
+        "plastica"
+       ],
+       "cells": [
+        "Teşhisi kapatamıyorum.",
+        "Hastanın ön değerlendirmesini (5/5) tamamlamış olması gerekir. Yalnızca doktor rolü kapatabilir."
+       ]
+      },
+      {
+       "only": [
+        "dermatologia"
+       ],
+       "cells": [
+        "Teşhisi kapatamıyorum.",
+        "Hastanın ön değerlendirmesini (3/3) tamamlamış olması gerekir. Yalnızca doktor rolü kapatabilir."
+       ]
+      },
       [
        "E-posta gönderilmiyor.",
        "Gönderimin yapılandırılmadığı uyarısı çıkıyorsa teknik yöneticiye bildir; bu arada WhatsApp'ı kullan."
@@ -860,6 +1410,14 @@
       [
        "Şifremi unuttum.",
        "Girişteki «Şifrenizi mi unuttunuz?» seçeneğini kullan veya yetkili birinden sıfırlamasını iste."
+      ],
+      [
+       "Tüm kliniklerimi göremiyorum ya da başka bir kliniğin hastalarını görüyorum.",
+       "Her klinik ayrı bir hesaptır: menüden «Klinik değiştir» seçeneğini kullan veya o kliniğin şifresiyle gir."
+      ],
+      [
+       "Tıbbi taburcuyu nasıl vereceğimi bulamıyorum.",
+       "Yalnızca doktor rolü bunu etkin görür, tanı hazır olduktan sonra: dosyada «Tıbbi taburcu» seçeneğini ara."
       ]
      ],
      "widths": [
@@ -871,7 +1429,8 @@
      "t": "tip",
      "text": "Ortak cihazlarda oturumunu her zaman kapat ve şifreni paylaşma: her işlem adınla kaydedilir."
     }
-   ]
+   ],
+   "key": "tips"
   }
  ]
 }

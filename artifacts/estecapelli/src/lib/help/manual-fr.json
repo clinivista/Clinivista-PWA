@@ -19,6 +19,22 @@
       "Barre de progression : Accueil → Données → Photographies. Vous savez toujours à quelle étape vous en êtes.",
       "Durée estimée du parcours (4 à 6 minutes).",
       "Ce qu'il comprend : données personnelles, cinq photographies guidées et l'examen médical confidentiel."
+     ],
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Sélecteur de langue.",
+      "Barre de progression : Accueil → Données → Photographies. Vous savez toujours à quelle étape vous en êtes.",
+      "Durée estimée du parcours (4 à 6 minutes).",
+      "Ce qu'il comprend : données personnelles, trois photographies guidées et l'examen médical confidentiel."
+     ],
+     "only": [
+      "dermatologia"
      ]
     },
     {
@@ -29,7 +45,8 @@
      ],
      "caption": "Changement de langue."
     }
-   ]
+   ],
+   "key": "entry"
   },
   {
    "id": "1.2",
@@ -54,7 +71,8 @@
      "t": "note",
      "text": "Les données d'exemple de ce manuel sont fictives."
     }
-   ]
+   ],
+   "key": "data"
   },
   {
    "id": "1.3",
@@ -62,7 +80,10 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Racontez-nous brièvement votre historique : depuis quand vous remarquez la perte de cheveux, où elle se concentre, quels traitements vous avez utilisés, si vous avez des symptômes et si vous avez déjà eu une greffe. Ce sont des informations de base pour que l'équipe médicale comprenne votre cas ; les champs facultatifs peuvent rester vides."
+     "text": "Racontez-nous brièvement votre historique : depuis quand vous remarquez la perte de cheveux, où elle se concentre, quels traitements vous avez utilisés, si vous avez des symptômes et si vous avez déjà eu une greffe. Ce sont des informations de base pour que l'équipe médicale comprenne votre cas ; les champs facultatifs peuvent rester vides.",
+     "only": [
+      "capilar"
+     ]
     },
     {
      "t": "legend",
@@ -72,6 +93,54 @@
       "Traitements que vous avez utilisés contre la chute.",
       "Symptômes associés (facultatif, texte libre).",
       "Greffes antérieures (facultatif)."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Indiquez brièvement quelle intervention vous intéresse, ce que vous aimeriez améliorer, quand vous souhaiteriez être opéré(e), vos chirurgies antérieures, maladies, médicaments ou allergies, et si vous fumez. Ce sont des informations de base pour que l'équipe médicale comprenne votre cas ; les champs facultatifs peuvent rester vides.",
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Quelle intervention vous intéresse ?",
+      "Qu'aimeriez-vous améliorer ?",
+      "Quand souhaitez-vous vous faire opérer ?",
+      "Chirurgies antérieures",
+      "Maladies ou conditions médicales",
+      "Médicaments et allergies",
+      "Fumez-vous ?"
+     ],
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Indiquez brièvement ce qui vous préoccupe, sur quelle zone du corps, depuis quand c'est apparu, si cela a changé, vos antécédents, médicaments ou traitements antérieurs, votre exposition au soleil et votre type de peau. Ce sont des informations de base pour que l'équipe médicale comprenne votre cas ; les champs facultatifs peuvent rester vides.",
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Qu'est-ce qui vous préoccupe ?",
+      "Sur quelle zone du corps ?",
+      "Depuis quand est-ce apparu ?",
+      "Y a-t-il eu des changements récents ?",
+      "Antécédents",
+      "Médicaments et traitements antérieurs",
+      "Exposition au soleil",
+      "Type de peau"
+     ],
+     "only": [
+      "dermatologia"
      ]
     },
     {
@@ -87,7 +156,8 @@
       "Continuer vers Photographies (le bouton s'active quand vous acceptez le consentement)."
      ]
     }
-   ]
+   ],
+   "key": "history"
   },
   {
    "id": "1.4",
@@ -95,7 +165,24 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Nous avons besoin de cinq prises de vue standardisées : vue de face, vertex ou sommet du crâne, tempe droite, tempe gauche et zone donneuse (nuque). Chaque prise a un guide de positionnement avec l'orientation, la lumière, la distance et le fond recommandés. Lisez-le avant de photographier et demandez de l'aide à quelqu'un si c'est difficile de vous prendre en photo vous-même."
+     "text": "Nous avons besoin de cinq prises de vue standardisées : vue de face, vertex ou sommet du crâne, tempe droite, tempe gauche et zone donneuse (nuque). Chaque prise a un guide de positionnement avec l'orientation, la lumière, la distance et le fond recommandés. Lisez-le avant de photographier et demandez de l'aide à quelqu'un si c'est difficile de vous prendre en photo vous-même.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Nous avons besoin de cinq prises standardisées : vue de face, profil droit, profil gauche, oblique droite et oblique gauche. Chaque prise a un guide de position avec l'orientation, la lumière, la distance et le fond recommandés. Lisez-le avant de photographier et demandez de l'aide à quelqu'un si vous avez du mal à la faire vous-même.",
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Nous avons besoin de trois prises standardisées : une vue panoramique de la zone, un gros plan avec une référence de taille et la dermoscopie (si votre clinique l'utilise). Chaque prise a un guide de position avec l'orientation, la lumière, la distance et le fond recommandés. Lisez-le avant de photographier et demandez de l'aide à quelqu'un si vous avez du mal à la faire vous-même.",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "legend",
@@ -105,6 +192,23 @@
       "Progression : photo 1 sur 5 et barre d'avancement.",
       "Guide de positionnement : orientation, lumière, distance et fond.",
       "Description de la prise de vue et zone pour photographier ou importer l'image."
+     ],
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Retour : revient à vos données.",
+      "Quitter : abandonne la capture (votre progression est enregistrée).",
+      "Progression : photo 1 sur 3 et barre d'avancement.",
+      "Guide de positionnement : orientation, lumière, distance et fond.",
+      "Description de la prise de vue et zone pour photographier ou importer l'image."
+     ],
+     "only": [
+      "dermatologia"
      ]
     },
     {
@@ -113,7 +217,18 @@
     },
     {
      "t": "p",
-     "text": "Appuyez sur «Prendre une photo». Le téléphone demandera l'autorisation d'utiliser l'appareil photo : acceptez. Vous verrez un aperçu avec un cadre de référence ; placez la tête dans le cadre comme l'indique le guide et appuyez sur le bouton rond blanc. Avec «Annuler», vous quittez sans photographier et, avec l'icône de rotation, vous pouvez passer de la caméra avant à la caméra arrière."
+     "text": "Appuyez sur «Prendre une photo». Le téléphone demandera l'autorisation d'utiliser l'appareil photo : acceptez. Vous verrez un aperçu avec un cadre de référence ; placez la tête dans le cadre comme l'indique le guide et appuyez sur le bouton rond blanc. Avec «Annuler», vous quittez sans photographier et, avec l'icône de rotation, vous pouvez passer de la caméra avant à la caméra arrière.",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Appuyez sur «Prendre une photo». Le téléphone demandera l'autorisation d'utiliser l'appareil photo : acceptez. Vous verrez un aperçu avec un cadre de référence ; placez la zone dans le cadre comme l'indique le guide et appuyez sur le bouton rond blanc. Avec «Annuler», vous quittez sans photographier et, avec l'icône de rotation, vous pouvez passer de la caméra avant à la caméra arrière.",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "legend",
@@ -130,7 +245,24 @@
     },
     {
      "t": "p",
-     "text": "Après la prise de vue, l'application vérifie la qualité de la photo (résolution, exposition, contraste et netteté) et vous montre des recommandations si quelque chose peut être amélioré. Ce sont des indications techniques, elles n'interprètent pas de caractéristiques médicales. Vous pouvez écrire une description facultative de 500 caractères maximum (par exemple, «je remarque moins de cheveux au niveau des golfes temporaux»). Si la photo vous convient, appuyez sur «Utiliser cette photo» ; sinon, refaites-la."
+     "text": "Après la prise de vue, l'application vérifie la qualité de la photo (résolution, exposition, contraste et netteté) et vous montre des recommandations si quelque chose peut être amélioré. Ce sont des indications techniques, elles n'interprètent pas de caractéristiques médicales. Vous pouvez écrire une description facultative de 500 caractères maximum (par exemple, «je remarque moins de cheveux au niveau des golfes temporaux»). Si la photo vous convient, appuyez sur «Utiliser cette photo» ; sinon, refaites-la.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Après la prise de vue, l'application vérifie la qualité de la photo (résolution, exposition, contraste et netteté) et vous montre des recommandations si quelque chose peut être amélioré. Ce sont des indications techniques, elles n'interprètent pas de caractéristiques médicales. Vous pouvez écrire une description facultative de 500 caractères maximum (par exemple, «je souhaite un nez plus harmonieux avec mon visage»). Si la photo vous convient, appuyez sur «Utiliser cette photo» ; sinon, refaites-la.",
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Après la prise de vue, l'application vérifie la qualité de la photo (résolution, exposition, contraste et netteté) et vous montre des recommandations si quelque chose peut être amélioré. Ce sont des indications techniques, elles n'interprètent pas de caractéristiques médicales. Vous pouvez écrire une description facultative de 500 caractères maximum (par exemple, «ça gratte et ça a grandi ces dernières semaines»). Si la photo vous convient, appuyez sur «Utiliser cette photo» ; sinon, refaites-la.",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "legend",
@@ -147,7 +279,11 @@
      "t": "tip",
      "text": "Si vous préférez ne pas utiliser l'appareil photo à ce moment-là, «Importer une autre photo» vous permet de choisir une image de votre galerie. Le fichier d'origine est conservé sans être réduit."
     }
-   ]
+   ],
+   "key": "photos",
+   "titles": {
+    "dermatologia": "Les trois photographies guidées"
+   }
   },
   {
    "id": "1.5",
@@ -155,7 +291,18 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Après chaque photo apparaît le message «Progression enregistrée» : votre progression est sauvegardée automatiquement. Avancez prise par prise jusqu'à compléter les cinq. Quand vous avez terminé, le récapitulatif affiche les miniatures ; à partir de chacune, vous pouvez reprendre la photo, ouvrir les réglages techniques de l'image ou en importer une autre. Le bouton d'envoi s'active à 5/5."
+     "text": "Après chaque photo apparaît le message «Progression enregistrée» : votre progression est sauvegardée automatiquement. Avancez prise par prise jusqu'à compléter les cinq. Quand vous avez terminé, le récapitulatif affiche les miniatures ; à partir de chacune, vous pouvez reprendre la photo, ouvrir les réglages techniques de l'image ou en importer une autre. Le bouton d'envoi s'active à 5/5.",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Après chaque photo apparaît le message «Progression enregistrée» : votre progression est sauvegardée automatiquement. Avancez prise par prise jusqu'à compléter les trois. Quand vous avez terminé, le récapitulatif affiche les miniatures ; à partir de chacune, vous pouvez reprendre la photo, ouvrir les réglages techniques de l'image ou en importer une autre. Le bouton d'envoi s'active à 3/5.",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "legend",
@@ -165,6 +312,23 @@
       "Importer une autre photo depuis la galerie.",
       "Miniatures des cinq prises, chacune avec son lien pour la reprendre.",
       "Envoyer l'évaluation (5/5) : envoie tout à l'équipe médicale."
+     ],
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Reprendre la photo de la prise en cours.",
+      "Réglages techniques de l'image.",
+      "Importer une autre photo depuis la galerie.",
+      "Miniatures des trois prises, chacune avec son lien pour la reprendre.",
+      "Envoyer l'évaluation (3/3) : envoie tout à l'équipe médicale."
+     ],
+     "only": [
+      "dermatologia"
      ]
     },
     {
@@ -175,7 +339,8 @@
       "Retour à l'Accueil."
      ]
     }
-   ]
+   ],
+   "key": "submit"
   },
   {
    "id": "1.6",
@@ -218,7 +383,8 @@
      "t": "note",
      "text": "Ne communiquez jamais votre mot de passe. La clinique ne vous le demandera ni par message ni par téléphone."
     }
-   ]
+   ],
+   "key": "account"
   },
   {
    "id": "1.7",
@@ -261,7 +427,8 @@
       62
      ]
     }
-   ]
+   ],
+   "key": "faq"
   }
  ],
  "staff": [
@@ -297,14 +464,40 @@
        "✔"
       ],
       [
-       "Diagnostic : annoter les photos, Norwood, notes, réponse, clôturer et rouvrir",
+       "Ajouter des patients et passer des étapes",
        "✔",
-       "Lecture seule"
+       "✔"
       ],
+      {
+       "only": [
+        "capilar"
+       ],
+       "cells": [
+        "Diagnostic : annoter les photos, Norwood, notes, réponse, clôturer et rouvrir",
+        "✔",
+        "Lecture seule"
+       ]
+      },
+      {
+       "only": [
+        "plastica",
+        "dermatologia"
+       ],
+       "cells": [
+        "Diagnostic : annoter les photos, notes, réponse, clôturer et rouvrir",
+        "✔",
+        "Lecture seule"
+       ]
+      },
       [
        "Envoyer les résultats (PDF par e-mail ou WhatsApp) et Évolution",
        "✔",
        "✔"
+      ],
+      [
+       "Donner la sortie médicale et rouvrir le parcours",
+       "✔",
+       "—"
       ],
       [
        "Voir le Rapport des dossiers en attente",
@@ -316,9 +509,29 @@
        "Représentant légal uniquement",
        "Représentant légal uniquement"
       ],
+      {
+       "only": [
+        "dermatologia"
+       ],
+       "cells": [
+        "Gérer les types de consultation",
+        "Représentant légal uniquement",
+        "Représentant légal uniquement"
+       ]
+      },
+      [
+       "Modifier les données des autres utilisateurs (nom, téléphone, rôle, mot de passe)",
+       "S'il est représentant légal",
+       "✔"
+      ],
       [
        "Gérer les Utilisateurs (créer, bloquer, réinitialiser, supprimer)",
        "S'il est représentant légal",
+       "✔"
+      ],
+      [
+       "Ouvrir des tickets d'assistance et les évaluer",
+       "✔",
        "✔"
       ]
      ],
@@ -336,7 +549,8 @@
      "t": "note",
      "text": "Les captures d'écran de ce manuel correspondent à la clinique fictive «Clínica Aurora». Les photographies sont des illustrations synthétiques, pas de vraies personnes."
     }
-   ]
+   ],
+   "key": "roles"
   },
   {
    "id": "2.2",
@@ -357,7 +571,7 @@
     },
     {
      "t": "p",
-     "text": "Pour le récupérer, appuyez sur «Mot de passe oublié ?», saisissez votre e-mail et vous recevrez un lien pour en choisir un nouveau. Le lien expire : s'il a déjà expiré, demandez-en un autre. Si vous n'avez pas accès à votre e-mail, une autre personne disposant des droits peut réinitialiser votre mot de passe depuis Utilisateurs (section 2.11)."
+     "text": "Pour le récupérer, appuyez sur «Mot de passe oublié ?», saisissez votre e-mail et vous recevrez un lien pour en choisir un nouveau. Le lien expire : s'il a déjà expiré, demandez-en un autre. Si vous n'avez pas accès à votre e-mail, une autre personne disposant des droits peut réinitialiser votre mot de passe depuis Utilisateurs (section {§users})."
     },
     {
      "t": "legend",
@@ -375,10 +589,38 @@
      ],
      "caption": "Écran qui s'ouvre depuis le lien de l'e-mail."
     }
-   ]
+   ],
+   "key": "login"
   },
   {
    "id": "2.3",
+   "key": "clinics",
+   "title": "Plusieurs cliniques avec le même e-mail",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Si vous travaillez dans plusieurs cliniques Clinivista, chaque clinique a son propre compte avec votre même e-mail. Chaque compte peut avoir son propre mot de passe et son propre rôle (médecin ou administratif) et n'affiche que les patients de cette clinique."
+    },
+    {
+     "t": "p",
+     "text": "À la connexion, si le mot de passe correspond à plusieurs comptes, l'écran «Dans quelle clinique voulez-vous entrer ?» liste vos cliniques : choisissez-en une et appuyez sur «Entrer». S'il ne correspond qu'à un seul, vous entrez directement."
+    },
+    {
+     "t": "p",
+     "text": "Pour passer à une autre clinique sans vous déconnecter, utilisez «Changer de clinique» dans le menu. Si vous vous connectez avec un autre mot de passe, vous entrerez dans la clinique correspondante."
+    },
+    {
+     "t": "note",
+     "text": "Si vous réinitialisez votre mot de passe avec «Mot de passe oublié ?», vous pouvez choisir les cliniques concernées (une case par clinique) ; celles que vous ne cochez pas gardent leur ancien mot de passe."
+    },
+    {
+     "t": "tip",
+     "text": "Les directeurs de Clinivista peuvent entrer dans n'importe quelle clinique comme médecin et administratif ; à l'intérieur, ils voient l'avis «Vous êtes dans … en tant que directeur» avec un bouton pour revenir au supra-contrôle."
+    }
+   ]
+  },
+  {
+   "id": "2.4",
    "title": "Le tableau de bord des patients",
    "blocks": [
     {
@@ -400,7 +642,18 @@
     },
     {
      "t": "p",
-     "text": "Les cartes du haut comptent les patients par statut (total, incomplet, prêt pour examen, prêt à contacter, opéré…) et servent de synthèse rapide. Le tableau affiche le nom, le téléphone, le statut, le nombre de photos de la pré-évaluation (par exemple 5/5) et la date d'inscription."
+     "text": "Les cartes du haut comptent les patients par statut (total, incomplet, prêt pour examen, prêt à contacter, opéré…) et servent de synthèse rapide. Le tableau affiche le nom, le téléphone, le statut, le nombre de photos de la pré-évaluation (par exemple 5/5) et la date d'inscription.",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Les cartes du haut comptent les patients par statut (total, incomplet, prêt pour examen, prêt à contacter, traité…) et servent de synthèse rapide. Le tableau affiche le nom, le téléphone, le statut, le nombre de photos de la pré-évaluation (par exemple 3/3) et la date d'inscription.",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "h3",
@@ -433,10 +686,64 @@
      "items": [],
      "caption": "Fenêtre avec le lien de la clinique."
     }
+   ],
+   "key": "panel"
+  },
+  {
+   "id": "2.5",
+   "key": "addpatient",
+   "title": "Ajouter un patient",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Utilisez «Ajouter un patient» (bouton du tableau des patients) pour enregistrer une personne reçue à la clinique sans passer par le lien de saisie. Les champs obligatoires sont «Nom complet», «Pièce d'identité (RUT)» et «Téléphone» ; l'e-mail et la ville sont facultatifs."
+    },
+    {
+     "t": "p",
+     "text": "Vous devez cocher que le patient a donné son consentement (en personne ou par écrit) : qui l'a confirmé et quand est enregistré, et sans cette case l'enregistrement est impossible. Si vous le souhaitez, cochez aussi «Envoyer au patient par e-mail l'accès à son portail»."
+    },
+    {
+     "t": "p",
+     "text": "Si la pièce d'identité existe déjà dans la clinique, le système le signale et propose «Ouvrir la fiche existante» pour éviter les doublons. À l'enregistrement, la fiche s'ouvre et le personnel y saisit les photos de la pré-évaluation."
+    },
+    {
+     "t": "p",
+     "text": "En dermatologie, le formulaire comprend aussi «Type de consultation» : choisissez le type selon le motif de la visite (par défaut «Consultation générale»). Détails à la section {§consults}.",
+     "only": [
+      "dermatologia"
+     ]
+    }
    ]
   },
   {
-   "id": "2.4",
+   "id": "2.6",
+   "key": "consults",
+   "title": "Types de consultation et plusieurs consultations par patient",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Chaque clinique de dermatologie travaille avec des types de consultation. «Consultation générale» (la base) existe toujours ; la clinique peut aussi activer des modèles prêts à l'emploi (par exemple lésions, acné, taches ou biopsie) ou créer ses propres types. Chaque type a ses propres phases et photos, configurées à la section {§phasesconfig}."
+    },
+    {
+     "t": "p",
+     "text": "Un patient n'a qu'une seule fiche mais peut avoir plusieurs consultations de types différents. Dans la fiche, la bande «Consultations de ce patient» affiche un onglet par consultation ; avec «Ajouter une autre consultation» vous choisissez le type et une nouvelle est créée."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Chaque consultation a ses propres photos, phases, diagnostic, statut et sortie médicale.",
+      "La liste des patients n'affiche qu'une ligne par personne, avec le type de consultation et leur nombre.",
+      "Les consultations supplémentaires ne comptent pas comme de nouveaux patients dans les statistiques.",
+      "Si vous supprimez la fiche principale, ses consultations supplémentaires sont supprimées aussi."
+     ]
+    }
+   ],
+   "only": [
+    "dermatologia"
+   ]
+  },
+  {
+   "id": "2.7",
    "title": "Statuts du patient",
    "blocks": [
     {
@@ -470,13 +777,32 @@
        "Contacté",
        "Le patient a été contacté mais aucun rendez-vous n'a été pris («Contacté, sans rendez-vous»)."
       ],
-      [
-       "Opéré",
-       "A terminé la phase post-opératoire."
-      ],
+      {
+       "only": [
+        "capilar",
+        "plastica"
+       ],
+       "cells": [
+        "Opéré",
+        "A terminé la phase post-opératoire."
+       ]
+      },
+      {
+       "only": [
+        "dermatologia"
+       ],
+       "cells": [
+        "Traité",
+        "A terminé la phase de traitement."
+       ]
+      },
       [
        "Traitement terminé",
        "Toutes les phases du protocole sont complètes."
+      ],
+      [
+       "Sortie médicale",
+       "Le médecin a donné la sortie médicale ; elle peut être rouverte."
       ],
       [
        "Clôturé",
@@ -488,10 +814,11 @@
       70
      ]
     }
-   ]
+   ],
+   "key": "states"
   },
   {
-   "id": "2.5",
+   "id": "2.8",
    "title": "Le dossier du patient",
    "blocks": [
     {
@@ -518,36 +845,99 @@
     },
     {
      "t": "p",
-     "text": "Sous le cadre de gestion se trouve le Suivi photographique avec les photos de la pré-évaluation (combien sur combien, par exemple 5/5). Touchez une photo pour l'agrandir."
+     "text": "Sous le cadre de gestion se trouve le Suivi photographique avec les photos de la pré-évaluation (combien sur combien, par exemple 5/5). Touchez une photo pour l'agrandir.",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Sous le cadre de gestion se trouve le Suivi photographique avec les photos de la pré-évaluation (combien sur combien, par exemple 3/3). Touchez une photo pour l'agrandir.",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "legend",
      "items": [
       "Suivi photographique : les cinq prises de vue du patient avec leur compteur."
+     ],
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Suivi photographique : les trois prises de vue du patient avec leur compteur."
+     ],
+     "only": [
+      "dermatologia"
      ]
     }
-   ]
+   ],
+   "key": "ficha"
   },
   {
-   "id": "2.6",
+   "id": "2.9",
    "title": "Parcours par phases",
    "blocks": [
     {
      "t": "p",
-     "text": "Le suivi s'organise en phases : pré-évaluation, diagnostic, pré-opératoire, post-opératoire et deux contrôles médicaux. Chaque phase s'ouvre quand la précédente est terminée, et ce qui manque apparaît verrouillé avec un message (par exemple «S'ouvre une fois “Diagnostic” terminée»). Les noms et les photos demandées dans chaque phase se configurent dans la section Phases (2.12)."
+     "text": "Le suivi s'organise en phases : pré-évaluation, diagnostic, pré-opératoire, post-opératoire et deux contrôles médicaux. Chaque phase s'ouvre quand la précédente est terminée, et ce qui manque apparaît verrouillé avec un message (par exemple «S'ouvre une fois “Diagnostic” terminée»). Les noms et les photos demandées dans chaque phase se configurent dans la section Phases ({§phasesconfig}).",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Le suivi s'organise en phases : pré-évaluation, diagnostic, traitement et deux contrôles. Chaque phase s'ouvre quand la précédente est terminée, et ce qui manque apparaît verrouillé avec un avis (par exemple «S'ouvre à la fin du diagnostic»). Les noms et les photos demandées à chaque phase se configurent dans la section Phases ({§phasesconfig}) ; chaque type de consultation a les siennes.",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "legend",
      "items": [
       "Titre de la section et sa règle : chaque phase s'ouvre une fois la précédente terminée.",
       "Pré-évaluation : réalisée par le patient depuis le lien ; ici on ne voit que l'avancement (5/5).",
-      "Diagnostic : travaillé par le médecin (section 2.7).",
+      "Diagnostic : travaillé par le médecin (section {§diagnosis}).",
       "Statut de la phase : Ouvert, Clôturé ou verrouillé."
+     ],
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Titre de la section et sa règle : chaque phase s'ouvre une fois la précédente terminée.",
+      "Pré-évaluation : réalisée par le patient depuis le lien ; ici on ne voit que l'avancement (3/3).",
+      "Diagnostic : travaillé par le médecin (section {§diagnosis}).",
+      "Statut de la phase : Ouvert, Clôturé ou verrouillé."
+     ],
+     "only": [
+      "dermatologia"
      ]
     },
     {
      "t": "p",
-     "text": "Dans les phases enregistrées par le personnel (pré-opératoire, post-opératoire et contrôles), chaque zone a une carte avec trois actions : Prendre une photo (ouvre l'appareil photo de l'appareil avec le cadre-guide), Téléverser (choisit une image sur l'appareil) et, lorsqu'il y a déjà une photo, Reprendre ou Supprimer. L'avancement de la phase s'affiche sous forme de compteur (0/5, 5/5)."
+     "text": "Dans les phases enregistrées par le personnel (pré-opératoire, post-opératoire et contrôles), chaque zone a une carte avec trois actions : Prendre une photo (ouvre l'appareil photo de l'appareil avec le cadre-guide), Téléverser (choisit une image sur l'appareil) et, lorsqu'il y a déjà une photo, Reprendre ou Supprimer. L'avancement de la phase s'affiche sous forme de compteur (0/5, 5/5).",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Dans les phases saisies par le personnel (traitement et contrôles), chaque zone a une carte avec trois actions : Prendre une photo (ouvre l'appareil photo avec le cadre guide), Téléverser (choisir une image de l'appareil) et, quand il y a déjà une photo, Refaire ou Supprimer. L'avancement de la phase s'affiche sous forme de compteur (0/3, 3/3).",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "legend",
@@ -557,12 +947,61 @@
       "Envoyer par e-mail.",
       "Envoyer par WhatsApp."
      ],
-     "caption": "Sous le diagnostic : envoi des résultats et phase pré-opératoire (0/5) avec ses cartes «Prendre une photo» / «Téléverser»."
+     "caption": "Sous le diagnostic : envoi des résultats et phase pré-opératoire (0/5) avec ses cartes «Prendre une photo» / «Téléverser».",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Rouvrir le diagnostic.",
+      "Voir le PDF : affiche un aperçu du rapport.",
+      "Envoyer par e-mail.",
+      "Envoyer par WhatsApp."
+     ],
+     "caption": "Sous le diagnostic : envoi des résultats et phase de traitement (0/3) avec ses cartes «Prendre une photo» / «Téléverser».",
+     "only": [
+      "dermatologia"
+     ]
+    }
+   ],
+   "key": "phases"
+  },
+  {
+   "id": "2.10",
+   "key": "skipdischarge",
+   "title": "Passer des étapes et sortie médicale",
+   "blocks": [
+    {
+     "t": "h3",
+     "text": "Passer l'étape"
+    },
+    {
+     "t": "p",
+     "text": "Quand une étape ne s'applique pas (par exemple, le patient apporte déjà une évaluation d'une autre clinique), appuyez sur «Passer l'étape» pour cette étape. Vous devez saisir le «Motif (obligatoire)» ; l'étape est marquée «Passée» et le parcours passe à la suivante. Seule l'étape ouverte et non terminée peut être passée."
+    },
+    {
+     "t": "p",
+     "text": "En cas d'erreur, appuyez sur «Annuler» et l'étape redevient en attente."
+    },
+    {
+     "t": "h3",
+     "text": "Sortie médicale"
+    },
+    {
+     "t": "p",
+     "text": "Quand le traitement est terminé, le médecin appuie sur «Donner la sortie médicale» dans la fiche (disponible à partir du diagnostic), avec une note facultative. Le patient passe au statut «Sortie médicale» et le parcours est clos. Seul le médecin peut le faire ; les administratifs le voient en lecture seule."
+    },
+    {
+     "t": "p",
+     "text": "S'il faut reprendre le dossier, le médecin utilise «Rouvrir le parcours» et le patient retrouve le statut correspondant à son avancement."
     }
    ]
   },
   {
-   "id": "2.7",
+   "id": "2.11",
    "title": "Diagnostic (médecins)",
    "blocks": [
     {
@@ -609,11 +1048,17 @@
     },
     {
      "t": "h3",
-     "text": "Étape 2 · Norwood, notes et réponse"
+     "text": "Étape 2 · Norwood, notes et réponse",
+     "only": [
+      "capilar"
+     ]
     },
     {
      "t": "p",
-     "text": "Choisissez l'échelle de Norwood (ou laissez «Non concluant»), écrivez vos notes cliniques (internes) et la réponse que recevra le patient (jusqu'à 8 000 caractères). «Enregistrer le brouillon» conserve votre travail sans le clôturer : vous pouvez y revenir plus tard."
+     "text": "Choisissez l'échelle de Norwood (ou laissez «Non concluant»), écrivez vos notes cliniques (internes) et la réponse que recevra le patient (jusqu'à 8 000 caractères). «Enregistrer le brouillon» conserve votre travail sans le clôturer : vous pouvez y revenir plus tard.",
+     "only": [
+      "capilar"
+     ]
     },
     {
      "t": "legend",
@@ -621,6 +1066,36 @@
       "Échelle de Norwood (Évaluation).",
       "Notes cliniques : seule l'équipe les voit.",
       "Réponse pour le patient : elle figurera dans son rapport PDF."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Étape 2 · Notes et réponse",
+     "only": [
+      "plastica",
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Rédigez vos notes cliniques (internes) et la réponse que le patient recevra (jusqu'à 8 000 caractères). «Enregistrer le brouillon» conserve votre travail sans clôturer : vous pouvez y revenir plus tard.",
+     "only": [
+      "plastica",
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "legend",
+     "items": [
+      "Notes cliniques : seule l'équipe les voit.",
+      "Réponse pour le patient : elle figurera dans son rapport PDF."
+     ],
+     "only": [
+      "plastica",
+      "dermatologia"
      ]
     },
     {
@@ -648,10 +1123,11 @@
      "items": [],
      "caption": "Vue d'un utilisateur administratif : le diagnostic en brouillon peut seulement être consulté."
     }
-   ]
+   ],
+   "key": "diagnosis"
   },
   {
-   "id": "2.8",
+   "id": "2.12",
    "title": "Envoyer les résultats au patient",
    "blocks": [
     {
@@ -667,15 +1143,27 @@
      "items": [],
      "caption": "Deuxième page du rapport de résultats : photographies avec les indications du médecin."
     }
-   ]
+   ],
+   "key": "results"
   },
   {
-   "id": "2.9",
+   "id": "2.13",
    "title": "Évolution : comparer les phases",
    "blocks": [
     {
      "t": "p",
-     "text": "Dans le dossier, la section Évolution compare, côte à côte, la même zone anatomique du patient à chaque phase : pré-évaluation, diagnostic, pré-opératoire, post-opératoire et contrôles. Dans la phase de diagnostic, la photo s'affiche avec les indications du médecin (marquée «Modifiée par l'équipe») ; dans les autres, la photo d'origine."
+     "text": "Dans le dossier, la section Évolution compare, côte à côte, la même zone anatomique du patient à chaque phase : pré-évaluation, diagnostic, pré-opératoire, post-opératoire et contrôles. Dans la phase de diagnostic, la photo s'affiche avec les indications du médecin (marquée «Modifiée par l'équipe») ; dans les autres, la photo d'origine.",
+     "only": [
+      "capilar",
+      "plastica"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Dans la fiche, la section Évolution compare, côte à côte, la même zone du patient à chaque phase : pré-évaluation, diagnostic, traitement et contrôles. À la phase de diagnostic, la photo est affichée avec les annotations du médecin (marquée «Modifiée par l'équipe») ; aux autres, la photo d'origine.",
+     "only": [
+      "dermatologia"
+     ]
     },
     {
      "t": "legend",
@@ -716,10 +1204,11 @@
      "items": [],
      "caption": "Exemple de PDF d'Évolution (une zone, une phase par colonne)."
     }
-   ]
+   ],
+   "key": "evolution"
   },
   {
-   "id": "2.10",
+   "id": "2.14",
    "title": "Rapport des dossiers en attente",
    "blocks": [
     {
@@ -742,15 +1231,20 @@
      "t": "note",
      "text": "Si le serveur n'a pas configuré l'envoi d'e-mails, l'écran l'indique et le rapport ne pourra pas encore être envoyé."
     }
-   ]
+   ],
+   "key": "report"
   },
   {
-   "id": "2.11",
+   "id": "2.15",
    "title": "Utilisateurs de la clinique",
    "blocks": [
     {
      "t": "p",
      "text": "Si vous êtes administratif ou représentant légal, depuis «Utilisateurs» vous gérez les personnes qui utilisent le tableau de bord de votre clinique : les créer, bloquer ou débloquer leur accès, réinitialiser leur mot de passe, définir qui est le représentant légal et les supprimer. Votre propre utilisateur apparaît marqué «Vous» et n'a aucune action destructrice sur lui-même."
+    },
+    {
+     "t": "p",
+     "text": "Avec «Modifier» (sur la ligne de chaque personne), vous changez son nom, son téléphone et son rôle et, si besoin, vous lui attribuez un nouveau mot de passe (8 caractères minimum). L'e-mail ne peut pas être modifié. Si la personne a des comptes dans d'autres cliniques, les changements de nom et de téléphone ne concernent que cette clinique."
     },
     {
      "t": "legend",
@@ -767,10 +1261,11 @@
      "items": [],
      "caption": "Formulaire pour ajouter un utilisateur."
     }
-   ]
+   ],
+   "key": "users"
   },
   {
-   "id": "2.12",
+   "id": "2.16",
    "title": "Phases : configurer le protocole (représentant légal)",
    "blocks": [
     {
@@ -789,11 +1284,26 @@
     {
      "t": "note",
      "text": "Vous pouvez modifier la configuration quand vous voulez : les photographies existantes ne sont pas supprimées, elles ne sont simplement plus demandées."
+    },
+    {
+     "t": "h3",
+     "text": "Types de consultation (dermatologie)",
+     "only": [
+      "dermatologia"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "En dermatologie, Phases affiche un onglet par type de consultation, chacun configuré séparément. Depuis la barre des types, vous pouvez activer un modèle prêt à l'emploi (lésions, acné, taches, biopsie), créer un type propre, le renommer ou le désactiver. La «Consultation générale» existe toujours et il y a au maximum 12 types. Seul le représentant légal peut les gérer.",
+     "only": [
+      "dermatologia"
+     ]
     }
-   ]
+   ],
+   "key": "phasesconfig"
   },
   {
-   "id": "2.13",
+   "id": "2.17",
    "title": "Utilisation depuis le téléphone",
    "blocks": [
     {
@@ -824,10 +1334,35 @@
       "Contacter par WhatsApp."
      ]
     }
+   ],
+   "key": "phone"
+  },
+  {
+   "id": "2.18",
+   "key": "support",
+   "title": "Tickets d'assistance",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Dans Aide › Assistance, vous pouvez ouvrir un ticket pour demander de l'aide à l'équipe Clinivista. Tout utilisateur de la clinique peut le faire : appuyez sur «Ouvrir un ticket», saisissez l'objet et votre message. Vous ne pouvez avoir qu'un seul ticket actif à la fois."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "«En attente» : le ticket est arrivé et personne ne l'a encore pris.",
+      "«En cours de traitement» : une personne de Clinivista s'en occupe («Traité par») ; vous pouvez échanger dans le même ticket.",
+      "«Résolu · votre évaluation est attendue» : l'équipe l'a résolu ; notez-le de 1 à 5 étoiles, avec un commentaire facultatif, et appuyez sur «Envoyer l'évaluation et clore».",
+      "«Clos» : le ticket est clos avec votre évaluation."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Les tickets précédents restent dans «Tickets précédents» avec leur évaluation."
+    }
    ]
   },
   {
-   "id": "2.14",
+   "id": "2.19",
    "title": "Conseils et dépannage",
    "blocks": [
     {
@@ -841,10 +1376,25 @@
        "Le patient n'apparaît pas dans la liste.",
        "Vérifiez la recherche et le filtre de statut : si l'un est actif, revenez à «Tous les statuts»."
       ],
-      [
-       "Je ne peux pas clôturer le diagnostic.",
-       "Le patient doit avoir terminé sa pré-évaluation (5/5). Seul le rôle de médecin peut le clôturer."
-      ],
+      {
+       "only": [
+        "capilar",
+        "plastica"
+       ],
+       "cells": [
+        "Je ne peux pas clôturer le diagnostic.",
+        "Le patient doit avoir terminé sa pré-évaluation (5/5). Seul le rôle de médecin peut le clôturer."
+       ]
+      },
+      {
+       "only": [
+        "dermatologia"
+       ],
+       "cells": [
+        "Je ne peux pas clôturer le diagnostic.",
+        "Le patient doit avoir terminé sa pré-évaluation (3/3). Seul le rôle de médecin peut le clôturer."
+       ]
+      },
       [
        "L'e-mail ne part pas.",
        "Si le message indiquant que l'envoi n'est pas configuré s'affiche, prévenez l'administrateur technique ; en attendant, utilisez WhatsApp."
@@ -860,6 +1410,14 @@
       [
        "J'ai oublié mon mot de passe.",
        "Utilisez «Mot de passe oublié ?» sur l'écran de connexion ou demandez à une autre personne disposant des droits de le réinitialiser."
+      ],
+      [
+       "Je ne vois pas toutes mes cliniques, ou je vois les patients d'une autre.",
+       "Chaque clinique est un compte distinct : utilisez «Changer de clinique» dans le menu ou connectez-vous avec le mot de passe de cette clinique."
+      ],
+      [
+       "Je ne trouve pas comment donner la sortie médicale.",
+       "Seul le rôle médecin la voit active, dès que le diagnostic est disponible : cherchez «Donner la sortie médicale» dans la fiche."
       ]
      ],
      "widths": [
@@ -871,7 +1429,8 @@
      "t": "tip",
      "text": "Déconnectez-vous toujours sur les ordinateurs partagés et ne communiquez pas votre mot de passe : chaque action est consignée sous votre nom."
     }
-   ]
+   ],
+   "key": "tips"
   }
  ]
 }
