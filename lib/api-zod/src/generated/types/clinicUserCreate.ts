@@ -10,6 +10,11 @@ import type { ClinicUserCreateRole } from './clinicUserCreateRole';
 export interface ClinicUserCreate {
   email: string;
   name?: string;
+  /**
+     * Contact phone number of the user (optional).
+     * @maxLength 30
+     */
+  phone?: string;
   /** @minLength 8 */
   password: string;
   role: ClinicUserCreateRole;

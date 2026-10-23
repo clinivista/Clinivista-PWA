@@ -11,6 +11,7 @@ import {
 } from "@workspace/api-zod";
 import { canManageClinicUsers, requireStaffAuth } from "./auth";
 import { clean, uid } from "../lib/helpers";
+import { PHONE_ERROR, parseUserPhone } from "../lib/user-phone";
 import { destroySessionsForUser } from "../lib/sessions";
 import { resetToTemporaryPassword } from "../lib/user-management";
 
@@ -24,6 +25,7 @@ const COLUMNS = {
   id: usersTable.id,
   email: usersTable.email,
   name: usersTable.name,
+  phone: usersTable.phone,
   role: usersTable.role,
   active: usersTable.active,
   legalRepresentative: usersTable.legalRepresentative,
@@ -104,9 +106,15 @@ router.post("/clinic/users", async (req, res): Promise<void> => {
     res.status(409).json({ error: `El correo ${email} ya está en uso.` });
     return;
   }
+  const phone = parseUserPhone(body.data.phone);
+  if (phone === null) {
+    res.status(400).json({ error: PHONE_ERROR });
+    return;
+  }
   const id = uid(9);
   await db.insert(usersTable).values({
     id,
+    phone,
     email,
     emailNormalized,
     passwordHash: hashPassword(body.data.password),
@@ -124,7 +132,8 @@ router.patch("/clinic/users/:userId", async (req, res): Promise<void> => {
   if (!manager) return;
   const params = PatchClinicUserParams.safeParse(req.params);
   const body = PatchClinicUserBody.safeParse(req.body);
-  if (!params.success || !body.success || (body.data.active === undefined && body.data.legalRepresentative === undefined)) {
+  const nothingToChange = body.success && ["active", "legalRepresentative", "name", "phone", "role", "password"].every((key) => body.data[key as keyof typeof body.data] === undefined);
+  if (!params.success || !body.success || nothingToChange) {
     res.status(400).json({ error: "Datos inválidos." });
     return;
   }
@@ -133,15 +142,25 @@ router.patch("/clinic/users/:userId", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Usuario no encontrado en esta clínica." });
     return;
   }
+  const phone = body.data.phone === undefined ? undefined : parseUserPhone(body.data.phone);
+  if (phone === null) {
+    res.status(400).json({ error: PHONE_ERROR });
+    return;
+  }
   const isSelf = user.id === manager.userId;
   if (isSelf && body.data.active === false) {
     res.status(400).json({ error: "No puedes bloquear tu propio acceso." });
     return;
   }
+  if (isSelf && body.data.role !== undefined && body.data.role !== user.role) {
+    res.status(400).json({ error: "No puedes cambiar tu propio rol." });
+    return;
+  }
   // Would this change stop the person from being able to manage users?
   const nextActive = body.data.active ?? user.active;
   const nextLegal = body.data.legalRepresentative ?? user.legalRepresentative;
-  const staysManager = nextActive && (user.role === "administrativo" || nextLegal);
+  const nextRole = body.data.role ?? user.role;
+  const staysManager = nextActive && (nextRole === "administrativo" || nextLegal);
   if (!staysManager && (await wouldLeaveNoManager(manager.centerId, user))) {
     res.status(400).json({ error: NO_MANAGER_LEFT });
     return;
@@ -150,9 +169,16 @@ router.patch("/clinic/users/:userId", async (req, res): Promise<void> => {
   await db.update(usersTable).set({
     ...(body.data.active !== undefined ? { active: body.data.active } : {}),
     ...(body.data.legalRepresentative !== undefined ? { legalRepresentative: body.data.legalRepresentative } : {}),
+    ...(body.data.name !== undefined ? { name: clean(body.data.name, 100) } : {}),
+    ...(phone !== undefined ? { phone } : {}),
+    ...(body.data.role !== undefined ? { role: body.data.role } : {}),
+    ...(body.data.password !== undefined ? { passwordHash: hashPassword(body.data.password) } : {}),
     updatedAt: new Date(),
   }).where(eq(usersTable.id, user.id));
-  if (body.data.active === false) destroySessionsForUser(user.id);
+  // Someone else's new password closes their open sessions (your own stays open).
+  if (body.data.password !== undefined && !isSelf) destroySessionsForUser(user.id);
+  // A new role must not keep working with the old one in an open session.
+  if (body.data.active === false || (body.data.role !== undefined && body.data.role !== user.role)) destroySessionsForUser(user.id);
   const [updated] = await db.select(COLUMNS).from(usersTable).where(eq(usersTable.id, user.id));
   res.json({ ...updated, isSelf });
 });

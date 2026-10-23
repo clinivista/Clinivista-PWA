@@ -9,6 +9,11 @@
 export interface DirectorTeamCreateBody {
   email: string;
   name?: string;
+  /**
+     * Contact phone number of the user (optional).
+     * @maxLength 30
+     */
+  phone?: string;
   /** At least 8 characters. Never stored in plain text. */
   password: string;
 }

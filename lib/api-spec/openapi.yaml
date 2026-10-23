@@ -2709,6 +2709,10 @@ components:
           type: string
         name:
           type: string
+        phone:
+          type: string
+          maxLength: 30
+          description: Contact phone number of the user (optional).
         role:
           type: string
           enum: [medico, administrativo]
@@ -2740,6 +2744,10 @@ components:
           type: string
         name:
           type: string
+        phone:
+          type: string
+          maxLength: 30
+          description: Contact phone number of the user (optional).
         password:
           type: string
           minLength: 8
@@ -2757,6 +2765,23 @@ components:
           description: false blocks the user's access (and closes their open sessions); true restores it.
         legalRepresentative:
           type: boolean
+        name:
+          type: string
+          maxLength: 100
+          description: Display name (the email is the account's identifier and cannot be changed).
+        phone:
+          type: string
+          maxLength: 30
+          description: Contact phone number of the user (optional).
+        password:
+          type: string
+          minLength: 8
+          maxLength: 100
+          description: New password set directly by whoever manages the account; closes the person's open sessions.
+        role:
+          type: string
+          enum: [medico, administrativo]
+          description: Role inside the clinic. Changing it closes the person's open sessions.
 
     DirectorCenterUser:
       type: object
@@ -2768,6 +2793,10 @@ components:
           type: string
         name:
           type: string
+        phone:
+          type: string
+          maxLength: 30
+          description: Contact phone number of the user (optional).
         role:
           type: string
           enum: [medico, administrativo]
@@ -2788,14 +2817,43 @@ components:
         legalRepresentative:
           type: boolean
           description: Marks or unmarks the clinic's legal representative (who may manage the clinic's users).
+        name:
+          type: string
+          maxLength: 100
+          description: Display name (the email is the account's identifier and cannot be changed).
+        phone:
+          type: string
+          maxLength: 30
+          description: Contact phone number of the user (optional).
+        password:
+          type: string
+          minLength: 8
+          maxLength: 100
+          description: New password set directly by whoever manages the account; closes the person's open sessions.
+        role:
+          type: string
+          enum: [medico, administrativo]
+          description: Role inside the clinic. Changing it closes the person's open sessions.
 
     DirectorUserPatch:
       type: object
-      required: [active]
       properties:
         active:
           type: boolean
           description: false blocks the user's access (and closes their open sessions); true restores it.
+        name:
+          type: string
+          maxLength: 100
+          description: Display name (the email is the account's identifier and cannot be changed).
+        phone:
+          type: string
+          maxLength: 30
+          description: Contact phone number of the user (optional).
+        password:
+          type: string
+          minLength: 8
+          maxLength: 100
+          description: New password set directly by whoever manages the account; closes the person's open sessions.
 
     DirectorTeamMember:
       type: object
@@ -2807,6 +2865,10 @@ components:
           type: string
         name:
           type: string
+        phone:
+          type: string
+          maxLength: 30
+          description: Contact phone number of the user (optional).
         role:
           type: string
           enum: [director, supra_admin]
@@ -2824,6 +2886,10 @@ components:
           type: string
         name:
           type: string
+        phone:
+          type: string
+          maxLength: 30
+          description: Contact phone number of the user (optional).
         password:
           type: string
           description: At least 8 characters. Never stored in plain text.
@@ -2867,6 +2933,10 @@ components:
           type: string
         name:
           type: string
+        phone:
+          type: string
+          maxLength: 30
+          description: Contact phone number of the user (optional).
         password:
           type: string
           description: At least 8 characters. Never stored in plain text.

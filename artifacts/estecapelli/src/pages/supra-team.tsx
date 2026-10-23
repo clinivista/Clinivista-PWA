@@ -49,18 +49,18 @@ function SupraTeamBody() {
   const resetPassword = useResetDirectorTeamMemberPassword();
   const createMember = useCreateDirectorTeamMember();
   const [adding, setAdding] = useState(false);
-  const [draft, setDraft] = useState({ name: "", email: "", password: "" });
+  const [draft, setDraft] = useState({ name: "", phone: "", email: "", password: "" });
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: getGetDirectorTeamQueryKey() });
 
   const handleCreate = (event: React.FormEvent) => {
     event.preventDefault();
     createMember.mutate(
-      { data: { email: draft.email.trim(), name: draft.name.trim() || undefined, password: draft.password } },
+      { data: { email: draft.email.trim(), name: draft.name.trim() || undefined, phone: draft.phone.trim() || undefined, password: draft.password } },
       {
         onSuccess: async (created) => {
           await refresh();
-          setDraft({ name: "", email: "", password: "" });
+          setDraft({ name: "", phone: "", email: "", password: "" });
           setAdding(false);
           toast({ title: "Administrativo creado", description: `${created.email} ya puede entrar al panel.` });
         },
@@ -89,13 +89,22 @@ function SupraTeamBody() {
 
       {adding && (
         <form onSubmit={handleCreate} className="flex flex-col gap-3 rounded-2xl bg-[#F5F2EE] p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <Input
               placeholder="Nombre"
               aria-label="Nombre"
               className="h-10 rounded-full bg-white"
               value={draft.name}
               onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))}
+            />
+            <Input
+              type="tel"
+              autoComplete="off"
+              placeholder="Teléfono (opcional)"
+              aria-label="Teléfono"
+              className="h-10 rounded-full bg-white"
+              value={draft.phone}
+              onChange={(event) => setDraft((prev) => ({ ...prev, phone: event.target.value }))}
             />
             <Input
               type="email"
@@ -144,6 +153,10 @@ function SupraTeamBody() {
           manageable={member.role === "supra_admin"}
           setActive={async (active) => {
             await patchMember.mutateAsync({ userId: member.id, data: { active } });
+            await refresh();
+          }}
+          updateProfile={async (changes) => {
+            await patchMember.mutateAsync({ userId: member.id, data: { name: changes.name, phone: changes.phone, password: changes.password } });
             await refresh();
           }}
           resetPassword={async () => (await resetPassword.mutateAsync({ userId: member.id })).temporaryPassword}

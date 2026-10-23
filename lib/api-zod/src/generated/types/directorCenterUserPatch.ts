@@ -5,10 +5,29 @@
  * Estecapelli API — Preevaluación capilar
  * OpenAPI spec version: 0.1.0
  */
+import type { DirectorCenterUserPatchRole } from './directorCenterUserPatchRole';
 
 export interface DirectorCenterUserPatch {
   /** false blocks the user's access (and closes their open sessions); true restores it. */
   active?: boolean;
   /** Marks or unmarks the clinic's legal representative (who may manage the clinic's users). */
   legalRepresentative?: boolean;
+  /**
+     * Display name (the email is the account's identifier and cannot be changed).
+     * @maxLength 100
+     */
+  name?: string;
+  /**
+     * Contact phone number of the user (optional).
+     * @maxLength 30
+     */
+  phone?: string;
+  /**
+     * New password set directly by whoever manages the account; closes the person's open sessions.
+     * @minLength 8
+     * @maxLength 100
+     */
+  password?: string;
+  /** Role inside the clinic. Changing it closes the person's open sessions. */
+  role?: DirectorCenterUserPatchRole;
 }

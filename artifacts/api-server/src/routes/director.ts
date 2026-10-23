@@ -28,6 +28,7 @@ import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
 import { seedSamplePatients } from "../lib/demo-patients";
 import { InvalidLogoError, SLUG_PATTERN, normalizeLogoDataUrl } from "../lib/clinic-identity";
 import { clean, uid } from "../lib/helpers";
+import { PHONE_ERROR, parseUserPhone } from "../lib/user-phone";
 import { destroySessionsForUser } from "../lib/sessions";
 import { resetToTemporaryPassword } from "../lib/user-management";
 
@@ -240,6 +241,7 @@ router.get("/director/centers/:id/users", async (req, res): Promise<void> => {
     id: usersTable.id,
     email: usersTable.email,
     name: usersTable.name,
+    phone: usersTable.phone,
     role: usersTable.role,
     active: usersTable.active,
     legalRepresentative: usersTable.legalRepresentative,
@@ -275,6 +277,11 @@ router.post("/director/centers/:id/users", async (req, res): Promise<void> => {
     return;
   }
 
+  const phone = parseUserPhone(body.data.phone);
+  if (phone === null) {
+    res.status(400).json({ error: PHONE_ERROR });
+    return;
+  }
   const id = uid(9);
   await db.insert(usersTable).values({
     id,
@@ -282,6 +289,7 @@ router.post("/director/centers/:id/users", async (req, res): Promise<void> => {
     emailNormalized,
     passwordHash: hashPassword(body.data.password),
     name: clean(body.data.name ?? "", 100),
+    phone,
     role: body.data.role,
     centerId: params.data.id,
     legalRepresentative: body.data.legalRepresentative === true,
@@ -322,13 +330,14 @@ router.patch("/director/centers/:id/users/:userId", async (req, res): Promise<vo
 
   const params = PatchDirectorCenterUserParams.safeParse(req.params);
   const body = PatchDirectorCenterUserBody.safeParse(req.body);
-  if (!params.success || !body.success || (body.data.active === undefined && body.data.legalRepresentative === undefined)) {
+  const nothingToChange = body.success && ["active", "legalRepresentative", "name", "phone", "role", "password"].every((key) => body.data[key as keyof typeof body.data] === undefined);
+  if (!params.success || !body.success || nothingToChange) {
     res.status(400).json({ error: "Datos inválidos." });
     return;
   }
 
   // Same scoping as the reset: a user of this clinic, never a director/admin.
-  const [user] = await db.select({ id: usersTable.id }).from(usersTable).where(and(
+  const [user] = await db.select({ id: usersTable.id, role: usersTable.role }).from(usersTable).where(and(
     eq(usersTable.id, params.data.userId),
     eq(usersTable.centerId, params.data.id),
     inArray(usersTable.role, [...CLINIC_ROLES]),
@@ -337,10 +346,25 @@ router.patch("/director/centers/:id/users/:userId", async (req, res): Promise<vo
     res.status(404).json({ error: "Usuario no encontrado en esta clínica." });
     return;
   }
-  if (body.data.legalRepresentative !== undefined) {
+  const phone = body.data.phone === undefined ? undefined : parseUserPhone(body.data.phone);
+  if (phone === null) {
+    res.status(400).json({ error: PHONE_ERROR });
+    return;
+  }
+  if (body.data.legalRepresentative !== undefined || body.data.name !== undefined || phone !== undefined || body.data.role !== undefined || body.data.password !== undefined) {
     await db.update(usersTable)
-      .set({ legalRepresentative: body.data.legalRepresentative, updatedAt: new Date() })
+      .set({
+        ...(body.data.legalRepresentative !== undefined ? { legalRepresentative: body.data.legalRepresentative } : {}),
+        ...(body.data.name !== undefined ? { name: clean(body.data.name, 100) } : {}),
+        ...(phone !== undefined ? { phone } : {}),
+        ...(body.data.role !== undefined ? { role: body.data.role } : {}),
+        ...(body.data.password !== undefined ? { passwordHash: hashPassword(body.data.password) } : {}),
+        updatedAt: new Date(),
+      })
       .where(eq(usersTable.id, user.id));
+    if (body.data.password !== undefined) destroySessionsForUser(user.id);
+    // A new role must not keep working with the old one in an open session.
+    if (body.data.role !== undefined && body.data.role !== user.role) destroySessionsForUser(user.id);
   }
   if (body.data.active !== undefined) {
     res.json(await setUserActive(user.id, body.data.active));
@@ -361,6 +385,7 @@ const TEAM_MEMBER_COLUMNS = {
   id: usersTable.id,
   email: usersTable.email,
   name: usersTable.name,
+  phone: usersTable.phone,
   role: usersTable.role,
   active: usersTable.active,
   legalRepresentative: usersTable.legalRepresentative,
@@ -400,6 +425,11 @@ router.post("/director/team", async (req, res): Promise<void> => {
     return;
   }
 
+  const phone = parseUserPhone(body.data.phone);
+  if (phone === null) {
+    res.status(400).json({ error: PHONE_ERROR });
+    return;
+  }
   const id = uid(9);
   await db.insert(usersTable).values({
     id,
@@ -407,6 +437,7 @@ router.post("/director/team", async (req, res): Promise<void> => {
     emailNormalized,
     passwordHash: hashPassword(body.data.password),
     name: clean(body.data.name ?? "", 100),
+    phone,
     role: "supra_admin",
     centerId: null,
   });
@@ -432,7 +463,30 @@ router.patch("/director/team/:userId", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Administrador no encontrado." });
     return;
   }
-  res.json(await setUserActive(member.id, body.data.active));
+  const phone = body.data.phone === undefined ? undefined : parseUserPhone(body.data.phone);
+  if (phone === null) {
+    res.status(400).json({ error: PHONE_ERROR });
+    return;
+  }
+  if (body.data.active === undefined && body.data.name === undefined && phone === undefined && body.data.password === undefined) {
+    res.status(400).json({ error: "Datos inválidos." });
+    return;
+  }
+  if (body.data.name !== undefined || phone !== undefined || body.data.password !== undefined) {
+    await db.update(usersTable).set({
+      ...(body.data.name !== undefined ? { name: clean(body.data.name, 100) } : {}),
+      ...(phone !== undefined ? { phone } : {}),
+      ...(body.data.password !== undefined ? { passwordHash: hashPassword(body.data.password) } : {}),
+      updatedAt: new Date(),
+    }).where(eq(usersTable.id, member.id));
+    if (body.data.password !== undefined) destroySessionsForUser(member.id);
+  }
+  if (body.data.active !== undefined) {
+    res.json(await setUserActive(member.id, body.data.active));
+    return;
+  }
+  const [updated] = await db.select(TEAM_MEMBER_COLUMNS).from(usersTable).where(eq(usersTable.id, member.id));
+  res.json(updated);
 });
 
 router.post("/director/team/:userId/reset-password", async (req, res): Promise<void> => {

@@ -11,6 +11,11 @@ export interface DirectorTeamMember {
   id: string;
   email: string;
   name: string;
+  /**
+     * Contact phone number of the user (optional).
+     * @maxLength 30
+     */
+  phone?: string;
   role: DirectorTeamMemberRole;
   active: boolean;
   createdAt: Date;

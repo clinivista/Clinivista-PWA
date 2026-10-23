@@ -94,7 +94,7 @@ beforeAll(async () => {
       email text NOT NULL,
       email_normalized text NOT NULL,
       password_hash text NOT NULL,
-      name text NOT NULL DEFAULT '',
+      name text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '',
       role text NOT NULL,
       center_id text,
       active boolean NOT NULL DEFAULT true,

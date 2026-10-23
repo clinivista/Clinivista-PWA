@@ -95,7 +95,7 @@ beforeAll(async () => {
       email text NOT NULL,
       email_normalized text NOT NULL,
       password_hash text NOT NULL,
-      name text NOT NULL DEFAULT '',
+      name text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '',
       role text NOT NULL,
       center_id text,
       active boolean NOT NULL DEFAULT true,
@@ -567,6 +567,51 @@ describe("equipo del panel de supra-control", () => {
     await post({ ...newAdmin, email: "ANA@clinivista.cl" }).expect(409);
     await seedClinic("clinic-a", { staff: 1 });
     await post({ ...newAdmin, email: "staff0@clinic-a.cl" }).expect(409);
+  });
+
+  it("edits the name of a supra-control administrator, never the email, and only for supra_admin", async () => {
+    const created = await request(app).post("/api/director/team").set("Cookie", director()).send(newAdmin).expect(201);
+    const id = created.body.id;
+    const res = await request(app).patch(`/api/director/team/${id}`).set("Cookie", director()).send({ name: "  Nuevo Nombre " }).expect(200);
+    expect(res.body).toMatchObject({ name: "Nuevo Nombre", active: true, email: created.body.email });
+    await request(app).patch(`/api/director/team/${id}`).set("Cookie", director()).send({}).expect(400);
+  });
+
+  it("edits a clinic user's name and role from supra-control, closing the session on a role change", async () => {
+    await seedClinic("clinic-a", { staff: 1 });
+    const userId = "clinic-a-staff-0";
+    const session = createSession({ userId, centerId: "clinic-a", role: "administrativo" });
+    const patch = (body: object) => request(app).patch(`/api/director/centers/clinic-a/users/${userId}`).set("Cookie", director()).send(body);
+    const named = await patch({ name: "Otro Nombre", email: "x@y.cl" }).expect(200);
+    expect(named.body).toMatchObject({ name: "Otro Nombre", email: "staff0@clinic-a.cl" });
+    await request(app).get("/api/auth/me").set("Cookie", `clinivista_session=${session}`).expect(200)
+      .then((r) => expect(r.body.authenticated).toBe(true));
+    const moved = await patch({ role: "medico" }).expect(200);
+    expect(moved.body.role).toBe("medico");
+    await request(app).get("/api/auth/me").set("Cookie", `clinivista_session=${session}`).expect(200)
+      .then((r) => expect(r.body.authenticated).toBe(false));
+    await patch({ role: "director" }).expect(400);
+  });
+
+  it("sets phone and password of supra-control and clinic users", async () => {
+    const created = await request(app).post("/api/director/team").set("Cookie", director()).send({ ...newAdmin, phone: "+56 2 2345 6789" }).expect(201);
+    expect(created.body.phone).toBe("+56 2 2345 6789");
+    await request(app).post("/api/director/team").set("Cookie", director()).send({ ...newAdmin, email: "otro@clinivista.cl", phone: "xx" }).expect(400);
+    const id = created.body.id;
+    const session = createSession({ userId: id, centerId: null, role: "supra_admin" });
+    await request(app).patch(`/api/director/team/${id}`).set("Cookie", director()).send({ password: "nueva-clave-123", phone: "987654321" }).expect(200)
+      .then((r) => expect(r.body.phone).toBe("987654321"));
+    await request(app).get("/api/auth/me").set("Cookie", `clinivista_session=${session}`).expect(200)
+      .then((r) => expect(r.body.authenticated).toBe(false));
+    await request(app).post("/api/auth/login").send({ email: newAdmin.email, password: "nueva-clave-123" }).expect(200);
+
+    await seedClinic("clinic-a", { staff: 1 });
+    const res = await request(app).patch("/api/director/centers/clinic-a/users/clinic-a-staff-0").set("Cookie", director())
+      .send({ phone: "+56 9 8765 4321", password: "otra-clave-123" }).expect(200);
+    expect(res.body.phone).toBe("+56 9 8765 4321");
+    const listed = await request(app).get("/api/director/centers/clinic-a/users").set("Cookie", director()).expect(200);
+    expect(listed.body.users[0].phone).toBe("+56 9 8765 4321");
+    await request(app).patch("/api/director/centers/clinic-a/users/clinic-a-staff-0").set("Cookie", director()).send({ phone: "no" }).expect(400);
   });
 
   it("blocks and unblocks an administrator, closing their session", async () => {
