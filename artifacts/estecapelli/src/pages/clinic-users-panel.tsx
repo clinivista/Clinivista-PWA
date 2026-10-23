@@ -18,6 +18,7 @@ import { UserRow } from "./user-row";
 
 const EMPTY_DRAFT = {
   name: "",
+  phone: "",
   email: "",
   password: "",
   role: "medico" as "medico" | "administrativo",
@@ -48,6 +49,7 @@ export function ClinicUsersPanel() {
         data: {
           email: draft.email.trim(),
           name: draft.name.trim() || undefined,
+          phone: draft.phone.trim() || undefined,
           password: draft.password,
           role: draft.role,
           legalRepresentative: draft.legalRepresentative,
@@ -95,6 +97,15 @@ export function ClinicUsersPanel() {
                 className="h-10 rounded-full bg-[#F5F2EE]"
                 value={draft.name}
                 onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))}
+              />
+              <Input
+                type="tel"
+                autoComplete="off"
+                placeholder="Teléfono (opcional)"
+                aria-label="Teléfono"
+                className="h-10 rounded-full bg-white"
+                value={draft.phone}
+                onChange={(event) => setDraft((prev) => ({ ...prev, phone: event.target.value }))}
               />
               <Input
                 type="email"
@@ -170,6 +181,11 @@ export function ClinicUsersPanel() {
             }}
             setLegalRepresentative={async (legalRepresentative) => {
               await patchUser.mutateAsync({ userId: user.id, data: { legalRepresentative } });
+              await refresh();
+            }}
+            roleEditable
+            updateProfile={async (changes) => {
+              await patchUser.mutateAsync({ userId: user.id, data: changes });
               await refresh();
             }}
             resetPassword={async () => (await resetPassword.mutateAsync({ userId: user.id })).temporaryPassword}

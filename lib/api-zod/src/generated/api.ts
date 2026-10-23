@@ -814,12 +814,17 @@ export const GetDirectorCentersResponse = zod.object({
 /**
  * @summary Create a new clinic with its staff accounts and, optionally, sample patients (director only)
  */
+export const createDirectorCenterBodyUsersItemPhoneMax = 30;
+
+
+
 export const CreateDirectorCenterBody = zod.object({
   "name": zod.string().describe('Display name of the clinic.'),
   "slug": zod.string().optional().describe('Optional identifier (lowercase letters, digits and hyphens). Derived from the name when omitted.'),
   "users": zod.array(zod.object({
   "email": zod.string(),
   "name": zod.string().optional(),
+  "phone": zod.string().max(createDirectorCenterBodyUsersItemPhoneMax).optional().describe('Contact phone number of the user (optional).'),
   "password": zod.string().describe('At least 8 characters. Never stored in plain text.'),
   "role": zod.enum(['medico', 'administrativo']),
   "legalRepresentative": zod.boolean().optional()
@@ -876,11 +881,16 @@ export const GetDirectorCenterUsersParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const getDirectorCenterUsersResponseUsersItemPhoneMax = 30;
+
+
+
 export const GetDirectorCenterUsersResponse = zod.object({
   "users": zod.array(zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string(),
+  "phone": zod.string().max(getDirectorCenterUsersResponseUsersItemPhoneMax).optional().describe('Contact phone number of the user (optional).'),
   "role": zod.enum(['medico', 'administrativo']),
   "active": zod.boolean(),
   "legalRepresentative": zod.boolean().optional(),
@@ -896,18 +906,28 @@ export const CreateDirectorCenterUserParams = zod.object({
   "id": zod.coerce.string()
 })
 
+export const createDirectorCenterUserBodyPhoneMax = 30;
+
+
+
 export const CreateDirectorCenterUserBody = zod.object({
   "email": zod.string(),
   "name": zod.string().optional(),
+  "phone": zod.string().max(createDirectorCenterUserBodyPhoneMax).optional().describe('Contact phone number of the user (optional).'),
   "password": zod.string().describe('At least 8 characters. Never stored in plain text.'),
   "role": zod.enum(['medico', 'administrativo']),
   "legalRepresentative": zod.boolean().optional()
 })
 
+export const createDirectorCenterUserResponsePhoneMax = 30;
+
+
+
 export const CreateDirectorCenterUserResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string(),
+  "phone": zod.string().max(createDirectorCenterUserResponsePhoneMax).optional().describe('Contact phone number of the user (optional).'),
   "role": zod.enum(['medico', 'administrativo']),
   "active": zod.boolean(),
   "legalRepresentative": zod.boolean().optional(),
@@ -936,15 +956,33 @@ export const PatchDirectorCenterUserParams = zod.object({
   "userId": zod.coerce.string()
 })
 
+export const patchDirectorCenterUserBodyNameMax = 100;
+
+export const patchDirectorCenterUserBodyPhoneMax = 30;
+
+export const patchDirectorCenterUserBodyPasswordMin = 8;
+export const patchDirectorCenterUserBodyPasswordMax = 100;
+
+
+
 export const PatchDirectorCenterUserBody = zod.object({
   "active": zod.boolean().optional().describe('false blocks the user\'s access (and closes their open sessions); true restores it.'),
-  "legalRepresentative": zod.boolean().optional().describe('Marks or unmarks the clinic\'s legal representative (who may manage the clinic\'s users).')
+  "legalRepresentative": zod.boolean().optional().describe('Marks or unmarks the clinic\'s legal representative (who may manage the clinic\'s users).'),
+  "name": zod.string().max(patchDirectorCenterUserBodyNameMax).optional().describe('Display name (the email is the account\'s identifier and cannot be changed).'),
+  "phone": zod.string().max(patchDirectorCenterUserBodyPhoneMax).optional().describe('Contact phone number of the user (optional).'),
+  "password": zod.string().min(patchDirectorCenterUserBodyPasswordMin).max(patchDirectorCenterUserBodyPasswordMax).optional().describe('New password set directly by whoever manages the account; closes the person\'s open sessions.'),
+  "role": zod.enum(['medico', 'administrativo']).optional().describe('Role inside the clinic. Changing it closes the person\'s open sessions.')
 })
+
+export const patchDirectorCenterUserResponsePhoneMax = 30;
+
+
 
 export const PatchDirectorCenterUserResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string(),
+  "phone": zod.string().max(patchDirectorCenterUserResponsePhoneMax).optional().describe('Contact phone number of the user (optional).'),
   "role": zod.enum(['medico', 'administrativo']),
   "active": zod.boolean(),
   "legalRepresentative": zod.boolean().optional(),
@@ -955,11 +993,16 @@ export const PatchDirectorCenterUserResponse = zod.object({
 /**
  * @summary List the supra-control team - directors and administrators (director only)
  */
+export const getDirectorTeamResponseUsersItemPhoneMax = 30;
+
+
+
 export const GetDirectorTeamResponse = zod.object({
   "users": zod.array(zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string(),
+  "phone": zod.string().max(getDirectorTeamResponseUsersItemPhoneMax).optional().describe('Contact phone number of the user (optional).'),
   "role": zod.enum(['director', 'supra_admin']),
   "active": zod.boolean(),
   "createdAt": zod.coerce.date()
@@ -970,16 +1013,26 @@ export const GetDirectorTeamResponse = zod.object({
 /**
  * @summary Create a supra-control administrator (director only)
  */
+export const createDirectorTeamMemberBodyPhoneMax = 30;
+
+
+
 export const CreateDirectorTeamMemberBody = zod.object({
   "email": zod.string(),
   "name": zod.string().optional(),
+  "phone": zod.string().max(createDirectorTeamMemberBodyPhoneMax).optional().describe('Contact phone number of the user (optional).'),
   "password": zod.string().describe('At least 8 characters. Never stored in plain text.')
 })
+
+export const createDirectorTeamMemberResponsePhoneMax = 30;
+
+
 
 export const CreateDirectorTeamMemberResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string(),
+  "phone": zod.string().max(createDirectorTeamMemberResponsePhoneMax).optional().describe('Contact phone number of the user (optional).'),
   "role": zod.enum(['director', 'supra_admin']),
   "active": zod.boolean(),
   "createdAt": zod.coerce.date()
@@ -993,14 +1046,31 @@ export const PatchDirectorTeamMemberParams = zod.object({
   "userId": zod.coerce.string()
 })
 
+export const patchDirectorTeamMemberBodyNameMax = 100;
+
+export const patchDirectorTeamMemberBodyPhoneMax = 30;
+
+export const patchDirectorTeamMemberBodyPasswordMin = 8;
+export const patchDirectorTeamMemberBodyPasswordMax = 100;
+
+
+
 export const PatchDirectorTeamMemberBody = zod.object({
-  "active": zod.boolean().describe('false blocks the user\'s access (and closes their open sessions); true restores it.')
+  "active": zod.boolean().optional().describe('false blocks the user\'s access (and closes their open sessions); true restores it.'),
+  "name": zod.string().max(patchDirectorTeamMemberBodyNameMax).optional().describe('Display name (the email is the account\'s identifier and cannot be changed).'),
+  "phone": zod.string().max(patchDirectorTeamMemberBodyPhoneMax).optional().describe('Contact phone number of the user (optional).'),
+  "password": zod.string().min(patchDirectorTeamMemberBodyPasswordMin).max(patchDirectorTeamMemberBodyPasswordMax).optional().describe('New password set directly by whoever manages the account; closes the person\'s open sessions.')
 })
+
+export const patchDirectorTeamMemberResponsePhoneMax = 30;
+
+
 
 export const PatchDirectorTeamMemberResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string(),
+  "phone": zod.string().max(patchDirectorTeamMemberResponsePhoneMax).optional().describe('Contact phone number of the user (optional).'),
   "role": zod.enum(['director', 'supra_admin']),
   "active": zod.boolean(),
   "createdAt": zod.coerce.date()
@@ -1208,11 +1278,16 @@ export const CreateClinicPatientResponse = zod.object({
 /**
  * @summary Users of the signed-in clinic (administrativos and the legal representative only)
  */
+export const getClinicUsersResponseUsersItemPhoneMax = 30;
+
+
+
 export const GetClinicUsersResponse = zod.object({
   "users": zod.array(zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string(),
+  "phone": zod.string().max(getClinicUsersResponseUsersItemPhoneMax).optional().describe('Contact phone number of the user (optional).'),
   "role": zod.enum(['medico', 'administrativo']),
   "active": zod.boolean(),
   "legalRepresentative": zod.boolean(),
@@ -1225,6 +1300,8 @@ export const GetClinicUsersResponse = zod.object({
 /**
  * @summary Create a médico or administrativo in the signed-in clinic
  */
+export const createClinicUserBodyPhoneMax = 30;
+
 export const createClinicUserBodyPasswordMin = 8;
 
 
@@ -1232,15 +1309,21 @@ export const createClinicUserBodyPasswordMin = 8;
 export const CreateClinicUserBody = zod.object({
   "email": zod.string(),
   "name": zod.string().optional(),
+  "phone": zod.string().max(createClinicUserBodyPhoneMax).optional().describe('Contact phone number of the user (optional).'),
   "password": zod.string().min(createClinicUserBodyPasswordMin),
   "role": zod.enum(['medico', 'administrativo']),
   "legalRepresentative": zod.boolean().optional()
 })
 
+export const createClinicUserResponsePhoneMax = 30;
+
+
+
 export const CreateClinicUserResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string(),
+  "phone": zod.string().max(createClinicUserResponsePhoneMax).optional().describe('Contact phone number of the user (optional).'),
   "role": zod.enum(['medico', 'administrativo']),
   "active": zod.boolean(),
   "legalRepresentative": zod.boolean(),
@@ -1256,15 +1339,33 @@ export const PatchClinicUserParams = zod.object({
   "userId": zod.coerce.string()
 })
 
+export const patchClinicUserBodyNameMax = 100;
+
+export const patchClinicUserBodyPhoneMax = 30;
+
+export const patchClinicUserBodyPasswordMin = 8;
+export const patchClinicUserBodyPasswordMax = 100;
+
+
+
 export const PatchClinicUserBody = zod.object({
   "active": zod.boolean().optional().describe('false blocks the user\'s access (and closes their open sessions); true restores it.'),
-  "legalRepresentative": zod.boolean().optional()
+  "legalRepresentative": zod.boolean().optional(),
+  "name": zod.string().max(patchClinicUserBodyNameMax).optional().describe('Display name (the email is the account\'s identifier and cannot be changed).'),
+  "phone": zod.string().max(patchClinicUserBodyPhoneMax).optional().describe('Contact phone number of the user (optional).'),
+  "password": zod.string().min(patchClinicUserBodyPasswordMin).max(patchClinicUserBodyPasswordMax).optional().describe('New password set directly by whoever manages the account; closes the person\'s open sessions.'),
+  "role": zod.enum(['medico', 'administrativo']).optional().describe('Role inside the clinic. Changing it closes the person\'s open sessions.')
 })
+
+export const patchClinicUserResponsePhoneMax = 30;
+
+
 
 export const PatchClinicUserResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string(),
+  "phone": zod.string().max(patchClinicUserResponsePhoneMax).optional().describe('Contact phone number of the user (optional).'),
   "role": zod.enum(['medico', 'administrativo']),
   "active": zod.boolean(),
   "legalRepresentative": zod.boolean(),

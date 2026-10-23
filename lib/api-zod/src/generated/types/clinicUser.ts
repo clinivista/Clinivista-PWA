@@ -11,6 +11,11 @@ export interface ClinicUser {
   id: string;
   email: string;
   name: string;
+  /**
+     * Contact phone number of the user (optional).
+     * @maxLength 30
+     */
+  phone?: string;
   role: ClinicUserRole;
   active: boolean;
   legalRepresentative: boolean;

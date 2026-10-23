@@ -19,6 +19,8 @@ export const usersTable = pgTable("users", {
   emailNormalized: text("email_normalized").notNull(),
   passwordHash: text("password_hash").notNull(),
   name: text("name").notNull().default(""),
+  // Contact phone of the person (optional, free format such as +56 9 1234 5678).
+  phone: text("phone").notNull().default(""),
   role: text("role", { enum: USER_ROLES }).notNull(),
   // null only for "director" and "supra_admin" — every clinic-scoped role must have one.
   centerId: text("center_id"),

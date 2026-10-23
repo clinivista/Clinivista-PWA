@@ -8,5 +8,21 @@
 
 export interface DirectorUserPatch {
   /** false blocks the user's access (and closes their open sessions); true restores it. */
-  active: boolean;
+  active?: boolean;
+  /**
+     * Display name (the email is the account's identifier and cannot be changed).
+     * @maxLength 100
+     */
+  name?: string;
+  /**
+     * Contact phone number of the user (optional).
+     * @maxLength 30
+     */
+  phone?: string;
+  /**
+     * New password set directly by whoever manages the account; closes the person's open sessions.
+     * @minLength 8
+     * @maxLength 100
+     */
+  password?: string;
 }

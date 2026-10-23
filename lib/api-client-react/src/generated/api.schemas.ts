@@ -228,6 +228,11 @@ export interface ClinicUser {
   id: string;
   email: string;
   name: string;
+  /**
+     * Contact phone number of the user (optional).
+     * @maxLength 30
+     */
+  phone?: string;
   role: ClinicUserRole;
   active: boolean;
   legalRepresentative: boolean;
@@ -251,16 +256,50 @@ export const ClinicUserCreateRole = {
 export interface ClinicUserCreate {
   email: string;
   name?: string;
+  /**
+     * Contact phone number of the user (optional).
+     * @maxLength 30
+     */
+  phone?: string;
   /** @minLength 8 */
   password: string;
   role: ClinicUserCreateRole;
   legalRepresentative?: boolean;
 }
 
+/**
+ * Role inside the clinic. Changing it closes the person's open sessions.
+ */
+export type ClinicUserPatchRole = typeof ClinicUserPatchRole[keyof typeof ClinicUserPatchRole];
+
+
+export const ClinicUserPatchRole = {
+  medico: 'medico',
+  administrativo: 'administrativo',
+} as const;
+
 export interface ClinicUserPatch {
   /** false blocks the user's access (and closes their open sessions); true restores it. */
   active?: boolean;
   legalRepresentative?: boolean;
+  /**
+     * Display name (the email is the account's identifier and cannot be changed).
+     * @maxLength 100
+     */
+  name?: string;
+  /**
+     * Contact phone number of the user (optional).
+     * @maxLength 30
+     */
+  phone?: string;
+  /**
+     * New password set directly by whoever manages the account; closes the person's open sessions.
+     * @minLength 8
+     * @maxLength 100
+     */
+  password?: string;
+  /** Role inside the clinic. Changing it closes the person's open sessions. */
+  role?: ClinicUserPatchRole;
 }
 
 export type DirectorCenterUserRole = typeof DirectorCenterUserRole[keyof typeof DirectorCenterUserRole];
@@ -275,22 +314,72 @@ export interface DirectorCenterUser {
   id: string;
   email: string;
   name: string;
+  /**
+     * Contact phone number of the user (optional).
+     * @maxLength 30
+     */
+  phone?: string;
   role: DirectorCenterUserRole;
   active: boolean;
   legalRepresentative?: boolean;
   createdAt: string;
 }
 
+/**
+ * Role inside the clinic. Changing it closes the person's open sessions.
+ */
+export type DirectorCenterUserPatchRole = typeof DirectorCenterUserPatchRole[keyof typeof DirectorCenterUserPatchRole];
+
+
+export const DirectorCenterUserPatchRole = {
+  medico: 'medico',
+  administrativo: 'administrativo',
+} as const;
+
 export interface DirectorCenterUserPatch {
   /** false blocks the user's access (and closes their open sessions); true restores it. */
   active?: boolean;
   /** Marks or unmarks the clinic's legal representative (who may manage the clinic's users). */
   legalRepresentative?: boolean;
+  /**
+     * Display name (the email is the account's identifier and cannot be changed).
+     * @maxLength 100
+     */
+  name?: string;
+  /**
+     * Contact phone number of the user (optional).
+     * @maxLength 30
+     */
+  phone?: string;
+  /**
+     * New password set directly by whoever manages the account; closes the person's open sessions.
+     * @minLength 8
+     * @maxLength 100
+     */
+  password?: string;
+  /** Role inside the clinic. Changing it closes the person's open sessions. */
+  role?: DirectorCenterUserPatchRole;
 }
 
 export interface DirectorUserPatch {
   /** false blocks the user's access (and closes their open sessions); true restores it. */
-  active: boolean;
+  active?: boolean;
+  /**
+     * Display name (the email is the account's identifier and cannot be changed).
+     * @maxLength 100
+     */
+  name?: string;
+  /**
+     * Contact phone number of the user (optional).
+     * @maxLength 30
+     */
+  phone?: string;
+  /**
+     * New password set directly by whoever manages the account; closes the person's open sessions.
+     * @minLength 8
+     * @maxLength 100
+     */
+  password?: string;
 }
 
 export type DirectorTeamMemberRole = typeof DirectorTeamMemberRole[keyof typeof DirectorTeamMemberRole];
@@ -305,6 +394,11 @@ export interface DirectorTeamMember {
   id: string;
   email: string;
   name: string;
+  /**
+     * Contact phone number of the user (optional).
+     * @maxLength 30
+     */
+  phone?: string;
   role: DirectorTeamMemberRole;
   active: boolean;
   createdAt: string;
@@ -313,6 +407,11 @@ export interface DirectorTeamMember {
 export interface DirectorTeamCreateBody {
   email: string;
   name?: string;
+  /**
+     * Contact phone number of the user (optional).
+     * @maxLength 30
+     */
+  phone?: string;
   /** At least 8 characters. Never stored in plain text. */
   password: string;
 }
@@ -345,6 +444,11 @@ export const DirectorCenterCreateUserRole = {
 export interface DirectorCenterCreateUser {
   email: string;
   name?: string;
+  /**
+     * Contact phone number of the user (optional).
+     * @maxLength 30
+     */
+  phone?: string;
   /** At least 8 characters. Never stored in plain text. */
   password: string;
   role: DirectorCenterCreateUserRole;

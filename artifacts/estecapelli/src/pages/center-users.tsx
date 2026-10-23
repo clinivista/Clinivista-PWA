@@ -16,7 +16,7 @@ import { PasswordInput } from "@/components/password-input";
 import { useToast } from "@/hooks/use-toast";
 import { UserRow } from "./user-row";
 
-const EMPTY_DRAFT = { name: "", email: "", password: "", role: "medico" as "medico" | "administrativo", legalRepresentative: false };
+const EMPTY_DRAFT = { name: "", phone: "", email: "", password: "", role: "medico" as "medico" | "administrativo", legalRepresentative: false };
 
 // Se monta solo cuando el director despliega "Usuarios", así la lista se pide
 // al servidor únicamente cuando hace falta.
@@ -34,7 +34,7 @@ export function CenterUsers({ centerId }: { centerId: string }) {
   const handleCreate = (event: React.FormEvent) => {
     event.preventDefault();
     createUser.mutate(
-      { id: centerId, data: { email: draft.email.trim(), name: draft.name.trim() || undefined, password: draft.password, role: draft.role, legalRepresentative: draft.legalRepresentative } },
+      { id: centerId, data: { email: draft.email.trim(), name: draft.name.trim() || undefined, phone: draft.phone.trim() || undefined, password: draft.password, role: draft.role, legalRepresentative: draft.legalRepresentative } },
       {
         onSuccess: async (created) => {
           await queryClient.invalidateQueries({ queryKey: getGetDirectorCenterUsersQueryKey(centerId) });
@@ -67,6 +67,15 @@ export function CenterUsers({ centerId }: { centerId: string }) {
               className="h-10 rounded-full bg-white"
               value={draft.name}
               onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))}
+            />
+            <Input
+              type="tel"
+              autoComplete="off"
+              placeholder="Teléfono (opcional)"
+              aria-label="Teléfono"
+              className="h-10 rounded-full bg-white"
+              value={draft.phone}
+              onChange={(event) => setDraft((prev) => ({ ...prev, phone: event.target.value }))}
             />
             <Input
               type="email"
@@ -140,6 +149,11 @@ export function CenterUsers({ centerId }: { centerId: string }) {
           }}
           setLegalRepresentative={async (legalRepresentative) => {
             await patchUser.mutateAsync({ id: centerId, userId: user.id, data: { legalRepresentative } });
+            await queryClient.invalidateQueries({ queryKey: getGetDirectorCenterUsersQueryKey(centerId) });
+          }}
+          roleEditable
+          updateProfile={async (changes) => {
+            await patchUser.mutateAsync({ id: centerId, userId: user.id, data: changes });
             await queryClient.invalidateQueries({ queryKey: getGetDirectorCenterUsersQueryKey(centerId) });
           }}
           resetPassword={async () => (await resetPassword.mutateAsync({ id: centerId, userId: user.id })).temporaryPassword}

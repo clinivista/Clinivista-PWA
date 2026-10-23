@@ -34,7 +34,7 @@ beforeAll(async () => {
     );
     CREATE TABLE IF NOT EXISTS users (
       id text PRIMARY KEY, email text NOT NULL, email_normalized text NOT NULL,
-      password_hash text NOT NULL, name text NOT NULL DEFAULT '', role text NOT NULL,
+      password_hash text NOT NULL, name text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', role text NOT NULL,
       center_id text, active boolean NOT NULL DEFAULT true,
       legal_representative boolean NOT NULL DEFAULT false,
       reset_token_hash text, reset_token_expires_at timestamptz,
@@ -216,5 +216,73 @@ describe("bloquear, representante legal, restablecer y eliminar", () => {
     await pglite.exec(`UPDATE users SET active = true WHERE id = 'adm2';`);
     await request(app).delete("/api/clinic/users/adm1").set("Cookie", cookie2).expect(204);
     await request(app).delete("/api/clinic/users/adm2").set("Cookie", cookie2).expect(400);
+  });
+});
+
+describe("editar nombre y rol (el correo no cambia)", () => {
+  const patch = (cookie: string, id: string, body: object) => request(app).patch(`/api/clinic/users/${id}`).set("Cookie", cookie).send(body);
+
+  it("cambia el nombre y el rol, cierra la sesión del afectado y deja el correo igual", async () => {
+    await seedUser("adm", "administrativo", "clinic-a");
+    await seedUser("adm2", "administrativo", "clinic-a");
+    await seedUser("doc", "medico", "clinic-a");
+    const cookie = as("adm", "administrativo", "clinic-a");
+    const docCookie = as("doc", "medico", "clinic-a");
+
+    const named = await patch(cookie, "doc", { name: "  Dra. Nueva  " }).expect(200);
+    expect(named.body).toMatchObject({ name: "Dra. Nueva", role: "medico", email: "doc@x.cl" });
+    expect((await request(app).get("/api/auth/me").set("Cookie", docCookie)).body.authenticated).toBe(true); // solo el nombre: sigue con sesión
+
+    const moved = await patch(cookie, "doc", { role: "administrativo", email: "otro@x.cl" }).expect(200);
+    expect(moved.body).toMatchObject({ role: "administrativo", email: "doc@x.cl" }); // el correo se ignora
+    expect((await request(app).get("/api/auth/me").set("Cookie", docCookie)).body.authenticated).toBe(false);
+    await patch(cookie, "doc", { role: "invalido" }).expect(400);
+    await patch(cookie, "doc", {}).expect(400);
+  });
+
+  it("no puedes cambiar tu propio rol, ni dejar a la clínica sin quien gestione usuarios", async () => {
+    await seedUser("adm", "administrativo", "clinic-a");
+    await seedUser("doc", "medico", "clinic-a");
+    const cookie = as("adm", "administrativo", "clinic-a");
+    await patch(cookie, "adm", { role: "medico" }).expect(400);
+    await patch(cookie, "adm", { name: "Mi nombre" }).expect(200);
+    await seedUser("adm2", "administrativo", "clinic-a");
+    await patch(cookie, "adm2", { role: "medico" }).expect(200); // queda adm
+    await patch(as("adm", "administrativo", "clinic-a"), "doc", { role: "administrativo" }).expect(200);
+  });
+});
+
+describe("teléfono y contraseña del usuario", () => {
+  const patch = (cookie: string, id: string, body: object) => request(app).patch(`/api/clinic/users/${id}`).set("Cookie", cookie).send(body);
+
+  it("guarda el teléfono al crear y al editar, y rechaza uno inválido", async () => {
+    await seedUser("adm", "administrativo", "clinic-a");
+    const cookie = as("adm", "administrativo", "clinic-a");
+    const created = await request(app).post("/api/clinic/users").set("Cookie", cookie)
+      .send({ email: "nuevo@x.cl", password: "password123", role: "medico", phone: "+56 9 1234 5678" }).expect(201);
+    expect(created.body.phone).toBe("+56 9 1234 5678");
+    await request(app).post("/api/clinic/users").set("Cookie", cookie)
+      .send({ email: "malo@x.cl", password: "password123", role: "medico", phone: "abc" }).expect(400);
+    const id = created.body.id;
+    expect((await patch(cookie, id, { phone: "(2) 2345-6789" }).expect(200)).body.phone).toBe("(2) 2345-6789");
+    expect((await patch(cookie, id, { phone: "" }).expect(200)).body.phone).toBe("");
+    await patch(cookie, id, { phone: "12" }).expect(400);
+    const users = (await list(cookie).expect(200)).body.users as { id: string; phone: string }[];
+    expect(users.find((u) => u.id === id)?.phone).toBe("");
+  });
+
+  it("cambia la contraseña de otra persona (cierra su sesión) y la propia sin cerrar la tuya", async () => {
+    await seedUser("adm", "administrativo", "clinic-a");
+    await seedUser("doc", "medico", "clinic-a");
+    const cookie = as("adm", "administrativo", "clinic-a");
+    const docCookie = as("doc", "medico", "clinic-a");
+    await patch(cookie, "doc", { password: "corta" }).expect(400);
+    await patch(cookie, "doc", { password: "clave-nueva-123" }).expect(200);
+    expect((await request(app).get("/api/auth/me").set("Cookie", docCookie)).body.authenticated).toBe(false);
+    await request(app).post("/api/auth/login").send({ email: "doc@x.cl", password: "clave-nueva-123" }).expect(200);
+    await request(app).post("/api/auth/login").send({ email: "doc@x.cl", password: "password123" }).expect(401);
+    await patch(cookie, "adm", { password: "mi-clave-nueva-1" }).expect(200);
+    expect((await request(app).get("/api/auth/me").set("Cookie", cookie)).body.authenticated).toBe(true);
+    await request(app).post("/api/auth/login").send({ email: "adm@x.cl", password: "mi-clave-nueva-1" }).expect(200);
   });
 });
