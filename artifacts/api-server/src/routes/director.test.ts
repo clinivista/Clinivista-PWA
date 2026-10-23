@@ -374,12 +374,22 @@ describe("POST /api/director/centers (crear clínica)", () => {
     await request(app).post("/api/director/centers").set("Cookie", director()).send({ name: "Otra", slug: "implicit-clinic" }).expect(409);
   });
 
-  it("rejects an email that already has an account, creating nothing", async () => {
+  it("allows an email that has an account in another clinic (one account per clinic)", async () => {
     await seedClinic("clinic-a", { staff: 1 });
     await request(app)
       .post("/api/director/centers")
       .set("Cookie", director())
       .send({ name: "Clínica Nueva", users: [{ email: "STAFF0@clinic-a.cl", password: "password-123", role: "medico" }] })
+      .expect(201);
+  });
+
+  it("rejects an email that belongs to a director or supra-control account, creating nothing", async () => {
+    await seedClinic("clinic-a", { staff: 1 });
+    await pglite.exec(`INSERT INTO users (id, email, email_normalized, password_hash, name, role, center_id) VALUES ('dir-x', 'jefe@clinivista.cl', 'jefe@clinivista.cl', 'x', 'Jefe', 'director', NULL);`);
+    await request(app)
+      .post("/api/director/centers")
+      .set("Cookie", director())
+      .send({ name: "Clínica Nueva", users: [{ email: "JEFE@clinivista.cl", password: "password-123", role: "medico" }] })
       .expect(409);
     const list = await request(app).get("/api/director/centers").set("Cookie", director()).expect(200);
     expect(list.body.centers.map((c: { id: string }) => c.id)).toEqual(["clinic-a"]);

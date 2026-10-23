@@ -8,7 +8,10 @@
 
 export * from './authStatus';
 export * from './authUser';
+export * from './authUserClinicsItem';
+export * from './authUserClinicsItemRole';
 export * from './authUserRole';
+export * from './authUserViewingClinic';
 export * from './clinicProtocol';
 export * from './clinicProtocolPhase';
 export * from './clinicProtocolPhaseInput';

@@ -1,3 +1,4 @@
+import { emailTaken } from "../lib/email-taken";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { and, eq, inArray, or } from "drizzle-orm";
 import { db, usersTable, hashPassword, normalizeEmail } from "@workspace/db";
@@ -98,9 +99,8 @@ router.post("/clinic/users", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Necesitas un correo válido y una contraseña de al menos 8 caracteres." });
     return;
   }
-  // An email identifies one account on the whole platform, not per clinic.
-  const [taken] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.emailNormalized, emailNormalized));
-  if (taken) {
+  // The same email may exist in other clinics (each has its own account and password); here only this clinic counts.
+  if (await emailTaken(emailNormalized, manager.centerId)) {
     res.status(409).json({ error: `El correo ${email} ya está en uso.` });
     return;
   }

@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { LogOut, Building2, Users, Download, ShieldOff, ShieldCheck, Loader2, CreditCard, Plus, ChevronDown, Palette } from "lucide-react";
+import { LogOut, LogIn, Building2, Users, Download, ShieldOff, ShieldCheck, Loader2, CreditCard, Plus, ChevronDown, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetDirectorCenters,
+  getGetAuthMeQueryKey,
   getGetDirectorCentersQueryKey,
   usePatchDirectorCenter,
   useRecordDirectorCenterPayment,
@@ -13,6 +14,7 @@ import {
   type DirectorCenterSummary,
 } from "@workspace/api-client-react";
 import { BrandLogo } from "@/components/brand-logo";
+import { selectClinic } from "@/components/clinic-chooser";
 import { CreateCenterForm } from "./create-center-form";
 import { CenterUsers } from "./center-users";
 import { SupraTeam } from "./supra-team";
@@ -126,14 +128,30 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
             <p className="text-xs text-white/60 font-medium">Todas las clínicas de Clinivista</p>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          className="text-white/70 hover:text-white hover:bg-white/10 font-medium rounded-2xl"
-          onClick={onLogout}
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Salir
-        </Button>
+        <div className="flex items-center gap-1">
+          {canManageUsers && (
+            <Button
+              variant="ghost"
+              className="text-white/70 hover:text-white hover:bg-white/10 font-medium rounded-2xl"
+              data-testid="director-choose-clinic"
+              onClick={async () => {
+                await selectClinic(null);
+                queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() });
+              }}
+            >
+              <Building2 className="w-4 h-4 mr-2" />
+              Cambiar de clínica
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            className="text-white/70 hover:text-white hover:bg-white/10 font-medium rounded-2xl"
+            onClick={onLogout}
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Salir
+          </Button>
+        </div>
       </header>
       {canManageUsers && <AdminBanner />}
 
@@ -232,6 +250,22 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                   >
                     <Users className="w-4 h-4 mr-2" /> Usuarios
                     <ChevronDown className={`w-4 h-4 ml-1 transition-transform ${usersOpenId === center.id ? "rotate-180" : ""}`} />
+                  </Button>
+                  )}
+                  {canManageUsers && (
+                  <Button
+                    className="rounded-full h-10 font-semibold"
+                    data-testid={`enter-clinic-${center.id}`}
+                    onClick={async () => {
+                      const response = await fetch("/api/auth/enter-clinic", {
+                        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ centerId: center.id }),
+                      });
+                      if (!response.ok) { toast({ variant: "destructive", title: "No pudimos entrar a la clínica" }); return; }
+                      queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== getGetAuthMeQueryKey()[0] });
+                      await queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() });
+                    }}
+                  >
+                    <LogIn className="w-4 h-4 mr-2" /> Entrar a la clínica
                   </Button>
                   )}
                   <Button

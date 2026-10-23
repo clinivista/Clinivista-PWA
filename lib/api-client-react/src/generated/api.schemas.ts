@@ -27,6 +27,25 @@ export const AuthUserRole = {
   supra_admin: 'supra_admin',
 } as const;
 
+export type AuthUserClinicsItemRole = typeof AuthUserClinicsItemRole[keyof typeof AuthUserClinicsItemRole];
+
+
+export const AuthUserClinicsItemRole = {
+  medico: 'medico',
+  administrativo: 'administrativo',
+} as const;
+
+export type AuthUserClinicsItem = {
+  id: string;
+  name: string;
+  role: AuthUserClinicsItemRole;
+};
+
+export type AuthUserViewingClinic = {
+  id: string;
+  name: string;
+};
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -36,6 +55,13 @@ export interface AuthUser {
   centerId: string | null;
   /** true for a clinic's administrativos and its legal representative (even a médico), who manage the clinic's users. */
   canManageUsers?: boolean;
+  /** Clinics this médico/administrativo can work in (not suspended). Only these are ever shown to them. */
+  clinics?: AuthUserClinicsItem[];
+  /** true when the person has several clinics and has not chosen one for this session yet. */
+  needsClinicChoice?: boolean;
+  /** true when a director is working inside a clinic's panel (with administrativo permissions). */
+  viewingAsDirector?: boolean;
+  viewingClinic?: AuthUserViewingClinic;
 }
 
 export interface AuthStatus {
@@ -535,6 +561,8 @@ export interface StaffForgotInput {
 export interface StaffResetInput {
   token: string;
   password: string;
+  /** Clinics (same email) where the new password applies; omitted means all of them */
+  centerIds?: string[];
 }
 
 export interface PortalLoginInput {
