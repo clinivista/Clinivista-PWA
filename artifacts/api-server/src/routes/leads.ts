@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, sql } from "drizzle-orm";
+import { listConsultTypes } from "../lib/consult-types";
 import { db, leadsTable, centersTable } from "@workspace/db";
 import {
   GetLeadPhotoFileParams,
@@ -20,7 +21,19 @@ const router: IRouter = Router();
 
 const ALLOWED_STATUSES: readonly string[] = LEAD_STATUSES;
 
-async function leadSummary(lead: typeof leadsTable.$inferSelect) {
+type Consult = { typeName: string; count: number };
+
+/** Consultation type name and how many consultations the patient's file holds (dermatology centers). */
+async function consultInfo(centerId: string, leads: Array<typeof leadsTable.$inferSelect>): Promise<(lead: typeof leadsTable.$inferSelect) => Consult> {
+  const { enabled, types } = await listConsultTypes(centerId);
+  if (!enabled) return () => ({ typeName: "", count: 1 });
+  const names = new Map(types.map((type) => [type.id, type.name]));
+  const perFile = new Map<string, number>();
+  for (const lead of leads) { const key = lead.parentLeadId ?? lead.id; perFile.set(key, (perFile.get(key) ?? 0) + 1); }
+  return (lead) => ({ typeName: names.get(lead.protocolId ?? "") ?? "", count: perFile.get(lead.parentLeadId ?? lead.id) ?? 1 });
+}
+
+async function leadSummary(lead: typeof leadsTable.$inferSelect, consult: Consult = { typeName: "", count: 1 }) {
   const { photos, symptoms, surgeryHistory, notes, ...safe } = lead;
   const clinicalPhotos = await getPhotoStatusesForLead(lead);
   const legacyKeys = Array.isArray(photos)
@@ -29,16 +42,20 @@ async function leadSummary(lead: typeof leadsTable.$inferSelect) {
   const visibleClinical = clinicalPhotos.filter((photo) => ["draft", "confirmed"].includes(photo.status));
   return {
     ...safe,
+    consultTypeName: consult.typeName,
+    consultCount: consult.count,
     photoCount: new Set([...legacyKeys, ...visibleClinical.map((photo) => photo.key)]).size,
     photoKeys: [...new Set([...legacyKeys, ...visibleClinical.map((photo) => photo.key)])],
   };
 }
 
-async function leadFull(lead: typeof leadsTable.$inferSelect) {
+async function leadFull(lead: typeof leadsTable.$inferSelect, consult: Consult = { typeName: "", count: 1 }) {
   const { photos: _legacyPhotos, ...safe } = lead;
   const photos = await getPhotoStatusesForLead(lead);
   return {
     ...safe,
+    consultTypeName: consult.typeName,
+    consultCount: consult.count,
     photoCount: photos.filter((photo) => ["draft", "confirmed"].includes(photo.status)).length,
     photos,
   };
@@ -67,7 +84,9 @@ router.get("/leads", async (req, res): Promise<void> => {
   const allLeads = (await db.select().from(leadsTable).orderBy(sql`${leadsTable.createdAt} desc`))
     .filter((lead) => (lead.centerId ?? DEFAULT_CENTER_ID) === context.centerId);
 
-  let leads = allLeads;
+  // Las consultas adicionales viven dentro de la ficha del paciente: la lista muestra cada paciente una vez.
+  const info = await consultInfo(context.centerId, allLeads);
+  let leads = allLeads.filter((lead) => !lead.parentLeadId);
   if (status && status !== "todos") {
     leads = leads.filter((l) => l.status === status);
   }
@@ -79,7 +98,7 @@ router.get("/leads", async (req, res): Promise<void> => {
     );
   }
 
-  res.json({ leads: await Promise.all(leads.map(leadSummary)) });
+  res.json({ leads: await Promise.all(leads.map((lead) => leadSummary(lead, info(lead)))) });
 });
 
 router.get("/leads/stats", async (req, res): Promise<void> => {
@@ -89,12 +108,12 @@ router.get("/leads/stats", async (req, res): Promise<void> => {
   const allLeads = (await db.select().from(leadsTable))
     .filter((lead) => (lead.centerId ?? DEFAULT_CENTER_ID) === context.centerId);
   const counts: Record<string, number> = {};
-  for (const lead of allLeads) {
+  for (const lead of allLeads.filter((candidate) => !candidate.parentLeadId)) {
     const s = lead.status || "nuevo";
     counts[s] = (counts[s] || 0) + 1;
   }
 
-  res.json({ total: allLeads.length, counts });
+  res.json({ total: allLeads.filter((lead) => !lead.parentLeadId).length, counts });
 });
 
 router.get("/leads/:id", async (req, res): Promise<void> => {
@@ -119,7 +138,10 @@ router.get("/leads/:id", async (req, res): Promise<void> => {
 
   // Patients registered before the automatic states catch up when their file is opened.
   const status = await syncLeadStatus(lead.id);
-  res.json(await leadFull(status && status !== lead.status ? { ...lead, status } : lead));
+  const siblings = (await db.select().from(leadsTable).where(eq(leadsTable.centerId, context.centerId)))
+    .filter((candidate) => (candidate.parentLeadId ?? candidate.id) === (lead.parentLeadId ?? lead.id));
+  const info = await consultInfo(context.centerId, siblings);
+  res.json(await leadFull(status && status !== lead.status ? { ...lead, status } : lead, info(lead)));
 });
 
 router.get("/leads/:id/photos/:photoId", async (req, res): Promise<void> => {
@@ -172,6 +194,12 @@ router.delete("/leads/:id", async (req, res): Promise<void> => {
     return;
   }
 
+  // Borrar la ficha principal borra también sus consultas adicionales.
+  const children = lead.parentLeadId ? [] : await db.select().from(leadsTable).where(eq(leadsTable.parentLeadId, lead.id));
+  for (const child of children) {
+    await deleteClinicalDataForLead(child);
+    await db.delete(leadsTable).where(eq(leadsTable.id, child.id));
+  }
   await deleteClinicalDataForLead(lead);
   await db.delete(leadsTable).where(eq(leadsTable.id, params.data.id));
 

@@ -10,6 +10,17 @@ import type { LeadSummaryClinicalData } from './leadSummaryClinicalData';
 
 export interface LeadSummary {
   id: string;
+  /**
+     * Set on an additional consultation; points to the patient's main file.
+     * @nullable
+     */
+  parentLeadId?: string | null;
+  /** @nullable */
+  protocolId?: string | null;
+  /** Name of the consultation type (dermatology centers); empty otherwise. */
+  consultTypeName?: string;
+  /** Consultations on this patient's file, including this one (dermatology centers). */
+  consultCount?: number;
   token: string;
   createdAt: string;
   updatedAt: string;

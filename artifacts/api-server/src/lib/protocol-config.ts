@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { and, asc, eq, inArray, ne } from "drizzle-orm";
-import { db, clinicalPhotosTable, protocolPhasesTable, protocolViewsTable } from "@workspace/db";
+import { db, clinicalPhotosTable, protocolPhasesTable, protocolViewsTable, protocolsTable } from "@workspace/db";
 import { defaultProtocolIdForCenter, ensureClinicalConfiguration } from "./clinical-photos";
 
 export const MAX_PHASES = 12;
@@ -24,10 +24,23 @@ export type ProtocolPhaseDto = {
 
 export class ProtocolConfigError extends Error {}
 
+/**
+ * The base protocol of the clinic, or — when `typeId` is given — one of its
+ * consult types. A type from another clinic is never reachable.
+ */
+export async function resolveProtocolId(centerId: string, typeId?: string): Promise<string> {
+  const baseId = defaultProtocolIdForCenter(centerId);
+  await ensureClinicalConfiguration(centerId, baseId);
+  if (!typeId || typeId === baseId) return baseId;
+  const [type] = await db.select({ id: protocolsTable.id }).from(protocolsTable)
+    .where(and(eq(protocolsTable.id, typeId), eq(protocolsTable.centerId, centerId)));
+  if (!type) throw new ProtocolConfigError("Ese tipo de consulta no existe en esta clínica.");
+  return type.id;
+}
+
 /** Loads (creating the starting six phases on first use) the clinic's protocol structure. */
-export async function getProtocolStructure(centerId: string): Promise<{ protocolId: string; phases: ProtocolPhaseDto[] }> {
-  const protocolId = defaultProtocolIdForCenter(centerId);
-  await ensureClinicalConfiguration(centerId, protocolId);
+export async function getProtocolStructure(centerId: string, typeId?: string): Promise<{ protocolId: string; phases: ProtocolPhaseDto[] }> {
+  const protocolId = await resolveProtocolId(centerId, typeId);
 
   const phases = await db.select().from(protocolPhasesTable)
     .where(and(eq(protocolPhasesTable.protocolId, protocolId), eq(protocolPhasesTable.active, true)))
@@ -69,8 +82,8 @@ const normalize = (text: string) => text.trim().replace(/\s+/g, " ");
  * place; new ones created; omitted ones deleted only when they hold no
  * photos — otherwise they are hidden (active = false), never erased.
  */
-export async function replaceProtocolStructure(centerId: string, input: PhaseInput[]): Promise<void> {
-  const current = await getProtocolStructure(centerId);
+export async function replaceProtocolStructure(centerId: string, input: PhaseInput[], typeId?: string): Promise<void> {
+  const current = await getProtocolStructure(centerId, typeId);
   const { protocolId } = current;
 
   if (input.length < 1 || input.length > MAX_PHASES) {

@@ -78,6 +78,10 @@ export const leadsTable = pgTable("leads", {
   dischargedAt: timestamp("discharged_at", { withTimezone: true }),
   dischargedByName: text("discharged_by_name").default(""),
   dischargeNote: text("discharge_note").default(""),
+  // Consulta adicional de un paciente (dermatología, varios tipos de consulta):
+  // apunta a la ficha principal. Las consultas adicionales no llevan RUT
+  // normalizado (el RUT es único por clínica) y no cuentan como pacientes.
+  parentLeadId: text("parent_lead_id"),
 }, (table) => [
   // Per-clinic uniqueness: the same RUT is only a duplicate within one center.
   uniqueIndex("leads_center_document_unique")

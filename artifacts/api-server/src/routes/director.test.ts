@@ -40,7 +40,7 @@ beforeAll(async () => {
       active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar',
       created_at timestamptz NOT NULL DEFAULT now()
     );
-    CREATE TABLE IF NOT EXISTS clinical_protocols (
+    CREATE TABLE IF NOT EXISTS clinical_protocols (template_key text NOT NULL DEFAULT '', 
       id text PRIMARY KEY, center_id text NOT NULL DEFAULT 'default-center',
       name text NOT NULL, version text NOT NULL DEFAULT '1',
       specialty text NOT NULL DEFAULT 'capilar', active boolean NOT NULL DEFAULT true,
@@ -57,7 +57,7 @@ beforeAll(async () => {
       position integer NOT NULL DEFAULT 0, active boolean NOT NULL DEFAULT true, kind text NOT NULL DEFAULT 'capture',
       UNIQUE (protocol_id, key)
     );
-    CREATE TABLE IF NOT EXISTS leads (
+    CREATE TABLE IF NOT EXISTS leads (parent_lead_id text, 
       id text PRIMARY KEY,
       token text NOT NULL UNIQUE,
       created_at timestamptz NOT NULL DEFAULT now(),

@@ -37,7 +37,7 @@ beforeAll(async () => {
       reset_token_hash text, reset_token_expires_at timestamptz,
       created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
     );
-    CREATE TABLE IF NOT EXISTS leads (
+    CREATE TABLE IF NOT EXISTS leads (parent_lead_id text, 
       id text PRIMARY KEY, token text NOT NULL UNIQUE,
       created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now(),
       name text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', document_id text DEFAULT '',

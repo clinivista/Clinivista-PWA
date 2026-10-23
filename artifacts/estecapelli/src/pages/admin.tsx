@@ -36,6 +36,8 @@ import { HelpPanel } from "./help-panel";
 import { HELP_TEXT } from "@/lib/help-i18n";
 import { LeadPhases } from "@/components/lead-phases";
 import { AddPatientDialog } from "@/components/add-patient-dialog";
+import { ConsultationsStrip } from "@/components/consultations-strip";
+import { CONSULT_TEXT } from "@/lib/consult-types-i18n";
 import { ClinicChooser, selectClinic } from "@/components/clinic-chooser";
 import { CLINIC_ACCESS_TEXT } from "@/lib/clinic-access-i18n";
 import { STAFF_FLOW_TEXT } from "@/lib/staff-flow-i18n";
@@ -102,7 +104,7 @@ export default function Admin() {
     refetchInterval: 20000, retry: false, enabled: isClinicStaff,
   });
   const helpUnread = supportUnread?.unread ?? 0;
-  const { data: protocol } = useGetClinicProtocol({ query: { enabled: isClinicStaff, queryKey: getGetClinicProtocolQueryKey(), staleTime: 60_000 } });
+  const { data: protocol } = useGetClinicProtocol(undefined, { query: { enabled: isClinicStaff, queryKey: getGetClinicProtocolQueryKey(), staleTime: 60_000 } });
   const photoTotal = protocol?.phases[0]?.views.length ?? 5;
   const canEditPhases = protocol?.canEdit === true;
 
@@ -111,6 +113,9 @@ export default function Admin() {
     query: { enabled: authStatus?.authenticated, queryKey: getGetLeadsQueryKey(leadsParams) }
   });
 
+  const consultText = CONSULT_TEXT[lang];
+  const consultLabel = (lead: { consultTypeName?: string; consultCount?: number }) =>
+    `${lead.consultTypeName}${(lead.consultCount ?? 1) > 1 ? ` · ${consultText.consultCount(lead.consultCount ?? 1)}` : ""}`;
   const selectedLeadSummary = leadsData?.leads.find(l => l.id === selectedLeadId);
   const { data: fullLead } = useGetLeadById(selectedLeadId || "", {
     query: { enabled: !!selectedLeadId, queryKey: getGetLeadByIdQueryKey(selectedLeadId || "") }
@@ -502,6 +507,7 @@ export default function Admin() {
                           <div className="min-w-0">
                             <div className="font-bold text-foreground text-base truncate">{lead.name || "—"}</div>
                             <div className="text-muted-foreground font-medium text-sm truncate">{lead.phone}</div>
+                            {lead.consultTypeName && <div className="text-xs font-semibold text-primary truncate" data-testid="lead-consult">{consultLabel(lead)}</div>}
                           </div>
                           <span className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 ${STATUS_COLORS[lead.status]}`}>
                             {STATUS_LABELS[lead.status]}
@@ -544,6 +550,7 @@ export default function Admin() {
                       <td className="px-6 py-5">
                         <div className="font-bold text-foreground text-base mb-0.5">{lead.name || "—"}</div>
                         <div className="text-muted-foreground font-medium text-sm">{lead.phone}</div>
+                        {lead.consultTypeName && <div className="text-xs font-semibold text-primary mt-0.5" data-testid="lead-consult">{consultLabel(lead)}</div>}
                       </td>
                       <td className="px-6 py-5">
                         <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${STATUS_COLORS[lead.status]}`}>
@@ -591,6 +598,8 @@ export default function Admin() {
                       <X className="w-5 h-5 text-gray-500" />
                     </button>
                   </div>
+
+                  <ConsultationsStrip leadId={fullLead.id} onOpen={(id) => setSelectedLeadId(id)} />
 
                   <div className="shrink-0 px-6 md:px-8 py-3 bg-white border-t border-[#E8E4DE] flex justify-end">
                     <Button

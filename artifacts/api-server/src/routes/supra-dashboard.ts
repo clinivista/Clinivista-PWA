@@ -47,7 +47,7 @@ router.get("/supra/dashboard", async (req, res): Promise<void> => {
     supra: sql<number>`count(*) filter (where ${usersTable.role} in ('director', 'supra_admin'))::int`,
   }).from(usersTable);
 
-  const notDemo = sql`coalesce(${leadsTable.isDemo}, false) = false`;
+  const notDemo = sql`coalesce(${leadsTable.isDemo}, false) = false and ${leadsTable.parentLeadId} is null`;
   const [patients] = await db.select({
     total: sql<number>`count(*)::int`,
     newThisMonth: sql<number>`count(*) filter (where ${leadsTable.createdAt} >= ${monthStart})::int`,

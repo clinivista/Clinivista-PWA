@@ -1903,6 +1903,13 @@ paths:
       operationId: getClinicProtocol
       tags: [clinic-protocol]
       summary: Phases and photos configured for the signed-in clinic
+      parameters:
+        - name: typeId
+          in: query
+          required: false
+          description: A consultation type of the clinic; omitted means the clinic's base process.
+          schema:
+            type: string
       responses:
         "200":
           description: The clinic's phase structure
@@ -1920,6 +1927,13 @@ paths:
       operationId: updateClinicProtocol
       tags: [clinic-protocol]
       summary: Replace the clinic's phases and photos (legal representative only)
+      parameters:
+        - name: typeId
+          in: query
+          required: false
+          description: A consultation type of the clinic; omitted means the clinic's base process.
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -3455,6 +3469,17 @@ components:
       properties:
         id:
           type: string
+        parentLeadId:
+          type: ["string", "null"]
+          description: Set on an additional consultation; points to the patient's main file.
+        protocolId:
+          type: ["string", "null"]
+        consultTypeName:
+          type: string
+          description: Name of the consultation type (dermatology centers); empty otherwise.
+        consultCount:
+          type: number
+          description: Consultations on this patient's file, including this one (dermatology centers).
         token:
           type: string
         createdAt:
@@ -3508,6 +3533,17 @@ components:
       properties:
         id:
           type: string
+        parentLeadId:
+          type: ["string", "null"]
+          description: Set on an additional consultation; points to the patient's main file.
+        protocolId:
+          type: ["string", "null"]
+        consultTypeName:
+          type: string
+          description: Name of the consultation type (dermatology centers); empty otherwise.
+        consultCount:
+          type: number
+          description: Consultations on this patient's file, including this one (dermatology centers).
         token:
           type: string
         createdAt:

@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, eq, or } from "drizzle-orm";
-import { db, leadsTable, usersTable, type SkippedPhase } from "@workspace/db";
+import { db, leadsTable, usersTable, centersTable, type SkippedPhase } from "@workspace/db";
 import { requireStaffAuth, type StaffAuthContext } from "./auth";
 import { uid, clean } from "../lib/helpers";
 import { validateRut } from "../lib/rut";
@@ -13,6 +13,7 @@ import {
 import { syncLeadStatus } from "../lib/lead-status";
 import { isCenterActive } from "../lib/centers";
 import { ensurePatientAccountForLead } from "../lib/patient-accounts";
+import { selectableTypeIds, listConsultTypes, CONSULT_SPECIALTY } from "../lib/consult-types";
 import { baseUrl } from "./results";
 import { EMAIL_REGEX, buildLead, specialtyAnswers } from "./patients";
 
@@ -90,8 +91,15 @@ router.post("/leads", async (req, res): Promise<void> => {
     return;
   }
 
-  const protocolId = defaultProtocolIdForCenter(staff.centerId);
+  let protocolId = defaultProtocolIdForCenter(staff.centerId);
   await ensureClinicalConfiguration(staff.centerId, protocolId);
+  if (typeof body.consultTypeId === "string" && body.consultTypeId && body.consultTypeId !== protocolId) {
+    if (!(await selectableTypeIds(staff.centerId)).includes(body.consultTypeId)) {
+      res.status(422).json({ error: "Elige un tipo de consulta válido." });
+      return;
+    }
+    protocolId = body.consultTypeId;
+  }
   const newLead = {
     id: uid(),
     token: uid(24),
@@ -113,6 +121,100 @@ router.post("/leads", async (req, res): Promise<void> => {
   // Acceso al portal del paciente por correo, solo si el personal lo pide.
   if (body.sendPortalAccess === true && inserted.email) void ensurePatientAccountForLead(inserted, baseUrl(req));
   res.status(201).json({ ok: true, lead: { id: inserted.id, token: inserted.token, name: inserted.name, status: inserted.status } });
+});
+
+// ── Consultas adicionales (dermatología) ──────────────────────────────────
+// Un paciente puede tener varias consultas de tipos distintos en la misma
+// ficha. Cada consulta adicional es un caso propio (con sus fotos, etapas,
+// diagnóstico y alta) que apunta a la ficha principal y copia sus datos
+// personales; no lleva RUT normalizado porque el RUT es único por clínica.
+
+async function mainFileOf(lead: typeof leadsTable.$inferSelect) {
+  if (!lead.parentLeadId) return lead;
+  const [parent] = await db.select().from(leadsTable).where(eq(leadsTable.id, lead.parentLeadId));
+  return parent ?? lead;
+}
+
+router.get("/leads/:id/consultations", async (req, res): Promise<void> => {
+  const staff = requireStaffAuth(req, res);
+  if (!staff) return;
+  const lead = await ownLead(staff.centerId, req.params.id);
+  if (!lead) {
+    res.status(404).json({ error: "Caso no encontrado." });
+    return;
+  }
+  const main = await mainFileOf(lead);
+  const extras = await db.select().from(leadsTable).where(and(eq(leadsTable.parentLeadId, main.id), eq(leadsTable.centerId, staff.centerId)));
+  const names = new Map((await listConsultTypes(staff.centerId)).types.map((type) => [type.id, type.name]));
+  const all = [main, ...extras.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())];
+  res.json({
+    currentId: lead.id,
+    consultations: all.map((item) => ({
+      id: item.id,
+      typeName: names.get(item.protocolId ?? "") ?? "",
+      status: item.status,
+      createdAt: item.createdAt,
+      isMain: item.id === main.id,
+    })),
+  });
+});
+
+router.post("/leads/:id/consultations", async (req, res): Promise<void> => {
+  const staff = requireStaffAuth(req, res);
+  if (!staff) return;
+  if (!(await isCenterActive(staff.centerId))) {
+    res.status(403).json({ error: "Esta clínica no está aceptando nuevos pacientes en este momento." });
+    return;
+  }
+  const lead = await ownLead(staff.centerId, req.params.id);
+  if (!lead) {
+    res.status(404).json({ error: "Caso no encontrado." });
+    return;
+  }
+  const [center] = await db.select({ specialty: centersTable.specialty }).from(centersTable).where(eq(centersTable.id, staff.centerId));
+  if (center?.specialty !== CONSULT_SPECIALTY) {
+    res.status(409).json({ error: "Solo los centros de dermatología tienen varios tipos de consulta." });
+    return;
+  }
+  const body = (req.body ?? {}) as { consultTypeId?: unknown };
+  const typeId = typeof body.consultTypeId === "string" ? body.consultTypeId : "";
+  if (!typeId || !(await selectableTypeIds(staff.centerId)).includes(typeId)) {
+    res.status(422).json({ error: "Elige un tipo de consulta válido." });
+    return;
+  }
+  const main = await mainFileOf(lead);
+  await ensureClinicalConfiguration(staff.centerId, typeId);
+  const created = {
+    id: uid(),
+    token: uid(24),
+    status: "incompleto",
+    notes: "",
+    norwood: "",
+    appointmentAt: "",
+    isDemo: main.isDemo ?? false,
+    photos: [],
+    photoCount: "0",
+    centerId: staff.centerId,
+    protocolId: typeId,
+    parentLeadId: main.id,
+    name: main.name,
+    phone: main.phone,
+    email: main.email,
+    age: main.age,
+    city: main.city,
+    documentId: main.documentId,
+    documentNormalized: "",
+    consent: main.consent,
+    marketingConsent: main.marketingConsent,
+    language: main.language,
+    deliveryChannel: main.deliveryChannel,
+    patientAccountId: main.patientAccountId,
+    clinicalData: await specialtyAnswers(staff.centerId, body as Record<string, unknown>) ?? {},
+    consentRecordedBy: main.consentRecordedBy,
+    consentRecordedAt: main.consentRecordedAt,
+  };
+  await db.insert(leadsTable).values(created);
+  res.status(201).json({ ok: true, lead: { id: created.id, token: created.token, name: created.name, status: created.status } });
 });
 
 // Omitir una etapa: cualquiera del personal, con motivo obligatorio. La etapa
