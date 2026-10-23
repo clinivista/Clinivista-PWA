@@ -95,6 +95,22 @@ describe("/c/:slug", () => {
     expect(screen.queryByText("Hair History")).not.toBeInTheDocument();
   });
 
+  it("dermatología: sus preguntas y textos reemplazan el historial capilar, en el idioma del paciente", async () => {
+    state.clinic = { data: { name: "Clínica Derma", logoDataUrl: null, specialty: "dermatologia" }, isLoading: false, isError: false, error: null };
+    localStorage.setItem("clinivista_lang", "en");
+    renderPage();
+    expect(screen.getByText(/area of skin that worries you/)).toBeInTheDocument();
+    expect(screen.queryByText(/scalp/i)).not.toBeInTheDocument();
+    const start = screen.getAllByRole("button").find((b) => /begin|start/i.test(b.textContent ?? ""));
+    start?.click();
+    const intake = await screen.findByTestId("derm-intake");
+    expect(intake).toHaveTextContent("Your dermatology consultation");
+    expect(intake).toHaveTextContent("What is your concern?");
+    expect(intake).toHaveTextContent("Skin type");
+    expect(screen.queryByText("Hair History")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("plastic-intake")).not.toBeInTheDocument();
+  });
+
   it("a hair clinic keeps the hair history form", async () => {
     state.clinic = { data: { name: "Estecapelli", logoDataUrl: null, specialty: "capilar" }, isLoading: false, isError: false, error: null };
     renderPage();

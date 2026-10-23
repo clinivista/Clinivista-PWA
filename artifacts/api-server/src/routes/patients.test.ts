@@ -928,6 +928,46 @@ describe("Cirugía plástica (segunda especialidad)", () => {
   });
 });
 
+describe("Dermatología (tercera especialidad)", () => {
+  const answers = { reason: "mole", area: "  Espalda alta  ", duration: "m1to6", changes: "colorShape", sun: "high", skinType: "light", hacker: "x", history: "" };
+  const register = (body: Record<string, unknown> = {}) =>
+    request(app).post("/api/clinics/derma-a/patients").send({ ...VALID_BODY, ...body });
+
+  beforeEach(async () => {
+    await pglite.exec(`INSERT INTO clinical_centers (id, name, slug, specialty) VALUES ('derma-a', 'Clínica Derma', 'derma-a', 'dermatologia') ON CONFLICT DO NOTHING;`);
+  });
+
+  it("reconoce la especialidad y guarda solo sus respuestas, limpias", async () => {
+    expect((await request(app).get("/api/clinics/derma-a").expect(200)).body.specialty).toBe("dermatologia");
+    const created = await register({ clinicalData: answers }).expect(201);
+    expect(created.body.lead.clinicalData).toEqual({ reason: "mole", area: "Espalda alta", duration: "m1to6", changes: "colorShape", sun: "high", skinType: "light" });
+    const cleaned = await request(app).put(`/api/patients/${created.body.lead.token}`).send({ ...VALID_BODY, clinicalData: { reason: "magia", sun: "low" } }).expect(200);
+    expect(cleaned.body.lead.clinicalData).toEqual({ sun: "low" });
+  });
+
+  it("parte con fotos de lesión (la dermatoscopía es opcional) y las etapas de dermatología", async () => {
+    const lead = (await register({ clinicalData: answers }).expect(201)).body.lead;
+    const protocol = await request(app).get(`/api/patients/${lead.token}/protocol`).expect(200);
+    expect(protocol.body.views).toEqual([
+      { key: "dermOverview", label: "Vista panorámica", required: true },
+      { key: "dermClose", label: "Primer plano con referencia", required: true },
+      { key: "dermDermoscopy", label: "Dermatoscopía", required: false },
+    ]);
+    const phases = (await pglite.exec(`SELECT name FROM clinical_protocol_phases WHERE protocol_id LIKE 'derma-a%' ORDER BY position;`)) as Array<{ rows: Array<{ name: string }> }>;
+    expect(phases[0].rows.map((r) => r.name)).toEqual(["Pre-evaluación", "Diagnóstico", "Tratamiento", "Control 1", "Control 2"]);
+  });
+
+  it("completar el tratamiento marca al paciente como «operado» (se muestra «Tratado»)", async () => {
+    const { deriveStatus } = await import("../lib/lead-status-rules");
+    const phases = (done: number) => ["preevaluacion", "diagnostico", "tratamiento", "control-1", "control-2"].map((key, index) => ({
+      key, kind: (key === "diagnostico" ? "diagnosis" : "capture") as "capture" | "diagnosis", complete: index < done,
+    }));
+    expect(deriveStatus("contactar", "", phases(2))).toBe("contactar");
+    expect(deriveStatus("contactar", "", phases(3))).toBe("operado");
+    expect(deriveStatus("operado", "", phases(5))).toBe("completado");
+  });
+});
+
 describe("descripción opcional de cada fotografía", () => {
   const image = Buffer.from(
     "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AVN//2Q==",

@@ -14,7 +14,7 @@ export type Specialty = {
 
 export const SPECIALTIES: Specialty[] = [
   { slug: "capilar", name: "Capilar", tagline: "Alopecia y control evolutivo", available: true },
-  { slug: "dermatologico", name: "Dermatología", tagline: "Lesiones y seguimiento", available: false },
+  { slug: "dermatologico", name: "Dermatología", tagline: "Lesiones y seguimiento", available: true },
   { slug: "estetico", name: "Medicina estética", tagline: "Antes, después y controles", available: false },
   { slug: "plastico", name: "Cirugía plástica", tagline: "Registro pre y posoperatorio", available: true },
   { slug: "dental", name: "Odontología", tagline: "Sonrisa y evolución", available: false },

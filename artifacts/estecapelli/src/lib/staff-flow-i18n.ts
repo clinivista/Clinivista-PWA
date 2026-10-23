@@ -474,3 +474,8 @@ export const STAFF_FLOW_TEXT: Record<LangCode, StaffFlowText> = {
     on: "于",
   },
 };
+
+/** En dermatología, el estado «Operado» se muestra como «Tratado» (la lógica interna es la misma). */
+export const STATUS_TREATED: Record<LangCode, string> = {
+  es: "Tratado", en: "Treated", pt: "Tratado", fr: "Traité", de: "Behandelt", it: "Trattato", tr: "Tedavi edildi", ar: "تمت المعالجة", zh: "已治疗",
+};

@@ -1,6 +1,7 @@
 // Textos del proceso por fases y del diagnóstico en el panel del personal, en los nueve idiomas.
 import type { AppTranslations, LangCode } from "./language";
 import { PLASTIC_TEXT, PLASTIC_VIEW_KEYS } from "./specialty-i18n";
+import { DERM_TEXT, DERM_VIEW_KEYS } from "./derm-i18n";
 
 export const DATE_LOCALES: Record<LangCode, string> = { es: "es-CL", en: "en-US", pt: "pt-BR", fr: "fr-FR", de: "de-DE", it: "it-IT", tr: "tr-TR", ar: "ar", zh: "zh-CN" };
 
@@ -313,6 +314,8 @@ export function viewLabel(view: { key: string; label: string }, phaseKey: string
   if (capilar) return view.label === capilar.es ? String(t[capilar.title]) : view.label;
   const plastic = (PLASTIC_VIEW_KEYS as readonly string[]).indexOf(base);
   if (plastic >= 0) return view.label === PLASTIC_TEXT.es.photos[plastic][0] ? PLASTIC_TEXT[lang].photos[plastic][0] : view.label;
+  const derm = (DERM_VIEW_KEYS as readonly string[]).indexOf(base);
+  if (derm >= 0) return view.label === DERM_TEXT.es.photos[derm][0] ? DERM_TEXT[lang].photos[derm][0] : view.label;
   return view.label;
 }
 

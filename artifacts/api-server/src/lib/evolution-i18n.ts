@@ -50,6 +50,9 @@ const ZONE_NAMES: Record<string, Record<PdfLanguage, string> & { default: string
   "plasticProfileLeft": {"default": "Perfil izquierdo", "es": "Perfil izquierdo", "en": "Left profile", "pt": "Perfil esquerdo", "fr": "Profil gauche", "de": "Linkes Profil", "it": "Profilo sinistro", "tr": "Sol profil", "ar": "الجانب الأيسر", "zh": "左侧面"},
   "plasticObliqueRight": {"default": "Oblicua derecha", "es": "Oblicua derecha", "en": "Right oblique", "pt": "Oblíqua direita", "fr": "Oblique droite", "de": "Schräg rechts", "it": "Obliqua destra", "tr": "Sağ çapraz", "ar": "مائلة لليمين", "zh": "右斜侧"},
   "plasticObliqueLeft": {"default": "Oblicua izquierda", "es": "Oblicua izquierda", "en": "Left oblique", "pt": "Oblíqua esquerda", "fr": "Oblique gauche", "de": "Schräg links", "it": "Obliqua sinistra", "tr": "Sol çapraz", "ar": "مائلة لليسار", "zh": "左斜侧"},
+  "dermOverview": {"default": "Vista panorámica", "es": "Vista panorámica", "en": "Overview", "pt": "Vista panorâmica", "fr": "Vue d'ensemble", "de": "Übersicht", "it": "Vista d'insieme", "tr": "Genel görünüm", "ar": "منظر عام", "zh": "全景"},
+  "dermClose": {"default": "Primer plano con referencia", "es": "Primer plano con referencia", "en": "Close-up with reference", "pt": "Close com referência", "fr": "Gros plan avec repère", "de": "Nahaufnahme mit Referenz", "it": "Primo piano con riferimento", "tr": "Referanslı yakın çekim", "ar": "لقطة مقرّبة مع مرجع", "zh": "带参照物的特写"},
+  "dermDermoscopy": {"default": "Dermatoscopía", "es": "Dermatoscopía", "en": "Dermoscopy", "pt": "Dermatoscopia", "fr": "Dermoscopie", "de": "Dermatoskopie", "it": "Dermatoscopia", "tr": "Dermatoskopi", "ar": "تنظير الجلد", "zh": "皮肤镜"},
 };
 
 /** The base key of a zone: later phases repeat the starting views as "<phase>-<view>". */

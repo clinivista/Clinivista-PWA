@@ -61,6 +61,7 @@ export type DirectorCenterSummarySpecialty = typeof DirectorCenterSummarySpecial
 export const DirectorCenterSummarySpecialty = {
   capilar: 'capilar',
   plastica: 'plastica',
+  dermatologia: 'dermatologia',
 } as const;
 
 export interface DirectorCenterSummary {
@@ -98,6 +99,7 @@ export type MyClinicSpecialty = typeof MyClinicSpecialty[keyof typeof MyClinicSp
 export const MyClinicSpecialty = {
   capilar: 'capilar',
   plastica: 'plastica',
+  dermatologia: 'dermatologia',
 } as const;
 
 export interface MyClinic {
@@ -174,6 +176,7 @@ export type PatientClinicSpecialty = typeof PatientClinicSpecialty[keyof typeof 
 export const PatientClinicSpecialty = {
   capilar: 'capilar',
   plastica: 'plastica',
+  dermatologia: 'dermatologia',
 } as const;
 
 export interface PatientClinic {
@@ -302,6 +305,7 @@ export type DirectorCenterCreateBodySpecialty = typeof DirectorCenterCreateBodyS
 export const DirectorCenterCreateBodySpecialty = {
   capilar: 'capilar',
   plastica: 'plastica',
+  dermatologia: 'dermatologia',
 } as const;
 
 export type DirectorCenterCreateUserRole = typeof DirectorCenterCreateUserRole[keyof typeof DirectorCenterCreateUserRole];

@@ -25,7 +25,7 @@ export function CreateCenterForm({ onClose }: { onClose: () => void }) {
   const createCenter = useCreateDirectorCenter();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
-  const [specialty, setSpecialty] = useState<"capilar" | "plastica">("capilar");
+  const [specialty, setSpecialty] = useState<"capilar" | "plastica" | "dermatologia">("capilar");
   const [withSamplePatients, setWithSamplePatients] = useState(false);
   const [accounts, setAccounts] = useState<Record<string, AccountDraft>>({
     medico: { ...EMPTY_ACCOUNT },
@@ -110,10 +110,11 @@ export function CreateCenterForm({ onClose }: { onClose: () => void }) {
           id="new-center-specialty"
           className="h-10 rounded-full bg-[#F5F2EE] px-4 text-sm font-semibold"
           value={specialty}
-          onChange={(event) => setSpecialty(event.target.value as "capilar" | "plastica")}
+          onChange={(event) => setSpecialty(event.target.value as "capilar" | "plastica" | "dermatologia")}
         >
           <option value="capilar">Capilar</option>
           <option value="plastica">Cirugía plástica</option>
+          <option value="dermatologia">Dermatología</option>
         </select>
         <p className="text-xs text-muted-foreground">Define el formulario del paciente, las fotos y las fases iniciales. No se puede cambiar después.</p>
       </div>
