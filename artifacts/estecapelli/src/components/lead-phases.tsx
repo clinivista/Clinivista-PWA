@@ -14,6 +14,7 @@ import { useLanguage } from "@/lib/language";
 import { PHASES_TEXT, phaseName, refreshLeadViews, viewLabel } from "@/lib/phases-i18n";
 import { STAFF_FLOW_TEXT } from "@/lib/staff-flow-i18n";
 import { DischargeControl, SkipPhaseButton, SkippedNote } from "@/components/phase-actions";
+import { PhaseAttention } from "@/components/phase-attention";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const MAX_SIDE = 2400;
@@ -196,9 +197,13 @@ export function LeadPhases({ leadId, onExpand, diagnosisLead, process }: { leadI
                   {p.opensAfter(previous ? phaseName(previous, lang) : "")}
                 </p>
               ) : phase.kind === "diagnosis" ? (
-                <DiagnosisPanel leadId={leadId} onExpand={onExpand} lead={diagnosisLead} />
+                <>
+                  {phase.attentionRequired && <PhaseAttention leadId={leadId} phase={phase} readOnly={!processOpen && !!process} />}
+                  <DiagnosisPanel leadId={leadId} onExpand={onExpand} lead={diagnosisLead} />
+                </>
               ) : (
                 <>
+                  {phase.attentionRequired && <PhaseAttention leadId={leadId} phase={phase} readOnly={!processOpen && !!process} />}
                   {phase.patientCaptured && <p className="text-xs text-muted-foreground mt-2">{s.staffTakes}</p>}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
                     {phase.views.map((view) => (

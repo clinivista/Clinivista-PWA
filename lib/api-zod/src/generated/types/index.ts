@@ -82,6 +82,7 @@ export * from './lead';
 export * from './leadClinicalData';
 export * from './leadPatch';
 export * from './leadPhase';
+export * from './leadPhaseAttention';
 export * from './leadPhaseKind';
 export * from './leadPhaseList';
 export * from './leadPhaseSkip';

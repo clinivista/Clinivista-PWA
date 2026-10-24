@@ -94,7 +94,7 @@ beforeAll(async () => {
        delivery_channel text DEFAULT '',
        language text DEFAULT '',
        patient_account_id text,
-       clinical_data jsonb NOT NULL DEFAULT '{}', consent_recorded_by text DEFAULT '', consent_recorded_at timestamptz, skipped_phases jsonb NOT NULL DEFAULT '[]', discharged_at timestamptz, discharged_by_name text DEFAULT '', discharge_note text DEFAULT ''
+       clinical_data jsonb NOT NULL DEFAULT '{}', consent_recorded_by text DEFAULT '', consent_recorded_at timestamptz, skipped_phases jsonb NOT NULL DEFAULT '[]', phase_attentions jsonb NOT NULL DEFAULT '{}', discharged_at timestamptz, discharged_by_name text DEFAULT '', discharge_note text DEFAULT ''
     );
     CREATE UNIQUE INDEX IF NOT EXISTS leads_center_document_unique
       ON leads (center_id, document_normalized)
@@ -1036,11 +1036,24 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
     id: string; name: string; kind: string; enabled: boolean; complete: boolean; patientCaptured: boolean;
     views: Array<{ id: string; key: string; required: boolean; photo: { id: string } | null }>;
   };
-  const phases = async (leadId: string, cookie = staff()) =>
-    (await request(app).get(`/api/leads/${leadId}/phases`).set("Cookie", cookie).expect(200)).body.phases as PhaseRow[];
+  const listPhases = async (leadId: string, cookie = staff()) =>
+    (await request(app).get(`/api/leads/${leadId}/phases`).set("Cookie", cookie).expect(200)).body.phases as Array<PhaseRow & { attentionRequired: boolean; attention: { date: string; agendaId: string } | null }>;
+  /** Registra la fecha de atención de las fases abiertas que la piden (sin ella no se cierra el diagnóstico ni se suben fotos). */
+  const attendOpenPhases = async (leadId: string, cookie = staff()) => {
+    for (const phase of await listPhases(leadId, cookie)) {
+      if (phase.attentionRequired && phase.enabled && !phase.attention) {
+        await request(app).put(`/api/leads/${leadId}/phases/${phase.id}/attention`).set("Cookie", cookie).send({ date: "2026-01-15", agendaId: "A-1" }).expect(200);
+      }
+    }
+  };
+  const phases = async (leadId: string, cookie = staff()) => {
+    await attendOpenPhases(leadId, cookie);
+    return (await listPhases(leadId, cookie)) as PhaseRow[];
+  };
   const capture = (leadId: string, viewId: string, cookie = staff()) =>
     request(app).post(`/api/leads/${leadId}/views/${viewId}/photo`).set("Cookie", cookie).set("Content-Type", "image/jpeg").send(JPEG);
   const closeDiagnosis = async (leadId: string) => {
+    await attendOpenPhases(leadId);
     await request(app).put(`/api/leads/${leadId}/diagnosis`).set("Cookie", staff()).send({ responseText: "Candidato a injerto." }).expect(200);
     await request(app).post(`/api/leads/${leadId}/diagnosis/close`).set("Cookie", staff()).send({}).expect(200);
   };
@@ -1280,6 +1293,7 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
       const lead = await patientWithPreEvaluation();
       const photoId = (await diagnosis(lead.id).expect(200)).body.photos[0].photoId as string;
       await request(app).put(`/api/leads/${lead.id}/diagnosis`).set("Cookie", staff()).send({ responseText: "Borrador" }).expect(200);
+      await attendOpenPhases(lead.id);
       const closed = await request(app).post(`/api/leads/${lead.id}/diagnosis/close`).set("Cookie", staff())
         .send({ responseText: "Candidato a injerto capilar, 2500 unidades." }).expect(200);
       expect(closed.body).toMatchObject({ status: "closed", responseText: "Candidato a injerto capilar, 2500 unidades." });
@@ -1910,6 +1924,7 @@ describe("Personal: agregar paciente, omitir etapa y alta médica", () => {
 
     // Con la pre-evaluación omitida el médico igual puede cerrar un diagnóstico propio.
     await request(app).delete(`/api/leads/${lead.id}/phases/${diagnosis.id}/skip`).set("Cookie", staff()).expect(204);
+    await request(app).put(`/api/leads/${lead.id}/phases/${diagnosis.id}/attention`).set("Cookie", staff("medico")).send({ date: "2026-01-15" }).expect(200);
     await request(app).put(`/api/leads/${lead.id}/diagnosis`).set("Cookie", staff("medico")).send({ responseText: "Candidato." }).expect(200);
     await request(app).post(`/api/leads/${lead.id}/diagnosis/close`).set("Cookie", staff("medico")).send({}).expect(200);
     expect((await phases(lead.id))[1].complete).toBe(true);
@@ -1917,6 +1932,80 @@ describe("Personal: agregar paciente, omitir etapa y alta médica", () => {
     await request(app).delete(`/api/leads/${lead.id}/phases/${pre.id}/skip`).set("Cookie", staff()).expect(204);
     expect((await phases(lead.id))[0].skipped).toBe(false);
     await request(app).delete(`/api/leads/${lead.id}/phases/${pre.id}/skip`).set("Cookie", staff()).expect(404);
+  });
+
+  describe("fecha e ID de la atención (desde el diagnóstico)", () => {
+    const attend = (leadId: string, phaseId: string, body: unknown, cookie = staff("medico")) =>
+      request(app).put(`/api/leads/${leadId}/phases/${phaseId}/attention`).set("Cookie", cookie).send(body as object);
+
+    it("la piden el diagnóstico y las fases siguientes, no la pre-evaluación; sin fecha no se cierra el diagnóstico", async () => {
+      const lead = await newPatient();
+      const [pre, dx, preop] = await phases(lead.id);
+      expect(pre).toMatchObject({ attentionRequired: false, attention: null });
+      expect(dx).toMatchObject({ attentionRequired: true, attention: null });
+      expect(preop).toMatchObject({ attentionRequired: true, attention: null });
+      for (const view of pre.views) await request(app).post(`/api/leads/${lead.id}/views/${view.id}/photo`).set("Cookie", staff()).set("Content-Type", "image/jpeg").send(JPEG).expect(201);
+      await request(app).put(`/api/leads/${lead.id}/diagnosis`).set("Cookie", staff("medico")).send({ responseText: "Candidato." }).expect(200);
+      const blocked = await request(app).post(`/api/leads/${lead.id}/diagnosis/close`).set("Cookie", staff("medico")).send({});
+      expect(blocked.status).toBe(409);
+      expect(blocked.body.error).toMatch(/fecha de atención/);
+      expect((await attend(lead.id, pre.id, { date: "2026-01-15" })).status).toBe(409);
+      const saved = await attend(lead.id, dx.id, { date: "2026-01-15", agendaId: "  AG-4587 " }).expect(200);
+      expect(saved.body.attention).toMatchObject({ date: "2026-01-15", agendaId: "AG-4587", byName: "staff-1" });
+      await request(app).post(`/api/leads/${lead.id}/diagnosis/close`).set("Cookie", staff("medico")).send({}).expect(200);
+      expect((await phases(lead.id))[1].attention).toMatchObject({ date: "2026-01-15", agendaId: "AG-4587" });
+    });
+
+    it("el ID es opcional y la fecha se puede corregir; el administrativo también las registra", async () => {
+      const lead = await newPatient();
+      const [, dx] = await phases(lead.id);
+      for (const view of (await phases(lead.id))[0].views) await request(app).post(`/api/leads/${lead.id}/views/${view.id}/photo`).set("Cookie", staff()).set("Content-Type", "image/jpeg").send(JPEG).expect(201);
+      await attend(lead.id, dx.id, { date: "2026-01-15" }, staff("administrativo")).expect(200);
+      expect((await phases(lead.id))[1].attention).toMatchObject({ date: "2026-01-15", agendaId: "" });
+      await attend(lead.id, dx.id, { date: "2026-02-01", agendaId: "77" }).expect(200);
+      expect((await phases(lead.id))[1].attention).toMatchObject({ date: "2026-02-01", agendaId: "77" });
+    });
+
+    it("valida la fecha y el ID, la clínica y que la fase esté abierta", async () => {
+      const lead = await newPatient();
+      const [, dx, preop] = await phases(lead.id);
+      for (const body of [{}, { date: "" }, { date: "15-01-2026" }, { date: "2026-02-30" }, { date: "1999-12-31" }, { date: "2999-01-01" }, { date: 20260115 }]) {
+        expect((await attend(lead.id, dx.id, body)).status, JSON.stringify(body)).toBe(422);
+      }
+      expect((await attend(lead.id, dx.id, { date: "2026-01-15", agendaId: "x".repeat(61) })).status).toBe(422);
+      expect((await attend(lead.id, dx.id, { date: "2026-01-15", agendaId: 5 })).status).toBe(422);
+      expect((await attend(lead.id, dx.id, { date: "2026-01-15" })).status).toBe(409); // la fase aún está bloqueada
+      expect((await attend(lead.id, preop.id, { date: "2026-01-15" })).status).toBe(409);
+      expect((await attend(lead.id, "no-existe", { date: "2026-01-15" })).status).toBe(404);
+      expect((await attend(lead.id, dx.id, { date: "2026-01-15" }, staff("medico", "otra-clinica"))).status).toBe(404);
+      expect((await request(app).put(`/api/leads/${lead.id}/phases/${dx.id}/attention`).send({ date: "2026-01-15" })).status).toBe(401);
+    });
+
+    it("sin la fecha de la fase no se suben sus fotografías; con ella sí", async () => {
+      const lead = await newPatient();
+      for (const view of (await phases(lead.id))[0].views) await request(app).post(`/api/leads/${lead.id}/views/${view.id}/photo`).set("Cookie", staff()).set("Content-Type", "image/jpeg").send(JPEG).expect(201);
+      const [, dx] = await phases(lead.id);
+      await attend(lead.id, dx.id, { date: "2026-01-15" }).expect(200);
+      await request(app).put(`/api/leads/${lead.id}/diagnosis`).set("Cookie", staff("medico")).send({ responseText: "Candidato." }).expect(200);
+      await request(app).post(`/api/leads/${lead.id}/diagnosis/close`).set("Cookie", staff("medico")).send({}).expect(200);
+      const [, , preop] = await phases(lead.id);
+      const blocked = await request(app).post(`/api/leads/${lead.id}/views/${preop.views[0].id}/photo`).set("Cookie", staff()).set("Content-Type", "image/jpeg").send(JPEG);
+      expect(blocked.status).toBe(409);
+      expect(blocked.body.error).toMatch(/fecha de atención/);
+      await attend(lead.id, preop.id, { date: "2026-02-10", agendaId: "AG-9" }).expect(200);
+      await request(app).post(`/api/leads/${lead.id}/views/${preop.views[0].id}/photo`).set("Cookie", staff()).set("Content-Type", "image/jpeg").send(JPEG).expect(201);
+    });
+
+    it("con el proceso cerrado (alta médica) ya no se cambia", async () => {
+      const lead = await newPatient();
+      for (const view of (await phases(lead.id))[0].views) await request(app).post(`/api/leads/${lead.id}/views/${view.id}/photo`).set("Cookie", staff()).set("Content-Type", "image/jpeg").send(JPEG).expect(201);
+      const [, dx] = await phases(lead.id);
+      await attend(lead.id, dx.id, { date: "2026-01-15" }).expect(200);
+      await request(app).put(`/api/leads/${lead.id}/diagnosis`).set("Cookie", staff("medico")).send({ responseText: "Candidato." }).expect(200);
+      await request(app).post(`/api/leads/${lead.id}/diagnosis/close`).set("Cookie", staff("medico")).send({}).expect(200);
+      await request(app).post(`/api/leads/${lead.id}/discharge`).set("Cookie", staff("medico")).send({}).expect(200);
+      expect((await attend(lead.id, dx.id, { date: "2026-01-20" })).status).toBe(409);
+    });
   });
 
   it("omitir una etapa solo vale para el personal de la misma clínica", async () => {

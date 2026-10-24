@@ -873,6 +873,13 @@ export type LeadPhaseSkip = {
   at: string;
 } | null;
 
+export type LeadPhaseAttention = {
+  date: string;
+  agendaId: string;
+  byName: string;
+  at: string;
+} | null;
+
 export interface LeadPhase {
   id: string;
   key: string;
@@ -885,6 +892,8 @@ export interface LeadPhase {
   complete: boolean;
   skipped: boolean;
   skip: LeadPhaseSkip;
+  attentionRequired: boolean;
+  attention: LeadPhaseAttention;
   views: LeadPhaseView[];
 }
 

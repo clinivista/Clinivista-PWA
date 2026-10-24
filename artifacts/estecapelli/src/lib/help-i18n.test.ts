@@ -39,6 +39,19 @@ describe("manuales por especialidad", () => {
     }
   });
 
+  it("todos los manuales explican la fecha y el ID de la atención", async () => {
+    for (const code of LANGS) for (const sp of MANUAL_SPECIALTIES) {
+      const phases = (await loadManual(code, sp)).staff.find((s) => s.key === "phases")!;
+      expect(phases.blocks.some((b) => b.t === "h3"), `${code}/${sp}`).toBe(true);
+      const tips = (await loadManual(code, sp)).staff.find((s) => s.key === "tips")!;
+      const table = tips.blocks[0];
+      expect(table.t === "table" && table.rows.length, `${code}/${sp}`).toBeGreaterThanOrEqual(9);
+    }
+    const es = JSON.stringify((await loadManual("es", "capilar")).staff.find((s) => s.key === "phases"));
+    expect(es).toContain("Fecha e ID de la atención");
+    expect(es).toContain("ID de la atención");
+  });
+
   it("solo dermatología trae los tipos de consulta y solo capilar el Norwood", async () => {
     for (const code of LANGS) {
       const raw = await loadRawManual(code);

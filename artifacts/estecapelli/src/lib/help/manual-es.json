@@ -965,6 +965,14 @@
      "only": [
       "dermatologia"
      ]
+    },
+    {
+     "t": "h3",
+     "text": "Fecha e ID de la atención"
+    },
+    {
+     "t": "p",
+     "text": "Desde el diagnóstico, cada fase muestra el recuadro «Atención» con «Fecha de la atención» y «ID de la atención». La fecha es obligatoria: sin ella no se puede cerrar el diagnóstico ni subir las fotografías de la fase. El ID es opcional y sirve para anotar el número de esa atención en la agenda propia de la clínica. Escribe los datos y pulsa «Guardar atención»; puedes corregirlos después mientras el proceso siga abierto. La pre-evaluación del paciente no lo pide."
     }
    ],
    "key": "phases"
@@ -1418,6 +1426,10 @@
       [
        "No encuentro cómo dar el alta médica.",
        "Solo el rol médico la ve activa, y desde que el diagnóstico está disponible: busca «Dar alta médica» en la ficha."
+      ],
+      [
+       "No me deja cerrar el diagnóstico ni subir las fotos de una fase.",
+       "Falta la fecha de atención de esa fase: regístrala en el recuadro «Atención» de la propia fase y vuelve a intentarlo."
       ]
      ],
      "widths": [

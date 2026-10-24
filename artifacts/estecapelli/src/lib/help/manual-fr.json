@@ -965,6 +965,14 @@
      "only": [
       "dermatologia"
      ]
+    },
+    {
+     "t": "h3",
+     "text": "Date et ID de la consultation"
+    },
+    {
+     "t": "p",
+     "text": "À partir du diagnostic, chaque phase affiche le cadre «Consultation» avec «Date de la consultation» et «ID de la consultation». La date est obligatoire : sans elle, on ne peut ni clôturer le diagnostic ni téléverser les photos de la phase. L'ID est facultatif et sert à noter le numéro de cette consultation dans l'agenda propre à la clinique. Saisissez les données et appuyez sur «Enregistrer la consultation» ; vous pouvez les corriger ensuite tant que le parcours reste ouvert. La pré-évaluation du patient ne le demande pas."
     }
    ],
    "key": "phases"
@@ -1418,6 +1426,10 @@
       [
        "Je ne trouve pas comment donner la sortie médicale.",
        "Seul le rôle médecin la voit active, dès que le diagnostic est disponible : cherchez «Donner la sortie médicale» dans la fiche."
+      ],
+      [
+       "Je ne peux ni clôturer le diagnostic ni téléverser les photos d'une phase.",
+       "La date de la consultation de cette phase manque : saisissez-la dans le cadre «Consultation» de la phase et réessayez."
       ]
      ],
      "widths": [

@@ -965,6 +965,14 @@
      "only": [
       "dermatologia"
      ]
+    },
+    {
+     "t": "h3",
+     "text": "Data e ID do atendimento"
+    },
+    {
+     "t": "p",
+     "text": "A partir do diagnóstico, cada fase mostra o quadro «Atendimento» com «Data do atendimento» e «ID do atendimento». A data é obrigatória: sem ela não é possível fechar o diagnóstico nem enviar as fotos da fase. O ID é opcional e serve para anotar o número desse atendimento na agenda própria da clínica. Preencha os dados e toque em «Salvar atendimento»; você pode corrigi-los depois enquanto o processo estiver aberto. A pré-avaliação do paciente não pede isso."
     }
    ],
    "key": "phases"
@@ -1418,6 +1426,10 @@
       [
        "Não encontro como dar a alta médica.",
        "Só o papel de médico a vê ativa, a partir do diagnóstico: procure «Dar alta médica» na ficha."
+      ],
+      [
+       "Não consigo fechar o diagnóstico nem enviar as fotos de uma fase.",
+       "Falta a data do atendimento dessa fase: registre-a no quadro «Atendimento» da própria fase e tente de novo."
       ]
      ],
      "widths": [
