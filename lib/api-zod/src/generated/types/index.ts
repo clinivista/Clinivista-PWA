@@ -112,6 +112,8 @@ export * from './pendingPatient';
 export * from './photoConfirmation';
 export * from './photoEntry';
 export * from './photoMarkup';
+export * from './photoTranscription';
+export * from './photoTranscriptionTier';
 export * from './portalCase';
 export * from './portalForgotInput';
 export * from './portalLoginInput';

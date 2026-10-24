@@ -15,6 +15,7 @@ import { PHASES_TEXT, phaseName, refreshLeadViews, viewLabel } from "@/lib/phase
 import { STAFF_FLOW_TEXT } from "@/lib/staff-flow-i18n";
 import { DischargeControl, SkipPhaseButton, SkippedNote } from "@/components/phase-actions";
 import { PhaseAttention } from "@/components/phase-attention";
+import { PhotoTranscription } from "@/components/photo-transcription";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const MAX_SIDE = 2400;
@@ -82,7 +83,7 @@ function ViewSlot({ leadId, phase, view, disabled, onExpand }: {
   };
 
   return (
-    <div className="rounded-2xl bg-[#F5F2EE] overflow-hidden flex flex-col">
+    <div className={`rounded-2xl bg-[#F5F2EE] overflow-hidden flex flex-col ${view.document && view.photo ? "col-span-2 sm:col-span-3" : ""}`}>
       {photoUrl ? (
         <button type="button" onClick={() => onExpand(photoUrl)} aria-label={p.viewPhoto(label)}>
           <img src={photoUrl} alt={label} className="w-full h-32 object-cover" />
@@ -139,6 +140,7 @@ function ViewSlot({ leadId, phase, view, disabled, onExpand }: {
           </div>
         )}
       </div>
+      {view.document && view.photo && <PhotoTranscription leadId={leadId} view={view} readOnly={disabled} />}
       <span className="sr-only">{phaseName(phase, lang)}</span>
     </div>
   );

@@ -149,6 +149,20 @@ beforeAll(async () => {
        created_by_user_id text, created_by_name text, created_at timestamptz NOT NULL DEFAULT now(),
        expires_at timestamptz NOT NULL
      );
+     CREATE TABLE IF NOT EXISTS clinical_photo_transcriptions (
+       photo_id text PRIMARY KEY, text text NOT NULL DEFAULT '', tier text NOT NULL DEFAULT 'basic', model text NOT NULL DEFAULT '',
+       transcribed_by_user_id text, transcribed_by_name text, transcribed_at timestamptz NOT NULL DEFAULT now(),
+       edited_by_name text, edited_at timestamptz
+     );
+     CREATE TABLE IF NOT EXISTS clinic_transcription_settings (
+       center_id text PRIMARY KEY, monthly_quota integer NOT NULL DEFAULT 100, advanced_enabled boolean NOT NULL DEFAULT false,
+       updated_at timestamptz NOT NULL DEFAULT now()
+     );
+     CREATE TABLE IF NOT EXISTS clinic_transcription_usage (
+       id text PRIMARY KEY, center_id text NOT NULL, photo_id text NOT NULL, tier text NOT NULL, model text NOT NULL,
+       units integer NOT NULL DEFAULT 1, input_tokens integer NOT NULL DEFAULT 0, output_tokens integer NOT NULL DEFAULT 0,
+       created_at timestamptz NOT NULL DEFAULT now()
+     );
      CREATE TABLE IF NOT EXISTS clinical_photo_annotations (
        id text PRIMARY KEY, photo_id text NOT NULL UNIQUE, object_path text NOT NULL, mime_type text NOT NULL,
        strokes jsonb NOT NULL DEFAULT '[]', updated_by_user_id text, updated_at timestamptz NOT NULL DEFAULT now()

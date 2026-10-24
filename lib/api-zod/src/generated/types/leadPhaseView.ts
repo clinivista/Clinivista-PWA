@@ -6,11 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { PatientPhotoStatus } from './patientPhotoStatus';
+import type { PhotoTranscription } from './photoTranscription';
 
 export interface LeadPhaseView {
   id: string;
   key: string;
   label: string;
   required: boolean;
+  document: boolean;
+  transcription: PhotoTranscription | null;
   photo: PatientPhotoStatus | null;
 }

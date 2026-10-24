@@ -24,6 +24,9 @@ app.use("/api", dashboardRouter);
 beforeAll(async () => {
   await pglite.exec(`
     CREATE TABLE clinical_centers (id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE, active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', created_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE clinical_evaluations (id text PRIMARY KEY, lead_id text NOT NULL UNIQUE, center_id text NOT NULL DEFAULT 'default-center', protocol_id text NOT NULL DEFAULT 'capillary-initial', status text NOT NULL DEFAULT 'draft', clinical_data jsonb NOT NULL DEFAULT '{}', created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE clinical_photos (id text PRIMARY KEY, evaluation_id text NOT NULL, view_id text NOT NULL, status text NOT NULL DEFAULT 'draft', original_object_path text NOT NULL, derivative_object_path text, original_mime_type text NOT NULL, original_bytes integer NOT NULL, original_sha256 text NOT NULL, width integer, height integer, source text NOT NULL DEFAULT 'upload', capture_metadata jsonb NOT NULL DEFAULT '{}', edit_params jsonb, note text, created_at timestamptz NOT NULL DEFAULT now(), confirmed_at timestamptz, discarded_at timestamptz);
+    CREATE TABLE clinical_photo_transcriptions (photo_id text PRIMARY KEY, text text NOT NULL DEFAULT '', tier text NOT NULL DEFAULT 'basic', model text NOT NULL DEFAULT '', transcribed_by_user_id text, transcribed_by_name text, transcribed_at timestamptz NOT NULL DEFAULT now(), edited_by_name text, edited_at timestamptz);
     CREATE TABLE users (id text PRIMARY KEY, email text NOT NULL, email_normalized text NOT NULL, password_hash text NOT NULL, name text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', role text NOT NULL, center_id text, active boolean NOT NULL DEFAULT true, legal_representative boolean NOT NULL DEFAULT false, reset_token_hash text, reset_token_expires_at timestamptz, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE leads (parent_lead_id text, id text PRIMARY KEY, is_demo boolean DEFAULT false, created_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE support_tickets (id text PRIMARY KEY, number serial NOT NULL, requester_user_id text NOT NULL, center_id text NOT NULL, subject text NOT NULL, status text NOT NULL DEFAULT 'waiting', language text NOT NULL DEFAULT 'es', created_at timestamptz NOT NULL DEFAULT now(), last_activity_at timestamptz NOT NULL DEFAULT now(), first_response_at timestamptz, resolved_at timestamptz, resolved_by_user_id text, closed_at timestamptz, rating integer, rating_comment text NOT NULL DEFAULT '');
@@ -66,6 +69,17 @@ describe("trafficLight", () => {
 });
 
 describe("GET /supra/dashboard", () => {
+  beforeAll(async () => {
+    await pglite.exec(`
+      INSERT INTO clinical_evaluations (id, lead_id, center_id) VALUES ('ev1', 'l1', 'clinic-a'), ('ev2', 'l2', 'clinic-b');
+      INSERT INTO clinical_photos (id, evaluation_id, view_id, status, original_object_path, original_mime_type, original_bytes, original_sha256) VALUES
+        ('ph1', 'ev1', 'v', 'confirmed', 'x', 'image/jpeg', 1, 'h'), ('ph2', 'ev2', 'v', 'draft', 'x', 'image/jpeg', 1, 'h'),
+        ('ph3', 'ev2', 'v', 'confirmed', 'x', 'image/jpeg', 1, 'h'), ('ph4', 'ev1', 'v', 'discarded', 'x', 'image/jpeg', 1, 'h');
+      INSERT INTO clinical_photo_transcriptions (photo_id, text, tier) VALUES
+        ('ph1', 'texto', 'basic'), ('ph2', 'texto', 'advanced'), ('ph3', 'a mano', 'manual'), ('ph4', 'descartada', 'basic');
+    `);
+  });
+
   it("exige sesión de supra-control", async () => {
     await request(app).get("/api/supra/dashboard").expect(401);
     await request(app).get("/api/supra/dashboard").set("Cookie", clinic()).expect(403);
@@ -76,6 +90,8 @@ describe("GET /supra/dashboard", () => {
     expect(body.clinics).toMatchObject({ total: 4, active: 3, suspended: 1, payments: { upToDate: 1, expiring: 1, overdue: 1, noRecord: 1 } });
     expect(body.users).toMatchObject({ total: 5, active: 4, blocked: 1, medicos: 2, administrativos: 1, supra: 2 });
     expect(body.patients).toEqual({ total: 2, newThisMonth: 1 });
+    // Solo cuentan los documentos transcritos con IA (no los escritos a mano) de fotos vigentes, de todas las clínicas.
+    expect(body.documents).toEqual({ transcribed: 2, transcribedThisMonth: 2 });
     expect(body.tickets).toMatchObject({ waiting: 1, attending: 1, closed: 2, pending: 2, attendedTotal: 3, ratingAverage: 4.5, ratingCount: 2, firstResponseMinutes: 20 });
     expect(["green", "yellow", "red", "unknown"]).toContain(body.services.light);
     expect(Array.isArray(body.services.checks)).toBe(true);

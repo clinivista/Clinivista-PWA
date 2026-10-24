@@ -18,7 +18,7 @@ vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast }) }));
 
 import { PhasesPanel } from "./phases-panel";
 
-const view = (id: string, label: string, hasPhotos = false, position = 0) => ({ id, key: id, label, position, hasPhotos });
+const view = (id: string, label: string, hasPhotos = false, position = 0) => ({ id, key: id, label, position, hasPhotos, document: false });
 const protocol = (canEdit: boolean) => ({
   canEdit,
   phases: [
@@ -81,10 +81,10 @@ describe("PhasesPanel", () => {
     expect(api.save.mock.calls[0][0]).toEqual({
       data: {
         phases: [
-          { id: "p1", name: "Pre-evaluación", views: [{ id: "v1", label: "Frontal" }, { id: "v2", label: "Vértex" }] },
+          { id: "p1", name: "Pre-evaluación", views: [{ id: "v1", label: "Frontal", document: false }, { id: "v2", label: "Vértex", document: false }] },
           { id: "p2", name: "Diagnóstico", views: [] },
-          { id: "p3", name: "Post-op y plan", views: [{ id: "v4", label: "Frontal" }, { label: "Zona receptora" }] },
-          { name: "Control 12 meses", views: [{ label: "Frontal" }] },
+          { id: "p3", name: "Post-op y plan", views: [{ id: "v4", label: "Frontal", document: false }, { label: "Zona receptora", document: false }] },
+          { name: "Control 12 meses", views: [{ label: "Frontal", document: false }] },
         ],
       },
     });
@@ -99,5 +99,18 @@ describe("PhasesPanel", () => {
     expect(screen.getByLabelText("Fotografía 2 de Pre-evaluación")).toBeInTheDocument();
     expect(within(screen.getByRole("region", { name: "Fase 3" })).getByRole("button", { name: "Quitar fotografía Frontal" })).toBeDisabled();
     confirm.mockRestore();
+  });
+
+  it("marks a photo as a document so staff can transcribe it", async () => {
+    const user = userEvent.setup();
+    render(<PhasesPanel />);
+    const box = within(screen.getByRole("region", { name: "Fase 3" })).getByRole("checkbox", { name: "Es un documento: Frontal" });
+    expect(box).not.toBeChecked();
+    await user.click(box);
+    expect(box).toBeChecked();
+    await user.click(screen.getByRole("button", { name: "Guardar fases" }));
+    const sent = api.save.mock.calls[0][0].data.phases as Array<{ views: Array<{ label: string; document: boolean }> }>;
+    expect(sent[2].views[0]).toMatchObject({ id: "v4", document: true });
+    expect(sent[0].views.every((v) => v.document === false)).toBe(true);
   });
 });

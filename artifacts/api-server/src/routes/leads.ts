@@ -16,6 +16,7 @@ import { privatePhotoStorage } from "../lib/clinical-photo-storage";
 import { syncLeadStatus } from "../lib/lead-status";
 import { LEAD_STATUSES } from "../lib/lead-status-rules";
 import { clinicIdentity } from "../lib/clinic-identity";
+import { countTranscribedDocuments } from "../lib/transcription";
 
 const router: IRouter = Router();
 
@@ -113,7 +114,11 @@ router.get("/leads/stats", async (req, res): Promise<void> => {
     counts[s] = (counts[s] || 0) + 1;
   }
 
-  res.json({ total: allLeads.filter((lead) => !lead.parentLeadId).length, counts });
+  res.json({
+    total: allLeads.filter((lead) => !lead.parentLeadId).length,
+    counts,
+    transcribedDocuments: (await countTranscribedDocuments(context.centerId)).total,
+  });
 });
 
 router.get("/leads/:id", async (req, res): Promise<void> => {
