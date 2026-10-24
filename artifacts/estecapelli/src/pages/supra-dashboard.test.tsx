@@ -6,7 +6,7 @@ import { SupraDashboard, type Dashboard } from "./supra-dashboard";
 import { DirectorPanel } from "./director-panel";
 
 const wrap = (ui: React.ReactNode) => render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>{ui}</QueryClientProvider>);
-const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 afterEach(() => vi.unstubAllGlobals());
 
 const base = (over: Partial<Dashboard> = {}): Dashboard => ({
@@ -76,5 +76,24 @@ describe("Panel de supra-control con menú lateral", () => {
     expect(screen.queryByTestId("supra-nav-team")).toBeNull();
     expect(screen.queryByTestId("supra-nav-admin")).toBeNull();
     expect(screen.queryByTestId("director-choose-clinic")).toBeNull();
+  });
+
+  it("en tablets la tarjeta de cada clínica apila el nombre y los botones (no los aprieta en una fila)", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      if (url.startsWith("/api/supra/dashboard")) return json(base());
+      if (url.startsWith("/api/support/queue")) return json({ counts: { waiting: 0, attending: 0, resolved: 0 }, tickets: [] });
+      if (url.startsWith("/api/support/alerts")) return json({ waiting: 0, items: [] });
+      if (url.startsWith("/api/supra/admin/banner")) return json({ problems: [], renewals: [] });
+      return json({ centers: [{ id: "c1", name: "Clínica con un nombre bastante largo de prueba", slug: "larga", active: true, paymentStatus: "al_dia", paidUntil: null, patientCount: 3, staffCount: 2, specialty: "capilar", logoDataUrl: "data:image/png;base64,AAAA" }] });
+    }));
+    wrap(<DirectorPanel onLogout={() => {}} />);
+    await userEvent.click(await screen.findByTestId("supra-nav-clinics"));
+    const card = await screen.findByTestId("center-card-c1");
+    expect(card.className).toContain("flex-col");
+    expect(card.className).toContain("xl:flex-row");
+    expect(card.className).not.toMatch(/(^|\s)(md|lg):flex-row/);
+    const name = screen.getByRole("heading", { name: "Clínica con un nombre bastante largo de prueba" });
+    expect(name.className).toContain("break-words");
+    expect(name.className).not.toContain("truncate");
   });
 });

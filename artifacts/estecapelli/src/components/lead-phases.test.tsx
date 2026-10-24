@@ -84,6 +84,20 @@ describe("LeadPhases", () => {
     expect(within(form).getByRole("button", { name: "Guardar atención" })).toBeDisabled();
   });
 
+  it("resalta solo la fase activa: las ejecutadas y las bloqueadas quedan con fondo blanco", () => {
+    render(<LeadPhases leadId="lead-1" onExpand={vi.fn()} />);
+    const done = screen.getByRole("listitem", { name: "Fase 1: Pre-evaluación" });
+    const open = screen.getByRole("listitem", { name: "Fase 2: Diagnóstico" });
+    const locked = screen.getByRole("listitem", { name: "Fase 3: Pre-operatorio" });
+    expect(open).toHaveAttribute("aria-current", "step");
+    expect(open.className).toContain("bg-[#E8F6F5]");
+    for (const item of [done, locked]) {
+      expect(item).not.toHaveAttribute("aria-current");
+      expect(item.className).toContain("bg-white");
+      expect(item.className).not.toContain("bg-[#E8F6F5]");
+    }
+  });
+
   it("uploads a chosen photo to the view and refreshes the phases", async () => {
     const user = userEvent.setup();
     render(<LeadPhases leadId="lead-1" onExpand={vi.fn()} />);

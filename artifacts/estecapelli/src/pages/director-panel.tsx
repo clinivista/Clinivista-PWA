@@ -268,13 +268,13 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
               key={center.id}
               className="bg-white rounded-[1.75rem] shadow-sm border border-[#E8E4DE] p-6 flex flex-col gap-5"
             >
-              <div className="flex flex-col md:flex-row md:items-center gap-5">
-                <div className="flex-1 min-w-0">
+              <div className="flex flex-col xl:flex-row xl:items-center gap-5" data-testid={`center-card-${center.id}`}>
+                <div className="flex-1 min-w-0 xl:min-w-[16rem]">
                   <div className="flex items-center gap-2 flex-wrap">
                     {center.logoDataUrl && (
-                      <img src={center.logoDataUrl} alt="" className="h-8 w-8 rounded-lg object-contain bg-white border border-[#E8E4DE]" />
+                      <img src={center.logoDataUrl} alt="" className="h-8 w-8 shrink-0 rounded-lg object-contain bg-white border border-[#E8E4DE]" />
                     )}
-                    <h2 className="text-lg font-bold text-foreground truncate">{center.name}</h2>
+                    <h2 className="text-lg font-bold text-foreground break-words min-w-0">{center.name}</h2>
                     <span
                       className={`text-xs font-bold px-2.5 py-1 rounded-full ${
                         center.active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
@@ -287,8 +287,8 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground font-medium mt-1">{center.slug}{center.specialty === "plastica" ? " · Cirugía plástica" : center.specialty === "dermatologia" ? " · Dermatología" : ""}</p>
-                  <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground font-medium">
-                    <span className="flex items-center gap-1.5">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3 text-sm text-muted-foreground font-medium">
+                    <span className="flex items-center gap-1.5 whitespace-nowrap">
                       <Building2 className="w-4 h-4" /> {center.patientCount} pacientes
                     </span>
                     <span className="flex items-center gap-1.5">
@@ -304,7 +304,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 md:shrink-0">
+                <div className="flex flex-wrap items-center gap-2 xl:shrink-0 xl:justify-end">
                   <a
                     href={getGetDirectorCenterExportUrl(center.id)}
                     className="inline-flex items-center gap-2 h-10 px-4 rounded-full border border-[#E8E4DE] text-sm font-semibold text-foreground hover:bg-[#F5F2EE] transition-colors"
@@ -368,7 +368,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                 <label htmlFor={`paid-until-${center.id}`} className="text-sm font-semibold text-muted-foreground shrink-0">
                   Registrar pago hasta:
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Input
                     id={`paid-until-${center.id}`}
                     type="date"
