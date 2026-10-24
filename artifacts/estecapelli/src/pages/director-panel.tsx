@@ -269,8 +269,8 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
               key={center.id}
               className="bg-white rounded-[1.75rem] shadow-sm border border-[#E8E4DE] p-6 flex flex-col gap-5"
             >
-              <div className="flex flex-col xl:flex-row xl:items-center gap-5" data-testid={`center-card-${center.id}`}>
-                <div className="flex-1 min-w-0 xl:min-w-[16rem]">
+              <div className="flex flex-col gap-5" data-testid={`center-card-${center.id}`}>
+                <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     {center.logoDataUrl && (
                       <img src={center.logoDataUrl} alt="" className="h-8 w-8 shrink-0 rounded-lg object-contain bg-white border border-[#E8E4DE]" />
@@ -305,7 +305,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 xl:shrink-0 xl:justify-end">
+                <div className="flex flex-wrap items-center gap-2 min-w-0">
                   <a
                     href={getGetDirectorCenterExportUrl(center.id)}
                     className="inline-flex items-center gap-2 h-10 px-4 rounded-full border border-[#E8E4DE] text-sm font-semibold text-foreground hover:bg-[#F5F2EE] transition-colors"
@@ -369,7 +369,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                 <label htmlFor={`paid-until-${center.id}`} className="text-sm font-semibold text-muted-foreground shrink-0">
                   Registrar pago hasta:
                 </label>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
                   <Input
                     id={`paid-until-${center.id}`}
                     type="date"

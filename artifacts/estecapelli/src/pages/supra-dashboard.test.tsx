@@ -94,8 +94,8 @@ describe("Panel de supra-control con menú lateral", () => {
     await userEvent.click(await screen.findByTestId("supra-nav-clinics"));
     const card = await screen.findByTestId("center-card-c1");
     expect(card.className).toContain("flex-col");
-    expect(card.className).toContain("xl:flex-row");
-    expect(card.className).not.toMatch(/(^|\s)(md|lg):flex-row/);
+    // Los botones van siempre debajo de los datos: en PC y tablets con menú lateral no queda espacio para ponerlos al lado.
+    expect(card.className).not.toMatch(/flex-row/);
     const name = screen.getByRole("heading", { name: "Clínica con un nombre bastante largo de prueba" });
     expect(name.className).toContain("break-words");
     expect(name.className).not.toContain("truncate");
