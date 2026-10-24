@@ -46,7 +46,7 @@ export function requireStaffAuth(req: Request, res: Response): StaffAuthContext 
   // A director inside a clinic can do everything a médico and an administrativo can do
   // (the médico role already covers the administrative work: patients, photos, reports).
   if (session.role === "director" && session.viewingCenterId) {
-    return { userId: session.userId, centerId: session.viewingCenterId, role: "medico" };
+    return { userId: session.userId, centerId: session.viewingCenterId, role: session.viewingRole ?? "medico" };
   }
   if ((session.role !== "medico" && session.role !== "administrativo") || !session.centerId) {
     res.status(403).json({ error: "Esta acción requiere una cuenta de clínica (médico o administrativo)." });
@@ -128,7 +128,7 @@ router.get("/auth/me", async (req, res): Promise<void> => {
     if (session.viewingCenterId) {
       const [center] = await db.select({ id: centersTable.id, name: centersTable.name }).from(centersTable).where(eq(centersTable.id, session.viewingCenterId));
       if (center) {
-        res.json({ authenticated: true, user: { ...authUser(user, { centerId: center.id, role: "medico" }), canManageUsers: false, viewingAsDirector: true, viewingClinic: center } });
+        res.json({ authenticated: true, user: { ...authUser(user, { centerId: center.id, role: session.viewingRole ?? "medico" }), canManageUsers: false, viewingAsDirector: true, viewingClinic: center } });
         return;
       }
       setSessionDirectorChoice(token);
@@ -274,7 +274,12 @@ router.post("/auth/enter-clinic", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Clínica no encontrada." });
     return;
   }
-  setSessionViewing(token, center.id);
+  const asRole = (req.body as { role?: unknown } | undefined)?.role;
+  if (asRole !== undefined && asRole !== "medico" && asRole !== "administrativo") {
+    res.status(400).json({ error: "Rol inválido." });
+    return;
+  }
+  setSessionViewing(token, center.id, asRole ?? "medico");
   res.json({ ok: true, clinic: center });
 });
 

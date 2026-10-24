@@ -10,6 +10,8 @@ export type SessionContext = {
   role: UserRole;
   /** Directors only: the clinic they are working inside right now (they keep their director role). */
   viewingCenterId?: string | null;
+  /** Directors only: the role they work as inside that clinic (default médico, which covers everything). */
+  viewingRole?: "medico" | "administrativo";
   /** Directors only: they already picked "Supra-control" on the clinic chooser. */
   supraChosen?: boolean;
   /**
@@ -69,10 +71,11 @@ export function setSessionAccount(token: string | undefined, account: { userId: 
 }
 
 /** A director enters (or, with null, leaves) a clinic's panel without being assigned to it. */
-export function setSessionViewing(token: string | undefined, centerId: string | null): boolean {
+export function setSessionViewing(token: string | undefined, centerId: string | null, role: "medico" | "administrativo" = "medico"): boolean {
   const session = token ? sessions.get(token) : undefined;
   if (!session || session.expiresAt <= Date.now() || session.role !== "director") return false;
   session.viewingCenterId = centerId;
+  session.viewingRole = centerId ? role : undefined;
   session.supraChosen = centerId ? false : true;
   return true;
 }
@@ -84,4 +87,11 @@ export function setSessionDirectorChoice(token: string | undefined): boolean {
   session.viewingCenterId = null;
   session.supraChosen = false;
   return true;
+}
+
+/** Closes every open session of one user except the one that is making the change. */
+export function destroyOtherSessionsForUser(userId: string, keepToken: string | undefined): void {
+  for (const [token, session] of sessions) {
+    if (token !== keepToken && session.userId === userId) sessions.delete(token);
+  }
 }

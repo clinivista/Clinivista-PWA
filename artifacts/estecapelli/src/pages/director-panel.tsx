@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { LogOut, LogIn, Building2, Users, Download, ShieldOff, ShieldCheck, Loader2, CreditCard, Plus, ChevronDown, Palette, LayoutDashboard, Headphones, UserCog, BriefcaseBusiness, Menu, X, Repeat, BookOpen } from "lucide-react";
+import { LogOut, LogIn, Building2, Users, Download, ShieldOff, ShieldCheck, Loader2, CreditCard, Plus, ChevronDown, Palette, LayoutDashboard, Headphones, UserCog, BriefcaseBusiness, Menu, X, Repeat, BookOpen, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +18,7 @@ import { selectClinic } from "@/components/clinic-chooser";
 import { CreateCenterForm } from "./create-center-form";
 import { CenterUsers } from "./center-users";
 import { SupraTeam } from "./supra-team";
+import { DirectorAccount } from "./director-account";
 import { SupraManual } from "./supra-manual";
 import { SupraInbox, OPEN_SUPPORT_INBOX_EVENT } from "./supra-inbox";
 import { SupraDashboard } from "./supra-dashboard";
@@ -66,7 +67,7 @@ function chileEndOfDayIso(dateValue: string): string {
 
 // Un director gestiona además a las personas (usuarios de clínica y equipo de
 // supra-control); un administrativo de supra-control solo opera el panel.
-type SupraView = "dashboard" | "clinics" | "support" | "team" | "admin" | "manual";
+type SupraView = "dashboard" | "clinics" | "support" | "team" | "admin" | "account" | "manual";
 
 export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: () => void; canManageUsers?: boolean }) {
   const { toast } = useToast();
@@ -76,6 +77,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
   const [openTicketId, setOpenTicketId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [enterRole, setEnterRole] = useState<"medico" | "administrativo">("medico");
   const [usersOpenId, setUsersOpenId] = useState<string | null>(null);
   const [identityOpenId, setIdentityOpenId] = useState<string | null>(null);
   const [paymentDraft, setPaymentDraft] = useState<Record<string, string>>({});
@@ -153,10 +155,11 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
     { id: "support", label: "Soporte", Icon: Headphones, show: true, badge: waiting },
     { id: "team", label: "Equipo de supra-control", Icon: UserCog, show: canManageUsers },
     { id: "admin", label: "Servicios y finanzas", Icon: BriefcaseBusiness, show: canManageUsers },
+    { id: "account", label: "Mi cuenta", Icon: UserRound, show: canManageUsers },
     { id: "manual", label: "Manual", Icon: BookOpen, show: true },
   ];
   const go = (next: SupraView) => { setView(next); setMobileNavOpen(false); if (next !== "support") setOpenTicketId(null); };
-  const titles: Record<SupraView, string> = { dashboard: "Resumen de la plataforma", clinics: "Clínicas", support: "Soporte (tickets de las clínicas)", team: "Equipo de supra-control", admin: "Administración: servicios y finanzas", manual: "Manual de supra-control" };
+  const titles: Record<SupraView, string> = { dashboard: "Resumen de la plataforma", clinics: "Clínicas", support: "Soporte (tickets de las clínicas)", team: "Equipo de supra-control", admin: "Administración: servicios y finanzas", account: "Mi cuenta", manual: "Manual de supra-control" };
 
   return (
     <div className="h-[100dvh] bg-[#F5F2EE] flex flex-col md:flex-row font-sans">
@@ -235,6 +238,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
             {view === "support" && <SupraInbox embedded openTicketId={openTicketId} />}
             {view === "team" && canManageUsers && <SupraTeam embedded />}
             {view === "admin" && canManageUsers && <SupraAdmin embedded />}
+            {view === "account" && canManageUsers && <DirectorAccount />}
             {view === "manual" && <SupraManual />}
             {view === "clinics" && (
               <>
@@ -332,12 +336,18 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                   </Button>
                   )}
                   {canManageUsers && (
+                  <select aria-label="Entrar como" value={enterRole} onChange={(event) => setEnterRole(event.target.value as "medico" | "administrativo")} className="h-10 rounded-full border border-[#E8E4DE] bg-white px-3 text-sm font-semibold" data-testid="enter-role">
+                    <option value="medico">Como médico</option>
+                    <option value="administrativo">Como administrativo</option>
+                  </select>
+                  )}
+                  {canManageUsers && (
                   <Button
                     className="rounded-full h-10 font-semibold"
                     data-testid={`enter-clinic-${center.id}`}
                     onClick={async () => {
                       const response = await fetch("/api/auth/enter-clinic", {
-                        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ centerId: center.id }),
+                        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ centerId: center.id, role: enterRole }),
                       });
                       if (!response.ok) { toast({ variant: "destructive", title: "No pudimos entrar a la clínica" }); return; }
                       queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== getGetAuthMeQueryKey()[0] });
