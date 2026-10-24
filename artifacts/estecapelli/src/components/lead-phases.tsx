@@ -176,8 +176,11 @@ export function LeadPhases({ leadId, onExpand, diagnosisLead, process }: { leadI
         {phases.map((phase, index) => {
           const taken = phase.views.filter((view) => view.photo).length;
           const previous = phases[index - 1];
+          // La fase activa (la que toca registrar ahora) se distingue de las ya ejecutadas con un fondo y un borde propios.
+          const active = phase.enabled && !phase.complete && !phase.skipped;
           return (
-            <li key={phase.id} className="rounded-2xl border border-[#E8E4DE] p-4" aria-label={p.phaseAria(index + 1, phaseName(phase, lang))}>
+            <li key={phase.id} data-active={active ? "true" : undefined} aria-current={active ? "step" : undefined}
+              className={`rounded-2xl border p-4 ${active ? "border-primary/40 bg-[#E8F6F5]" : "border-[#E8E4DE] bg-white"}`} aria-label={p.phaseAria(index + 1, phaseName(phase, lang))}>
               <div className="flex items-center gap-2">
                 <span className="shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-extrabold flex items-center justify-center">{index + 1}</span>
                 <h4 className="font-bold text-foreground min-w-0 break-words">{phaseName(phase, lang)}</h4>
