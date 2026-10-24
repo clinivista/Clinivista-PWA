@@ -256,6 +256,30 @@ describe("tipos de consulta", () => {
     await request(app).patch(`/api/clinic/consult-types/${base.id}`).set("Cookie", rep()).send({ active: false }).expect(400);
   });
 
+  it("elimina un tipo creado por error (plantilla o propio) y la plantilla vuelve a estar disponible", async () => {
+    const acne = await typeId("acne");
+    const own = (await request(app).post("/api/clinic/consult-types").set("Cookie", rep()).send({ name: "Por error" }).expect(201)).body.id as string;
+    await request(app).delete(`/api/clinic/consult-types/${own}`).set("Cookie", doc()).expect(403);
+    const after = (await request(app).delete(`/api/clinic/consult-types/${acne}`).set("Cookie", rep()).expect(200)).body;
+    expect(after.types.map((t: { name: string }) => t.name)).not.toContain("Acné");
+    expect(after.templates.map((t: { key: string }) => t.key)).toContain("acne");
+    await request(app).delete(`/api/clinic/consult-types/${own}`).set("Cookie", rep()).expect(200);
+    // no quedan etapas ni fotos sueltas del tipo borrado
+    const rows = (await pglite.exec(`SELECT (SELECT count(*)::int FROM clinical_protocol_phases WHERE protocol_id IN ('${acne}', '${own}')) AS phases, (SELECT count(*)::int FROM clinical_protocol_views WHERE protocol_id IN ('${acne}', '${own}')) AS views;`)) as Array<{ rows: Array<{ phases: number; views: number }> }>;
+    expect(rows[0].rows[0]).toEqual({ phases: 0, views: 0 });
+    // se puede volver a activar la plantilla
+    await typeId("acne");
+    await request(app).delete(`/api/clinic/consult-types/${own}`).set("Cookie", rep()).expect(400); // ya no existe
+  });
+
+  it("el proceso base y los tipos de otro centro no se eliminan", async () => {
+    const base = (await request(app).get("/api/clinic/consult-types").set("Cookie", rep())).body.types.find((t: { isBase: boolean }) => t.isBase);
+    await request(app).delete(`/api/clinic/consult-types/${base.id}`).set("Cookie", rep()).expect(400);
+    const mine = await typeId("manchas");
+    await request(app).delete(`/api/clinic/consult-types/${mine}`).set("Cookie", as("rep-b", "derma-b")).expect(400);
+    expect((await request(app).get("/api/clinic/consult-types").set("Cookie", rep())).body.types.map((t: { id: string }) => t.id)).toContain(mine);
+  });
+
   it("un centro no ve ni edita los tipos de otro", async () => {
     const id = await typeId("manchas");
     await request(app).get(`/api/clinic/protocol?typeId=${id}`).set("Cookie", as("x", "derma-b")).expect(404);
@@ -285,6 +309,19 @@ describe("consultas del paciente", () => {
     expect(phases[0].views.map((v: { label: string }) => v.label)).toEqual(["Frente", "Perfil derecho", "Perfil izquierdo"]);
     const lead = (await request(app).get(`/api/leads/${id}`).set("Cookie", doc()).expect(200)).body;
     expect(lead).toMatchObject({ consultTypeName: "Acné", consultCount: 1 });
+  });
+
+  it("un tipo con pacientes no se elimina (se puede renombrar y desactivar); sin ellos, sí", async () => {
+    const acne = await typeId("acne");
+    const id = await addPatient(acne);
+    const blocked = await request(app).delete(`/api/clinic/consult-types/${acne}`).set("Cookie", rep()).expect(400);
+    expect(blocked.body.error).toContain("ya tiene 1 registro");
+    await request(app).patch(`/api/clinic/consult-types/${acne}`).set("Cookie", rep()).send({ name: "Acné juvenil" }).expect(200);
+    await request(app).patch(`/api/clinic/consult-types/${acne}`).set("Cookie", rep()).send({ active: false }).expect(200);
+    expect((await request(app).get("/api/clinic/consult-types").set("Cookie", rep())).body.types.find((t: { id: string }) => t.id === acne)).toMatchObject({ name: "Acné juvenil", active: false, patientCount: 1 });
+    // al borrar la ficha, el tipo vuelve a quedar sin registros y ya se puede eliminar
+    await request(app).delete(`/api/leads/${id}`).set("Cookie", doc()).expect(200);
+    await request(app).delete(`/api/clinic/consult-types/${acne}`).set("Cookie", rep()).expect(200);
   });
 
   it("rechaza un tipo inexistente, desactivado o de otro centro", async () => {

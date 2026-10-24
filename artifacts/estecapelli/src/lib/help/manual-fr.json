@@ -1314,7 +1314,7 @@
     },
     {
      "t": "p",
-     "text": "En dermatologie, Phases affiche un onglet par type de consultation, chacun configuré séparément. Depuis la barre des types, vous pouvez activer un modèle prêt à l'emploi (lésions, acné, taches, biopsie), créer un type propre, le renommer ou le désactiver. La «Consultation générale» existe toujours et il y a au maximum 12 types. Seul le représentant légal peut les gérer.",
+     "text": "En dermatologie, Phases affiche un onglet par type de consultation, chacun configuré séparément. Depuis la barre des types, vous pouvez activer un modèle prêt à l'emploi (lésions, acné, taches, biopsie), créer un type propre, le renommer ou le désactiver. La «Consultation générale» existe toujours et il y a au maximum 12 types. Un type ne peut être supprimé que s'il n'a pas encore de dossiers ; sinon, vous pouvez le renommer ou le désactiver. Seul le représentant légal peut les gérer.",
      "only": [
       "dermatologia"
      ]

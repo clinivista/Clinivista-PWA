@@ -1314,7 +1314,7 @@
     },
     {
      "t": "p",
-     "text": "En dermatología, Fases muestra una pestaña por tipo de consulta: cada una se configura por separado. Desde la barra de tipos puedes activar una plantilla lista (lesiones, acné, manchas, biopsia), crear un tipo propio, renombrarlo o desactivarlo. La «Consulta general» siempre existe y hay un máximo de 12 tipos. Solo el representante legal puede administrarlos.",
+     "text": "En dermatología, Fases muestra una pestaña por tipo de consulta: cada una se configura por separado. Desde la barra de tipos puedes activar una plantilla lista (lesiones, acné, manchas, biopsia), crear un tipo propio, renombrarlo o desactivarlo. La «Consulta general» siempre existe y hay un máximo de 12 tipos. Un tipo solo se puede eliminar si aún no tiene registros; si ya los tiene, puedes cambiarle el nombre o desactivarlo. Solo el representante legal puede administrarlos.",
      "only": [
       "dermatologia"
      ]

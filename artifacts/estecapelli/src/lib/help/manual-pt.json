@@ -1314,7 +1314,7 @@
     },
     {
      "t": "p",
-     "text": "Em dermatologia, Fases mostra uma aba por tipo de consulta, cada uma configurada separadamente. Pela barra de tipos você pode ativar um modelo pronto (lesões, acne, manchas, biópsia), criar um tipo próprio, renomeá-lo ou desativá-lo. A «Consulta geral» sempre existe e há no máximo 12 tipos. Só o representante legal pode administrá-los.",
+     "text": "Em dermatologia, Fases mostra uma aba por tipo de consulta, cada uma configurada separadamente. Pela barra de tipos você pode ativar um modelo pronto (lesões, acne, manchas, biópsia), criar um tipo próprio, renomeá-lo ou desativá-lo. A «Consulta geral» sempre existe e há no máximo 12 tipos. Um tipo só pode ser excluído se ainda não tiver registros; se já tiver, você pode renomeá-lo ou desativá-lo. Só o representante legal pode administrá-los.",
      "only": [
       "dermatologia"
      ]

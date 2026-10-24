@@ -1314,7 +1314,7 @@
     },
     {
      "t": "p",
-     "text": "In dermatology, Phases shows one tab per consultation type, each configured separately. From the type bar you can turn on a ready-made template (lesions, acne, spots, biopsy), create your own type, rename it or deactivate it. «General consultation» always exists and there is a maximum of 12 types. Only the legal representative can manage them.",
+     "text": "In dermatology, Phases shows one tab per consultation type, each configured separately. From the type bar you can turn on a ready-made template (lesions, acne, spots, biopsy), create your own type, rename it or deactivate it. «General consultation» always exists and there is a maximum of 12 types. A type can only be deleted if it has no records yet; if it does, you can rename or deactivate it. Only the legal representative can manage them.",
      "only": [
       "dermatologia"
      ]

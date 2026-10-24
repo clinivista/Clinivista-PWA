@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { CONSULT_TYPES_KEY, useConsultTypes, type ConsultTypes } from "@/lib/consult-types";
 
-async function send(url: string, method: "POST" | "PATCH", body: unknown): Promise<ConsultTypes & { id?: string }> {
-  const response = await fetch(url, { method, credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+async function send(url: string, method: "POST" | "PATCH" | "DELETE", body?: unknown): Promise<ConsultTypes & { id?: string }> {
+  const response = await fetch(url, { method, credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
   const data = (await response.json().catch(() => ({}))) as ConsultTypes & { id?: string; error?: string };
   if (!response.ok) throw new Error(data.error ?? "No pudimos guardar el cambio.");
   return data;
@@ -15,7 +15,7 @@ async function send(url: string, method: "POST" | "PATCH", body: unknown): Promi
 
 // «Tipos de consulta» de un centro de dermatología: cada tipo tiene sus propias
 // etapas y fotos (se editan debajo, en esta misma pantalla). Todo el personal los
-// ve; solo el representante legal los activa, crea, renombra o desactiva.
+// ve; solo el representante legal los activa, crea, renombra, desactiva o elimina (solo si aún no tiene registros).
 export function ConsultTypesBar({ typeId, onSelect }: { typeId: string; onSelect: (id: string) => void }) {
   const { data } = useConsultTypes();
   const { toast } = useToast();
@@ -85,6 +85,18 @@ export function ConsultTypesBar({ typeId, onSelect }: { typeId: string; onSelect
                 onClick={() => void run(() => send(`/api/clinic/consult-types/${encodeURIComponent(current.id)}`, "PATCH", { active: !current.active }), current.active ? "Tipo desactivado" : "Tipo activado")}>
                 {current.active ? "Desactivar" : "Activar"}
               </Button>
+              <Button size="sm" variant="outline" className="rounded-full text-destructive" disabled={busy || current.patientCount > 0} data-testid="delete-consult-type"
+                onClick={() => {
+                  if (!window.confirm(`¿Eliminar el tipo «${current.name}»? Se borran también sus etapas y fotos configuradas.`)) return;
+                  void run(() => send(`/api/clinic/consult-types/${encodeURIComponent(current.id)}`, "DELETE"), "Tipo eliminado").then(() => onSelect(""));
+                }}>
+                Eliminar
+              </Button>
+              {current.patientCount > 0 && (
+                <span className="text-xs text-muted-foreground" data-testid="delete-consult-type-blocked">
+                  No se puede eliminar: ya tiene {current.patientCount} {current.patientCount === 1 ? "registro" : "registros"}. Puedes cambiarle el nombre o desactivarlo.
+                </span>
+              )}
               <span className="text-xs text-muted-foreground">
                 {current.active ? "Desactivarlo solo evita elegirlo para pacientes nuevos; los pacientes que ya lo tienen no cambian." : "No se puede elegir para pacientes nuevos."}
               </span>

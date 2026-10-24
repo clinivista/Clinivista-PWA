@@ -1314,7 +1314,7 @@
     },
     {
      "t": "p",
-     "text": "Dermatolojide Aşamalar, her muayene türü için ayrı yapılandırılan bir sekme gösterir. Tür çubuğundan hazır bir şablonu (lezyonlar, akne, lekeler, biyopsi) açabilir, kendi türünü oluşturabilir, yeniden adlandırabilir veya devre dışı bırakabilirsin. «Genel muayene» her zaman vardır ve en fazla 12 tür olabilir. Bunları yalnızca yasal temsilci yönetebilir.",
+     "text": "Dermatolojide Aşamalar, her muayene türü için ayrı yapılandırılan bir sekme gösterir. Tür çubuğundan hazır bir şablonu (lezyonlar, akne, lekeler, biyopsi) açabilir, kendi türünü oluşturabilir, yeniden adlandırabilir veya devre dışı bırakabilirsin. «Genel muayene» her zaman vardır ve en fazla 12 tür olabilir. Bir tür yalnızca henüz kaydı yoksa silinebilir; kaydı varsa yeniden adlandırabilir veya devre dışı bırakabilirsin. Bunları yalnızca yasal temsilci yönetebilir.",
      "only": [
       "dermatologia"
      ]
