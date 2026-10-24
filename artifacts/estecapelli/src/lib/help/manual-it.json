@@ -973,6 +973,14 @@
     {
      "t": "p",
      "text": "Dalla diagnosi in poi, ogni fase mostra il riquadro «Appuntamento» con «Data dell'appuntamento» e «ID dell'appuntamento». La data è obbligatoria: senza di essa non si può chiudere la diagnosi né caricare le foto della fase. L'ID è facoltativo e serve per annotare il numero di quell'appuntamento nell'agenda propria della clinica. Inserisci i dati e premi «Salva appuntamento»; puoi correggerli in seguito finché il percorso resta aperto. La pre-valutazione del paziente non lo richiede."
+    },
+    {
+     "t": "h3",
+     "text": "Trascrizione dei documenti"
+    },
+    {
+     "t": "p",
+     "text": "Se la clinica ha contrassegnato una foto come «Documento» in Fasi (ad esempio la scheda tecnica scritta a mano), sotto l'immagine compare il riquadro «Trascrizione». Premi «Trascrivi» perché il sistema legga il documento e ne scriva il testo; lo vede solo il personale, mai il paziente. Il testo è modificabile: controllalo, correggilo e premi «Salva testo». Ogni clinica ha una quota mensile di trascrizioni (il riquadro indica quante restano); se è esaurita o la funzione non è disponibile, usa «Scrivi a mano». Se il risultato è scarso e la tua clinica ha abilitato il modello avanzato, «Riprova con il modello avanzato» fa una nuova lettura e conta come 2 trascrizioni. Una trascrizione automatica può contenere errori, soprattutto con la scrittura a mano: controllala sempre."
     }
    ],
    "key": "phases"
@@ -1292,6 +1300,10 @@
     {
      "t": "note",
      "text": "Puoi cambiare la configurazione quando vuoi: le foto già esistenti non vengono cancellate, semplicemente non vengono più richieste."
+    },
+    {
+     "t": "p",
+     "text": "Spunta «Documento» accanto a una foto se è un foglio (scheda, consenso): sotto di essa il personale potrà trascriverne il testo."
     },
     {
      "t": "h3",

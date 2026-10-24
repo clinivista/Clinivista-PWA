@@ -3,6 +3,7 @@ import { and, desc, eq, gte, lt } from "drizzle-orm";
 import { db, adminServicesTable, financeEntriesTable } from "@workspace/db";
 import { requireDirectorAuth } from "./auth";
 import { clean, uid } from "../lib/helpers";
+import { getAiUsageReport } from "../lib/transcription";
 import { alertRenewals, applyResults, currentStatuses, getAlertEmails, runAllChecks, setAlertEmails, upcomingRenewals } from "../lib/service-monitor";
 
 // Sección administrativa (servicios y finanzas): solo directores.
@@ -165,6 +166,13 @@ router.get("/supra/admin/finance", async (req, res): Promise<void> => {
     totals: totalsOf(inMonth),
     history: months.map((m) => ({ month: m, totals: totalsOf(rows.filter((r) => r.entryDate.startsWith(m))) })),
   });
+});
+
+// Costo de la IA (transcripción de documentos): consumo del mes por clínica y nivel, con su costo estimado.
+router.get("/supra/admin/finance/ai-usage", async (req, res): Promise<void> => {
+  if (!requireDirectorAuth(req, res)) return;
+  const month = isMonth(req.query.month) ? req.query.month : chileMonth();
+  res.json(await getAiUsageReport(month));
 });
 
 router.post("/supra/admin/finance", async (req, res): Promise<void> => {

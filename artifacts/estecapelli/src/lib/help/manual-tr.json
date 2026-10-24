@@ -973,6 +973,14 @@
     {
      "t": "p",
      "text": "Teşhisten itibaren her aşamada «Randevu tarihi» ve «Randevu kimliği» alanlarını içeren «Randevu» kutusu görünür. Tarih zorunludur: tarih olmadan teşhis kapatılamaz ve aşamanın fotoğrafları yüklenemez. Kimlik isteğe bağlıdır ve o randevunun kliniğin kendi ajandasındaki numarasını not etmeye yarar. Bilgileri yaz ve «Randevuyu kaydet» düğmesine bas; süreç açık olduğu sürece sonradan düzeltebilirsin. Hastanın ön değerlendirmesi bunu istemez."
+    },
+    {
+     "t": "h3",
+     "text": "Belge transkripsiyonu"
+    },
+    {
+     "t": "p",
+     "text": "Klinik, Aşamalar'da bir fotoğrafı «Documento» olarak işaretlediyse (örneğin elle yazılmış teknik form), görselin altında «Transkripsiyon» kutusu görünür. Sistemin belgeyi okuyup metnini yazması için «Yazıya dök» düğmesine bas; metni yalnızca personel görür, hasta asla görmez. Metin düzenlenebilir: kontrol et, düzelt ve «Metni kaydet» düğmesine bas. Her kliniğin aylık bir transkripsiyon kotası vardır (kutu kaç hakkın kaldığını gösterir); biterse veya özellik kullanılamıyorsa «Elle yaz» seçeneğini kullan. Sonuç kötüyse ve kliniğinde gelişmiş model açıksa, «Gelişmiş modelle yeniden dene» yeni bir okuma yapar ve 2 transkripsiyon sayılır. Otomatik transkripsiyonda, özellikle el yazısında hatalar olabilir: her zaman kontrol et."
     }
    ],
    "key": "phases"
@@ -1292,6 +1300,10 @@
     {
      "t": "note",
      "text": "Yapılandırmayı istediğin zaman değiştirebilirsin: mevcut fotoğraflar silinmez, yalnızca artık istenmezler."
+    },
+    {
+     "t": "p",
+     "text": "Bir fotoğraf bir kâğıtsa (form, onam) yanındaki «Documento» kutusunu işaretle: altında personel metni yazıya dökebilir."
     },
     {
      "t": "h3",

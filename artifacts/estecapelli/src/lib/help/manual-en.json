@@ -973,6 +973,14 @@
     {
      "t": "p",
      "text": "From the diagnosis onwards, each phase shows the «Appointment» box with «Appointment date» and «Appointment ID». The date is required: without it the diagnosis cannot be closed and the phase's photos cannot be uploaded. The ID is optional and is used to note the number of that appointment in the clinic's own scheduling system. Enter the details and press «Save appointment»; you can correct them later while the process is still open. The patient's pre-evaluation does not ask for it."
+    },
+    {
+     "t": "h3",
+     "text": "Document transcription"
+    },
+    {
+     "t": "p",
+     "text": "If the clinic marked a photo as «Documento» in Phases (for example the handwritten technical sheet), a «Transcription» box appears below the image. Press «Transcribe» so the system reads the document and writes its text; only staff see it, never the patient. The text is editable: review it, correct it and press «Save text». Each clinic has a monthly transcription quota (the box shows how many are left); if it runs out or the feature is unavailable, use «Type it manually». If the result is poor and your clinic has the advanced model enabled, «Retry with advanced model» makes a new reading and counts as 2 transcriptions. An automatic transcription can contain mistakes, especially with handwriting: always review it."
     }
    ],
    "key": "phases"
@@ -1292,6 +1300,10 @@
     {
      "t": "note",
      "text": "You can change the configuration whenever you want: photographs that already exist are not deleted, they just stop being requested."
+    },
+    {
+     "t": "p",
+     "text": "Tick «Documento» next to a photo if it is a paper (sheet, consent form): below it, staff will be able to transcribe its text."
     },
     {
      "t": "h3",

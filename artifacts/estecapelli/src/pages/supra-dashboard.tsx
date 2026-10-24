@@ -9,6 +9,7 @@ export type Dashboard = {
   clinics: { total: number; active: number; suspended: number; payments: { upToDate: number; expiring: number; overdue: number; noRecord: number }; expiringDays: number };
   users: { total: number; active: number; blocked: number; medicos: number; administrativos: number; supra: number };
   patients: { total: number; newThisMonth: number };
+  documents?: { transcribed: number; transcribedThisMonth: number };
   tickets: {
     waiting: number; attending: number; resolved: number; closed: number; pending: number; attendedTotal: number;
     openedThisMonth: number; resolvedThisMonth: number; ratingAverage: number | null; ratingCount: number; firstResponseMinutes: number | null;
@@ -118,10 +119,11 @@ export function SupraDashboard({ onNavigate }: { onNavigate?: (view: "support" |
         </ul>
       </section>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         <Tile testId="tile-clinics" label="Clínicas" value={num(data.clinics.total)} sub={`${num(data.clinics.active)} activas · ${num(data.clinics.suspended)} suspendidas`} />
         <Tile testId="tile-users" label="Usuarios" value={num(data.users.total)} sub={`${num(data.users.medicos)} médicos · ${num(data.users.administrativos)} administrativos`} />
         <Tile testId="tile-patients" label="Pacientes" value={num(data.patients.total)} sub={`${num(data.patients.newThisMonth)} nuevos este mes`} />
+        <Tile testId="tile-documents" label="Documentos transcritos" value={num(data.documents?.transcribed ?? 0)} sub={`${num(data.documents?.transcribedThisMonth ?? 0)} este mes`} />
         <Tile testId="tile-pending" label="Tickets por resolver" value={num(t.pending)} sub={`${num(t.waiting)} en espera · ${num(t.attending)} en atención`} />
       </div>
 

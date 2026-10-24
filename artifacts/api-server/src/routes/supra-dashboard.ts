@@ -3,6 +3,7 @@ import { and, gte, lt, sql } from "drizzle-orm";
 import { db, centersTable, usersTable, leadsTable, supportTicketsTable, financeEntriesTable } from "@workspace/db";
 import { requireSupraAuth } from "./auth";
 import { currentStatuses } from "../lib/service-monitor";
+import { countTranscribedDocuments } from "../lib/transcription";
 
 // Dashboard del panel de supra-control: estadísticas de la plataforma. Las finanzas solo las ven los directores.
 const router: IRouter = Router();
@@ -67,6 +68,7 @@ router.get("/supra/dashboard", async (req, res): Promise<void> => {
     firstResponseMinutes: sql<number | null>`(avg(extract(epoch from (${t.firstResponseAt} - ${t.createdAt})) / 60) filter (where ${t.firstResponseAt} is not null and ${t.createdAt} >= ${new Date(now - 30 * 86_400_000)}))::float`,
   }).from(t);
 
+  const documents = await countTranscribedDocuments();
   const checks = await currentStatuses();
   const round = (value: number | null, digits: number) => (value === null || value === undefined ? null : Math.round(value * 10 ** digits) / 10 ** digits);
 
@@ -88,6 +90,7 @@ router.get("/supra/dashboard", async (req, res): Promise<void> => {
     clinics: { total: clinics?.total ?? 0, active: clinics?.active ?? 0, suspended: clinics?.suspended ?? 0, payments: { upToDate: clinics?.upToDate ?? 0, expiring: clinics?.expiring ?? 0, overdue: clinics?.overdue ?? 0, noRecord: clinics?.noRecord ?? 0 }, expiringDays: EXPIRING_DAYS },
     users: { total: users?.total ?? 0, active: users?.active ?? 0, blocked: users?.blocked ?? 0, medicos: users?.medicos ?? 0, administrativos: users?.administrativos ?? 0, supra: users?.supra ?? 0 },
     patients: { total: patients?.total ?? 0, newThisMonth: patients?.newThisMonth ?? 0 },
+    documents: { transcribed: documents.total, transcribedThisMonth: documents.thisMonth },
     tickets: {
       waiting: tickets?.waiting ?? 0, attending: tickets?.attending ?? 0, resolved: tickets?.resolved ?? 0, closed: tickets?.closed ?? 0,
       pending: (tickets?.waiting ?? 0) + (tickets?.attending ?? 0),

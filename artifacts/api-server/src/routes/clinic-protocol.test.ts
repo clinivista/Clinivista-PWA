@@ -15,6 +15,7 @@ vi.mock("@workspace/db", async () => {
 import * as mockedDb from "@workspace/db";
 import { hashPassword } from "@workspace/db";
 import clinicProtocolRouter from "./clinic-protocol";
+import transcriptionRouter from "./transcription";
 import { createSession } from "../lib/sessions";
 import { getPatientPhaseViews, getRequiredViewKeys } from "../lib/clinical-photos";
 
@@ -23,6 +24,7 @@ const pglite = (mockedDb as unknown as { __pglite: { exec(sql: string): Promise<
 const app = express();
 app.use(express.json());
 app.use("/api", clinicProtocolRouter);
+app.use("/api", transcriptionRouter);
 
 beforeAll(async () => {
   await pglite.exec(`
@@ -64,11 +66,20 @@ beforeAll(async () => {
       edit_params jsonb, note text, created_at timestamptz NOT NULL DEFAULT now(), confirmed_at timestamptz,
       discarded_at timestamptz
     );
+    CREATE TABLE IF NOT EXISTS clinic_transcription_settings (
+      center_id text PRIMARY KEY, monthly_quota integer NOT NULL DEFAULT 100, advanced_enabled boolean NOT NULL DEFAULT false,
+      updated_at timestamptz NOT NULL DEFAULT now()
+    );
+    CREATE TABLE IF NOT EXISTS clinic_transcription_usage (
+      id text PRIMARY KEY, center_id text NOT NULL, photo_id text NOT NULL, tier text NOT NULL, model text NOT NULL,
+      units integer NOT NULL DEFAULT 1, input_tokens integer NOT NULL DEFAULT 0, output_tokens integer NOT NULL DEFAULT 0,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
   `);
 });
 
 beforeEach(async () => {
-  await pglite.exec(`TRUNCATE clinical_centers, users, clinical_protocols, clinical_protocol_views, clinical_protocol_phases, clinical_photos;`);
+  await pglite.exec(`TRUNCATE clinical_centers, users, clinical_protocols, clinical_protocol_views, clinical_protocol_phases, clinical_photos, clinic_transcription_settings, clinic_transcription_usage;`);
   await pglite.exec(`INSERT INTO clinical_centers (id, name, slug) VALUES ('clinic-a', 'Clínica A', 'clinic-a'), ('clinic-b', 'Clínica B', 'clinic-b'), ('default-center', 'Estecapelli', 'estecapelli');`);
 });
 
@@ -81,7 +92,7 @@ async function seedUser(id: string, role: string, centerId: string | null, legal
 const as = (id: string, role: string, centerId: string | null) =>
   `clinivista_session=${createSession({ userId: id, centerId, role: role as "medico" })}`;
 
-type Phase = { id: string; name: string; views: Array<{ id: string; label: string; hasPhotos: boolean }> };
+type Phase = { id: string; name: string; views: Array<{ id: string; label: string; hasPhotos: boolean; document: boolean }> };
 const read = async (cookie: string) => (await request(app).get("/api/clinic/protocol").set("Cookie", cookie).expect(200)).body as { canEdit: boolean; phases: Phase[] };
 const toInput = (phases: Phase[]) => phases.map((p) => ({ id: p.id, name: p.name, views: p.views.map((v) => ({ id: v.id, label: v.label })) }));
 
@@ -202,5 +213,62 @@ describe("fases de la clínica", () => {
     const required = await getRequiredViewKeys("clinic-a-capillary-initial");
     expect(required).toHaveLength(3);
     expect(required.slice(0, 2)).toEqual(["frontal", "vertex"]);
+  });
+});
+
+describe("fotografías marcadas como documento", () => {
+  it("se marca al crear y al editar, y se conserva cuando la petición no lo menciona", async () => {
+    await seedUser("rep", "medico", "clinic-a", true);
+    const cookie = as("rep", "medico", "clinic-a");
+    const { phases } = await read(cookie);
+    expect(phases.flatMap((p) => p.views).every((v) => v.document === false)).toBe(true);
+
+    const next = toInput(phases) as Array<{ id: string; name: string; views: Array<{ id?: string; label: string; document?: boolean }> }>;
+    next[3].views[0].document = true; // una foto existente
+    next[3].views.push({ label: "Consentimiento firmado", document: true });
+    const saved = (await request(app).put("/api/clinic/protocol").set("Cookie", cookie).send({ phases: next }).expect(200)).body.phases as Phase[];
+    expect(saved[3].views.map((v) => v.document)).toEqual([true, false, false, false, false, true]);
+
+    // Guardar de nuevo sin mencionar el campo no lo borra.
+    const again = (await request(app).put("/api/clinic/protocol").set("Cookie", cookie).send({ phases: toInput(saved) }).expect(200)).body.phases as Phase[];
+    expect(again[3].views[0].document).toBe(true);
+
+    // Y se puede quitar explícitamente.
+    const cleared = toInput(again) as typeof next;
+    cleared[3].views[0].document = false;
+    const final = (await request(app).put("/api/clinic/protocol").set("Cookie", cookie).send({ phases: cleared }).expect(200)).body.phases as Phase[];
+    expect(final[3].views[0].document).toBe(false);
+    expect(final[3].views[5].document).toBe(true);
+  });
+});
+
+describe("cuota de transcripciones por clínica (supra-control)", () => {
+  const supra = () => `clinivista_session=${createSession({ userId: "dir", centerId: null, role: "director" })}`;
+
+  it("sin configuración usa 100 al mes y el reintento avanzado apagado", async () => {
+    const res = await request(app).get("/api/director/centers/clinic-a/transcription").set("Cookie", supra()).expect(200);
+    expect(res.body).toMatchObject({ monthlyQuota: 100, used: 0, remaining: 100, advancedEnabled: false });
+  });
+
+  it("el director fija la cuota y habilita el avanzado; los datos inválidos se rechazan", async () => {
+    const ok = await request(app).put("/api/director/centers/clinic-a/transcription").set("Cookie", supra()).send({ monthlyQuota: 250, advancedEnabled: true }).expect(200);
+    expect(ok.body).toMatchObject({ monthlyQuota: 250, advancedEnabled: true, remaining: 250 });
+    await request(app).put("/api/director/centers/clinic-a/transcription").set("Cookie", supra()).send({ monthlyQuota: -1 }).expect(422);
+    await request(app).put("/api/director/centers/clinic-a/transcription").set("Cookie", supra()).send({ monthlyQuota: 1.5 }).expect(422);
+    await request(app).put("/api/director/centers/clinic-a/transcription").set("Cookie", supra()).send({ advancedEnabled: "si" }).expect(422);
+    // Solo cambia lo enviado.
+    const partial = await request(app).put("/api/director/centers/clinic-a/transcription").set("Cookie", supra()).send({ monthlyQuota: 40 }).expect(200);
+    expect(partial.body).toMatchObject({ monthlyQuota: 40, advancedEnabled: true });
+    await request(app).get("/api/director/centers/nope/transcription").set("Cookie", supra()).expect(404);
+  });
+
+  it("solo supra-control lo administra, y cada clínica ve solo lo suyo", async () => {
+    await seedUser("adm", "administrativo", "clinic-a");
+    const staffCookie = as("adm", "administrativo", "clinic-a");
+    await request(app).put("/api/director/centers/clinic-a/transcription").set("Cookie", staffCookie).send({ monthlyQuota: 5 }).expect(403);
+    await request(app).put("/api/director/centers/clinic-a/transcription").send({ monthlyQuota: 5 }).expect(401);
+    await request(app).put("/api/director/centers/clinic-b/transcription").set("Cookie", supra()).send({ monthlyQuota: 7 }).expect(200);
+    const own = await request(app).get("/api/clinic/transcription").set("Cookie", staffCookie).expect(200);
+    expect(own.body.monthlyQuota).toBe(100);
   });
 });

@@ -28,6 +28,9 @@ beforeAll(async () => {
     CREATE TABLE admin_service_status (check_key text PRIMARY KEY, status text NOT NULL DEFAULT 'unknown', detail text NOT NULL DEFAULT '', checked_at timestamptz NOT NULL DEFAULT now(), changed_at timestamptz NOT NULL DEFAULT now(), failures integer NOT NULL DEFAULT 0, alerted boolean NOT NULL DEFAULT false, last_alert_at timestamptz);
     CREATE TABLE finance_entries (id text PRIMARY KEY, kind text NOT NULL, entry_date text NOT NULL, amount_cents integer NOT NULL, currency text NOT NULL DEFAULT 'CLP', category text NOT NULL DEFAULT '', note text NOT NULL DEFAULT '', service_id text, created_by text, created_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE admin_settings (key text PRIMARY KEY, value text NOT NULL DEFAULT '');
+    CREATE TABLE clinical_centers (id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE, active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', created_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE clinic_transcription_settings (center_id text PRIMARY KEY, monthly_quota integer NOT NULL DEFAULT 100, advanced_enabled boolean NOT NULL DEFAULT false, updated_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE clinic_transcription_usage (id text PRIMARY KEY, center_id text NOT NULL, photo_id text NOT NULL, tier text NOT NULL, model text NOT NULL, units integer NOT NULL DEFAULT 1, input_tokens integer NOT NULL DEFAULT 0, output_tokens integer NOT NULL DEFAULT 0, created_at timestamptz NOT NULL DEFAULT now());
   `);
 });
 
@@ -87,6 +90,41 @@ describe("finanzas", () => {
     expect(res.text).toContain("Fecha;Tipo;Monto;Moneda;Categoría;Nota");
     expect(res.text).toContain("'=HYPERLINK");
     expect(res.text).toContain('"a;b"');
+  });
+});
+
+describe("costo de la IA", () => {
+  const usage = (id: string, center: string, tier: string, input: number, output: number, at: string, units = tier === "advanced" ? 2 : 1) =>
+    pglite.exec(`INSERT INTO clinic_transcription_usage (id, center_id, photo_id, tier, model, units, input_tokens, output_tokens, created_at) VALUES ('${id}', '${center}', 'p', '${tier}', 'm', ${units}, ${input}, ${output}, '${at}');`);
+
+  it("suma tokens y costo del mes por clínica y por nivel, con historial de 12 meses", async () => {
+    await pglite.exec(`INSERT INTO clinical_centers (id, name, slug) VALUES ('ca', 'Clínica Alfa', 'ca'), ('cb', 'Clínica Beta', 'cb') ON CONFLICT DO NOTHING;
+      INSERT INTO clinic_transcription_settings (center_id, monthly_quota) VALUES ('ca', 250) ON CONFLICT DO NOTHING;`);
+    await usage("u1", "ca", "basic", 2000, 600, "2026-10-05T12:00:00Z");
+    await usage("u2", "ca", "advanced", 2000, 600, "2026-10-06T12:00:00Z");
+    await usage("u3", "cb", "basic", 1_000_000, 0, "2026-10-07T12:00:00Z");
+    await usage("u4", "ca", "basic", 2000, 600, "2026-09-10T12:00:00Z");
+    await usage("u5", "ca", "basic", 2000, 600, "2026-11-01T00:00:00Z"); // fuera del mes
+
+    const res = (await request(app).get("/api/supra/admin/finance/ai-usage?month=2026-10").set("Cookie", supra()).expect(200)).body;
+    // básico: 2000×0,10 + 600×0,50 = 500 / 1e6 · avanzado: 2000×2 + 600×10 = 10000 / 1e6 · Beta: 1e6 × 0,10 = 0,10 USD
+    expect(res.totals.calls).toBe(3);
+    expect(res.totals.units).toBe(4);
+    expect(res.totals.inputTokens).toBe(1_004_000);
+    expect(res.totals.costUsd).toBeCloseTo(0.0005 + 0.01 + 0.1, 6);
+    expect(res.byTier.find((t: { tier: string }) => t.tier === "advanced")).toMatchObject({ calls: 1, units: 2 });
+    expect(res.byClinic.map((c: { name: string }) => c.name)).toEqual(["Clínica Beta", "Clínica Alfa"]);
+    expect(res.byClinic.find((c: { centerId: string }) => c.centerId === "ca")).toMatchObject({ monthlyQuota: 250, calls: 2, units: 3 });
+    expect(res.history).toHaveLength(12);
+    expect(res.history.at(-1)).toMatchObject({ month: "2026-10", calls: 3 });
+    expect(res.history.at(-2)).toMatchObject({ month: "2026-09", calls: 1 });
+    expect(res.rates.basic).toMatchObject({ input: 0.1, output: 0.5 });
+  });
+
+  it("solo la ven los directores", async () => {
+    await request(app).get("/api/supra/admin/finance/ai-usage").set("Cookie", clinic()).expect(403);
+    await request(app).get("/api/supra/admin/finance/ai-usage").set("Cookie", supra("supra_admin")).expect(403);
+    await request(app).get("/api/supra/admin/finance/ai-usage").expect(401);
   });
 });
 

@@ -973,6 +973,14 @@
     {
      "t": "p",
      "text": "Desde el diagnóstico, cada fase muestra el recuadro «Atención» con «Fecha de la atención» y «ID de la atención». La fecha es obligatoria: sin ella no se puede cerrar el diagnóstico ni subir las fotografías de la fase. El ID es opcional y sirve para anotar el número de esa atención en la agenda propia de la clínica. Escribe los datos y pulsa «Guardar atención»; puedes corregirlos después mientras el proceso siga abierto. La pre-evaluación del paciente no lo pide."
+    },
+    {
+     "t": "h3",
+     "text": "Transcripción de documentos"
+    },
+    {
+     "t": "p",
+     "text": "Si la clínica marcó una fotografía como «Documento» en Fases (por ejemplo la ficha técnica escrita a mano), debajo de la imagen aparece el recuadro «Transcripción». Pulsa «Transcribir» para que el sistema lea el documento y escriba su texto; solo lo ve el personal, nunca el paciente. El texto es editable: revísalo, corrígelo y pulsa «Guardar texto». Cada clínica tiene una cuota mensual de transcripciones (el recuadro indica cuántas quedan); si se agota o la función no está disponible, usa «Escribir a mano». Si el resultado es malo y tu clínica tiene habilitado el modelo avanzado, «Reintentar con modelo avanzado» hace una nueva lectura y cuenta como 2 transcripciones. Una transcripción automática puede tener errores, sobre todo con letra manuscrita: revísala siempre."
     }
    ],
    "key": "phases"
@@ -1292,6 +1300,10 @@
     {
      "t": "note",
      "text": "Puedes cambiar la configuración cuando quieras: las fotografías que ya existen no se borran, solo dejan de pedirse."
+    },
+    {
+     "t": "p",
+     "text": "Marca «Documento» junto a una fotografía si es un papel (ficha, consentimiento): bajo ella el personal podrá transcribir su texto."
     },
     {
      "t": "h3",

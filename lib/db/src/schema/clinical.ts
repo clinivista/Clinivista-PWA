@@ -229,3 +229,44 @@ export const reportSettingsTable = pgTable("clinic_report_settings", {
 });
 
 export type ReportSettings = typeof reportSettingsTable.$inferSelect;
+
+// Transcripción (OCR) de una foto marcada como documento (p. ej. la ficha
+// técnica manuscrita). Una por foto; el texto es editable por el personal y
+// guarda quién lo generó y quién lo corrigió. Solo la ve el personal.
+export const photoTranscriptionsTable = pgTable("clinical_photo_transcriptions", {
+  photoId: text("photo_id").primaryKey(),
+  text: text("text").notNull().default(""),
+  // "basic" (modelo económico) o "advanced" (reintento con un modelo más potente).
+  tier: text("tier").notNull().default("basic"),
+  model: text("model").notNull().default(""),
+  transcribedByUserId: text("transcribed_by_user_id"),
+  transcribedByName: text("transcribed_by_name"),
+  transcribedAt: timestamp("transcribed_at", { withTimezone: true }).notNull().defaultNow(),
+  editedByName: text("edited_by_name"),
+  editedAt: timestamp("edited_at", { withTimezone: true }),
+});
+
+// Cuota mensual de transcripciones por clínica y si tiene habilitado el
+// reintento avanzado. Sin fila = valores por defecto del servidor.
+export const transcriptionSettingsTable = pgTable("clinic_transcription_settings", {
+  centerId: text("center_id").primaryKey(),
+  monthlyQuota: integer("monthly_quota").notNull().default(100),
+  advancedEnabled: boolean("advanced_enabled").notNull().default(false),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Cada llamada al modelo: sirve para contar el uso del mes contra la cuota
+// (units: básica = 1, avanzada = 2) y para estimar el costo real.
+export const transcriptionUsageTable = pgTable("clinic_transcription_usage", {
+  id: text("id").primaryKey(),
+  centerId: text("center_id").notNull(),
+  photoId: text("photo_id").notNull(),
+  tier: text("tier").notNull(),
+  model: text("model").notNull(),
+  units: integer("units").notNull().default(1),
+  inputTokens: integer("input_tokens").notNull().default(0),
+  outputTokens: integer("output_tokens").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type PhotoTranscription = typeof photoTranscriptionsTable.$inferSelect;

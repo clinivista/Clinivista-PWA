@@ -127,6 +127,80 @@ function ServicesTab() {
   );
 }
 
+type AiUsage = {
+  month: string; available: boolean;
+  rates: { basic: { model: string; input: number; output: number }; advanced: { model: string; input: number; output: number } };
+  totals: { calls: number; units: number; inputTokens: number; outputTokens: number; costUsd: number };
+  byTier: Array<{ tier: "basic" | "advanced"; model: string; calls: number; units: number; inputTokens: number; outputTokens: number; costUsd: number }>;
+  byClinic: Array<{ centerId: string; name: string; monthlyQuota: number; calls: number; units: number; inputTokens: number; outputTokens: number; costUsd: number }>;
+  history: Array<{ month: string; calls: number; units: number; costUsd: number }>;
+};
+const usd = (n: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: n > 0 && n < 1 ? 4 : 2 }).format(n);
+const tokens = (n: number) => n.toLocaleString("es-CL");
+const lastDayOf = (m: string) => { const [y, mo] = m.split("-").map(Number) as [number, number]; return `${m}-${String(new Date(y, mo, 0).getDate()).padStart(2, "0")}`; };
+
+/** Costo de la IA (transcripción de documentos) del mes: estimado con los tokens consumidos y los precios del modelo. */
+function AiCostPanel({ month, onRegistered }: { month: string; onRegistered: () => void }) {
+  const { data } = useQuery({ queryKey: ["admin-ai-usage", month], queryFn: () => api<AiUsage>(`/api/supra/admin/finance/ai-usage?month=${month}`), retry: false });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  if (!data || !data.totals || !Array.isArray(data.byClinic)) return null;
+  const cost = Math.round(data.totals.costUsd * 100) / 100;
+  const register = async () => {
+    if (!window.confirm(`Se registrará un gasto de ${usd(cost)} (USD) por la IA de ${monthLabel(month)}. ¿Continuar?`)) return;
+    setBusy(true); setError(null);
+    try {
+      const date = month === today().slice(0, 7) ? today() : lastDayOf(month);
+      await api("/api/supra/admin/finance", { method: "POST", body: JSON.stringify({ kind: "expense", date, amount: cost, currency: "USD", category: "IA · Transcripción", note: `Estimado a partir de ${tokens(data.totals.inputTokens + data.totals.outputTokens)} tokens` }) });
+      onRegistered();
+    } catch (err) { setError((err as Error).message); } finally { setBusy(false); }
+  };
+  return (
+    <section className="space-y-3 rounded-2xl border border-[#E8E4DE] p-4" aria-label="Costo de la IA" data-testid="ai-cost">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-bold">Costo de la IA · transcripción de documentos</h3>
+        <Button variant="outline" className="h-9 rounded-full text-sm" disabled={busy || cost < 0.01} onClick={register} data-testid="register-ai-cost">
+          {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Registrar como gasto del mes
+        </Button>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl bg-amber-50 p-4"><p className="text-xs font-semibold text-amber-800">Costo estimado (USD)</p><p className="text-lg font-bold text-amber-900" data-testid="ai-cost-total">{usd(data.totals.costUsd)}</p></div>
+        <div className="rounded-2xl bg-[#F5F2EE] p-4"><p className="text-xs font-semibold text-muted-foreground">Transcripciones</p><p className="text-lg font-bold">{data.totals.calls} <span className="text-xs font-semibold text-muted-foreground">({data.totals.units} de cuota)</span></p></div>
+        <div className="rounded-2xl bg-[#F5F2EE] p-4"><p className="text-xs font-semibold text-muted-foreground">Tokens enviados / recibidos</p><p className="text-lg font-bold">{tokens(data.totals.inputTokens)} / {tokens(data.totals.outputTokens)}</p></div>
+      </div>
+      {!data.available && <p className="text-xs font-semibold text-amber-800">Falta definir ANTHROPIC_API_KEY en el servidor: la transcripción automática está apagada.</p>}
+      {data.byClinic.length === 0 ? <p className="rounded-2xl bg-[#F5F2EE] px-4 py-3 text-sm text-muted-foreground">Sin transcripciones este mes.</p> : (
+        <div className="overflow-x-auto rounded-2xl border border-[#E8E4DE]">
+          <table className="w-full text-sm"><caption className="px-4 py-2 text-start text-xs font-bold text-muted-foreground">Por clínica</caption>
+            <thead className="bg-[#F5F2EE]"><tr><th className="px-3 py-2 text-start">Clínica</th><th className="px-3 py-2 text-end">Transcripciones</th><th className="px-3 py-2 text-end">Cuota usada</th><th className="px-3 py-2 text-end">Costo (USD)</th></tr></thead>
+            <tbody>{data.byClinic.map((c) => (
+              <tr key={c.centerId} className="border-t border-[#E8E4DE]"><td className="px-3 py-2">{c.name}</td><td className="px-3 py-2 text-end">{c.calls}</td><td className="px-3 py-2 text-end">{c.units} / {c.monthlyQuota}</td><td className="px-3 py-2 text-end font-semibold">{usd(c.costUsd)}</td></tr>
+            ))}</tbody>
+          </table>
+        </div>
+      )}
+      <div className="overflow-x-auto rounded-2xl border border-[#E8E4DE]">
+        <table className="w-full text-sm"><caption className="px-4 py-2 text-start text-xs font-bold text-muted-foreground">Por modelo</caption>
+          <thead className="bg-[#F5F2EE]"><tr><th className="px-3 py-2 text-start">Nivel</th><th className="px-3 py-2 text-start">Modelo</th><th className="px-3 py-2 text-end">Precio por millón (entrada / salida)</th><th className="px-3 py-2 text-end">Transcripciones</th><th className="px-3 py-2 text-end">Costo (USD)</th></tr></thead>
+          <tbody>{data.byTier.map((t) => (
+            <tr key={t.tier} className="border-t border-[#E8E4DE]"><td className="px-3 py-2">{t.tier === "basic" ? "Básico" : "Avanzado"}</td><td className="px-3 py-2">{t.model}</td><td className="px-3 py-2 text-end">{usd(data.rates[t.tier].input)} / {usd(data.rates[t.tier].output)}</td><td className="px-3 py-2 text-end">{t.calls}</td><td className="px-3 py-2 text-end font-semibold">{usd(t.costUsd)}</td></tr>
+          ))}</tbody>
+        </table>
+      </div>
+      <div className="overflow-x-auto rounded-2xl border border-[#E8E4DE]">
+        <table className="w-full text-sm"><caption className="px-4 py-2 text-start text-xs font-bold text-muted-foreground">Últimos 12 meses</caption>
+          <thead className="bg-[#F5F2EE]"><tr><th className="px-3 py-2 text-start">Mes</th><th className="px-3 py-2 text-end">Transcripciones</th><th className="px-3 py-2 text-end">Costo (USD)</th></tr></thead>
+          <tbody>{data.history.slice().reverse().map((h) => (
+            <tr key={h.month} className="border-t border-[#E8E4DE]"><td className="px-3 py-2">{monthLabel(h.month)}</td><td className="px-3 py-2 text-end">{h.calls}</td><td className="px-3 py-2 text-end">{h.calls ? usd(h.costUsd) : "—"}</td></tr>
+          ))}</tbody>
+        </table>
+      </div>
+      <p className="text-xs text-muted-foreground">Es una estimación: tokens reales de cada llamada por el precio por millón del modelo. La factura real de Anthropic puede diferir levemente. No se suma a los gastos hasta que lo registres.</p>
+      {error && <p role="alert" className="text-sm font-semibold text-red-700">{error}</p>}
+    </section>
+  );
+}
+
 function FinanceTab() {
   const queryClient = useQueryClient();
   const [month, setMonth] = useState(() => today().slice(0, 7));
@@ -164,6 +238,8 @@ function FinanceTab() {
               <div className="rounded-2xl bg-red-50 p-4"><p className="text-xs font-semibold text-red-700">Gastos ({cur})</p><p className="text-lg font-bold text-red-800">{money(t.expense, cur)}</p></div>
               <div className="rounded-2xl bg-[#F5F2EE] p-4"><p className="text-xs font-semibold text-muted-foreground">Balance ({cur})</p><p className={`text-lg font-bold ${t.balance < 0 ? "text-red-700" : ""}`}>{money(t.balance, cur)}</p></div>
             </div>); })}
+
+          <AiCostPanel month={month} onRegistered={refresh} />
 
           <form onSubmit={add} className="grid gap-3 rounded-2xl bg-[#F5F2EE] p-4 md:grid-cols-6" aria-label="Nuevo movimiento">
             <select className={FIELD} aria-label="Tipo" value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}><option value="expense">Gasto</option><option value="income">Ingreso</option></select>

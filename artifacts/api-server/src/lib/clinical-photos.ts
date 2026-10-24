@@ -11,6 +11,7 @@ import {
   diagnosisEventsTable,
   photoAnnotationsTable,
   photoAuditEventsTable,
+  photoTranscriptionsTable,
   protocolPhasesTable,
   protocolsTable,
   protocolViewsTable,
@@ -690,6 +691,8 @@ export async function deleteClinicalDataForLead(lead: Lead): Promise<void> {
         .where(inArray(photoAnnotationsTable.photoId, photos.map((photo) => photo.id)));
       await tx.delete(photoAuditEventsTable)
         .where(inArray(photoAuditEventsTable.photoId, photos.map((photo) => photo.id)));
+      await tx.delete(photoTranscriptionsTable)
+        .where(inArray(photoTranscriptionsTable.photoId, photos.map((photo) => photo.id)));
     }
     if (diagnosis) {
       await tx.delete(diagnosisEventsTable).where(eq(diagnosisEventsTable.diagnosisId, diagnosis.id));
@@ -705,6 +708,18 @@ export type LeadPhaseView = {
   key: string;
   label: string;
   required: boolean;
+  /** La foto de esta vista es un documento (p. ej. una ficha manuscrita): el personal puede transcribirla. */
+  document: boolean;
+  /** Transcripción de la foto actual (solo el personal la ve). */
+  transcription: {
+    text: string;
+    tier: string;
+    model: string;
+    byName: string;
+    at: string;
+    editedByName: string | null;
+    editedAt: string | null;
+  } | null;
   photo: PhotoStatus | null;
 };
 
@@ -750,6 +765,14 @@ export async function getLeadPhases(lead: Lead): Promise<LeadPhase[]> {
   }
 
   const [diagnosis] = await db.select().from(diagnosesTable).where(eq(diagnosesTable.evaluationId, evaluation.id));
+  const documentPhotoIds = [...latest.values()]
+    .filter((photo) => views.some((view) => view.id === photo.viewId && (view.requirements as Record<string, unknown> | null)?.document === true))
+    .map((photo) => photo.id);
+  const transcriptions = new Map(
+    (documentPhotoIds.length
+      ? await db.select().from(photoTranscriptionsTable).where(inArray(photoTranscriptionsTable.photoId, documentPhotoIds))
+      : []).map((row) => [row.photoId, row]),
+  );
 
   const attentions = (lead.phaseAttentions && typeof lead.phaseAttentions === "object" && !Array.isArray(lead.phaseAttentions) ? lead.phaseAttentions : {}) as Record<string, PhaseAttention>;
   // La atención se registra desde la fase de diagnóstico en adelante (si no hay, desde la segunda fase).
@@ -768,6 +791,21 @@ export async function getLeadPhases(lead: Lead): Promise<LeadPhase[]> {
           key: view.key,
           label: view.label,
           required: (view.requirements as Record<string, unknown> | null)?.required !== false,
+          document: (view.requirements as Record<string, unknown> | null)?.document === true,
+          transcription: photo && transcriptions.has(photo.id)
+            ? (() => {
+                const row = transcriptions.get(photo.id)!;
+                return {
+                  text: row.text,
+                  tier: row.tier,
+                  model: row.model,
+                  byName: row.transcribedByName ?? "",
+                  at: row.transcribedAt.toISOString(),
+                  editedByName: row.editedByName,
+                  editedAt: row.editedAt ? row.editedAt.toISOString() : null,
+                };
+              })()
+            : null,
           photo: photo ? photoStatus(photo, view) : null,
         };
       });
@@ -881,6 +919,7 @@ export async function discardStaffPhasePhoto(lead: Lead, photoId: string, staffU
     .set({ status: "discarded", discardedAt: new Date(), derivativeObjectPath: null })
     .where(eq(clinicalPhotosTable.id, photoId))
     .returning();
+  await db.delete(photoTranscriptionsTable).where(eq(photoTranscriptionsTable.photoId, photoId));
   await writeAuditEvent(photo, "discarded", "staff", staffUserId, {});
   return true;
 }

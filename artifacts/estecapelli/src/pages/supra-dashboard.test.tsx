@@ -14,6 +14,7 @@ const base = (over: Partial<Dashboard> = {}): Dashboard => ({
   clinics: { total: 5, active: 4, suspended: 1, payments: { upToDate: 2, expiring: 1, overdue: 1, noRecord: 1 }, expiringDays: 7 },
   users: { total: 12, active: 11, blocked: 1, medicos: 5, administrativos: 5, supra: 2 },
   patients: { total: 340, newThisMonth: 21 },
+  documents: { transcribed: 57, transcribedThisMonth: 12 },
   tickets: { waiting: 2, attending: 1, resolved: 0, closed: 8, pending: 3, attendedTotal: 9, openedThisMonth: 4, resolvedThisMonth: 3, ratingAverage: 4.5, ratingCount: 6, firstResponseMinutes: 12 },
   services: { light: "green", checks: [{ key: "database", label: "Base de datos", status: "ok", detail: "ok", checkedAt: null }] },
   finance: null,
@@ -26,6 +27,9 @@ describe("Dashboard de supra-control", () => {
     wrap(<SupraDashboard />);
     expect(await screen.findByTestId("tile-clinics")).toHaveTextContent("5");
     expect(screen.getByTestId("tile-patients")).toHaveTextContent("21 nuevos este mes");
+    expect(screen.getByTestId("tile-documents")).toHaveTextContent("Documentos transcritos");
+    expect(screen.getByTestId("tile-documents")).toHaveTextContent("57");
+    expect(screen.getByTestId("tile-documents")).toHaveTextContent("12 este mes");
     expect(screen.getByTestId("tile-pending")).toHaveTextContent("3");
     expect(screen.getByTestId("support-first-response")).toHaveTextContent("12 min");
     expect(screen.getByTestId("traffic-light")).toHaveAttribute("data-light", "green");

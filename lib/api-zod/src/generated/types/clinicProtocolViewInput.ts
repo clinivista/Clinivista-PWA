@@ -9,4 +9,6 @@
 export interface ClinicProtocolViewInput {
   id?: string;
   label: string;
+  /** Mark the photo as a document. When omitted, an existing photo keeps its current value. */
+  document?: boolean;
 }

@@ -27,6 +27,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { buildPublicPatientLink, copyToClipboard } from "@/lib/clipboard";
 import { DirectorPanel } from "./director-panel";
 import { ClinicUsersPanel } from "./clinic-users-panel";
+import { DOCS_TRANSCRIBED } from "@/lib/transcription-i18n";
 import { PhasesPanel } from "./phases-panel";
 import { plasticSummaryRows } from "@/lib/specialty-i18n";
 import { dermSummaryRows } from "@/lib/derm-i18n";
@@ -433,7 +434,7 @@ export default function Admin() {
         <AddPatientDialog open={addPatientOpen} onOpenChange={setAddPatientOpen} onCreated={(id) => { setStatusFilter("all"); setSearch(""); setSelectedLeadId(id); }} />
 
         {/* Stats Strip — floating cards on bg */}
-        <div className="px-4 sm:px-6 md:px-10 py-4 sm:py-6 shrink-0 grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 bg-[#F5F2EE]">
+        <div className="px-4 sm:px-6 md:px-10 py-4 sm:py-6 shrink-0 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 bg-[#F5F2EE]">
           {([
             { filter: "all", label: t.adminTotal, count: stats?.total || 0, ring: "ring-[#E8E4DE]", text: "text-foreground", sub: "text-muted-foreground" },
             { filter: "incompleto", label: t.statusIncompleto, count: stats?.counts?.incompleto || 0, ring: "ring-amber-100", text: "text-amber-700", sub: "text-amber-500" },
@@ -452,6 +453,10 @@ export default function Admin() {
               <p className={`text-2xl sm:text-3xl font-extrabold ${card.text}`}>{card.count}</p>
             </button>
           ))}
+          <div className="text-start bg-white p-4 sm:p-5 rounded-[1.5rem] shadow-sm ring-1 ring-[#E8E4DE]" data-testid="stat-transcribed">
+            <p className="text-xs font-bold mb-2 uppercase tracking-wider text-muted-foreground">{DOCS_TRANSCRIBED[lang]}</p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-foreground">{(stats as { transcribedDocuments?: number } | undefined)?.transcribedDocuments ?? 0}</p>
+          </div>
         </div>
 
         {/* Filters */}

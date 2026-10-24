@@ -973,6 +973,14 @@
     {
      "t": "p",
      "text": "Ab der Diagnose zeigt jede Phase das Feld «Termin» mit «Termindatum» und «Termin-ID». Das Datum ist Pflicht: Ohne es lässt sich die Diagnose nicht abschließen und können die Fotos der Phase nicht hochgeladen werden. Die ID ist optional und dient dazu, die Nummer dieses Termins im eigenen Terminsystem der Klinik zu vermerken. Geben Sie die Daten ein und tippen Sie auf «Termin speichern»; solange der Ablauf offen ist, können Sie sie später korrigieren. Die Voruntersuchung des Patienten verlangt das nicht."
+    },
+    {
+     "t": "h3",
+     "text": "Transkription von Dokumenten"
+    },
+    {
+     "t": "p",
+     "text": "Hat die Klinik ein Foto unter Phasen als «Documento» markiert (zum Beispiel das handschriftliche Datenblatt), erscheint unter dem Bild das Feld «Transkription». Tippen Sie auf «Transkribieren», damit das System das Dokument liest und seinen Text schreibt; nur das Personal sieht ihn, nie der Patient. Der Text ist bearbeitbar: prüfen, korrigieren und «Text speichern» tippen. Jede Klinik hat ein monatliches Transkriptionskontingent (das Feld zeigt, wie viele übrig sind); ist es aufgebraucht oder die Funktion nicht verfügbar, nutzen Sie «Von Hand eingeben». Ist das Ergebnis schlecht und hat Ihre Klinik das erweiterte Modell aktiviert, liest «Mit erweitertem Modell wiederholen» neu und zählt als 2 Transkriptionen. Eine automatische Transkription kann Fehler enthalten, vor allem bei Handschrift: immer prüfen."
     }
    ],
    "key": "phases"
@@ -1292,6 +1300,10 @@
     {
      "t": "note",
      "text": "Sie können die Konfiguration jederzeit ändern: Bereits vorhandene Fotos werden nicht gelöscht, sie werden nur nicht mehr verlangt."
+    },
+    {
+     "t": "p",
+     "text": "Setzen Sie bei einem Foto den Haken bei «Documento», wenn es ein Papier ist (Datenblatt, Einwilligung): darunter kann das Personal den Text transkribieren."
     },
     {
      "t": "h3",

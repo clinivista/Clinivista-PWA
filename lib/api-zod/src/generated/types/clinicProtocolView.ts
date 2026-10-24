@@ -12,4 +12,6 @@ export interface ClinicProtocolView {
   label: string;
   position: number;
   hasPhotos: boolean;
+  /** The photo is a document (e.g. a handwritten sheet) that staff can transcribe. */
+  document: boolean;
 }

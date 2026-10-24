@@ -10,4 +10,6 @@ import type { LeadStatsCounts } from './leadStatsCounts';
 export interface LeadStats {
   total: number;
   counts: LeadStatsCounts;
+  /** Documents (photos marked as document) with a transcription in this clinic. */
+  transcribedDocuments: number;
 }

@@ -2612,13 +2612,16 @@ components:
 
     ClinicProtocolView:
       type: object
-      required: [id, key, label, position, hasPhotos]
+      required: [id, key, label, position, hasPhotos, document]
       properties:
         id: {type: string}
         key: {type: string}
         label: {type: string}
         position: {type: number}
         hasPhotos: {type: boolean}
+        document:
+          type: boolean
+          description: The photo is a document (e.g. a handwritten sheet) that staff can transcribe.
 
     ClinicProtocolPhase:
       type: object
@@ -2653,6 +2656,9 @@ components:
       properties:
         id: {type: string}
         label: {type: string}
+        document:
+          type: boolean
+          description: Mark the photo as a document. When omitted, an existing photo keeps its current value.
 
     ClinicProtocolPhaseInput:
       type: object
@@ -3389,14 +3395,33 @@ components:
           items:
             $ref: "#/components/schemas/DiagnosisEvent"
 
+    PhotoTranscription:
+      type: object
+      required: [text, tier, model, byName, at, editedByName, editedAt]
+      properties:
+        text: {type: string}
+        tier:
+          type: string
+          enum: [basic, advanced, manual]
+        model: {type: string}
+        byName: {type: string}
+        at: {type: string}
+        editedByName: {type: string, nullable: true}
+        editedAt: {type: string, nullable: true}
+
     LeadPhaseView:
       type: object
-      required: [id, key, label, required, photo]
+      required: [id, key, label, required, document, transcription, photo]
       properties:
         id: {type: string}
         key: {type: string}
         label: {type: string}
         required: {type: boolean}
+        document: {type: boolean}
+        transcription:
+          oneOf:
+            - $ref: "#/components/schemas/PhotoTranscription"
+            - type: "null"
         photo:
           oneOf:
             - $ref: "#/components/schemas/PatientPhotoStatus"
@@ -3604,7 +3629,7 @@ components:
 
     LeadStats:
       type: object
-      required: [total, counts]
+      required: [total, counts, transcribedDocuments]
       properties:
         total:
           type: number
@@ -3612,6 +3637,9 @@ components:
           type: object
           additionalProperties:
             type: number
+        transcribedDocuments:
+          type: number
+          description: Documents (photos marked as document) with a transcription in this clinic.
 
     LeadPatch:
       type: object

@@ -155,7 +155,8 @@ export const GetLeadsResponse = zod.object({
  */
 export const GetLeadStatsResponse = zod.object({
   "total": zod.number(),
-  "counts": zod.record(zod.string(), zod.number())
+  "counts": zod.record(zod.string(), zod.number()),
+  "transcribedDocuments": zod.number().describe('Documents (photos marked as document) with a transcription in this clinic.')
 })
 
 
@@ -324,6 +325,16 @@ export const GetLeadPhasesResponse = zod.object({
   "key": zod.string(),
   "label": zod.string(),
   "required": zod.boolean(),
+  "document": zod.boolean(),
+  "transcription": zod.union([zod.object({
+  "text": zod.string(),
+  "tier": zod.enum(['basic', 'advanced', 'manual']),
+  "model": zod.string(),
+  "byName": zod.string(),
+  "at": zod.string(),
+  "editedByName": zod.string().nullable(),
+  "editedAt": zod.string().nullable()
+}),zod.null()]),
   "photo": zod.union([zod.object({
   "id": zod.string(),
   "key": zod.string(),
@@ -1459,7 +1470,8 @@ export const GetClinicProtocolResponse = zod.object({
   "key": zod.string(),
   "label": zod.string(),
   "position": zod.number(),
-  "hasPhotos": zod.boolean()
+  "hasPhotos": zod.boolean(),
+  "document": zod.boolean().describe('The photo is a document (e.g. a handwritten sheet) that staff can transcribe.')
 }))
 }))
 })
@@ -1478,7 +1490,8 @@ export const UpdateClinicProtocolBody = zod.object({
   "name": zod.string(),
   "views": zod.array(zod.object({
   "id": zod.string().optional(),
-  "label": zod.string()
+  "label": zod.string(),
+  "document": zod.boolean().optional().describe('Mark the photo as a document. When omitted, an existing photo keeps its current value.')
 }))
 }))
 })
@@ -1497,7 +1510,8 @@ export const UpdateClinicProtocolResponse = zod.object({
   "key": zod.string(),
   "label": zod.string(),
   "position": zod.number(),
-  "hasPhotos": zod.boolean()
+  "hasPhotos": zod.boolean(),
+  "document": zod.boolean().describe('The photo is a document (e.g. a handwritten sheet) that staff can transcribe.')
 }))
 }))
 })

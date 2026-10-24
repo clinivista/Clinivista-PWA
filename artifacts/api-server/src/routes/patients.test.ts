@@ -27,6 +27,7 @@ import diagnosisRouter from "./diagnosis";
 import resultsRouter from "./results";
 import evolutionRouter from "./evolution";
 import portalRouter from "./portal";
+import transcriptionRouter from "./transcription";
 import { createSession } from "../lib/sessions";
 import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
 import { resetThrottleForTests } from "../lib/patient-accounts";
@@ -50,6 +51,7 @@ app.use("/api", diagnosisRouter);
 app.use("/api", resultsRouter);
 app.use("/api", evolutionRouter);
 app.use("/api", portalRouter);
+app.use("/api", transcriptionRouter);
 
 // Fixture data only — not a real person.
 const VALID_BODY = {
@@ -156,6 +158,20 @@ beforeAll(async () => {
        created_by_user_id text, created_by_name text, created_at timestamptz NOT NULL DEFAULT now(),
        expires_at timestamptz NOT NULL
      );
+     CREATE TABLE IF NOT EXISTS clinical_photo_transcriptions (
+       photo_id text PRIMARY KEY, text text NOT NULL DEFAULT '', tier text NOT NULL DEFAULT 'basic', model text NOT NULL DEFAULT '',
+       transcribed_by_user_id text, transcribed_by_name text, transcribed_at timestamptz NOT NULL DEFAULT now(),
+       edited_by_name text, edited_at timestamptz
+     );
+     CREATE TABLE IF NOT EXISTS clinic_transcription_settings (
+       center_id text PRIMARY KEY, monthly_quota integer NOT NULL DEFAULT 100, advanced_enabled boolean NOT NULL DEFAULT false,
+       updated_at timestamptz NOT NULL DEFAULT now()
+     );
+     CREATE TABLE IF NOT EXISTS clinic_transcription_usage (
+       id text PRIMARY KEY, center_id text NOT NULL, photo_id text NOT NULL, tier text NOT NULL, model text NOT NULL,
+       units integer NOT NULL DEFAULT 1, input_tokens integer NOT NULL DEFAULT 0, output_tokens integer NOT NULL DEFAULT 0,
+       created_at timestamptz NOT NULL DEFAULT now()
+     );
      CREATE TABLE IF NOT EXISTS clinical_photo_annotations (
        id text PRIMARY KEY, photo_id text NOT NULL UNIQUE, object_path text NOT NULL, mime_type text NOT NULL,
        strokes jsonb NOT NULL DEFAULT '[]', updated_by_user_id text, updated_at timestamptz NOT NULL DEFAULT now()
@@ -182,6 +198,9 @@ beforeEach(async () => {
     DELETE FROM clinical_result_deliveries;
     DELETE FROM patient_accounts;
     DELETE FROM clinical_photo_annotations;
+    DELETE FROM clinical_photo_transcriptions;
+    DELETE FROM clinic_transcription_settings;
+    DELETE FROM clinic_transcription_usage;
     DELETE FROM clinical_diagnosis_events;
     DELETE FROM clinical_diagnoses;
     DELETE FROM clinical_photos;
@@ -1837,6 +1856,125 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
       expect(calls.filter((call) => call.attachments)).toHaveLength(0);
     });
   });
+  describe("transcripción de documentos", () => {
+    const fetchMock = vi.fn();
+    afterEach(() => { vi.unstubAllGlobals(); fetchMock.mockReset(); delete process.env.ANTHROPIC_API_KEY; });
+    const anthropicCalls = () => fetchMock.mock.calls.filter((call) => String(call[0]).includes("api.anthropic.com"));
+    const claudeReplies = (text = "Ficha técnica\nPaciente: Juan [ilegible]") => {
+      process.env.ANTHROPIC_API_KEY = "sk-ant-test";
+      fetchMock.mockImplementation(async (url: string) => String(url).includes("api.anthropic.com")
+        ? new Response(JSON.stringify({ content: [{ type: "text", text }], usage: { input_tokens: 1500, output_tokens: 300 } }), { status: 200, headers: { "Content-Type": "application/json" } })
+        : new Response("{}", { status: 200 }));
+      vi.stubGlobal("fetch", fetchMock);
+    };
+    /** Un paciente con la primera foto de la fase 3 ya tomada y la vista marcada (o no) como documento. */
+    async function documentPhoto(isDocument = true) {
+      const lead = await patientReadyForCapture();
+      const list = await phases(lead.id);
+      const photo = (await capture(lead.id, list[2].views[0].id).expect(201)).body as { id: string };
+      if (isDocument) await pglite.exec(`UPDATE clinical_protocol_views SET requirements = requirements || '{"document": true}'::jsonb WHERE id = '${list[2].views[0].id}';`);
+      return { lead, photo, viewId: list[2].views[0].id };
+    }
+    const transcribe = (leadId: string, photoId: string, body: Record<string, unknown> = {}, cookie = staff()) =>
+      request(app).post(`/api/leads/${leadId}/phase-photos/${photoId}/transcribe`).set("Cookie", cookie).send(body);
+    const status = async () => (await request(app).get("/api/clinic/transcription").set("Cookie", staff()).expect(200)).body;
+
+    it("una foto que no es documento no se transcribe", async () => {
+      claudeReplies();
+      const { lead, photo } = await documentPhoto(false);
+      expect((await transcribe(lead.id, photo.id)).status).toBe(409);
+      expect(anthropicCalls()).toHaveLength(0);
+    });
+
+    it("transcribe con el modelo económico, muestra el texto bajo la foto y descuenta 1 de la cuota", async () => {
+      claudeReplies();
+      const { lead, photo, viewId } = await documentPhoto();
+      const before = await status();
+      expect(before).toMatchObject({ available: true, monthlyQuota: 100, used: 0, advancedEnabled: false });
+      const res = await transcribe(lead.id, photo.id);
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({ text: expect.stringContaining("[ilegible]"), tier: "basic" });
+      const sent = JSON.parse(anthropicCalls()[0][1].body as string);
+      expect(sent.model).toBe("claude-haiku-5-5");
+      expect(sent.messages[0].content[0].source.media_type).toBe("image/jpeg");
+      const view = (await listPhases(lead.id))[2].views.find((v) => v.id === viewId) as unknown as { document: boolean; transcription: { text: string; tier: string } | null };
+      expect(view.document).toBe(true);
+      expect(view.transcription).toMatchObject({ tier: "basic" });
+      expect(view.transcription?.text).toContain("Ficha técnica");
+      expect((await status()).used).toBe(1);
+      // El dashboard de la clínica cuenta solo los documentos transcritos con IA.
+      expect((await request(app).get("/api/leads/stats").set("Cookie", staff()).expect(200)).body.transcribedDocuments).toBe(1);
+    });
+
+    it("no vuelve a cobrar la misma transcripción y el avanzado exige que la clínica lo tenga habilitado", async () => {
+      claudeReplies();
+      const { lead, photo } = await documentPhoto();
+      await transcribe(lead.id, photo.id).expect(200);
+      expect((await transcribe(lead.id, photo.id)).status).toBe(409);
+      expect((await transcribe(lead.id, photo.id, { advanced: true })).status).toBe(403);
+      await pglite.exec(`INSERT INTO clinic_transcription_settings (center_id, monthly_quota, advanced_enabled) VALUES ('${DEFAULT_CENTER_ID}', 10, true);`);
+      const advanced = await transcribe(lead.id, photo.id, { advanced: true });
+      expect(advanced.status).toBe(200);
+      expect(advanced.body.tier).toBe("advanced");
+      expect(JSON.parse(anthropicCalls()[1][1].body as string).model).toBe("claude-sonnet-5-5");
+      expect((await status()).used).toBe(3);
+      expect((await transcribe(lead.id, photo.id, { advanced: true })).status).toBe(409);
+    });
+
+    it("al llegar a la cuota mensual responde 429 sin llamar al modelo", async () => {
+      claudeReplies();
+      const { lead, photo } = await documentPhoto();
+      await pglite.exec(`INSERT INTO clinic_transcription_settings (center_id, monthly_quota, advanced_enabled) VALUES ('${DEFAULT_CENTER_ID}', 0, false);`);
+      const res = await transcribe(lead.id, photo.id);
+      expect(res.status).toBe(429);
+      expect(anthropicCalls()).toHaveLength(0);
+      expect((await status()).remaining).toBe(0);
+    });
+
+    it("sin ANTHROPIC_API_KEY responde 503 y nada se cobra", async () => {
+      const { lead, photo } = await documentPhoto();
+      expect((await transcribe(lead.id, photo.id)).status).toBe(503);
+      expect((await status()).used).toBe(0);
+    });
+
+    it("si el servicio falla no se cobra y se puede reintentar", async () => {
+      process.env.ANTHROPIC_API_KEY = "sk-ant-test";
+      fetchMock.mockImplementation(async (url: string) => new Response("{}", { status: String(url).includes("api.anthropic.com") ? 500 : 200 }));
+      vi.stubGlobal("fetch", fetchMock);
+      const { lead, photo } = await documentPhoto();
+      expect((await transcribe(lead.id, photo.id)).status).toBe(502);
+      expect((await status()).used).toBe(0);
+    });
+
+    it("el personal corrige el texto y queda quién lo editó; también se puede escribir sin IA", async () => {
+      claudeReplies();
+      const { lead, photo, viewId } = await documentPhoto();
+      await request(app).put(`/api/leads/${lead.id}/phase-photos/${photo.id}/transcription`).set("Cookie", staff()).send({ text: "Escrita a mano por el equipo" }).expect(200);
+      const view = (await listPhases(lead.id))[2].views.find((v) => v.id === viewId) as unknown as { transcription: { tier: string; text: string; editedByName: string | null } };
+      expect(view.transcription).toMatchObject({ tier: "manual", text: "Escrita a mano por el equipo" });
+      expect(view.transcription.editedByName).toBeTruthy();
+      expect((await request(app).get("/api/leads/stats").set("Cookie", staff()).expect(200)).body.transcribedDocuments).toBe(0);
+      await request(app).put(`/api/leads/${lead.id}/phase-photos/${photo.id}/transcription`).set("Cookie", staff()).send({ text: 5 }).expect(422);
+      expect((await status()).used).toBe(0);
+    });
+
+    it("otra clínica no puede transcribir ni editar la foto", async () => {
+      claudeReplies();
+      const { lead, photo } = await documentPhoto();
+      expect((await transcribe(lead.id, photo.id, {}, staff("clinic-b"))).status).toBe(404);
+      await request(app).put(`/api/leads/${lead.id}/phase-photos/${photo.id}/transcription`).set("Cookie", staff("clinic-b")).send({ text: "x" }).expect(404);
+    });
+
+    it("borrar la foto borra su transcripción", async () => {
+      claudeReplies();
+      const { lead, photo } = await documentPhoto();
+      await transcribe(lead.id, photo.id).expect(200);
+      await request(app).delete(`/api/leads/${lead.id}/phase-photos/${photo.id}`).set("Cookie", staff()).expect(204);
+      const rows = (await pglite.exec("SELECT count(*)::int AS n FROM clinical_photo_transcriptions;")) as Array<{ rows: Array<{ n: number }> }>;
+      expect(rows[0].rows[0].n).toBe(0);
+    });
+  });
+
 });
 
 describe("Personal: agregar paciente, omitir etapa y alta médica", () => {

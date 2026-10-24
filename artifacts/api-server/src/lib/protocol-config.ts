@@ -8,7 +8,7 @@ export const MAX_VIEWS_PER_PHASE = 12;
 export const MIN_NAME_LENGTH = 2;
 export const MAX_NAME_LENGTH = 60;
 
-export type PhaseInput = { id?: string; name: string; views: Array<{ id?: string; label: string }> };
+export type PhaseInput = { id?: string; name: string; views: Array<{ id?: string; label: string; document?: boolean }> };
 
 export type ProtocolPhaseDto = {
   id: string;
@@ -19,7 +19,7 @@ export type ProtocolPhaseDto = {
   patientCaptured: boolean;
   /** "diagnosis": the doctor marks up the patient's photos; it has no photo list of its own. */
   kind: "capture" | "diagnosis";
-  views: Array<{ id: string; key: string; label: string; position: number; hasPhotos: boolean }>;
+  views: Array<{ id: string; key: string; label: string; position: number; hasPhotos: boolean; document: boolean }>;
 };
 
 export class ProtocolConfigError extends Error {}
@@ -61,7 +61,7 @@ export async function getProtocolStructure(centerId: string, typeId?: string): P
       views: views
         .filter((view) => view.phaseId === phase.id || (index === 0 && view.phaseId === null))
         .sort((a, b) => a.position - b.position)
-        .map((view, position) => ({ id: view.id, key: view.key, label: view.label, position, hasPhotos: withPhotos.has(view.id) })),
+        .map((view, position) => ({ id: view.id, key: view.key, label: view.label, position, hasPhotos: withPhotos.has(view.id), document: (view.requirements as Record<string, unknown> | null)?.document === true })),
     })),
   };
 }
@@ -115,6 +115,7 @@ export async function replaceProtocolStructure(centerId: string, input: PhaseInp
   }
 
   const currentById = new Map(current.phases.map((phase) => [phase.id, phase]));
+  const currentViewDocument = new Map(current.phases.flatMap((phase) => phase.views).map((view) => [view.id, view.document]));
   // The first phase is the patient's pre-evaluación: it stays first.
   if (current.phases.length > 0 && input[0].id !== current.phases[0].id) {
     throw new ProtocolConfigError("La primera fase es la pre-evaluación del paciente y no se puede mover ni reemplazar.");
@@ -151,7 +152,12 @@ export async function replaceProtocolStructure(centerId: string, input: PhaseInp
         const label = normalize(view.label);
         if (view.id) {
           keptViewIds.add(view.id);
-          await tx.update(protocolViewsTable).set({ label, position: viewIndex }).where(eq(protocolViewsTable.id, view.id));
+          const [existing] = await tx.select({ requirements: protocolViewsTable.requirements }).from(protocolViewsTable).where(eq(protocolViewsTable.id, view.id));
+          const requirements = { ...((existing?.requirements as Record<string, unknown> | null) ?? {}) };
+          // Sin valor en la petición se conserva lo que ya tenía la foto.
+          const document = view.document ?? currentViewDocument.get(view.id) ?? false;
+          if (document) requirements.document = true; else delete requirements.document;
+          await tx.update(protocolViewsTable).set({ label, position: viewIndex, requirements }).where(eq(protocolViewsTable.id, view.id));
         } else {
           const key = `${phaseIndex === 0 ? "vista" : phaseId.split("-phase-")[1]}-${shortId()}`;
           await tx.insert(protocolViewsTable).values({
@@ -161,7 +167,7 @@ export async function replaceProtocolStructure(centerId: string, input: PhaseInp
             key,
             label,
             position: viewIndex,
-            requirements: { required: true },
+            requirements: view.document ? { required: true, document: true } : { required: true },
           });
         }
       }

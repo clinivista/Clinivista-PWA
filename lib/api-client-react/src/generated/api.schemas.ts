@@ -142,6 +142,8 @@ export interface ClinicProtocolView {
   label: string;
   position: number;
   hasPhotos: boolean;
+  /** The photo is a document (e.g. a handwritten sheet) that staff can transcribe. */
+  document: boolean;
 }
 
 export type ClinicProtocolPhaseKind = typeof ClinicProtocolPhaseKind[keyof typeof ClinicProtocolPhaseKind];
@@ -170,6 +172,8 @@ export interface ClinicProtocol {
 export interface ClinicProtocolViewInput {
   id?: string;
   label: string;
+  /** Mark the photo as a document. When omitted, an existing photo keeps its current value. */
+  document?: boolean;
 }
 
 export interface ClinicProtocolPhaseInput {
@@ -851,11 +855,32 @@ export interface DiagnosisState {
   events: DiagnosisEvent[];
 }
 
+export type PhotoTranscriptionTier = typeof PhotoTranscriptionTier[keyof typeof PhotoTranscriptionTier];
+
+
+export const PhotoTranscriptionTier = {
+  basic: 'basic',
+  advanced: 'advanced',
+  manual: 'manual',
+} as const;
+
+export interface PhotoTranscription {
+  text: string;
+  tier: PhotoTranscriptionTier;
+  model: string;
+  byName: string;
+  at: string;
+  editedByName: string | null;
+  editedAt: string | null;
+}
+
 export interface LeadPhaseView {
   id: string;
   key: string;
   label: string;
   required: boolean;
+  document: boolean;
+  transcription: PhotoTranscription | null;
   photo: PatientPhotoStatus | null;
 }
 
@@ -1033,6 +1058,8 @@ export type LeadStatsCounts = {[key: string]: number};
 export interface LeadStats {
   total: number;
   counts: LeadStatsCounts;
+  /** Documents (photos marked as document) with a transcription in this clinic. */
+  transcribedDocuments: number;
 }
 
 export interface LeadPatch {

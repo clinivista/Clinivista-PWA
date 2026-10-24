@@ -153,6 +153,10 @@
      "t": "p",
      "text": "Muestra los ingresos, gastos y balance del mes. Si no hay movimientos aparece «Sin movimientos este mes». Esta tarjeta solo la ve el director.",
      "directorOnly": true
+    },
+    {
+     "t": "p",
+     "text": "El tablero también muestra «Documentos transcritos»: cuántos documentos de todas las clínicas se transcribieron con IA (no cuentan los escritos a mano) y cuántos este mes. El costo de esas transcripciones está en Servicios y finanzas, «Costo de la IA»."
     }
    ]
   },
@@ -233,6 +237,14 @@
      "t": "warn",
      "text": "Dentro de una clínica actúas sobre datos reales de pacientes: usa esta función solo para soporte o demostraciones y cierra el acceso al terminar.",
      "directorOnly": true
+    },
+    {
+     "t": "h3",
+     "text": "Transcripción de documentos: cuota por clínica"
+    },
+    {
+     "t": "p",
+     "text": "En la tarjeta de cada clínica, el recuadro «Transcripción de documentos» fija su cuota mensual de transcripciones (por defecto 100) y si puede «Reintentar con modelo avanzado», que cuenta como 2. Muestra además lo usado este mes y los tokens consumidos. Al agotarse la cuota, el personal de la clínica puede seguir escribiendo el texto a mano. Subir la cuota o habilitar el modelo avanzado es la base para ofrecer planes distintos según las funciones avanzadas que contrate cada clínica. Si aparece el aviso de ANTHROPIC_API_KEY, falta definir esa clave en el servidor y la transcripción automática está apagada."
     }
    ]
   },
@@ -335,6 +347,14 @@
     {
      "t": "p",
      "text": "Con «Registrar movimiento» anotas un ingreso o un gasto (fecha, monto, moneda, categoría, nota y, si corresponde, el servicio asociado). Puedes recorrer los meses, ver el balance de cada moneda y descargar la información como CSV: «Este mes (CSV)», «Últimos 12 meses» o «Todo (CSV)»."
+    },
+    {
+     "t": "h3",
+     "text": "Costo de la IA"
+    },
+    {
+     "t": "p",
+     "text": "En «Ingresos y gastos» aparece el recuadro «Costo de la IA · transcripción de documentos»: el costo estimado del mes en dólares, las transcripciones y los tokens, el detalle por clínica (con su cuota usada) y por modelo, y los últimos 12 meses. Se calcula con los tokens reales de cada llamada y los precios por millón de cada modelo. No se suma a los gastos por sí solo: con «Registrar como gasto del mes» lo anotas como un gasto en USD con la categoría «IA · Transcripción». Es una estimación y la factura de Anthropic puede diferir levemente."
     }
    ],
    "directorOnly": true
