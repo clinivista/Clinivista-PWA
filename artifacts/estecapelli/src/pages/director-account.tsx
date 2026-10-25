@@ -6,10 +6,16 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
 import { useToast } from "@/hooks/use-toast";
 
-type Me = { id: string; email: string; name: string; phone: string };
+type Profile = "medico" | "administrativo" | "representante_legal";
+type Me = { id: string; email: string; name: string; phone: string; entryProfile?: Profile };
+const PROFILES: { id: Profile; title: string; text: string }[] = [
+  { id: "medico", title: "Médico", text: "Ves pacientes, fotos, diagnósticos e informes como un médico de la clínica." },
+  { id: "administrativo", title: "Administrativo", text: "Ves lo que ve el personal administrativo de la clínica." },
+  { id: "representante_legal", title: "Representante legal", text: "Como médico, y además configuras fases, tipos de consulta e informes de la clínica." },
+];
 const KEY = ["director-me"];
 
-async function call<T>(url: string, method: "GET" | "PATCH" | "POST", body?: unknown): Promise<T> {
+async function call<T>(url: string, method: "GET" | "PATCH" | "POST" | "PUT", body?: unknown): Promise<T> {
   const response = await fetch(url, { method, credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
   const data = (await response.json().catch(() => ({}))) as T & { error?: string };
   if (!response.ok) throw new Error(data.error ?? "No pudimos guardar el cambio.");
@@ -59,8 +65,38 @@ export function DirectorAccount() {
     } finally { setBusy(null); }
   };
 
+  const chooseProfile = async (profile: Profile) => {
+    try {
+      await call("/api/director/me/entry-profile", "PUT", { profile });
+      queryClient.setQueryData(KEY, { ...me, entryProfile: profile });
+      toast({ title: "Perfil de ingreso actualizado", description: "Aplica a todas las clínicas." });
+    } catch (error) {
+      toast({ variant: "destructive", title: "No pudimos guardar", description: (error as Error).message });
+    }
+  };
+
   return (
     <div className="grid gap-6 md:grid-cols-2" data-testid="director-account">
+      <section className="md:col-span-2 bg-white rounded-[1.75rem] shadow-sm border border-[#E8E4DE] p-6 flex flex-col gap-3" aria-label="Perfil de ingreso a las clínicas">
+        <div>
+          <h2 className="text-lg font-bold">Perfil de ingreso a las clínicas</h2>
+          <p className="text-sm text-muted-foreground">Elige con qué perfil entras a cualquier clínica. Vale para todas hasta que lo cambies aquí, y solo se cambia desde supra-control.</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3" role="radiogroup" aria-label="Perfil de ingreso">
+          {PROFILES.map((option) => {
+            const selected = (me.entryProfile ?? "medico") === option.id;
+            return (
+              <button key={option.id} type="button" role="radio" aria-checked={selected} data-testid={`entry-profile-${option.id}`}
+                onClick={() => void chooseProfile(option.id)}
+                className={`text-left rounded-2xl border p-4 ${selected ? "border-primary bg-primary/5 ring-2 ring-primary" : "border-[#E8E4DE] hover:bg-[#F5F2EE]"}`}>
+                <span className="block font-bold">{option.title}</span>
+                <span className="block text-sm text-muted-foreground mt-1">{option.text}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
       <section className="bg-white rounded-[1.75rem] shadow-sm border border-[#E8E4DE] p-6 flex flex-col gap-3" aria-label="Mis datos">
         <h2 className="text-lg font-bold">Mis datos</h2>
         <label className="text-sm font-semibold flex flex-col gap-1">Nombre

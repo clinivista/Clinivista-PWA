@@ -77,7 +77,6 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
   const [openTicketId, setOpenTicketId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  const [enterRole, setEnterRole] = useState<"medico" | "administrativo">("medico");
   const [usersOpenId, setUsersOpenId] = useState<string | null>(null);
   const [identityOpenId, setIdentityOpenId] = useState<string | null>(null);
   const [paymentDraft, setPaymentDraft] = useState<Record<string, string>>({});
@@ -336,18 +335,12 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                   </Button>
                   )}
                   {canManageUsers && (
-                  <select aria-label="Entrar como" value={enterRole} onChange={(event) => setEnterRole(event.target.value as "medico" | "administrativo")} className="h-10 rounded-full border border-[#E8E4DE] bg-white px-3 text-sm font-semibold" data-testid="enter-role">
-                    <option value="medico">Como médico</option>
-                    <option value="administrativo">Como administrativo</option>
-                  </select>
-                  )}
-                  {canManageUsers && (
                   <Button
                     className="rounded-full h-10 font-semibold"
                     data-testid={`enter-clinic-${center.id}`}
                     onClick={async () => {
                       const response = await fetch("/api/auth/enter-clinic", {
-                        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ centerId: center.id, role: enterRole }),
+                        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ centerId: center.id }),
                       });
                       if (!response.ok) { toast({ variant: "destructive", title: "No pudimos entrar a la clínica" }); return; }
                       queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== getGetAuthMeQueryKey()[0] });

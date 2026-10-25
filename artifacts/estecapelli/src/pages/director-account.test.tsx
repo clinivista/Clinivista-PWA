@@ -52,4 +52,17 @@ describe("DirectorAccount", () => {
     await waitFor(() => expect(calls.some((c) => c.url === "/api/director/me/password")).toBe(true));
     expect(JSON.parse(calls.find((c) => c.url === "/api/director/me/password")!.body!)).toEqual({ currentPassword: "clave-actual-1", newPassword: "nueva-clave-9" });
   });
+
+  it("elige el perfil de ingreso a las clínicas", async () => {
+    const calls: Array<{ url: string; method?: string; body?: string }> = [];
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      calls.push({ url, method: init?.method, body: init?.body as string | undefined });
+      return json(init?.method === "PUT" ? { entryProfile: "representante_legal" } : { ...me, entryProfile: "medico" });
+    }));
+    wrap();
+    expect(await screen.findByTestId("entry-profile-medico")).toHaveAttribute("aria-checked", "true");
+    await userEvent.click(screen.getByTestId("entry-profile-representante_legal"));
+    await waitFor(() => expect(screen.getByTestId("entry-profile-representante_legal")).toHaveAttribute("aria-checked", "true"));
+    expect(calls.find((c) => c.method === "PUT")).toMatchObject({ url: "/api/director/me/entry-profile", body: JSON.stringify({ profile: "representante_legal" }) });
+  });
 });

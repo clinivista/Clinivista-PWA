@@ -2536,6 +2536,10 @@ components:
         viewingAsDirector:
           type: boolean
           description: true when a director is working inside a clinic's panel (with administrativo permissions).
+        viewingProfile:
+          type: string
+          enum: [medico, administrativo, representante_legal]
+          description: the profile a director entered the clinic with (chosen in supra-control, "Mi cuenta").
         viewingClinic:
           type: object
           required: [id, name]

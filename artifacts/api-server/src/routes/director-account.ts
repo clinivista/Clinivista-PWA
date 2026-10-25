@@ -1,10 +1,11 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
-import { db, usersTable, hashPassword, verifyPassword, normalizeEmail } from "@workspace/db";
+import { db, usersTable, directorPreferencesTable, DIRECTOR_ENTRY_PROFILES, type DirectorEntryProfile, hashPassword, verifyPassword, normalizeEmail } from "@workspace/db";
 import { requireDirectorAuth } from "./auth";
 import { clean, getSessionToken } from "../lib/helpers";
 import { PHONE_ERROR, parseUserPhone } from "../lib/user-phone";
-import { destroyOtherSessionsForUser } from "../lib/sessions";
+import { directorEntryProfile } from "../lib/director-profile";
+import { destroyOtherSessionsForUser, setDirectorProfileEverywhere } from "../lib/sessions";
 
 const router: IRouter = Router();
 
@@ -18,7 +19,24 @@ router.get("/director/me", async (req, res): Promise<void> => {
   if (!context) return;
   const [me] = await db.select(MINE).from(usersTable).where(eq(usersTable.id, context.userId));
   res.setHeader("Cache-Control", "no-store");
-  res.json(me);
+  res.json({ ...me, entryProfile: await directorEntryProfile(context.userId) });
+});
+
+// Perfil con el que el director entra a cualquier clínica: médico, administrativo o representante legal.
+// Vale para todas las clínicas hasta que lo cambie aquí (también al instante si ya está dentro de una).
+router.put("/director/me/entry-profile", async (req, res): Promise<void> => {
+  const context = requireDirectorAuth(req, res);
+  if (!context) return;
+  const profile = (req.body as { profile?: unknown } | undefined)?.profile;
+  if (typeof profile !== "string" || !(DIRECTOR_ENTRY_PROFILES as readonly string[]).includes(profile)) {
+    res.status(400).json({ error: "Elige médico, administrativo o representante legal." });
+    return;
+  }
+  const entryProfile = profile as DirectorEntryProfile;
+  await db.insert(directorPreferencesTable).values({ userId: context.userId, entryProfile })
+    .onConflictDoUpdate({ target: directorPreferencesTable.userId, set: { entryProfile, updatedAt: new Date() } });
+  setDirectorProfileEverywhere(context.userId, entryProfile);
+  res.json({ entryProfile });
 });
 
 router.patch("/director/me", async (req, res): Promise<void> => {

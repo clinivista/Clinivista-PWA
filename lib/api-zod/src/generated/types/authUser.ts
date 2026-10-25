@@ -8,6 +8,7 @@
 import type { AuthUserClinicsItem } from './authUserClinicsItem';
 import type { AuthUserRole } from './authUserRole';
 import type { AuthUserViewingClinic } from './authUserViewingClinic';
+import type { AuthUserViewingProfile } from './authUserViewingProfile';
 
 export interface AuthUser {
   id: string;
@@ -24,5 +25,7 @@ export interface AuthUser {
   needsClinicChoice?: boolean;
   /** true when a director is working inside a clinic's panel (with administrativo permissions). */
   viewingAsDirector?: boolean;
+  /** the profile a director entered the clinic with (chosen in supra-control, "Mi cuenta"). */
+  viewingProfile?: AuthUserViewingProfile;
   viewingClinic?: AuthUserViewingClinic;
 }

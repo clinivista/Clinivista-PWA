@@ -10,6 +10,8 @@ export type SessionContext = {
   role: UserRole;
   /** Directors only: the clinic they are working inside right now (they keep their director role). */
   viewingCenterId?: string | null;
+  /** Directors only: inside the clinic they act as its legal representative (configure phases, reports). */
+  viewingLegal?: boolean;
   /** Directors only: the role they work as inside that clinic (default médico, which covers everything). */
   viewingRole?: "medico" | "administrativo";
   /** Directors only: they already picked "Supra-control" on the clinic chooser. */
@@ -71,11 +73,11 @@ export function setSessionAccount(token: string | undefined, account: { userId: 
 }
 
 /** A director enters (or, with null, leaves) a clinic's panel without being assigned to it. */
-export function setSessionViewing(token: string | undefined, centerId: string | null, role: "medico" | "administrativo" = "medico"): boolean {
+export function setSessionViewing(token: string | undefined, centerId: string | null, profile: "medico" | "administrativo" | "representante_legal" = "medico"): boolean {
   const session = token ? sessions.get(token) : undefined;
   if (!session || session.expiresAt <= Date.now() || session.role !== "director") return false;
   session.viewingCenterId = centerId;
-  session.viewingRole = centerId ? role : undefined;
+  applyEntryProfile(session, centerId ? profile : undefined);
   session.supraChosen = centerId ? false : true;
   return true;
 }
@@ -93,5 +95,17 @@ export function setSessionDirectorChoice(token: string | undefined): boolean {
 export function destroyOtherSessionsForUser(userId: string, keepToken: string | undefined): void {
   for (const [token, session] of sessions) {
     if (token !== keepToken && session.userId === userId) sessions.delete(token);
+  }
+}
+
+function applyEntryProfile(session: SessionContext, profile: "medico" | "administrativo" | "representante_legal" | undefined): void {
+  session.viewingRole = profile === undefined ? undefined : profile === "administrativo" ? "administrativo" : "medico";
+  session.viewingLegal = profile === "representante_legal";
+}
+
+/** The director changed their entry profile: it also applies to the clinic they are inside right now. */
+export function setDirectorProfileEverywhere(userId: string, profile: "medico" | "administrativo" | "representante_legal"): void {
+  for (const session of sessions.values()) {
+    if (session.userId === userId && session.role === "director" && session.viewingCenterId) applyEntryProfile(session, profile);
   }
 }

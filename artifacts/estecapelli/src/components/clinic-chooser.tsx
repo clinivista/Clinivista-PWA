@@ -44,7 +44,6 @@ export function ClinicChooser({ clinics, onChosen, director = false }: { clinics
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const [filter, setFilter] = useState("");
-  const [asRole, setAsRole] = useState<"medico" | "administrativo">("medico");
   const shown = clinics.filter((clinic) => clinic.name.toLowerCase().includes(filter.trim().toLowerCase()));
 
   const run = async (key: string, action: () => Promise<boolean>) => {
@@ -53,7 +52,7 @@ export function ClinicChooser({ clinics, onChosen, director = false }: { clinics
     if (await action()) onChosen();
     else { setError(true); setBusy(null); }
   };
-  const choose = (id: string) => run(id, () => (director ? post("/api/auth/enter-clinic", { centerId: id, role: asRole }) : selectClinic(id)));
+  const choose = (id: string) => run(id, () => (director ? post("/api/auth/enter-clinic", { centerId: id }) : selectClinic(id)));
 
   return (
     <div className="min-h-[100dvh] bg-[#F5F2EE] flex items-center justify-center p-4" data-testid="clinic-chooser">
@@ -72,15 +71,6 @@ export function ClinicChooser({ clinics, onChosen, director = false }: { clinics
               {busy === "supra" && <Loader2 className="w-4 h-4 animate-spin mr-2" />}{c.enter}
             </Button>
           </div>
-        )}
-        {director && (
-          <label className="flex items-center gap-2 text-sm font-semibold mb-3">
-            {c.enterAs}
-            <select value={asRole} onChange={(event) => setAsRole(event.target.value as "medico" | "administrativo")} className="h-10 rounded-full border border-[#E8E4DE] bg-white px-3 text-sm" data-testid="chooser-role">
-              <option value="medico">{c.roleMedico}</option>
-              <option value="administrativo">{c.roleAdministrativo}</option>
-            </select>
-          </label>
         )}
         {clinics.length > 6 && (
           <Input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder={c.search} aria-label={c.search} className="h-11 rounded-2xl mb-3" />

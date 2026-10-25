@@ -230,7 +230,7 @@
     },
     {
      "t": "p",
-     "text": "En «Mi cuenta» el director cambia su nombre, teléfono y correo de acceso, y su clave. Cambiar el correo o la clave pide la clave actual; al cambiar la clave se cierran tus otras sesiones abiertas.",
+     "text": "En «Mi cuenta» el director elige además el perfil con el que entra a cualquier clínica: médico, administrativo o representante legal (este último también configura fases, tipos de consulta e informes). Vale para todas las clínicas hasta que lo cambie, y solo se cambia desde supra-control. También cambia su nombre, teléfono y correo de acceso, y su clave. Cambiar el correo o la clave pide la clave actual; al cambiar la clave se cierran tus otras sesiones abiertas.",
      "directorOnly": true
     },
     {
@@ -240,7 +240,7 @@
     },
     {
      "t": "p",
-     "text": "«Entrar a la clínica» te lleva dentro de esa clínica para dar soporte o hacer una demostración. Antes de entrar eliges «Como médico» (todo, incluido el diagnóstico) o «Como administrativo» (solo lo que ve un administrativo); el aviso superior muestra con qué rol estás. Dentro verás el aviso «Estás dentro de … como director» con el botón «Volver a supra-control». También puedes usar «Cambiar de clínica» en el menú.",
+     "text": "«Entrar a la clínica» te lleva dentro de esa clínica para dar soporte o hacer una demostración. Entras con el perfil que elegiste en «Mi cuenta» (médico, administrativo o representante legal); el aviso superior muestra con cuál estás. Dentro verás el aviso «Estás dentro de … como director» con el botón «Volver a supra-control». También puedes usar «Cambiar de clínica» en el menú.",
      "directorOnly": true
     },
     {
