@@ -18,7 +18,7 @@ describe("DirectorAccount", () => {
       return json(init?.method === "PATCH" ? { ...me, name: "José F." } : me);
     }));
     wrap();
-    const name = await screen.findByLabelText("Nombre");
+    const name = await screen.findByDisplayValue("Jose");
     await userEvent.clear(name);
     await userEvent.type(name, "José F.");
     await userEvent.click(screen.getByTestId("save-director-data"));
