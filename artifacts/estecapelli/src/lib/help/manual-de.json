@@ -981,6 +981,14 @@
     {
      "t": "p",
      "text": "Hat die Klinik ein Foto unter Phasen als «Documento» markiert (zum Beispiel das handschriftliche Datenblatt), erscheint unter dem Bild das Feld «Transkription». Tippen Sie auf «Transkribieren», damit das System das Dokument liest und seinen Text schreibt; nur das Personal sieht ihn, nie der Patient. Der Text ist bearbeitbar: prüfen, korrigieren und «Text speichern» tippen. Jede Klinik hat ein monatliches Transkriptionskontingent (das Feld zeigt, wie viele übrig sind); ist es aufgebraucht oder die Funktion nicht verfügbar, nutzen Sie «Von Hand eingeben». Ist das Ergebnis schlecht und hat Ihre Klinik das erweiterte Modell aktiviert, liest «Mit erweitertem Modell wiederholen» neu und zählt als 2 Transkriptionen. Eine automatische Transkription kann Fehler enthalten, vor allem bei Handschrift: immer prüfen."
+    },
+    {
+     "t": "h3",
+     "text": "Am Handy fortfahren"
+    },
+    {
+     "t": "p",
+     "text": "In jeder Phase mit Fotos zeigt die Schaltfläche «Am Handy fortfahren» einen QR-Code. Scannen Sie ihn mit der Kamera eines Handys (oder eines anderen Geräts mit Kamera) und nehmen Sie die Fotos dieser Phase auf; sie erscheinen von selbst auf diesem Bildschirm. Der Link gilt nur für diese Phase dieses Patienten, läuft nach 20 Minuten ab und zeigt keine Patientendaten. Am Ende tippen Sie auf «Fertig und zurück» oder schließen den Link hier."
     }
    ],
    "key": "phases"
