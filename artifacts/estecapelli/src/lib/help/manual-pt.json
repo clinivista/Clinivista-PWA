@@ -988,7 +988,7 @@
     },
     {
      "t": "p",
-     "text": "Se a clínica marcou uma foto como «Medir» em Fases, o paciente mede a lesão em casa colocando uma moeda chilena ao lado dela, e você pode medi-la ou corrigi-la com o botão «Medir» sob a foto. Escolha a moeda, toque em duas bordas opostas dela e depois nas duas extremidades da lesão; os pontos podem ser arrastados. O resultado mostra a margem de erro (±). É uma medida aproximada, útil para acompanhamento e não para diagnóstico: a foto deve ser de frente, sem inclinação, com a moeda à mesma distância que a lesão. Para usar uma régua própria escolha «Outra referência» e informe o tamanho."
+     "text": "Se a clínica marcou uma foto como «Medir» em Fases, o paciente mede a lesão em casa colocando uma moeda chilena ao lado dela, e você pode medi-la ou corrigi-la com o botão «Medir» sob a foto. Escolha a moeda, toque em duas bordas opostas dela e depois nas duas extremidades da lesão; os pontos podem ser arrastados. O resultado mostra a margem de erro (±). É uma medida aproximada, útil para acompanhamento e não para diagnóstico: a foto deve ser de frente, sem inclinação, com a moeda à mesma distância que a lesão. Para usar uma régua própria escolha «Outra referência» e informe o tamanho. O app tenta achar a moeda sozinho e sugere suas bordas; se a moeda parecer oval, avisa que a foto está inclinada e amplia a margem de erro. A detecção ocorre no próprio dispositivo: a foto não é enviada a terceiros. Você também pode tocar em «Marcar a lesão automaticamente», tocar em um ponto dentro da lesão e revisar as extremidades sugeridas."
     },
     {
      "t": "h3",
@@ -997,6 +997,14 @@
     {
      "t": "p",
      "text": "Em cada fase com fotos, o botão «Continuar no celular» mostra um código QR. Escaneie com a câmera de um celular (ou outro dispositivo com câmera) e tire as fotos dessa fase; elas aparecem sozinhas nesta tela. O link serve só para essa fase desse paciente, expira em 20 minutos e não mostra dados do paciente. Ao terminar, toque em «Concluir e voltar» ou feche o link por aqui."
+    },
+    {
+     "t": "h3",
+     "text": "Evolução das medidas"
+    },
+    {
+     "t": "p",
+     "text": "Acima das fases aparece o quadro «Evolução das medidas»: reúne as medidas da mesma foto (pelo nome) ao longo das fases e compara cada uma com a anterior. Uma mudança só é indicada como aumento ou diminuição se superar a margem de erro combinada das duas medidas; caso contrário diz «sem mudança clara»."
     }
    ],
    "key": "phases"

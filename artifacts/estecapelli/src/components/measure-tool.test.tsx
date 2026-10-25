@@ -5,13 +5,17 @@ import { MeasureTool } from "./measure-tool";
 import { MeasureDialog } from "./measure-dialog";
 import { MeasureProtocol } from "./measure-protocol";
 
+const coin = vi.hoisted(() => ({ fit: null as unknown, lesion: null as unknown }));
+vi.mock("@/lib/lesion-detect", () => ({ findLesionExtremes: () => coin.lesion }));
+vi.mock("@/lib/coin-detect", async (original) => ({ ...(await original<typeof import("@/lib/coin-detect")>()), findCoin: () => coin.fit }));
+
 // jsdom no carga imágenes ni mide la pantalla: se fija un lienzo de 1000×800 mostrado a 500×400 px.
 beforeEach(() => {
   Object.defineProperty(HTMLImageElement.prototype, "naturalWidth", { configurable: true, get: () => 1000 });
   Object.defineProperty(HTMLImageElement.prototype, "naturalHeight", { configurable: true, get: () => 800 });
   vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({ left: 0, top: 0, width: 500, height: 400, right: 500, bottom: 400, x: 0, y: 0, toJSON: () => ({}) });
 });
-afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); coin.fit = null; coin.lesion = null; });
 
 const tap = (x: number, y: number) => {
   const surface = screen.getByTestId("measure-surface");
@@ -19,6 +23,79 @@ const tap = (x: number, y: number) => {
   fireEvent.pointerUp(surface, { clientX: x, clientY: y, pointerId: 1 });
 };
 const ready = async () => { fireEvent.load(document.querySelector("img")!); await screen.findByTestId("measure-surface"); };
+
+describe("MeasureTool: moneda detectada sola", () => {
+  const found = (axisRatio: number) => ({ center: { x: 225, y: 100 }, radius: 130, diameterPoints: [{ x: 100, y: 100 }, { x: 360, y: 100 }], axisRatio, coverage: 0.9, score: 0.8 });
+
+  it("propone los bordes de la moneda y pasa directo a marcar la lesión", async () => {
+    coin.fit = found(0.99);
+    const onSave = vi.fn(async () => undefined);
+    render(<MeasureTool imageUrl="/x.jpg" role="patient" onSave={onSave} onClose={vi.fn()} />);
+    await ready();
+    await waitFor(() => expect(screen.getByTestId("measure-step")).toHaveTextContent("Paso 2 de 2"));
+    expect(screen.getByTestId("measure-auto")).toHaveTextContent("Encontramos la moneda");
+    expect(screen.queryByTestId("measure-tilt")).not.toBeInTheDocument();
+    tap(50, 200); tap(110, 200);
+    expect(screen.getByTestId("measure-result")).toHaveTextContent("12,0 mm");
+    await userEvent.click(screen.getByTestId("measure-save"));
+    await waitFor(() => expect(onSave).toHaveBeenCalled());
+    expect(onSave.mock.calls[0][0]).toMatchObject({ detection: { auto: true, axisRatio: 0.99 } });
+  });
+
+  it("avisa si la moneda se ve ovalada y suma incertidumbre; mover el punto deja de contarla como automática", async () => {
+    coin.fit = found(0.85);
+    const onSave = vi.fn(async () => undefined);
+    render(<MeasureTool imageUrl="/x.jpg" role="patient" onSave={onSave} onClose={vi.fn()} />);
+    await ready();
+    expect(await screen.findByTestId("measure-tilt")).toHaveTextContent("inclinada");
+    tap(50, 200); tap(110, 200);
+    expect(screen.getByTestId("measure-result")).toHaveTextContent("±22 %"); // 7 + 15
+    // Arrastra el primer punto de la moneda unos píxeles.
+    const surface = screen.getByTestId("measure-surface");
+    fireEvent.pointerDown(surface, { clientX: 50, clientY: 50, pointerId: 1 });
+    fireEvent.pointerMove(surface, { clientX: 52, clientY: 50, pointerId: 1 });
+    fireEvent.pointerUp(surface, { clientX: 52, clientY: 50, pointerId: 1 });
+    await userEvent.click(screen.getByTestId("measure-save"));
+    await waitFor(() => expect(onSave).toHaveBeenCalled());
+    expect(onSave.mock.calls[0][0]).toMatchObject({ detection: { auto: false, axisRatio: 0.85 } });
+  });
+
+  it("si no la encuentra, lo dice y deja marcarla a mano", async () => {
+    coin.fit = null;
+    render(<MeasureTool imageUrl="/x.jpg" role="patient" onSave={vi.fn()} onClose={vi.fn()} />);
+    await ready();
+    await waitFor(() => expect(screen.getByTestId("measure-auto")).toHaveTextContent("No pudimos encontrar la moneda"));
+    expect(screen.getByTestId("measure-step")).toHaveTextContent("Paso 1 de 2");
+    expect(screen.getByText("Buscar la moneda otra vez")).toBeInTheDocument();
+  });
+});
+
+describe("MeasureTool: lesión marcada sola", () => {
+  it("al tocar dentro de la lesión propone sus extremos y calcula la medida", async () => {
+    coin.lesion = { points: [{ x: 100, y: 400 }, { x: 220, y: 400 }], areaFraction: 0.05 };
+    render(<MeasureTool imageUrl="/x.jpg" role="patient" onSave={vi.fn()} onClose={vi.fn()} />);
+    await ready();
+    tap(50, 50); tap(180, 50); // moneda de $500: 10 px por mm
+    await userEvent.click(screen.getByTestId("measure-auto-lesion"));
+    expect(screen.getByTestId("measure-seed-hint")).toBeInTheDocument();
+    tap(80, 200);
+    expect(await screen.findByTestId("measure-lesion-note")).toHaveTextContent("Marcamos los extremos");
+    expect(screen.getByTestId("measure-result")).toHaveTextContent("12,0 mm");
+    expect(screen.queryByTestId("measure-auto-lesion")).not.toBeInTheDocument();
+  });
+
+  it("si no puede delimitarla lo dice y el toque siguiente se marca a mano", async () => {
+    coin.lesion = null;
+    render(<MeasureTool imageUrl="/x.jpg" role="patient" onSave={vi.fn()} onClose={vi.fn()} />);
+    await ready();
+    tap(50, 50); tap(180, 50);
+    await userEvent.click(screen.getByTestId("measure-auto-lesion"));
+    tap(80, 200);
+    expect(await screen.findByTestId("measure-lesion-note")).toHaveTextContent("No pudimos delimitar");
+    tap(50, 200); tap(110, 200);
+    expect(screen.getByTestId("measure-result")).toHaveTextContent("12,0 mm");
+  });
+});
 
 describe("MeasureTool", () => {
   it("pide primero los bordes de la moneda y luego los extremos de la lesión, y muestra la medida en vivo", async () => {

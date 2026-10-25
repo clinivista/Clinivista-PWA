@@ -988,7 +988,7 @@
     },
     {
      "t": "p",
-     "text": "Si la clínica marcó una fotografía como «Medir» en Fases, el paciente mide su lesión en casa colocando una moneda chilena junto a ella, y tú puedes medirla o corregirla con el botón «Medir» bajo la foto. Elige la moneda, toca sus dos bordes opuestos y luego los dos extremos de la lesión; los puntos se pueden arrastrar. El resultado se muestra con su margen de error (±). Es una medida aproximada, apta para seguimiento y no para diagnóstico: la foto debe estar de frente, sin inclinación, y la moneda a la misma distancia que la lesión. Para medir con una regla propia elige «Otra referencia» e indica su tamaño."
+     "text": "Si la clínica marcó una fotografía como «Medir» en Fases, el paciente mide su lesión en casa colocando una moneda chilena junto a ella, y tú puedes medirla o corregirla con el botón «Medir» bajo la foto. Elige la moneda, toca sus dos bordes opuestos y luego los dos extremos de la lesión; los puntos se pueden arrastrar. El resultado se muestra con su margen de error (±). Es una medida aproximada, apta para seguimiento y no para diagnóstico: la foto debe estar de frente, sin inclinación, y la moneda a la misma distancia que la lesión. Para medir con una regla propia elige «Otra referencia» e indica su tamaño. La app intenta encontrar la moneda sola y propone sus bordes; si la moneda se ve ovalada avisa que la foto está inclinada y amplía el margen de error. La detección ocurre en el propio dispositivo: la foto no se envía a ningún tercero. También puedes pulsar «Marcar la lesión automáticamente», tocar un punto dentro de la lesión y revisar los extremos que se proponen."
     },
     {
      "t": "h3",
@@ -997,6 +997,14 @@
     {
      "t": "p",
      "text": "En cada fase con fotos, el botón «Continuar en el celular» muestra un código QR. Escanéalo con la cámara de un celular (u otro dispositivo con cámara) y toma las fotos de esa fase; aparecen solas en esta pantalla. El enlace sirve solo para esa fase de ese paciente, vence a los 20 minutos y no muestra datos del paciente. Al terminar pulsa «Terminar y volver», o cierra el enlace desde aquí."
+    },
+    {
+     "t": "h3",
+     "text": "Evolución de las medidas"
+    },
+    {
+     "t": "p",
+     "text": "Sobre las fases aparece el recuadro «Evolución de las medidas»: reúne las medidas de una misma fotografía (por el nombre) a lo largo de las fases y compara cada una con la anterior. Un cambio solo se marca como aumento o disminución si supera el margen de error combinado de las dos medidas; si no, dice «sin cambio claro»."
     }
    ],
    "key": "phases"

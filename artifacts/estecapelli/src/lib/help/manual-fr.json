@@ -988,7 +988,7 @@
     },
     {
      "t": "p",
-     "text": "Si la clinique a marqué une photo «Mesurer» dans Phases, le patient mesure sa lésion chez lui en posant une pièce chilienne à côté, et vous pouvez la mesurer ou la corriger avec le bouton «Mesurer» sous la photo. Choisissez la pièce, touchez deux bords opposés, puis les deux extrémités de la lésion; les points sont déplaçables. Le résultat indique sa marge d'erreur (±). Mesure approximative, utile pour le suivi et non pour le diagnostic: photo de face, sans inclinaison, pièce à la même distance que la lésion. Pour une règle personnelle, choisissez «Autre référence» et indiquez sa taille."
+     "text": "Si la clinique a marqué une photo «Mesurer» dans Phases, le patient mesure sa lésion chez lui en posant une pièce chilienne à côté, et vous pouvez la mesurer ou la corriger avec le bouton «Mesurer» sous la photo. Choisissez la pièce, touchez deux bords opposés, puis les deux extrémités de la lésion; les points sont déplaçables. Le résultat indique sa marge d'erreur (±). Mesure approximative, utile pour le suivi et non pour le diagnostic: photo de face, sans inclinaison, pièce à la même distance que la lésion. Pour une règle personnelle, choisissez «Autre référence» et indiquez sa taille. L'application tente de trouver seule la pièce et propose ses bords ; si la pièce paraît ovale, elle signale que la photo est inclinée et élargit la marge d'erreur. La détection se fait sur l'appareil : la photo n'est envoyée à aucun tiers. Vous pouvez aussi appuyer sur «Marquer la lésion automatiquement», toucher un point à l'intérieur de la lésion et vérifier les extrémités proposées."
     },
     {
      "t": "h3",
@@ -997,6 +997,14 @@
     {
      "t": "p",
      "text": "Dans chaque phase avec photos, le bouton «Continuer sur le téléphone» affiche un code QR. Scannez-le avec l'appareil photo d'un téléphone (ou d'un autre appareil) et prenez les photos de cette phase ; elles apparaissent seules sur cet écran. Le lien ne sert que pour cette phase de ce patient, expire après 20 minutes et n'affiche aucune donnée du patient. Une fois terminé, touchez «Terminer et revenir» ou fermez le lien ici."
+    },
+    {
+     "t": "h3",
+     "text": "Évolution des mesures"
+    },
+    {
+     "t": "p",
+     "text": "Au-dessus des phases, l'encadré «Évolution des mesures» rassemble les mesures d'une même photo (par son nom) au fil des phases et compare chacune à la précédente. Un changement n'est signalé comme augmentation ou diminution que s'il dépasse la marge d'erreur combinée des deux mesures ; sinon, il indique «pas de changement net»."
     }
    ],
    "key": "phases"

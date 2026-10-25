@@ -988,7 +988,7 @@
     },
     {
      "t": "p",
-     "text": "Se la clinica ha contrassegnato una foto come «Misura» in Fasi, il paziente misura la lesione a casa appoggiandovi accanto una moneta cilena, e tu puoi misurarla o correggerla con il pulsante «Misura» sotto la foto. Scegli la moneta, tocca due bordi opposti, poi le due estremità della lesione; i punti si possono trascinare. Il risultato mostra il margine di errore (±). È una misura approssimativa, utile per il controllo e non per la diagnosi: foto frontale, senza inclinazione, moneta alla stessa distanza della lesione. Per un righello proprio scegli «Altro riferimento» e indica la misura."
+     "text": "Se la clinica ha contrassegnato una foto come «Misura» in Fasi, il paziente misura la lesione a casa appoggiandovi accanto una moneta cilena, e tu puoi misurarla o correggerla con il pulsante «Misura» sotto la foto. Scegli la moneta, tocca due bordi opposti, poi le due estremità della lesione; i punti si possono trascinare. Il risultato mostra il margine di errore (±). È una misura approssimativa, utile per il controllo e non per la diagnosi: foto frontale, senza inclinazione, moneta alla stessa distanza della lesione. Per un righello proprio scegli «Altro riferimento» e indica la misura. L'app prova a trovare da sola la moneta e propone i suoi bordi; se la moneta appare ovale avvisa che la foto è inclinata e amplia il margine di errore. Il rilevamento avviene sul dispositivo: la foto non viene inviata a terzi. Puoi anche premere «Segna la lesione automaticamente», toccare un punto dentro la lesione e controllare le estremità proposte."
     },
     {
      "t": "h3",
@@ -997,6 +997,14 @@
     {
      "t": "p",
      "text": "In ogni fase con foto, il pulsante «Continua sul cellulare» mostra un codice QR. Inquadralo con la fotocamera di un cellulare (o di un altro dispositivo) e scatta le foto di quella fase; compaiono da sole su questa schermata. Il link vale solo per quella fase di quel paziente, scade dopo 20 minuti e non mostra dati del paziente. Al termine tocca «Termina e torna indietro» oppure chiudi il link da qui."
+    },
+    {
+     "t": "h3",
+     "text": "Evoluzione delle misure"
+    },
+    {
+     "t": "p",
+     "text": "Sopra le fasi appare il riquadro «Evoluzione delle misure»: raccoglie le misure della stessa foto (per nome) nelle varie fasi e confronta ciascuna con la precedente. Un cambiamento è indicato come aumento o diminuzione solo se supera il margine di errore combinato delle due misure; altrimenti dice «nessun cambiamento evidente»."
     }
    ],
    "key": "phases"

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { PhotoMeasurementBy } from './photoMeasurementBy';
+import type { PhotoMeasurementDetection } from './photoMeasurementDetection';
 import type { PhotoMeasurementPoint } from './photoMeasurementPoint';
 
 export interface PhotoMeasurement {
@@ -18,6 +19,7 @@ export interface PhotoMeasurement {
   imageHeight: number;
   lengthMm: number;
   uncertaintyPct: number;
+  detection?: PhotoMeasurementDetection;
   by: PhotoMeasurementBy;
   byName: string;
   at: string;

@@ -3045,6 +3045,12 @@ components:
         imageHeight: {type: number}
         lengthMm: {type: number}
         uncertaintyPct: {type: number}
+        detection:
+          type: object
+          required: [auto]
+          properties:
+            auto: {type: boolean}
+            axisRatio: {type: number}
         by:
           type: string
           enum: [patient, staff]

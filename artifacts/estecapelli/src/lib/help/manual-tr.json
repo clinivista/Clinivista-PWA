@@ -988,7 +988,7 @@
     },
     {
      "t": "p",
-     "text": "Klinik bir fotoğrafı Aşamalar'da «Ölç» olarak işaretlediyse hasta, lezyonun yanına Şili madeni parası koyarak evde ölçer; siz de fotoğrafın altındaki «Ölç» düğmesiyle ölçebilir veya düzeltebilirsiniz. Parayı seçin, karşılıklı iki kenarına, sonra lezyonun iki ucuna dokunun; noktalar sürüklenebilir. Sonuç hata payıyla (±) gösterilir. Yaklaşık bir ölçümdür, takip içindir, tanı için değil: fotoğraf karşıdan, eğimsiz çekilmeli ve para lezyonla aynı mesafede olmalı. Kendi cetvelinizi kullanmak için «Başka referans» seçip boyutunu girin."
+     "text": "Klinik bir fotoğrafı Aşamalar'da «Ölç» olarak işaretlediyse hasta, lezyonun yanına Şili madeni parası koyarak evde ölçer; siz de fotoğrafın altındaki «Ölç» düğmesiyle ölçebilir veya düzeltebilirsiniz. Parayı seçin, karşılıklı iki kenarına, sonra lezyonun iki ucuna dokunun; noktalar sürüklenebilir. Sonuç hata payıyla (±) gösterilir. Yaklaşık bir ölçümdür, takip içindir, tanı için değil: fotoğraf karşıdan, eğimsiz çekilmeli ve para lezyonla aynı mesafede olmalı. Kendi cetvelinizi kullanmak için «Başka referans» seçip boyutunu girin. Uygulama parayı kendisi bulmaya çalışır ve kenarlarını önerir; para oval görünüyorsa fotoğrafın eğik olduğunu bildirir ve hata payını artırır. Algılama cihazın kendisinde yapılır: fotoğraf üçüncü taraflara gönderilmez. Ayrıca «Lezyonu otomatik işaretle» düğmesine basabilir, lezyonun içinde bir noktaya dokunabilir ve önerilen uçları gözden geçirebilirsiniz."
     },
     {
      "t": "h3",
@@ -997,6 +997,14 @@
     {
      "t": "p",
      "text": "Fotoğraflı her aşamada «Telefonda devam et» düğmesi bir QR kodu gösterir. Bir telefonun (veya kameralı başka bir cihazın) kamerasıyla tarayın ve o aşamanın fotoğraflarını çekin; fotoğraflar bu ekranda kendiliğinden görünür. Bağlantı yalnızca o hastanın o aşaması için geçerlidir, 20 dakika sonra sona erer ve hasta verisi göstermez. Bitince «Bitir ve geri dön»e dokunun veya bağlantıyı buradan kapatın."
+    },
+    {
+     "t": "h3",
+     "text": "Ölçümlerin seyri"
+    },
+    {
+     "t": "p",
+     "text": "Aşamaların üstünde, «Ölçümlerin seyri» kutusu aynı fotoğrafın (adına göre) ölçümlerini aşamalar boyunca toplar ve her birini bir öncekiyle karşılaştırır. Bir değişiklik, yalnızca iki ölçümün birleşik hata payını aşarsa artış veya azalış olarak gösterilir; aksi halde «belirgin değişiklik yok» yazar."
     }
    ],
    "key": "phases"
