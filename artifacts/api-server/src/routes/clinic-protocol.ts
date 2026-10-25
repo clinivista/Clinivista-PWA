@@ -9,7 +9,9 @@ import { ProtocolConfigError, getProtocolStructure, replaceProtocolStructure } f
 const router: IRouter = Router();
 
 /** Only the clinic's legal representative defines its phases (read from the DB on every request). */
-async function isLegalRepresentative(userId: string, centerId: string): Promise<boolean> {
+async function isLegalRepresentative({ userId, centerId, legal }: { userId: string; centerId: string; legal?: boolean }): Promise<boolean> {
+  // A director who entered the clinic as its legal representative (chosen in supra-control → «Mi cuenta»).
+  if (legal) return true;
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
   return Boolean(user && user.active && user.centerId === centerId && user.legalRepresentative);
 }
@@ -22,7 +24,7 @@ router.get("/clinic/protocol", async (req, res): Promise<void> => {
   if (!staff) return;
   try {
     const { phases } = await getProtocolStructure(staff.centerId, typeParam(req));
-    res.json({ canEdit: await isLegalRepresentative(staff.userId, staff.centerId), phases });
+    res.json({ canEdit: await isLegalRepresentative(staff), phases });
   } catch (error) {
     if (error instanceof ProtocolConfigError) { res.status(404).json({ error: error.message }); return; }
     throw error;
@@ -32,7 +34,7 @@ router.get("/clinic/protocol", async (req, res): Promise<void> => {
 router.put("/clinic/protocol", async (req, res): Promise<void> => {
   const staff = requireStaffAuth(req, res);
   if (!staff) return;
-  if (!(await isLegalRepresentative(staff.userId, staff.centerId))) {
+  if (!(await isLegalRepresentative(staff))) {
     res.status(403).json({ error: "Solo el representante legal puede configurar las fases." });
     return;
   }
@@ -61,13 +63,13 @@ router.put("/clinic/protocol", async (req, res): Promise<void> => {
 router.get("/clinic/consult-types", async (req, res): Promise<void> => {
   const staff = requireStaffAuth(req, res);
   if (!staff) return;
-  res.json({ ...(await listConsultTypes(staff.centerId)), canEdit: await isLegalRepresentative(staff.userId, staff.centerId) });
+  res.json({ ...(await listConsultTypes(staff.centerId)), canEdit: await isLegalRepresentative(staff) });
 });
 
 async function manage(req: Parameters<typeof requireStaffAuth>[0], res: Parameters<typeof requireStaffAuth>[1], action: (centerId: string) => Promise<unknown>, status = 201): Promise<void> {
   const staff = requireStaffAuth(req, res);
   if (!staff) return;
-  if (!(await isLegalRepresentative(staff.userId, staff.centerId))) {
+  if (!(await isLegalRepresentative(staff))) {
     res.status(403).json({ error: "Solo el representante legal puede configurar los tipos de consulta." });
     return;
   }

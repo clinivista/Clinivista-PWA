@@ -35,6 +35,18 @@ export const AuthUserClinicsItemRole = {
   administrativo: 'administrativo',
 } as const;
 
+/**
+ * the profile a director entered the clinic with (chosen in supra-control, "Mi cuenta").
+ */
+export type AuthUserViewingProfile = typeof AuthUserViewingProfile[keyof typeof AuthUserViewingProfile];
+
+
+export const AuthUserViewingProfile = {
+  medico: 'medico',
+  administrativo: 'administrativo',
+  representante_legal: 'representante_legal',
+} as const;
+
 export type AuthUserClinicsItem = {
   id: string;
   name: string;
@@ -61,6 +73,8 @@ export interface AuthUser {
   needsClinicChoice?: boolean;
   /** true when a director is working inside a clinic's panel (with administrativo permissions). */
   viewingAsDirector?: boolean;
+  /** the profile a director entered the clinic with (chosen in supra-control, "Mi cuenta"). */
+  viewingProfile?: AuthUserViewingProfile;
   viewingClinic?: AuthUserViewingClinic;
 }
 

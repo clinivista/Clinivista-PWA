@@ -375,7 +375,7 @@ export default function Admin() {
       <main className="flex-1 flex flex-col min-h-0 md:h-[100dvh] overflow-hidden relative">
         {authStatus.user?.viewingAsDirector && (
           <div className="bg-[#0B1F33] text-white px-4 sm:px-6 py-2.5 flex flex-wrap items-center gap-3 shrink-0 z-30" data-testid="director-banner">
-            <span className="text-sm font-semibold min-w-0 break-words">{CLINIC_ACCESS_TEXT[lang].directorBanner(authStatus.user.viewingClinic?.name ?? "")} · {authStatus.user.role === "administrativo" ? CLINIC_ACCESS_TEXT[lang].roleAdministrativo : CLINIC_ACCESS_TEXT[lang].roleMedico}</span>
+            <span className="text-sm font-semibold min-w-0 break-words">{CLINIC_ACCESS_TEXT[lang].directorBanner(authStatus.user.viewingClinic?.name ?? "")} · {authStatus.user.viewingProfile === "representante_legal" ? CLINIC_ACCESS_TEXT[lang].roleLegal : authStatus.user.role === "administrativo" ? CLINIC_ACCESS_TEXT[lang].roleAdministrativo : CLINIC_ACCESS_TEXT[lang].roleMedico}</span>
             <Button
               size="sm"
               variant="outline"

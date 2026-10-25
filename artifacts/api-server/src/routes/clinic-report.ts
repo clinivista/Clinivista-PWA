@@ -10,7 +10,9 @@ import { ReportError, getReportConfig, pendingDiagnoses, saveReportConfig, sendR
 const router: IRouter = Router();
 
 /** The clinic's legal representative configures the report (read from the DB on every request). */
-async function isLegalRepresentative(userId: string, centerId: string): Promise<boolean> {
+async function isLegalRepresentative({ userId, centerId, legal }: { userId: string; centerId: string; legal?: boolean }): Promise<boolean> {
+  // A director who entered the clinic as its legal representative (chosen in supra-control → «Mi cuenta»).
+  if (legal) return true;
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
   return Boolean(user && user.active && user.centerId === centerId && user.legalRepresentative);
 }
@@ -28,13 +30,13 @@ async function state(centerId: string, canEdit: boolean, base: string) {
 router.get("/clinic/report", async (req, res): Promise<void> => {
   const staff = requireStaffAuth(req, res);
   if (!staff) return;
-  res.json(await state(staff.centerId, await isLegalRepresentative(staff.userId, staff.centerId), baseUrl(req)));
+  res.json(await state(staff.centerId, await isLegalRepresentative(staff), baseUrl(req)));
 });
 
 router.put("/clinic/report", async (req, res): Promise<void> => {
   const staff = requireStaffAuth(req, res);
   if (!staff) return;
-  if (!(await isLegalRepresentative(staff.userId, staff.centerId))) {
+  if (!(await isLegalRepresentative(staff))) {
     res.status(403).json({ error: "Solo el representante legal puede configurar el informe." });
     return;
   }
@@ -58,7 +60,7 @@ router.put("/clinic/report", async (req, res): Promise<void> => {
 router.post("/clinic/report/send", async (req, res): Promise<void> => {
   const staff = requireStaffAuth(req, res);
   if (!staff) return;
-  if (!(await isLegalRepresentative(staff.userId, staff.centerId))) {
+  if (!(await isLegalRepresentative(staff))) {
     res.status(403).json({ error: "Solo el representante legal puede enviar el informe." });
     return;
   }

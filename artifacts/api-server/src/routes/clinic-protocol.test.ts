@@ -16,7 +16,7 @@ import * as mockedDb from "@workspace/db";
 import { hashPassword } from "@workspace/db";
 import clinicProtocolRouter from "./clinic-protocol";
 import transcriptionRouter from "./transcription";
-import { createSession } from "../lib/sessions";
+import { createSession, setSessionViewing } from "../lib/sessions";
 import { getPatientPhaseViews, getRequiredViewKeys } from "../lib/clinical-photos";
 
 const pglite = (mockedDb as unknown as { __pglite: { exec(sql: string): Promise<unknown> } }).__pglite;
@@ -125,6 +125,18 @@ describe("fases de la clínica", () => {
     await request(app).put("/api/clinic/protocol").set("Cookie", as("adm", "administrativo", "clinic-a")).send({ phases: toInput(phases) }).expect(403);
     await request(app).get("/api/clinic/protocol").expect(401);
     await request(app).get("/api/clinic/protocol").set("Cookie", as("dir", "director", null)).expect(403);
+  });
+
+  it("un director configura las fases solo si entró como representante legal", async () => {
+    await seedUser("dir", "director", null);
+    for (const [profile, allowed] of [["medico", false], ["administrativo", false], ["representante_legal", true]] as const) {
+      const token = createSession({ userId: "dir", centerId: null, role: "director" });
+      setSessionViewing(token, "clinic-a", profile);
+      const cookie = `clinivista_session=${token}`;
+      const { phases, canEdit } = await read(cookie);
+      expect(canEdit).toBe(allowed);
+      await request(app).put("/api/clinic/protocol").set("Cookie", cookie).send({ phases: toInput(phases) }).expect(allowed ? 200 : 403);
+    }
   });
 
   it("renames, adds and removes phases and photos, and keeps the order", async () => {

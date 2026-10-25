@@ -35,6 +35,7 @@ export const GetAuthMeResponse = zod.object({
 })).optional().describe('Clinics this médico\/administrativo can work in (not suspended). Only these are ever shown to them.'),
   "needsClinicChoice": zod.boolean().optional().describe('true when the person has several clinics and has not chosen one for this session yet.'),
   "viewingAsDirector": zod.boolean().optional().describe('true when a director is working inside a clinic\'s panel (with administrativo permissions).'),
+  "viewingProfile": zod.enum(['medico', 'administrativo', 'representante_legal']).optional().describe('the profile a director entered the clinic with (chosen in supra-control, \"Mi cuenta\").'),
   "viewingClinic": zod.object({
   "id": zod.string(),
   "name": zod.string()
@@ -67,6 +68,7 @@ export const AdminLoginResponse = zod.object({
 })).optional().describe('Clinics this médico\/administrativo can work in (not suspended). Only these are ever shown to them.'),
   "needsClinicChoice": zod.boolean().optional().describe('true when the person has several clinics and has not chosen one for this session yet.'),
   "viewingAsDirector": zod.boolean().optional().describe('true when a director is working inside a clinic\'s panel (with administrativo permissions).'),
+  "viewingProfile": zod.enum(['medico', 'administrativo', 'representante_legal']).optional().describe('the profile a director entered the clinic with (chosen in supra-control, \"Mi cuenta\").'),
   "viewingClinic": zod.object({
   "id": zod.string(),
   "name": zod.string()

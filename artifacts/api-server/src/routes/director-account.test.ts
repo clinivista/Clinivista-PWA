@@ -35,6 +35,7 @@ beforeAll(async () => {
       active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar',
       created_at timestamptz NOT NULL DEFAULT now()
     );
+    CREATE TABLE IF NOT EXISTS director_preferences (user_id text PRIMARY KEY, entry_profile text NOT NULL DEFAULT 'medico', updated_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE IF NOT EXISTS users (
       id text PRIMARY KEY, email text NOT NULL, email_normalized text NOT NULL, password_hash text NOT NULL,
       name text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', role text NOT NULL, center_id text,
@@ -46,7 +47,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await pglite.exec(`DELETE FROM users; DELETE FROM clinical_centers;`);
+  await pglite.exec(`DELETE FROM director_preferences; DELETE FROM users; DELETE FROM clinical_centers;`);
   await pglite.exec(`INSERT INTO clinical_centers (id, name, slug) VALUES ('c1', 'Clínica Uno', 'uno');`);
   const hash = hashPassword("clave-actual-1");
   await pglite.exec(`
@@ -98,16 +99,44 @@ describe("Mi cuenta del director", () => {
   });
 });
 
-describe("El director entra a una clínica con un rol", () => {
-  it("por defecto como médico; puede entrar como administrativo", async () => {
+describe("Perfil de ingreso del director a las clínicas", () => {
+  const put = (token: string, profile: unknown) => request(app).put("/api/director/me/entry-profile").set("Cookie", cookie(token)).send({ profile });
+
+  it("por defecto entra como médico y el perfil se guarda para todas las clínicas", async () => {
+    const token = directorSession();
+    expect((await request(app).get("/api/director/me").set("Cookie", cookie(token)).expect(200)).body.entryProfile).toBe("medico");
+    await put(token, "administrativo").expect(200);
+    expect((await request(app).get("/api/director/me").set("Cookie", cookie(token))).body.entryProfile).toBe("administrativo");
+    await request(app).post("/api/auth/enter-clinic").set("Cookie", cookie(token)).send({ centerId: "c1" }).expect(200);
+    const me = await request(app).get("/api/auth/me").set("Cookie", cookie(token));
+    expect(me.body.user).toMatchObject({ role: "administrativo", viewingAsDirector: true, viewingProfile: "administrativo" });
+    // otra sesión del mismo director y otra clínica usan el mismo perfil
+    const again = directorSession();
+    await request(app).post("/api/auth/enter-clinic").set("Cookie", cookie(again)).send({ centerId: "c1" }).expect(200);
+    expect(getSession(again)).toMatchObject({ viewingRole: "administrativo", viewingLegal: false });
+  });
+
+  it("representante legal: entra como médico con las facultades del representante", async () => {
+    const token = directorSession();
+    await put(token, "representante_legal").expect(200);
+    await request(app).post("/api/auth/enter-clinic").set("Cookie", cookie(token)).send({ centerId: "c1" }).expect(200);
+    expect(getSession(token)).toMatchObject({ viewingRole: "medico", viewingLegal: true });
+    const me = await request(app).get("/api/auth/me").set("Cookie", cookie(token));
+    expect(me.body.user).toMatchObject({ role: "medico", viewingProfile: "representante_legal" });
+  });
+
+  it("al cambiarlo, vale al instante dentro de la clínica donde ya está", async () => {
     const token = directorSession();
     await request(app).post("/api/auth/enter-clinic").set("Cookie", cookie(token)).send({ centerId: "c1" }).expect(200);
-    expect(getSession(token)?.viewingRole).toBe("medico");
-    await request(app).post("/api/auth/enter-clinic").set("Cookie", cookie(token)).send({ centerId: "c1", role: "administrativo" }).expect(200);
-    const me = await request(app).get("/api/auth/me").set("Cookie", cookie(token));
-    expect(me.body.user).toMatchObject({ role: "administrativo", viewingAsDirector: true });
-    await request(app).post("/api/auth/enter-clinic").set("Cookie", cookie(token)).send({ centerId: "c1", role: "director" }).expect(400);
-    await request(app).post("/api/auth/leave-clinic").set("Cookie", cookie(token)).expect(200);
-    expect(getSession(token)?.viewingRole).toBeUndefined();
+    await put(token, "representante_legal").expect(200);
+    expect(getSession(token)).toMatchObject({ viewingRole: "medico", viewingLegal: true });
+    await put(token, "administrativo").expect(200);
+    expect(getSession(token)).toMatchObject({ viewingRole: "administrativo", viewingLegal: false });
+  });
+
+  it("rechaza perfiles inválidos y a quien no es director", async () => {
+    await put(directorSession(), "director").expect(400);
+    const staff = createSession({ userId: "s1", centerId: "c1", role: "administrativo" });
+    await put(staff, "medico").expect(403);
   });
 });

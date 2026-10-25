@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { AdminLoginBody } from "@workspace/api-zod";
 import { db, usersTable, centersTable, verifyPassword, normalizeEmail, type UserRole } from "@workspace/db";
 import { createSession, getSession, isValidSession, destroySession, setSessionAccount, setSessionViewing, setSessionDirectorChoice } from "../lib/sessions";
+import { directorEntryProfile } from "../lib/director-profile";
 import { accessesForAccounts, allClinicsForDirector, type ClinicAccess } from "../lib/clinic-access";
 import { getSessionToken } from "../lib/helpers";
 import { requestStaffPasswordReset, resetStaffPassword, staffResetClinics, StaffResetError } from "../lib/staff-password-reset";
@@ -29,7 +30,7 @@ export function getAuthContext(req: Request): { userId: string; centerId: string
   return session ? { userId: session.userId, centerId: session.centerId, role: session.role } : undefined;
 }
 
-export type StaffAuthContext = { userId: string; centerId: string; role: "medico" | "administrativo" };
+export type StaffAuthContext = { userId: string; centerId: string; role: "medico" | "administrativo"; /** a director acting as the clinic's legal representative */ legal?: boolean };
 
 /**
  * médico/administrativo only, with a guaranteed (non-null) centerId — what
@@ -46,7 +47,7 @@ export function requireStaffAuth(req: Request, res: Response): StaffAuthContext 
   // A director inside a clinic can do everything a médico and an administrativo can do
   // (the médico role already covers the administrative work: patients, photos, reports).
   if (session.role === "director" && session.viewingCenterId) {
-    return { userId: session.userId, centerId: session.viewingCenterId, role: session.viewingRole ?? "medico" };
+    return { userId: session.userId, centerId: session.viewingCenterId, role: session.viewingRole ?? "medico", legal: session.viewingLegal === true };
   }
   if ((session.role !== "medico" && session.role !== "administrativo") || !session.centerId) {
     res.status(403).json({ error: "Esta acción requiere una cuenta de clínica (médico o administrativo)." });
@@ -128,7 +129,7 @@ router.get("/auth/me", async (req, res): Promise<void> => {
     if (session.viewingCenterId) {
       const [center] = await db.select({ id: centersTable.id, name: centersTable.name }).from(centersTable).where(eq(centersTable.id, session.viewingCenterId));
       if (center) {
-        res.json({ authenticated: true, user: { ...authUser(user, { centerId: center.id, role: session.viewingRole ?? "medico" }), canManageUsers: false, viewingAsDirector: true, viewingClinic: center } });
+        res.json({ authenticated: true, user: { ...authUser(user, { centerId: center.id, role: session.viewingRole ?? "medico" }), canManageUsers: false, viewingAsDirector: true, viewingClinic: center, viewingProfile: session.viewingLegal ? "representante_legal" : session.viewingRole ?? "medico" } });
         return;
       }
       setSessionDirectorChoice(token);
@@ -274,12 +275,7 @@ router.post("/auth/enter-clinic", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Clínica no encontrada." });
     return;
   }
-  const asRole = (req.body as { role?: unknown } | undefined)?.role;
-  if (asRole !== undefined && asRole !== "medico" && asRole !== "administrativo") {
-    res.status(400).json({ error: "Rol inválido." });
-    return;
-  }
-  setSessionViewing(token, center.id, asRole ?? "medico");
+  setSessionViewing(token, center.id, await directorEntryProfile(session.userId));
   res.json({ ok: true, clinic: center });
 });
 

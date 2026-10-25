@@ -44,3 +44,13 @@ export const usersTable = pgTable("users", {
 export const insertUserSchema = createInsertSchema(usersTable).omit({ createdAt: true, updatedAt: true });
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof usersTable.$inferSelect;
+
+// Preferencia del director: con qué perfil entra a cualquier clínica (se cambia en supra-control → «Mi cuenta»).
+export const DIRECTOR_ENTRY_PROFILES = ["medico", "administrativo", "representante_legal"] as const;
+export type DirectorEntryProfile = (typeof DIRECTOR_ENTRY_PROFILES)[number];
+
+export const directorPreferencesTable = pgTable("director_preferences", {
+  userId: text("user_id").primaryKey(),
+  entryProfile: text("entry_profile", { enum: DIRECTOR_ENTRY_PROFILES }).notNull().default("medico"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});

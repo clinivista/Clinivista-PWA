@@ -12,6 +12,7 @@ export * from './authUserClinicsItem';
 export * from './authUserClinicsItemRole';
 export * from './authUserRole';
 export * from './authUserViewingClinic';
+export * from './authUserViewingProfile';
 export * from './clinicProtocol';
 export * from './clinicProtocolPhase';
 export * from './clinicProtocolPhaseInput';
