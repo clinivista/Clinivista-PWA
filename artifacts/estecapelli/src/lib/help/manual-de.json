@@ -1314,7 +1314,7 @@
     },
     {
      "t": "p",
-     "text": "In der Dermatologie zeigt Phasen einen Reiter pro Konsultationsart, jeweils getrennt konfiguriert. In der Artenleiste können Sie eine fertige Vorlage aktivieren (Läsionen, Akne, Flecken, Biopsie), eine eigene Art anlegen, umbenennen oder deaktivieren. Die «Allgemeine Konsultation» gibt es immer; maximal 12 Arten. Nur der gesetzliche Vertreter kann sie verwalten.",
+     "text": "In der Dermatologie zeigt Phasen einen Reiter pro Konsultationsart, jeweils getrennt konfiguriert. In der Artenleiste können Sie eine fertige Vorlage aktivieren (Läsionen, Akne, Flecken, Biopsie), eine eigene Art anlegen, umbenennen oder deaktivieren. Die «Allgemeine Konsultation» gibt es immer; maximal 12 Arten. Eine Art kann nur gelöscht werden, wenn sie noch keine Einträge hat; sonst können Sie sie umbenennen oder deaktivieren. Nur der gesetzliche Vertreter kann sie verwalten.",
      "only": [
       "dermatologia"
      ]

@@ -1314,7 +1314,7 @@
     },
     {
      "t": "p",
-     "text": "In dermatologia, Fasi mostra una scheda per tipo di visita, ciascuna configurata separatamente. Dalla barra dei tipi puoi attivare un modello pronto (lesioni, acne, macchie, biopsia), creare un tipo proprio, rinominarlo o disattivarlo. La «Visita generale» esiste sempre e il massimo è 12 tipi. Solo il rappresentante legale può gestirli.",
+     "text": "In dermatologia, Fasi mostra una scheda per tipo di visita, ciascuna configurata separatamente. Dalla barra dei tipi puoi attivare un modello pronto (lesioni, acne, macchie, biopsia), creare un tipo proprio, rinominarlo o disattivarlo. La «Visita generale» esiste sempre e il massimo è 12 tipi. Un tipo si può eliminare solo se non ha ancora registri; altrimenti puoi rinominarlo o disattivarlo. Solo il rappresentante legale può gestirli.",
      "only": [
       "dermatologia"
      ]

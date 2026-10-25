@@ -55,6 +55,30 @@ describe("ConsultTypesBar", () => {
     expect(calls.find((c) => c.method === "PATCH")).toMatchObject({ url: "/api/clinic/consult-types/acne", body: JSON.stringify({ active: false }) });
   });
 
+  it("elimina un tipo sin registros y vuelve al tipo base", async () => {
+    const calls: Array<{ url: string; method?: string }> = [];
+    const empty = { ...types(true), types: types(true).types.map((t) => (t.id === "acne" ? { ...t, patientCount: 0 } : t)) };
+    vi.stubGlobal("confirm", vi.fn(() => true));
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      calls.push({ url, method: init?.method });
+      return json(init?.method === "DELETE" ? { ...types(true), types: [types(true).types[0]] } : empty);
+    }));
+    const onSelect = vi.fn();
+    wrap(<ConsultTypesBar typeId="acne" onSelect={onSelect} />);
+    await userEvent.click(await screen.findByTestId("delete-consult-type"));
+    await waitFor(() => expect(onSelect).toHaveBeenCalledWith(""));
+    expect(calls.find((c) => c.method === "DELETE")).toMatchObject({ url: "/api/clinic/consult-types/acne" });
+  });
+
+  it("no deja eliminar un tipo con registros, pero sí renombrar y desactivar", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => json(types(true))));
+    wrap(<ConsultTypesBar typeId="acne" onSelect={vi.fn()} />);
+    expect(await screen.findByTestId("delete-consult-type")).toBeDisabled();
+    expect(screen.getByTestId("delete-consult-type-blocked")).toHaveTextContent("ya tiene 1 registro");
+    expect(screen.getByTestId("toggle-consult-type")).toBeEnabled();
+    expect(screen.getByText("Cambiar nombre")).toBeEnabled();
+  });
+
   it("no aparece en clínicas que no son de dermatología", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => json({ enabled: false, canEdit: true, types: [], templates: [] })));
     wrap(<ConsultTypesBar typeId="" onSelect={vi.fn()} />);

@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import { UpdateClinicProtocolBody } from "@workspace/api-zod";
-import { CONSULT_TEMPLATES, createCustomType, enableTemplate, listConsultTypes, updateType } from "../lib/consult-types";
+import { CONSULT_TEMPLATES, createCustomType, deleteType, enableTemplate, listConsultTypes, updateType } from "../lib/consult-types";
 import { canManageClinicUsers, requireStaffAuth } from "./auth";
 import { ProtocolConfigError, getProtocolStructure, replaceProtocolStructure } from "../lib/protocol-config";
 
@@ -96,6 +96,12 @@ router.patch("/clinic/consult-types/:id", async (req, res): Promise<void> => {
       ...(typeof body.name === "string" ? { name: body.name } : {}),
       ...(typeof body.active === "boolean" ? { active: body.active } : {}),
     });
+  }, 200);
+});
+
+router.delete("/clinic/consult-types/:id", async (req, res): Promise<void> => {
+  await manage(req, res, async (centerId) => {
+    await deleteType(centerId, String(req.params.id));
   }, 200);
 });
 

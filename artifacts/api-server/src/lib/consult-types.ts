@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { and, asc, eq, sql } from "drizzle-orm";
-import { db, centersTable, leadsTable, protocolPhasesTable, protocolViewsTable, protocolsTable } from "@workspace/db";
+import { db, centersTable, evaluationsTable, leadsTable, protocolPhasesTable, protocolViewsTable, protocolsTable } from "@workspace/db";
 import { defaultProtocolIdForCenter, ensureClinicalConfiguration } from "./clinical-photos";
 import { ProtocolConfigError, MAX_NAME_LENGTH, MIN_NAME_LENGTH } from "./protocol-config";
 import { PROTOCOL_VIEWS, DEFAULT_PHASES } from "./specialties/dermatologia";
@@ -211,6 +211,31 @@ export async function updateType(centerId: string, typeId: string, change: { nam
   }
   if (change.active !== undefined) set.active = change.active;
   if (Object.keys(set).length) await db.update(protocolsTable).set(set).where(eq(protocolsTable.id, typeId));
+}
+
+/**
+ * Elimina un tipo creado por error, con sus etapas y fotografías de configuración.
+ * Solo si todavía nadie lo usó: con pacientes, consultas o evaluaciones queda
+ * únicamente cambiar el nombre o desactivarlo. El proceso base nunca se elimina.
+ */
+export async function deleteType(centerId: string, typeId: string): Promise<void> {
+  const [row] = await db.select().from(protocolsTable).where(and(eq(protocolsTable.id, typeId), eq(protocolsTable.centerId, centerId)));
+  if (!row || row.id === defaultProtocolIdForCenter(centerId) || row.specialty !== CONSULT_SPECIALTY) {
+    throw new ProtocolConfigError("Ese tipo de consulta no se puede eliminar.");
+  }
+  const [leads] = await db.select({ total: sql<number>`count(*)::int` }).from(leadsTable)
+    .where(and(eq(leadsTable.centerId, centerId), eq(leadsTable.protocolId, typeId)));
+  const [evaluations] = await db.select({ total: sql<number>`count(*)::int` }).from(evaluationsTable)
+    .where(and(eq(evaluationsTable.centerId, centerId), eq(evaluationsTable.protocolId, typeId)));
+  const used = Math.max(leads?.total ?? 0, evaluations?.total ?? 0);
+  if (used > 0) {
+    throw new ProtocolConfigError(`No se puede eliminar «${row.name}»: ya tiene ${used} ${used === 1 ? "registro" : "registros"}. Puedes cambiarle el nombre o desactivarlo.`);
+  }
+  await db.transaction(async (tx) => {
+    await tx.delete(protocolViewsTable).where(eq(protocolViewsTable.protocolId, typeId));
+    await tx.delete(protocolPhasesTable).where(eq(protocolPhasesTable.protocolId, typeId));
+    await tx.delete(protocolsTable).where(eq(protocolsTable.id, typeId));
+  });
 }
 
 /** Tipos que el personal puede elegir al agregar una consulta (el base y los activos). */
