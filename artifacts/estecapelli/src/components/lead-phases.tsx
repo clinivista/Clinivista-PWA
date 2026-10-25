@@ -17,6 +17,7 @@ import { DischargeControl, SkipPhaseButton, SkippedNote } from "@/components/pha
 import { PhaseAttention } from "@/components/phase-attention";
 import { PhotoTranscription } from "@/components/photo-transcription";
 import { CaptureHandoff } from "@/components/capture-handoff";
+import { MeasureDialog } from "@/components/measure-dialog";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const MAX_SIDE = 2400;
@@ -38,6 +39,29 @@ async function prepareImage(file: File, tooBig: string): Promise<Blob> {
   }
   if (file.size > MAX_BYTES) throw new Error(tooBig);
   return file;
+}
+
+/** Fotos que tomó el paciente y la clínica pidió medir: el personal también puede medir o corregir. */
+function PatientMeasureList({ leadId, phase }: { leadId: string; phase: LeadPhase }) {
+  const { lang, t } = useLanguage();
+  const queryClient = useQueryClient();
+  const measured = phase.views.filter((view) => view.measure && view.photo);
+  if (measured.length === 0) return null;
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2">
+      {measured.map((view) => (
+        <div key={view.id} className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span>{viewLabel(view, phase.key, lang, t)}</span>
+          <MeasureDialog
+            endpoint={`/api/leads/${encodeURIComponent(leadId)}/photos/${encodeURIComponent(view.photo!.id)}/measurement`}
+            imageUrl={`/api/leads/${encodeURIComponent(leadId)}/photos/${encodeURIComponent(view.photo!.id)}?rendition=original`}
+            role="staff" measurement={view.photo!.measurement} compact
+            onChanged={() => { void refreshLeadViews(queryClient); }}
+          />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function ViewSlot({ leadId, phase, view, disabled, onExpand }: {
@@ -142,6 +166,16 @@ function ViewSlot({ leadId, phase, view, disabled, onExpand }: {
         )}
       </div>
       {view.document && view.photo && <PhotoTranscription leadId={leadId} view={view} readOnly={disabled} />}
+      {view.measure && view.photo && (
+        <div className="px-2.5 pb-2.5 flex justify-center">
+          <MeasureDialog
+            endpoint={`/api/leads/${encodeURIComponent(leadId)}/photos/${encodeURIComponent(view.photo.id)}/measurement`}
+            imageUrl={`/api/leads/${encodeURIComponent(leadId)}/photos/${encodeURIComponent(view.photo.id)}?rendition=original`}
+            role="staff" measurement={view.photo.measurement} compact
+            onChanged={() => { void refresh(); }}
+          />
+        </div>
+      )}
       <span className="sr-only">{phaseName(phase, lang)}</span>
     </div>
   );
@@ -195,9 +229,12 @@ export function LeadPhases({ leadId, onExpand, diagnosisLead, process }: { leadI
               {phase.skipped ? (
                 <SkippedNote leadId={leadId} phase={phase} canUndo={processOpen} />
               ) : phase.patientCaptured && !phase.staffCanCapture ? (
-                <p className="text-xs text-muted-foreground mt-2">
-                  {p.patientTakes}{phase.complete ? p.patientDone : p.patientPending}
-                </p>
+                <>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {p.patientTakes}{phase.complete ? p.patientDone : p.patientPending}
+                  </p>
+                  <PatientMeasureList leadId={leadId} phase={phase} />
+                </>
               ) : !phase.enabled ? (
                 <p className="text-xs text-muted-foreground mt-2">
                   {p.opensAfter(previous ? phaseName(previous, lang) : "")}

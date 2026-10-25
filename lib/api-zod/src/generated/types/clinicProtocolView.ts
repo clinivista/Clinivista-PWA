@@ -14,4 +14,6 @@ export interface ClinicProtocolView {
   hasPhotos: boolean;
   /** The photo is a document (e.g. a handwritten sheet) that staff can transcribe. */
   document: boolean;
+  /** The lesion is measured on this photo with a reference coin next to it. */
+  measure: boolean;
 }

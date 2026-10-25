@@ -10,4 +10,6 @@ export interface PatientProtocolView {
   key: string;
   label: string;
   required: boolean;
+  /** The patient measures the lesion on this photo, with a coin next to it. */
+  measure?: boolean;
 }

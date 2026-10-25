@@ -363,6 +363,7 @@ router.get("/patients/:token/protocol", async (req, res): Promise<void> => {
       key: view.key,
       label: view.label,
       required: (view.requirements as Record<string, unknown> | null)?.required !== false,
+      measure: (view.requirements as Record<string, unknown> | null)?.measure === true,
     })),
   });
 });

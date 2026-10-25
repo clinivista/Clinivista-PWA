@@ -984,6 +984,14 @@
     },
     {
      "t": "h3",
+     "text": "Measuring a lesion with a coin"
+    },
+    {
+     "t": "p",
+     "text": "If the clinic marked a photo as «Measure» in Phases, the patient measures the lesion at home by placing a Chilean coin next to it, and you can measure or correct it with the «Measure» button under the photo. Choose the coin, tap two opposite edges of it, then the two ends of the lesion; points can be dragged. The result shows its margin of error (±). It is an approximate measure, suitable for follow-up and not for diagnosis: the photo must be taken straight on, without tilt, with the coin at the same distance as the lesion. To use your own ruler choose «Other reference» and enter its size."
+    },
+    {
+     "t": "h3",
      "text": "Continue on phone"
     },
     {
@@ -1312,6 +1320,10 @@
     {
      "t": "p",
      "text": "Tick «Documento» next to a photo if it is a paper (sheet, consent form): below it, staff will be able to transcribe its text."
+    },
+    {
+     "t": "p",
+     "text": "Tick «Measure» if the lesion must be measured in that photo: the patient will see how to use a Chilean reference coin and can measure it themselves."
     },
     {
      "t": "h3",

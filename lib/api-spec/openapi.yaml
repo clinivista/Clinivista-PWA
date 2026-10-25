@@ -2616,7 +2616,7 @@ components:
 
     ClinicProtocolView:
       type: object
-      required: [id, key, label, position, hasPhotos, document]
+      required: [id, key, label, position, hasPhotos, document, measure]
       properties:
         id: {type: string}
         key: {type: string}
@@ -2626,6 +2626,9 @@ components:
         document:
           type: boolean
           description: The photo is a document (e.g. a handwritten sheet) that staff can transcribe.
+        measure:
+          type: boolean
+          description: The lesion is measured on this photo with a reference coin next to it.
 
     ClinicProtocolPhase:
       type: object
@@ -2663,6 +2666,9 @@ components:
         document:
           type: boolean
           description: Mark the photo as a document. When omitted, an existing photo keeps its current value.
+        measure:
+          type: boolean
+          description: Mark the photo as one where the lesion is measured. When omitted, an existing photo keeps its current value.
 
     ClinicProtocolPhaseInput:
       type: object
@@ -2691,6 +2697,9 @@ components:
         key: {type: string}
         label: {type: string}
         required: {type: boolean}
+        measure:
+          type: boolean
+          description: The patient measures the lesion on this photo, with a coin next to it.
 
     PatientProtocol:
       type: object
@@ -3012,6 +3021,36 @@ components:
         createdAt:
           type: string
 
+    PhotoMeasurementPoint:
+      type: object
+      required: [x, y]
+      properties:
+        x: {type: number}
+        y: {type: number}
+
+    PhotoMeasurement:
+      type: object
+      required: [referenceId, referenceMm, referencePx, referencePoints, lesionPoints, imageWidth, imageHeight, lengthMm, uncertaintyPct, by, byName, at]
+      properties:
+        referenceId: {type: string}
+        referenceMm: {type: number}
+        referencePx: {type: number}
+        referencePoints:
+          type: array
+          items: {$ref: "#/components/schemas/PhotoMeasurementPoint"}
+        lesionPoints:
+          type: array
+          items: {$ref: "#/components/schemas/PhotoMeasurementPoint"}
+        imageWidth: {type: number}
+        imageHeight: {type: number}
+        lengthMm: {type: number}
+        uncertaintyPct: {type: number}
+        by:
+          type: string
+          enum: [patient, staff]
+        byName: {type: string}
+        at: {type: string}
+
     PatientPhotoStatus:
       type: object
       required: [id, key, label, status, source, mimeType, sizeBytes, sha256, createdAt, hasOriginal, hasAdjusted]
@@ -3049,6 +3088,10 @@ components:
         height:
           type: ["number", "null"]
         captureMetadata: {}
+        measurement:
+          oneOf:
+            - $ref: "#/components/schemas/PhotoMeasurement"
+            - type: "null"
         note:
           type: ["string", "null"]
           description: Optional description the patient wrote for this photo
@@ -3415,13 +3458,14 @@ components:
 
     LeadPhaseView:
       type: object
-      required: [id, key, label, required, document, transcription, photo]
+      required: [id, key, label, required, document, measure, transcription, photo]
       properties:
         id: {type: string}
         key: {type: string}
         label: {type: string}
         required: {type: boolean}
         document: {type: boolean}
+        measure: {type: boolean}
         transcription:
           oneOf:
             - $ref: "#/components/schemas/PhotoTranscription"

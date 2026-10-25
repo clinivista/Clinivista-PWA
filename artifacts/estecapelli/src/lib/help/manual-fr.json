@@ -984,6 +984,14 @@
     },
     {
      "t": "h3",
+     "text": "Mesurer une lésion avec une pièce"
+    },
+    {
+     "t": "p",
+     "text": "Si la clinique a marqué une photo «Mesurer» dans Phases, le patient mesure sa lésion chez lui en posant une pièce chilienne à côté, et vous pouvez la mesurer ou la corriger avec le bouton «Mesurer» sous la photo. Choisissez la pièce, touchez deux bords opposés, puis les deux extrémités de la lésion; les points sont déplaçables. Le résultat indique sa marge d'erreur (±). Mesure approximative, utile pour le suivi et non pour le diagnostic: photo de face, sans inclinaison, pièce à la même distance que la lésion. Pour une règle personnelle, choisissez «Autre référence» et indiquez sa taille."
+    },
+    {
+     "t": "h3",
      "text": "Continuer sur le téléphone"
     },
     {
@@ -1312,6 +1320,10 @@
     {
      "t": "p",
      "text": "Cochez «Documento» à côté d'une photo s'il s'agit d'un papier (fiche, consentement) : sous cette photo, le personnel pourra en transcrire le texte."
+    },
+    {
+     "t": "p",
+     "text": "Cochez «Mesurer» si la lésion doit être mesurée sur cette photo: le patient verra comment utiliser une pièce chilienne de référence et pourra la mesurer lui-même."
     },
     {
      "t": "h3",

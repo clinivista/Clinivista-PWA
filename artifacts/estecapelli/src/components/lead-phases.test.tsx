@@ -46,6 +46,14 @@ describe("LeadPhases", () => {
     expect(within(locked).queryByRole("button")).not.toBeInTheDocument();
   });
 
+  it("ofrece medir con la moneda solo en las fotos marcadas para medir", () => {
+    api.phases = [
+      phase("p1", "Pre-evaluación", { patientCaptured: true, enabled: true, complete: true, views: [{ ...view("p1-a", "Lesión", "f1"), measure: true, photo: { id: "f1", measurement: null } }, view("p1-b", "General", "f2")] }),
+    ];
+    render(<LeadPhases leadId="lead-1" onExpand={vi.fn()} />);
+    expect(screen.getAllByTestId("measure-open")).toHaveLength(1);
+  });
+
   it("pide la fecha y el ID de la atención en la fase abierta y los guarda", async () => {
     const user = userEvent.setup();
     api.phases = [

@@ -12,6 +12,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CameraModal } from "@/components/camera-modal";
 import { PhotoEditor } from "@/components/photo-editor";
+import { MeasureDialog } from "@/components/measure-dialog";
+import { MeasureProtocol } from "@/components/measure-protocol";
+import type { PhotoMeasurement } from "@workspace/api-client-react";
 import type { TechnicalPhotoParams } from "@/lib/photo-editor";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -259,12 +262,14 @@ interface ActivePhotoCardProps {
   onEdit: (key: string) => void;
   isProcessing: boolean;
   photoOfLabel: string;
+  patientToken: string | null;
+  onMeasured: (key: string, measurement: PhotoMeasurement | null) => void;
 }
 
 function ActivePhotoCard({
   view, index, total, pendingDataUrl, pendingReview, acceptedDataUrl, savedOnServer, serverState,
   onFileSelected, onCameraCaptured, onAccept, onRetake, isProcessing, photoOfLabel,
-  onEdit,
+  onEdit, patientToken, onMeasured,
 }: ActivePhotoCardProps) {
   const { key: photoKey, title, description, tip, referenceVisual, color, orientation, aspectRatio, light, distance, background } = view;
   const galleryRef = useRef<HTMLInputElement>(null);
@@ -338,6 +343,7 @@ function ActivePhotoCard({
               </div>
             </div>
           )}
+          {view.measure && <div className="px-6 pb-4"><MeasureProtocol /></div>}
         </div>
 
         <div className="p-6">
@@ -439,6 +445,14 @@ function ActivePhotoCard({
                   <p className="whitespace-pre-wrap break-words text-foreground">{serverState.note}</p>
                 </div>
               )}
+              {view.measure && savedOnServer && serverState?.id && patientToken && (
+                <MeasureDialog
+                  endpoint={`/api/patients/${encodeURIComponent(patientToken)}/photos/${encodeURIComponent(serverState.id)}/measurement`}
+                  imageUrl={`/api/patients/${encodeURIComponent(patientToken)}/photos/${encodeURIComponent(serverState.id)}/original`}
+                  role="patient" measurement={serverState.measurement}
+                  onChanged={(measurement) => onMeasured(photoKey, measurement)}
+                />
+              )}
               <div className="flex gap-2.5 flex-wrap">
                 {/* Camera access is only requested when the patient taps "Tomar foto" */}
                 <button
@@ -493,6 +507,7 @@ type ServerPhotoState = {
   sizeBytes?: number;
   editParams?: unknown;
   note?: string | null;
+  measurement?: PhotoMeasurement | null;
 };
 
 // ---------- Resume token (this device only) ----------
@@ -663,13 +678,13 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
     let alive = true;
     fetch(`/api/patients/${encodeURIComponent(token)}/photos`)
       .then(response => response.ok ? response.json() : Promise.reject(new Error("No photo state")))
-      .then((payload: { photos?: Array<{ id: string; key: string; status: string; hasAdjusted?: boolean; width?: number | null; height?: number | null; mimeType?: string; sizeBytes?: number; editParams?: unknown; captureMetadata?: { technicalReview?: { warningCodes?: string[] } } }> }) => {
+      .then((payload: { photos?: Array<{ id: string; key: string; status: string; hasAdjusted?: boolean; width?: number | null; height?: number | null; mimeType?: string; sizeBytes?: number; editParams?: unknown; measurement?: PhotoMeasurement | null; captureMetadata?: { technicalReview?: { warningCodes?: string[] } } }> }) => {
         if (!alive) return;
         const confirmed = (payload.photos ?? []).filter(photo => photo.status === "confirmed");
         setSavedKeys(new Set(confirmed.map(photo => photo.key)));
         setServerPhotoStates(Object.fromEntries(confirmed.map(photo => [photo.key, {
           status: photo.status, review: photo.captureMetadata?.technicalReview, hasAdjusted: photo.hasAdjusted,
-          id: photo.id, width: photo.width, height: photo.height, mimeType: photo.mimeType, sizeBytes: photo.sizeBytes, editParams: photo.editParams,
+          id: photo.id, width: photo.width, height: photo.height, mimeType: photo.mimeType, sizeBytes: photo.sizeBytes, editParams: photo.editParams, measurement: photo.measurement ?? null,
         }])));
         if (confirmed.length > 0) setResumeOffer(true);
       })
@@ -1655,6 +1670,8 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
               onEdit={openTechnicalEditor}
               isProcessing={processingPhoto === activeReq.key}
               photoOfLabel={t.pPhotoOf.replace("{n}", String(currentPhotoIndex + 1)).replace("{total}", String(photoTotal))}
+              patientToken={patientToken}
+              onMeasured={(key, measurement) => setServerPhotoStates((current) => ({ ...current, [key]: { ...current[key], measurement } }))}
             />
 
             {/* Accepted photo thumbnails */}

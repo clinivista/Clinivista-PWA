@@ -29,6 +29,7 @@ import evolutionRouter from "./evolution";
 import portalRouter from "./portal";
 import transcriptionRouter from "./transcription";
 import captureSessionsRouter from "./capture-sessions";
+import measurementsRouter from "./measurements";
 import { createSession } from "../lib/sessions";
 import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
 import { resetThrottleForTests } from "../lib/patient-accounts";
@@ -54,6 +55,7 @@ app.use("/api", evolutionRouter);
 app.use("/api", portalRouter);
 app.use("/api", transcriptionRouter);
 app.use("/api", captureSessionsRouter);
+app.use("/api", measurementsRouter);
 
 // Fixture data only — not a real person.
 const VALID_BODY = {
@@ -975,9 +977,9 @@ describe("Dermatología (tercera especialidad)", () => {
     const lead = (await register({ clinicalData: answers }).expect(201)).body.lead;
     const protocol = await request(app).get(`/api/patients/${lead.token}/protocol`).expect(200);
     expect(protocol.body.views).toEqual([
-      { key: "dermOverview", label: "Vista panorámica", required: true },
-      { key: "dermClose", label: "Primer plano con referencia", required: true },
-      { key: "dermDermoscopy", label: "Dermatoscopía", required: false },
+      { key: "dermOverview", label: "Vista panorámica", required: true, measure: false },
+      { key: "dermClose", label: "Primer plano con referencia", required: true, measure: false },
+      { key: "dermDermoscopy", label: "Dermatoscopía", required: false, measure: false },
     ]);
     const phases = (await pglite.exec(`SELECT name FROM clinical_protocol_phases WHERE protocol_id LIKE 'derma-a%' ORDER BY position;`)) as Array<{ rows: Array<{ name: string }> }>;
     expect(phases[0].rows.map((r) => r.name)).toEqual(["Pre-evaluación", "Diagnóstico", "Tratamiento", "Control 1", "Control 2"]);
@@ -1095,6 +1097,65 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
   const completePhase = async (leadId: string, index: number) => {
     for (const view of (await phases(leadId))[index].views) await capture(leadId, view.id).expect(201);
   };
+
+  describe("medir la lesión con una moneda de referencia", () => {
+    const REF = [{ x: 100, y: 100 }, { x: 360, y: 100 }]; // 260 px = una moneda de $500 (26 mm) → 10 px por mm
+    const body = (over: Record<string, unknown> = {}) => ({
+      referenceId: "clp-500", referencePoints: REF, lesionPoints: [{ x: 100, y: 300 }, { x: 220, y: 300 }], imageWidth: 1000, imageHeight: 800, ...over,
+    });
+    async function frontalPhotoId(token: string) {
+      const list = await request(app).get(`/api/patients/${token}/photos`).expect(200);
+      return (list.body.photos ?? list.body).find((photo: { key: string }) => photo.key === "frontal").id as string;
+    }
+    const markMeasure = (key = "frontal") =>
+      pglite.exec(`UPDATE clinical_protocol_views SET requirements = requirements || '{"measure": true}'::jsonb WHERE key = '${key}'`);
+
+    it("el paciente mide su foto: el servidor calcula la medida y la muestra en su lista", async () => {
+      const lead = await patientWithPreEvaluation();
+      await markMeasure();
+      const photoId = await frontalPhotoId(lead.token);
+      const saved = await request(app).put(`/api/patients/${lead.token}/photos/${photoId}/measurement`).send(body()).expect(200);
+      expect(saved.body.measurement).toMatchObject({ referenceId: "clp-500", referenceMm: 26, lengthMm: 12, by: "patient" });
+      expect(saved.body.measurement.uncertaintyPct).toBeGreaterThanOrEqual(5);
+      expect((await request(app).get(`/api/patients/${lead.token}/photos`)).body).toBeDefined();
+      const staffView = (await listPhases(lead.id))[0].views.find((view) => view.key === "frontal") as unknown as { measure: boolean; photo: { measurement: { lengthMm: number } } };
+      expect(staffView.measure).toBe(true);
+      expect(staffView.photo.measurement.lengthMm).toBe(12);
+      const protocol = await request(app).get(`/api/patients/${lead.token}/protocol`).expect(200);
+      expect(protocol.body.views.find((view: { key: string }) => view.key === "frontal").measure).toBe(true);
+      expect(protocol.body.views.find((view: { key: string }) => view.key === "vertex").measure).toBe(false);
+      await request(app).delete(`/api/patients/${lead.token}/photos/${photoId}/measurement`).expect(200);
+      expect((await listPhases(lead.id))[0].views.find((view) => view.key === "frontal")?.photo).toMatchObject({ measurement: null });
+    });
+
+    it("rechaza lo que no sirve: foto sin la marca, moneda desconocida, puntos fuera de la foto o referencia propia del paciente", async () => {
+      const lead = await patientWithPreEvaluation();
+      await markMeasure();
+      const photoId = await frontalPhotoId(lead.token);
+      const put = (payload: unknown, id = photoId) => request(app).put(`/api/patients/${lead.token}/photos/${id}/measurement`).send(payload as object);
+      expect((await put(body({ referenceId: "clp-1" }))).status).toBe(400);
+      expect((await put(body({ referenceId: "custom", referenceMm: 10 }))).status).toBe(400);
+      expect((await put(body({ lesionPoints: [{ x: 5000, y: 0 }, { x: 10, y: 10 }] }))).status).toBe(400);
+      expect((await put(body({ referencePoints: [{ x: 10, y: 10 }, { x: 15, y: 10 }] }))).status).toBe(400);
+      expect((await put({ referenceId: "clp-500" })).status).toBe(400);
+      const other = (await request(app).get(`/api/patients/${lead.token}/photos`).expect(200)).body;
+      const vertex = (other.photos ?? other).find((photo: { key: string }) => photo.key === "vertex").id as string;
+      expect((await put(body(), vertex)).status).toBe(400); // la vista «vertex» no está marcada para medir
+      expect((await request(app).put(`/api/patients/token-que-no-existe-1/photos/${photoId}/measurement`).send(body())).status).toBe(404);
+    });
+
+    it("el personal mide o corrige cualquier foto marcada de su clínica, también con una regla propia", async () => {
+      const lead = await patientWithPreEvaluation();
+      await markMeasure();
+      const photoId = await frontalPhotoId(lead.token);
+      await request(app).put(`/api/leads/${lead.id}/photos/${photoId}/measurement`).send(body()).expect(401);
+      const staffSaved = await request(app).put(`/api/leads/${lead.id}/photos/${photoId}/measurement`).set("Cookie", staff())
+        .send(body({ referenceId: "custom", referenceMm: 10, referencePoints: [{ x: 0, y: 0 }, { x: 100, y: 0 }], lesionPoints: [{ x: 0, y: 50 }, { x: 250, y: 50 }] })).expect(200);
+      expect(staffSaved.body.measurement).toMatchObject({ by: "staff", referenceMm: 10, lengthMm: 25 });
+      expect((await request(app).put(`/api/leads/${lead.id}/photos/${photoId}/measurement`).set("Cookie", staff("otra-clinica")).send(body())).status).toBe(404);
+      await request(app).delete(`/api/leads/${lead.id}/photos/${photoId}/measurement`).set("Cookie", staff()).expect(200);
+    });
+  });
 
   describe("continuar en el celular", () => {
     const open = async (leadId: string, phaseId: string, cookie = staff()) =>

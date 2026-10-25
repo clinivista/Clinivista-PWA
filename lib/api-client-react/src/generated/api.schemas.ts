@@ -158,6 +158,8 @@ export interface ClinicProtocolView {
   hasPhotos: boolean;
   /** The photo is a document (e.g. a handwritten sheet) that staff can transcribe. */
   document: boolean;
+  /** The lesion is measured on this photo with a reference coin next to it. */
+  measure: boolean;
 }
 
 export type ClinicProtocolPhaseKind = typeof ClinicProtocolPhaseKind[keyof typeof ClinicProtocolPhaseKind];
@@ -188,6 +190,8 @@ export interface ClinicProtocolViewInput {
   label: string;
   /** Mark the photo as a document. When omitted, an existing photo keeps its current value. */
   document?: boolean;
+  /** Mark the photo as one where the lesion is measured. When omitted, an existing photo keeps its current value. */
+  measure?: boolean;
 }
 
 export interface ClinicProtocolPhaseInput {
@@ -204,6 +208,8 @@ export interface PatientProtocolView {
   key: string;
   label: string;
   required: boolean;
+  /** The patient measures the lesion on this photo, with a coin next to it. */
+  measure?: boolean;
 }
 
 export interface PatientProtocol {
@@ -509,6 +515,34 @@ export interface PhotoEntry {
   createdAt: string;
 }
 
+export interface PhotoMeasurementPoint {
+  x: number;
+  y: number;
+}
+
+export type PhotoMeasurementBy = typeof PhotoMeasurementBy[keyof typeof PhotoMeasurementBy];
+
+
+export const PhotoMeasurementBy = {
+  patient: 'patient',
+  staff: 'staff',
+} as const;
+
+export interface PhotoMeasurement {
+  referenceId: string;
+  referenceMm: number;
+  referencePx: number;
+  referencePoints: PhotoMeasurementPoint[];
+  lesionPoints: PhotoMeasurementPoint[];
+  imageWidth: number;
+  imageHeight: number;
+  lengthMm: number;
+  uncertaintyPct: number;
+  by: PhotoMeasurementBy;
+  byName: string;
+  at: string;
+}
+
 export type PatientPhotoStatusStatus = typeof PatientPhotoStatusStatus[keyof typeof PatientPhotoStatusStatus];
 
 
@@ -546,6 +580,7 @@ export interface PatientPhotoStatus {
   /** @nullable */
   height?: number | null;
   captureMetadata?: unknown;
+  measurement?: PhotoMeasurement | null;
   /**
      * Optional description the patient wrote for this photo
      * @nullable
@@ -894,6 +929,7 @@ export interface LeadPhaseView {
   label: string;
   required: boolean;
   document: boolean;
+  measure: boolean;
   transcription: PhotoTranscription | null;
   photo: PatientPhotoStatus | null;
 }

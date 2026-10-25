@@ -984,6 +984,14 @@
     },
     {
      "t": "h3",
+     "text": "Bir madeni parayla lezyon ölçme"
+    },
+    {
+     "t": "p",
+     "text": "Klinik bir fotoğrafı Aşamalar'da «Ölç» olarak işaretlediyse hasta, lezyonun yanına Şili madeni parası koyarak evde ölçer; siz de fotoğrafın altındaki «Ölç» düğmesiyle ölçebilir veya düzeltebilirsiniz. Parayı seçin, karşılıklı iki kenarına, sonra lezyonun iki ucuna dokunun; noktalar sürüklenebilir. Sonuç hata payıyla (±) gösterilir. Yaklaşık bir ölçümdür, takip içindir, tanı için değil: fotoğraf karşıdan, eğimsiz çekilmeli ve para lezyonla aynı mesafede olmalı. Kendi cetvelinizi kullanmak için «Başka referans» seçip boyutunu girin."
+    },
+    {
+     "t": "h3",
      "text": "Telefonda devam et"
     },
     {
@@ -1312,6 +1320,10 @@
     {
      "t": "p",
      "text": "Bir fotoğraf bir kâğıtsa (form, onam) yanındaki «Documento» kutusunu işaretle: altında personel metni yazıya dökebilir."
+    },
+    {
+     "t": "p",
+     "text": "Lezyon bu fotoğrafta ölçülecekse «Ölç» kutusunu işaretleyin: hasta Şili referans parasının nasıl kullanılacağını görür ve kendisi ölçebilir."
     },
     {
      "t": "h3",

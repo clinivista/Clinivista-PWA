@@ -11,4 +11,6 @@ export interface ClinicProtocolViewInput {
   label: string;
   /** Mark the photo as a document. When omitted, an existing photo keeps its current value. */
   document?: boolean;
+  /** Mark the photo as one where the lesion is measured. When omitted, an existing photo keeps its current value. */
+  measure?: boolean;
 }

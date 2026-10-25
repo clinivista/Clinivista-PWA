@@ -1,3 +1,4 @@
+import { MeasurementError, computeMeasurement, readMeasurement, type PhotoMeasurement } from "./measurement";
 import crypto from "crypto";
 import sharp from "sharp";
 import { and, asc, eq, inArray, isNull, ne, or } from "drizzle-orm";
@@ -61,6 +62,8 @@ export type PhotoStatus = {
   width: number | null;
   height: number | null;
   captureMetadata: unknown;
+  /** Medida de la lesión sobre la foto (con una moneda de referencia), si alguien la marcó. */
+  measurement: PhotoMeasurement | null;
   note: string | null;
   editParams?: unknown;
 };
@@ -82,6 +85,7 @@ function photoStatus(photo: ClinicalPhoto, view: { key: string; label: string })
     width: photo.width,
     height: photo.height,
     captureMetadata: photo.captureMetadata,
+    measurement: readMeasurement(photo.captureMetadata),
     note: photo.note ?? null,
     ...(photo.editParams ? { editParams: photo.editParams } : {}),
   };
@@ -710,6 +714,8 @@ export type LeadPhaseView = {
   required: boolean;
   /** La foto de esta vista es un documento (p. ej. una ficha manuscrita): el personal puede transcribirla. */
   document: boolean;
+  /** La clínica pidió medir la lesión en esta foto con una moneda de referencia. */
+  measure: boolean;
   /** Transcripción de la foto actual (solo el personal la ve). */
   transcription: {
     text: string;
@@ -792,6 +798,7 @@ export async function getLeadPhases(lead: Lead): Promise<LeadPhase[]> {
           label: view.label,
           required: (view.requirements as Record<string, unknown> | null)?.required !== false,
           document: (view.requirements as Record<string, unknown> | null)?.document === true,
+          measure: (view.requirements as Record<string, unknown> | null)?.measure === true,
           transcription: photo && transcriptions.has(photo.id)
             ? (() => {
                 const row = transcriptions.get(photo.id)!;
@@ -958,4 +965,23 @@ async function writeAuditEvent(
     actorId,
     details,
   });
+}
+export { MeasurementError };
+
+/**
+ * Guarda (o, con `body === null`, borra) la medida de una foto. La foto debe pertenecer a una vista que la clínica
+ * marcó como «medir»; el paciente solo puede medir las de su pre-evaluación.
+ */
+export async function saveMeasurement(lead: Lead, photoId: string, actor: { type: "patient" | "staff"; id: string; name: string }, body: unknown | null): Promise<PhotoStatus | null> {
+  const located = actor.type === "patient" ? await findOwnedPatientPhoto(lead, photoId) : await findOwnedPhoto(lead, photoId);
+  if (!located || !isVisible(located.photo.status)) return null;
+  if ((located.view.requirements as Record<string, unknown> | null)?.measure !== true) {
+    throw new MeasurementError("Esta fotografía no está marcada para medir.");
+  }
+  const metadata = { ...((located.photo.captureMetadata as Record<string, unknown> | null) ?? {}) };
+  if (body === null) delete metadata.measurement;
+  else metadata.measurement = computeMeasurement(body, actor.type, actor.name);
+  const [photo] = await db.update(clinicalPhotosTable).set({ captureMetadata: metadata }).where(eq(clinicalPhotosTable.id, photoId)).returning();
+  await writeAuditEvent(photo, body === null ? "measurement_removed" : "measured", actor.type, actor.id, body === null ? {} : { lengthMm: (metadata.measurement as PhotoMeasurement).lengthMm });
+  return photoStatus(photo, located.view);
 }
