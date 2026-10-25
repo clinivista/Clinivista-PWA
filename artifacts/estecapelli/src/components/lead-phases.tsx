@@ -16,6 +16,7 @@ import { STAFF_FLOW_TEXT } from "@/lib/staff-flow-i18n";
 import { DischargeControl, SkipPhaseButton, SkippedNote } from "@/components/phase-actions";
 import { PhaseAttention } from "@/components/phase-attention";
 import { PhotoTranscription } from "@/components/photo-transcription";
+import { CaptureHandoff } from "@/components/capture-handoff";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const MAX_SIDE = 2400;
@@ -210,6 +211,7 @@ export function LeadPhases({ leadId, onExpand, diagnosisLead, process }: { leadI
                 <>
                   {phase.attentionRequired && <PhaseAttention leadId={leadId} phase={phase} readOnly={!processOpen && !!process} />}
                   {phase.patientCaptured && <p className="text-xs text-muted-foreground mt-2">{s.staffTakes}</p>}
+                  {phase.staffCanCapture && <div className="mt-3 flex justify-end"><CaptureHandoff leadId={leadId} phase={phase} /></div>}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
                     {phase.views.map((view) => (
                       <ViewSlot key={view.id} leadId={leadId} phase={phase} view={view} disabled={false} onExpand={onExpand} />

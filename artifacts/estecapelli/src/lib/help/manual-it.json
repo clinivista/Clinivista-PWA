@@ -981,6 +981,14 @@
     {
      "t": "p",
      "text": "Se la clinica ha contrassegnato una foto come «Documento» in Fasi (ad esempio la scheda tecnica scritta a mano), sotto l'immagine compare il riquadro «Trascrizione». Premi «Trascrivi» perché il sistema legga il documento e ne scriva il testo; lo vede solo il personale, mai il paziente. Il testo è modificabile: controllalo, correggilo e premi «Salva testo». Ogni clinica ha una quota mensile di trascrizioni (il riquadro indica quante restano); se è esaurita o la funzione non è disponibile, usa «Scrivi a mano». Se il risultato è scarso e la tua clinica ha abilitato il modello avanzato, «Riprova con il modello avanzato» fa una nuova lettura e conta come 2 trascrizioni. Una trascrizione automatica può contenere errori, soprattutto con la scrittura a mano: controllala sempre."
+    },
+    {
+     "t": "h3",
+     "text": "Continua sul cellulare"
+    },
+    {
+     "t": "p",
+     "text": "In ogni fase con foto, il pulsante «Continua sul cellulare» mostra un codice QR. Inquadralo con la fotocamera di un cellulare (o di un altro dispositivo) e scatta le foto di quella fase; compaiono da sole su questa schermata. Il link vale solo per quella fase di quel paziente, scade dopo 20 minuti e non mostra dati del paziente. Al termine tocca «Termina e torna indietro» oppure chiudi il link da qui."
     }
    ],
    "key": "phases"

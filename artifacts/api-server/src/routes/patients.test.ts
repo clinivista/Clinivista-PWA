@@ -28,6 +28,7 @@ import resultsRouter from "./results";
 import evolutionRouter from "./evolution";
 import portalRouter from "./portal";
 import transcriptionRouter from "./transcription";
+import captureSessionsRouter from "./capture-sessions";
 import { createSession } from "../lib/sessions";
 import { DEFAULT_CENTER_ID } from "../lib/clinical-photos";
 import { resetThrottleForTests } from "../lib/patient-accounts";
@@ -52,6 +53,7 @@ app.use("/api", resultsRouter);
 app.use("/api", evolutionRouter);
 app.use("/api", portalRouter);
 app.use("/api", transcriptionRouter);
+app.use("/api", captureSessionsRouter);
 
 // Fixture data only — not a real person.
 const VALID_BODY = {
@@ -163,6 +165,10 @@ beforeAll(async () => {
        transcribed_by_user_id text, transcribed_by_name text, transcribed_at timestamptz NOT NULL DEFAULT now(),
        edited_by_name text, edited_at timestamptz
      );
+     CREATE TABLE IF NOT EXISTS capture_sessions (
+       token_hash text PRIMARY KEY, lead_id text NOT NULL, center_id text NOT NULL, phase_id text NOT NULL,
+       created_by_user_id text NOT NULL, expires_at timestamptz NOT NULL, closed_at timestamptz, created_at timestamptz NOT NULL DEFAULT now()
+     );
      CREATE TABLE IF NOT EXISTS clinic_transcription_settings (
        center_id text PRIMARY KEY, monthly_quota integer NOT NULL DEFAULT 100, advanced_enabled boolean NOT NULL DEFAULT false,
        updated_at timestamptz NOT NULL DEFAULT now()
@@ -199,6 +205,7 @@ beforeEach(async () => {
     DELETE FROM patient_accounts;
     DELETE FROM clinical_photo_annotations;
     DELETE FROM clinical_photo_transcriptions;
+    DELETE FROM capture_sessions;
     DELETE FROM clinic_transcription_settings;
     DELETE FROM clinic_transcription_usage;
     DELETE FROM clinical_diagnosis_events;
@@ -1088,6 +1095,63 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
   const completePhase = async (leadId: string, index: number) => {
     for (const view of (await phases(leadId))[index].views) await capture(leadId, view.id).expect(201);
   };
+
+  describe("continuar en el celular", () => {
+    const open = async (leadId: string, phaseId: string, cookie = staff()) =>
+      request(app).post(`/api/leads/${leadId}/phases/${phaseId}/capture-session`).set("Cookie", cookie);
+
+    it("el celular fotografía una sola fase con el enlace, y la tablet ve las fotos", async () => {
+      const lead = await patientReadyForCapture();
+      const phase = (await phases(lead.id))[2];
+      const created = await (await open(lead.id, phase.id)).body;
+      expect(created.path).toBe(`/captura/${created.token}`);
+
+      const info = await request(app).get(`/api/capture/${created.token}`).expect(200);
+      expect(info.body.views).toHaveLength(phase.views.length);
+      expect(JSON.stringify(info.body)).not.toContain(lead.email ?? "@");
+      expect(info.body.views.every((view: { taken: boolean }) => !view.taken)).toBe(true);
+
+      const target = phase.views[0];
+      await request(app).post(`/api/capture/${created.token}/views/${target.id}/photo`).set("Content-Type", "image/jpeg").send(JPEG).expect(201);
+      const after = (await phases(lead.id))[2];
+      expect(after.views.find((view) => view.id === target.id)?.photo).not.toBeNull();
+      expect((await request(app).get(`/api/capture/${created.token}`)).body.views.find((view: { id: string }) => view.id === target.id).taken).toBe(true);
+
+      // Not a view of this phase → rejected.
+      const other = (await phases(lead.id))[0].views[0];
+      await request(app).post(`/api/capture/${created.token}/views/${other.id}/photo`).set("Content-Type", "image/jpeg").send(JPEG).expect(404);
+
+      await request(app).post(`/api/capture/${created.token}/finish`).expect(200);
+      await request(app).get(`/api/capture/${created.token}`).expect(410);
+      await request(app).post(`/api/capture/${created.token}/views/${target.id}/photo`).set("Content-Type", "image/jpeg").send(JPEG).expect(410);
+    });
+
+    it("solo el personal de la clínica abre el enlace, y solo para fases que se pueden fotografiar", async () => {
+      const lead = await patientReadyForCapture();
+      const list = await phases(lead.id);
+      await request(app).post(`/api/leads/${lead.id}/phases/${list[2].id}/capture-session`).expect(401);
+      expect((await open(lead.id, list[2].id, staff("otra-clinica"))).status).toBe(404);
+      expect((await open(lead.id, "no-existe")).status).toBe(404);
+      const diagnosis = list.find((phase) => phase.kind === "diagnosis");
+      if (diagnosis) expect((await open(lead.id, diagnosis.id)).status).toBe(400);
+      // Una fase todavía bloqueada no se puede abrir en el celular.
+      const locked = list.find((phase) => !phase.enabled);
+      if (locked) expect((await open(lead.id, locked.id)).status).toBe(409);
+    });
+
+    it("un enlace nuevo reemplaza al anterior; uno inventado o vencido no sirve", async () => {
+      const lead = await patientReadyForCapture();
+      const phase = (await phases(lead.id))[2];
+      const first = (await open(lead.id, phase.id)).body;
+      const second = (await open(lead.id, phase.id)).body;
+      await request(app).get(`/api/capture/${first.token}`).expect(410);
+      await request(app).get(`/api/capture/${second.token}`).expect(200);
+      await request(app).get(`/api/capture/${"x".repeat(43)}`).expect(410);
+      await request(app).get("/api/capture/corto").expect(410);
+      await pglite.exec(`UPDATE capture_sessions SET expires_at = now() - interval '1 minute'`);
+      await request(app).get(`/api/capture/${second.token}`).expect(410);
+    });
+  });
 
   it("los estados cambian solos con cada etapa: incompleto → listo → contactar → agendado → operado → completado", async () => {
     const lead = await patientWithPreEvaluation(false);

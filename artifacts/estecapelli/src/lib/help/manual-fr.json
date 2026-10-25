@@ -981,6 +981,14 @@
     {
      "t": "p",
      "text": "Si la clinique a marqué une photo comme «Documento» dans Phases (par exemple la fiche technique manuscrite), un cadre «Transcription» apparaît sous l'image. Appuyez sur «Transcrire» pour que le système lise le document et écrive son texte ; seul le personnel le voit, jamais le patient. Le texte est modifiable : relisez-le, corrigez-le et appuyez sur «Enregistrer le texte». Chaque clinique a un quota mensuel de transcriptions (le cadre indique combien il en reste) ; s'il est épuisé ou si la fonction est indisponible, utilisez «Saisir à la main». Si le résultat est mauvais et que votre clinique a activé le modèle avancé, «Réessayer avec le modèle avancé» fait une nouvelle lecture et compte pour 2 transcriptions. Une transcription automatique peut contenir des erreurs, surtout avec une écriture manuscrite : relisez-la toujours."
+    },
+    {
+     "t": "h3",
+     "text": "Continuer sur le téléphone"
+    },
+    {
+     "t": "p",
+     "text": "Dans chaque phase avec photos, le bouton «Continuer sur le téléphone» affiche un code QR. Scannez-le avec l'appareil photo d'un téléphone (ou d'un autre appareil) et prenez les photos de cette phase ; elles apparaissent seules sur cet écran. Le lien ne sert que pour cette phase de ce patient, expire après 20 minutes et n'affiche aucune donnée du patient. Une fois terminé, touchez «Terminer et revenir» ou fermez le lien ici."
     }
    ],
    "key": "phases"

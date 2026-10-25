@@ -269,4 +269,17 @@ export const transcriptionUsageTable = pgTable("clinic_transcription_usage", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// «Continuar en el celular»: el personal abre una sesión corta para UNA fase de UN paciente y el
+// celular sube las fotos con el token de un solo enlace (solo se guarda el hash del token).
+export const captureSessionsTable = pgTable("capture_sessions", {
+  tokenHash: text("token_hash").primaryKey(),
+  leadId: text("lead_id").notNull(),
+  centerId: text("center_id").notNull(),
+  phaseId: text("phase_id").notNull(),
+  createdByUserId: text("created_by_user_id").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  closedAt: timestamp("closed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type PhotoTranscription = typeof photoTranscriptionsTable.$inferSelect;

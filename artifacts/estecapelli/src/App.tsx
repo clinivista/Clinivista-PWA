@@ -1,3 +1,4 @@
+import Capture from "@/pages/capture";
 import { type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -39,6 +40,7 @@ function Router() {
         <Route path="/" component={HomeWithTokenRedirect} />
         <Route path="/patient">{() => <Patient />}</Route>
         <Route path="/c/:slug" component={ClinicPatient} />
+        <Route path="/captura/:token" component={Capture} />
         <Route path="/paciente" component={Portal} />
         <Route path="/paciente/clave" component={PortalSetPassword} />
         <Route path="/privacidad" component={Privacy} />

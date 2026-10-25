@@ -981,6 +981,14 @@
     {
      "t": "p",
      "text": "Si la clínica marcó una fotografía como «Documento» en Fases (por ejemplo la ficha técnica escrita a mano), debajo de la imagen aparece el recuadro «Transcripción». Pulsa «Transcribir» para que el sistema lea el documento y escriba su texto; solo lo ve el personal, nunca el paciente. El texto es editable: revísalo, corrígelo y pulsa «Guardar texto». Cada clínica tiene una cuota mensual de transcripciones (el recuadro indica cuántas quedan); si se agota o la función no está disponible, usa «Escribir a mano». Si el resultado es malo y tu clínica tiene habilitado el modelo avanzado, «Reintentar con modelo avanzado» hace una nueva lectura y cuenta como 2 transcripciones. Una transcripción automática puede tener errores, sobre todo con letra manuscrita: revísala siempre."
+    },
+    {
+     "t": "h3",
+     "text": "Continuar en el celular"
+    },
+    {
+     "t": "p",
+     "text": "En cada fase con fotos, el botón «Continuar en el celular» muestra un código QR. Escanéalo con la cámara de un celular (u otro dispositivo con cámara) y toma las fotos de esa fase; aparecen solas en esta pantalla. El enlace sirve solo para esa fase de ese paciente, vence a los 20 minutos y no muestra datos del paciente. Al terminar pulsa «Terminar y volver», o cierra el enlace desde aquí."
     }
    ],
    "key": "phases"
