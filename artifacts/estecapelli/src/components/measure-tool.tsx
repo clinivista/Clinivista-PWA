@@ -7,6 +7,7 @@ import { useLanguage } from "@/lib/language";
 import { MEASURE_TEXT, coinLabel } from "@/lib/measure-i18n";
 import { MEASURE_REFERENCES, estimateMeasurement, type Point } from "@/lib/measure-references";
 import { TILT_WARNING_RATIO, findCoin, imageSampler } from "@/lib/coin-detect";
+import { findLesionExtremes } from "@/lib/lesion-detect";
 
 export type MeasurePayload = {
   referenceId: string; referenceMm?: number; referencePoints: Point[]; lesionPoints: Point[]; imageWidth: number; imageHeight: number;
@@ -46,6 +47,9 @@ export function MeasureTool({ imageUrl, role, initial, onSave, onRemove, onClose
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   // Resultado de buscar la moneda sola: "off" mientras no se ha intentado o ya hay puntos guardados.
+  // Modo "marcar la lesión sola": el próximo toque dentro de la lesión es el punto de partida.
+  const [seedMode, setSeedMode] = useState(false);
+  const [lesionNote, setLesionNote] = useState<"" | "found" | "missing">("");
   const [auto, setAuto] = useState<{ state: "off" | "searching" | "found" | "missing"; axisRatio?: number; placed: boolean }>({ state: "off", placed: false });
 
   const detectCoin = (img: HTMLImageElement, place: boolean) => {
@@ -128,6 +132,18 @@ export function MeasureTool({ imageUrl, role, initial, onSave, onRemove, onClose
     } catch { /* la lupa es solo una ayuda */ }
   };
 
+  const proposeLesion = (seed: Point) => {
+    const img = imgRef.current;
+    setSeedMode(false);
+    if (!img || !natural) return;
+    const coinFit = refPoints.length === 2
+      ? { center: { x: (refPoints[0].x + refPoints[1].x) / 2, y: (refPoints[0].y + refPoints[1].y) / 2 }, radius: Math.hypot(refPoints[0].x - refPoints[1].x, refPoints[0].y - refPoints[1].y) / 2 }
+      : undefined;
+    let fit = null;
+    try { fit = findLesionExtremes(natural.w, natural.h, imageSampler(img), seed, coinFit); } catch { fit = null; }
+    if (fit) { setLesionPoints(fit.points); setLesionNote("found"); } else setLesionNote("missing");
+  };
+
   const onPointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
     const point = toImagePoint(event);
     if (!point) return;
@@ -138,6 +154,7 @@ export function MeasureTool({ imageUrl, role, initial, onSave, onRemove, onClose
       drawLoupe(point);
       return;
     }
+    if (seedMode && step === "lesion" && lesionPoints.length === 0) { proposeLesion(point); return; }
     if (step === "ref") setRefPoints((points) => (points.length < 2 ? [...points, point] : points));
     else if (lesionPoints.length < 2) setLesionPoints((points) => [...points, point]);
   };
@@ -154,7 +171,7 @@ export function MeasureTool({ imageUrl, role, initial, onSave, onRemove, onClose
     if (lesionPoints.length > 0) setLesionPoints((points) => points.slice(0, -1));
     else setRefPoints((points) => points.slice(0, -1));
   };
-  const reset = () => { setRefPoints([]); setLesionPoints([]); setError(""); setAuto({ state: "off", placed: false }); };
+  const reset = () => { setRefPoints([]); setLesionPoints([]); setError(""); setAuto({ state: "off", placed: false }); setSeedMode(false); setLesionNote(""); };
 
   const custom = referenceId === "custom";
   const estimate = useMemo(() => estimateMeasurement({
@@ -197,6 +214,14 @@ export function MeasureTool({ imageUrl, role, initial, onSave, onRemove, onClose
         </label>
       )}
       <p className="text-sm font-semibold text-primary" data-testid="measure-step">{step === "ref" ? c.stepCoin : c.stepLesion}</p>
+      {step === "lesion" && lesionPoints.length === 0 && (
+        <div className="flex flex-col gap-1.5">
+          <Button type="button" variant="outline" className="rounded-full self-start" aria-pressed={seedMode} onClick={() => { setSeedMode((on) => !on); setLesionNote(""); }} data-testid="measure-auto-lesion">{c.autoLesion}</Button>
+          {seedMode && <p className="text-xs text-primary font-semibold" role="status" data-testid="measure-seed-hint">{c.seedHint}</p>}
+        </div>
+      )}
+      {lesionNote === "found" && <p className="text-xs text-muted-foreground" role="status" data-testid="measure-lesion-note">{c.lesionFound}</p>}
+      {lesionNote === "missing" && <p className="text-xs text-muted-foreground" role="status" data-testid="measure-lesion-note">{c.lesionMissing}</p>}
       {auto.state === "searching" && <p className="text-xs text-muted-foreground flex items-center gap-1.5" role="status" data-testid="measure-auto"><Loader2 className="w-3.5 h-3.5 animate-spin" />{c.detecting}</p>}
       {auto.state === "found" && auto.placed && <p className="text-xs text-muted-foreground" role="status" data-testid="measure-auto">{c.autoFound}</p>}
       {auto.state === "missing" && <p className="text-xs text-muted-foreground" role="status" data-testid="measure-auto">{c.autoNotFound}</p>}

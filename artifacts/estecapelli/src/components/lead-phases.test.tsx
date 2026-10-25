@@ -54,6 +54,19 @@ describe("LeadPhases", () => {
     expect(screen.getAllByTestId("measure-open")).toHaveLength(1);
   });
 
+  it("muestra cómo cambia la medida entre fases", () => {
+    const measured = (id: string, mm: number) => ({ id, measurement: { lengthMm: mm, uncertaintyPct: 7, at: "2026-01-01T00:00:00Z", by: "patient" } });
+    api.phases = [
+      phase("p1", "Pre-evaluación", { patientCaptured: true, enabled: true, complete: true, views: [{ ...view("p1-a", "Lesión", "f1"), measure: true, photo: measured("f1", 10) }] }),
+      phase("p2", "Control 1", { enabled: true, views: [{ ...view("p2-a", "Lesión", "f2"), measure: true, photo: measured("f2", 15) }] }),
+    ];
+    render(<LeadPhases leadId="lead-1" onExpand={vi.fn()} />);
+    const trend = screen.getByTestId("measure-trend");
+    expect(within(trend).getAllByTestId("measure-trend-row")).toHaveLength(2);
+    expect(trend).toHaveTextContent("primera medida");
+    expect(trend).toHaveTextContent("aumentó 50 % (5,0 mm)");
+  });
+
   it("pide la fecha y el ID de la atención en la fase abierta y los guarda", async () => {
     const user = userEvent.setup();
     api.phases = [

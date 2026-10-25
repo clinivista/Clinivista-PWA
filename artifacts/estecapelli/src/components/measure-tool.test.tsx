@@ -5,7 +5,8 @@ import { MeasureTool } from "./measure-tool";
 import { MeasureDialog } from "./measure-dialog";
 import { MeasureProtocol } from "./measure-protocol";
 
-const coin = vi.hoisted(() => ({ fit: null as unknown }));
+const coin = vi.hoisted(() => ({ fit: null as unknown, lesion: null as unknown }));
+vi.mock("@/lib/lesion-detect", () => ({ findLesionExtremes: () => coin.lesion }));
 vi.mock("@/lib/coin-detect", async (original) => ({ ...(await original<typeof import("@/lib/coin-detect")>()), findCoin: () => coin.fit }));
 
 // jsdom no carga imágenes ni mide la pantalla: se fija un lienzo de 1000×800 mostrado a 500×400 px.
@@ -14,7 +15,7 @@ beforeEach(() => {
   Object.defineProperty(HTMLImageElement.prototype, "naturalHeight", { configurable: true, get: () => 800 });
   vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({ left: 0, top: 0, width: 500, height: 400, right: 500, bottom: 400, x: 0, y: 0, toJSON: () => ({}) });
 });
-afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); coin.fit = null; });
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); coin.fit = null; coin.lesion = null; });
 
 const tap = (x: number, y: number) => {
   const surface = screen.getByTestId("measure-surface");
@@ -66,6 +67,33 @@ describe("MeasureTool: moneda detectada sola", () => {
     await waitFor(() => expect(screen.getByTestId("measure-auto")).toHaveTextContent("No pudimos encontrar la moneda"));
     expect(screen.getByTestId("measure-step")).toHaveTextContent("Paso 1 de 2");
     expect(screen.getByText("Buscar la moneda otra vez")).toBeInTheDocument();
+  });
+});
+
+describe("MeasureTool: lesión marcada sola", () => {
+  it("al tocar dentro de la lesión propone sus extremos y calcula la medida", async () => {
+    coin.lesion = { points: [{ x: 100, y: 400 }, { x: 220, y: 400 }], areaFraction: 0.05 };
+    render(<MeasureTool imageUrl="/x.jpg" role="patient" onSave={vi.fn()} onClose={vi.fn()} />);
+    await ready();
+    tap(50, 50); tap(180, 50); // moneda de $500: 10 px por mm
+    await userEvent.click(screen.getByTestId("measure-auto-lesion"));
+    expect(screen.getByTestId("measure-seed-hint")).toBeInTheDocument();
+    tap(80, 200);
+    expect(await screen.findByTestId("measure-lesion-note")).toHaveTextContent("Marcamos los extremos");
+    expect(screen.getByTestId("measure-result")).toHaveTextContent("12,0 mm");
+    expect(screen.queryByTestId("measure-auto-lesion")).not.toBeInTheDocument();
+  });
+
+  it("si no puede delimitarla lo dice y el toque siguiente se marca a mano", async () => {
+    coin.lesion = null;
+    render(<MeasureTool imageUrl="/x.jpg" role="patient" onSave={vi.fn()} onClose={vi.fn()} />);
+    await ready();
+    tap(50, 50); tap(180, 50);
+    await userEvent.click(screen.getByTestId("measure-auto-lesion"));
+    tap(80, 200);
+    expect(await screen.findByTestId("measure-lesion-note")).toHaveTextContent("No pudimos delimitar");
+    tap(50, 200); tap(110, 200);
+    expect(screen.getByTestId("measure-result")).toHaveTextContent("12,0 mm");
   });
 });
 

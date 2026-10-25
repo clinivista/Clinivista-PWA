@@ -988,7 +988,7 @@
     },
     {
      "t": "p",
-     "text": "Hat die Klinik ein Foto in Phasen als «Messen» markiert, misst der Patient die Läsion zu Hause mit einer danebengelegten chilenischen Münze; Sie können sie mit der Schaltfläche «Messen» unter dem Foto messen oder korrigieren. Wählen Sie die Münze, tippen Sie zwei gegenüberliegende Ränder an, dann die beiden Enden der Läsion; Punkte lassen sich verschieben. Das Ergebnis zeigt die Fehlertoleranz (±). Es ist ein Näherungswert für die Verlaufskontrolle, nicht für die Diagnose: Foto frontal, ohne Neigung, Münze in gleicher Entfernung wie die Läsion. Für ein eigenes Lineal wählen Sie «Andere Referenz» und geben die Größe an. Die App versucht, die Münze selbst zu finden, und schlägt ihre Ränder vor; wirkt die Münze oval, warnt sie vor einem geneigten Foto und vergrößert die Fehlertoleranz. Die Erkennung läuft auf dem Gerät selbst: Das Foto wird an keinen Dritten gesendet."
+     "text": "Hat die Klinik ein Foto in Phasen als «Messen» markiert, misst der Patient die Läsion zu Hause mit einer danebengelegten chilenischen Münze; Sie können sie mit der Schaltfläche «Messen» unter dem Foto messen oder korrigieren. Wählen Sie die Münze, tippen Sie zwei gegenüberliegende Ränder an, dann die beiden Enden der Läsion; Punkte lassen sich verschieben. Das Ergebnis zeigt die Fehlertoleranz (±). Es ist ein Näherungswert für die Verlaufskontrolle, nicht für die Diagnose: Foto frontal, ohne Neigung, Münze in gleicher Entfernung wie die Läsion. Für ein eigenes Lineal wählen Sie «Andere Referenz» und geben die Größe an. Die App versucht, die Münze selbst zu finden, und schlägt ihre Ränder vor; wirkt die Münze oval, warnt sie vor einem geneigten Foto und vergrößert die Fehlertoleranz. Die Erkennung läuft auf dem Gerät selbst: Das Foto wird an keinen Dritten gesendet. Sie können auch «Läsion automatisch markieren» wählen, einen Punkt innerhalb der Läsion antippen und die vorgeschlagenen Enden prüfen."
     },
     {
      "t": "h3",
@@ -997,6 +997,14 @@
     {
      "t": "p",
      "text": "In jeder Phase mit Fotos zeigt die Schaltfläche «Am Handy fortfahren» einen QR-Code. Scannen Sie ihn mit der Kamera eines Handys (oder eines anderen Geräts mit Kamera) und nehmen Sie die Fotos dieser Phase auf; sie erscheinen von selbst auf diesem Bildschirm. Der Link gilt nur für diese Phase dieses Patienten, läuft nach 20 Minuten ab und zeigt keine Patientendaten. Am Ende tippen Sie auf «Fertig und zurück» oder schließen den Link hier."
+    },
+    {
+     "t": "h3",
+     "text": "Verlauf der Messungen"
+    },
+    {
+     "t": "p",
+     "text": "Über den Phasen sammelt das Feld «Verlauf der Messungen» die Messungen desselben Fotos (nach Namen) über die Phasen hinweg und vergleicht jede mit der vorherigen. Eine Veränderung wird nur dann als Zu- oder Abnahme angezeigt, wenn sie die kombinierte Fehlertoleranz beider Messungen übersteigt; sonst steht dort «keine klare Veränderung»."
     }
    ],
    "key": "phases"

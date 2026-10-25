@@ -988,7 +988,7 @@
     },
     {
      "t": "p",
-     "text": "If the clinic marked a photo as «Measure» in Phases, the patient measures the lesion at home by placing a Chilean coin next to it, and you can measure or correct it with the «Measure» button under the photo. Choose the coin, tap two opposite edges of it, then the two ends of the lesion; points can be dragged. The result shows its margin of error (±). It is an approximate measure, suitable for follow-up and not for diagnosis: the photo must be taken straight on, without tilt, with the coin at the same distance as the lesion. To use your own ruler choose «Other reference» and enter its size. The app tries to find the coin by itself and suggests its edges; if the coin looks oval it warns that the photo is tilted and widens the margin of error. Detection runs on the device itself: the photo is not sent to any third party."
+     "text": "If the clinic marked a photo as «Measure» in Phases, the patient measures the lesion at home by placing a Chilean coin next to it, and you can measure or correct it with the «Measure» button under the photo. Choose the coin, tap two opposite edges of it, then the two ends of the lesion; points can be dragged. The result shows its margin of error (±). It is an approximate measure, suitable for follow-up and not for diagnosis: the photo must be taken straight on, without tilt, with the coin at the same distance as the lesion. To use your own ruler choose «Other reference» and enter its size. The app tries to find the coin by itself and suggests its edges; if the coin looks oval it warns that the photo is tilted and widens the margin of error. Detection runs on the device itself: the photo is not sent to any third party. You can also press «Mark the lesion automatically», tap a point inside the lesion and review the ends it suggests."
     },
     {
      "t": "h3",
@@ -997,6 +997,14 @@
     {
      "t": "p",
      "text": "In each phase with photos, the «Continue on phone» button shows a QR code. Scan it with the camera of a phone (or another device with a camera) and take that phase's photos; they appear on this screen by themselves. The link works only for that phase of that patient, expires after 20 minutes and shows no patient data. When done, tap «Finish and go back», or close the link from here."
+    },
+    {
+     "t": "h3",
+     "text": "Measurement trend"
+    },
+    {
+     "t": "p",
+     "text": "Above the phases, the «Measurement trend» box gathers the measurements of the same photo (by name) across phases and compares each with the previous one. A change is only shown as an increase or decrease if it exceeds the combined margin of error of both measurements; otherwise it says «no clear change»."
     }
    ],
    "key": "phases"

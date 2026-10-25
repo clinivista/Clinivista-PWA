@@ -18,6 +18,7 @@ import { PhaseAttention } from "@/components/phase-attention";
 import { PhotoTranscription } from "@/components/photo-transcription";
 import { CaptureHandoff } from "@/components/capture-handoff";
 import { MeasureDialog } from "@/components/measure-dialog";
+import { MeasureTrend } from "@/components/measure-trend";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const MAX_SIDE = 2400;
@@ -193,7 +194,7 @@ export type LeadPhasesProcess = {
 };
 
 export function LeadPhases({ leadId, onExpand, diagnosisLead, process }: { leadId: string; onExpand: (url: string) => void; diagnosisLead?: DiagnosisLeadData; process?: LeadPhasesProcess }) {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const p = PHASES_TEXT[lang];
   const s = STAFF_FLOW_TEXT[lang];
   const { data, isLoading, isError } = useGetLeadPhases(leadId);
@@ -209,6 +210,7 @@ export function LeadPhases({ leadId, onExpand, diagnosisLead, process }: { leadI
       <p className="text-sm text-muted-foreground mb-5">{p.subtitle}</p>
       {isLoading && <p className="text-sm text-muted-foreground">{p.loading}</p>}
       {isError && <p className="text-sm text-destructive">{p.loadError}</p>}
+      <MeasureTrend phases={phases.map((phase) => ({ phaseId: phase.id, phaseName: phaseName(phase, lang), views: phase.views.map((view) => ({ id: view.id, label: viewLabel(view, phase.key, lang, t), photo: view.photo })) }))} />
       <ol className="flex flex-col gap-4">
         {phases.map((phase, index) => {
           const taken = phase.views.filter((view) => view.photo).length;
