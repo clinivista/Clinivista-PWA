@@ -988,7 +988,7 @@
     },
     {
      "t": "p",
-     "text": "Si la clinique a marqué une photo «Mesurer» dans Phases, le patient mesure sa lésion chez lui en posant une pièce chilienne à côté, et vous pouvez la mesurer ou la corriger avec le bouton «Mesurer» sous la photo. Choisissez la pièce, touchez deux bords opposés, puis les deux extrémités de la lésion; les points sont déplaçables. Le résultat indique sa marge d'erreur (±). Mesure approximative, utile pour le suivi et non pour le diagnostic: photo de face, sans inclinaison, pièce à la même distance que la lésion. Pour une règle personnelle, choisissez «Autre référence» et indiquez sa taille."
+     "text": "Si la clinique a marqué une photo «Mesurer» dans Phases, le patient mesure sa lésion chez lui en posant une pièce chilienne à côté, et vous pouvez la mesurer ou la corriger avec le bouton «Mesurer» sous la photo. Choisissez la pièce, touchez deux bords opposés, puis les deux extrémités de la lésion; les points sont déplaçables. Le résultat indique sa marge d'erreur (±). Mesure approximative, utile pour le suivi et non pour le diagnostic: photo de face, sans inclinaison, pièce à la même distance que la lésion. Pour une règle personnelle, choisissez «Autre référence» et indiquez sa taille. L'application tente de trouver seule la pièce et propose ses bords ; si la pièce paraît ovale, elle signale que la photo est inclinée et élargit la marge d'erreur. La détection se fait sur l'appareil : la photo n'est envoyée à aucun tiers."
     },
     {
      "t": "h3",

@@ -520,6 +520,11 @@ export interface PhotoMeasurementPoint {
   y: number;
 }
 
+export type PhotoMeasurementDetection = {
+  auto: boolean;
+  axisRatio?: number;
+};
+
 export type PhotoMeasurementBy = typeof PhotoMeasurementBy[keyof typeof PhotoMeasurementBy];
 
 
@@ -538,6 +543,7 @@ export interface PhotoMeasurement {
   imageHeight: number;
   lengthMm: number;
   uncertaintyPct: number;
+  detection?: PhotoMeasurementDetection;
   by: PhotoMeasurementBy;
   byName: string;
   at: string;

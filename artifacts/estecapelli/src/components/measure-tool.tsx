@@ -6,9 +6,12 @@ import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/lib/language";
 import { MEASURE_TEXT, coinLabel } from "@/lib/measure-i18n";
 import { MEASURE_REFERENCES, estimateMeasurement, type Point } from "@/lib/measure-references";
+import { TILT_WARNING_RATIO, findCoin, imageSampler } from "@/lib/coin-detect";
 
 export type MeasurePayload = {
   referenceId: string; referenceMm?: number; referencePoints: Point[]; lesionPoints: Point[]; imageWidth: number; imageHeight: number;
+  /** Cómo se ubicó la moneda: sola o a mano, y qué tan ovalada se veía (1 = de frente). */
+  detection?: { auto: boolean; axisRatio?: number };
 };
 
 type Props = {
@@ -42,12 +45,32 @@ export function MeasureTool({ imageUrl, role, initial, onSave, onRemove, onClose
   const [drag, setDrag] = useState<{ group: "ref" | "lesion"; index: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  // Resultado de buscar la moneda sola: "off" mientras no se ha intentado o ya hay puntos guardados.
+  const [auto, setAuto] = useState<{ state: "off" | "searching" | "found" | "missing"; axisRatio?: number; placed: boolean }>({ state: "off", placed: false });
+
+  const detectCoin = (img: HTMLImageElement, place: boolean) => {
+    setAuto({ state: "searching", placed: false });
+    // Se pospone un instante para que la foto se vea antes de empezar el cálculo.
+    setTimeout(() => {
+      let fit = null;
+      try { fit = findCoin(img.naturalWidth, img.naturalHeight, imageSampler(img)); } catch { fit = null; }
+      if (!fit) { setAuto({ state: "missing", placed: false }); return; }
+      if (place) setRefPoints(fit.diameterPoints);
+      setAuto({ state: "found", axisRatio: fit.axisRatio, placed: place });
+    }, 30);
+  };
 
   const measure = () => {
     const img = imgRef.current;
     if (!img || !img.naturalWidth) return;
     setNatural({ w: img.naturalWidth, h: img.naturalHeight });
     setShown(img.getBoundingClientRect().width || img.naturalWidth);
+  };
+  const onImageLoad = () => {
+    measure();
+    const img = imgRef.current;
+    // Con una medida ya guardada no se toca nada; si no, se busca la moneda y se proponen sus bordes.
+    if (img && img.naturalWidth && refPoints.length === 0 && !initial) detectCoin(img, true);
   };
   useEffect(() => {
     window.addEventListener("resize", measure);
@@ -85,7 +108,7 @@ export function MeasureTool({ imageUrl, role, initial, onSave, onRemove, onClose
 
   const setPoint = (group: "ref" | "lesion", index: number, point: Point) => {
     const update = (points: Point[]) => points.map((existing, i) => (i === index ? point : existing));
-    if (group === "ref") setRefPoints(update); else setLesionPoints(update);
+    if (group === "ref") { setRefPoints(update); setAuto((current) => ({ ...current, placed: false })); } else setLesionPoints(update);
   };
 
   const drawLoupe = (point: Point) => {
@@ -131,12 +154,12 @@ export function MeasureTool({ imageUrl, role, initial, onSave, onRemove, onClose
     if (lesionPoints.length > 0) setLesionPoints((points) => points.slice(0, -1));
     else setRefPoints((points) => points.slice(0, -1));
   };
-  const reset = () => { setRefPoints([]); setLesionPoints([]); setError(""); };
+  const reset = () => { setRefPoints([]); setLesionPoints([]); setError(""); setAuto({ state: "off", placed: false }); };
 
   const custom = referenceId === "custom";
   const estimate = useMemo(() => estimateMeasurement({
-    referenceId, customMm: custom ? Number(customMm.replace(",", ".")) : undefined, referencePoints: refPoints, lesionPoints, by: role,
-  }), [referenceId, custom, customMm, refPoints, lesionPoints, role]);
+    referenceId, customMm: custom ? Number(customMm.replace(",", ".")) : undefined, referencePoints: refPoints, lesionPoints, by: role, axisRatio: auto.axisRatio,
+  }), [referenceId, custom, customMm, refPoints, lesionPoints, role, auto.axisRatio]);
 
   const save = async () => {
     if (!natural || !estimate) { setError(c.needPoints); return; }
@@ -146,6 +169,7 @@ export function MeasureTool({ imageUrl, role, initial, onSave, onRemove, onClose
       await onSave({
         referenceId, ...(custom ? { referenceMm: Number(customMm.replace(",", ".")) } : {}),
         referencePoints: refPoints, lesionPoints, imageWidth: natural.w, imageHeight: natural.h,
+        detection: { auto: auto.placed, ...(auto.axisRatio !== undefined ? { axisRatio: auto.axisRatio } : {}) },
       });
     } catch (caught) {
       setError(caught instanceof Error && caught.message ? caught.message : c.saveFailed);
@@ -173,9 +197,13 @@ export function MeasureTool({ imageUrl, role, initial, onSave, onRemove, onClose
         </label>
       )}
       <p className="text-sm font-semibold text-primary" data-testid="measure-step">{step === "ref" ? c.stepCoin : c.stepLesion}</p>
+      {auto.state === "searching" && <p className="text-xs text-muted-foreground flex items-center gap-1.5" role="status" data-testid="measure-auto"><Loader2 className="w-3.5 h-3.5 animate-spin" />{c.detecting}</p>}
+      {auto.state === "found" && auto.placed && <p className="text-xs text-muted-foreground" role="status" data-testid="measure-auto">{c.autoFound}</p>}
+      {auto.state === "missing" && <p className="text-xs text-muted-foreground" role="status" data-testid="measure-auto">{c.autoNotFound}</p>}
+      {auto.axisRatio !== undefined && auto.axisRatio < TILT_WARNING_RATIO && <p className="text-xs rounded-xl bg-amber-50 text-amber-900 p-2" role="alert" data-testid="measure-tilt">{c.tiltWarn}</p>}
 
       <div className="relative inline-block self-center max-w-full touch-none select-none rounded-2xl overflow-hidden bg-black/5">
-        <img ref={imgRef} src={imageUrl} alt="" onLoad={measure} className="block max-w-full max-h-[55vh] w-auto" draggable={false} />
+        <img ref={imgRef} src={imageUrl} alt="" onLoad={onImageLoad} className="block max-w-full max-h-[55vh] w-auto" draggable={false} />
         {natural && (
           <svg ref={svgRef} viewBox={`0 0 ${natural.w} ${natural.h}`} preserveAspectRatio="none" className="absolute inset-0 w-full h-full cursor-crosshair touch-none"
             onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={stopDrag} onPointerCancel={stopDrag} data-testid="measure-surface">
@@ -206,6 +234,7 @@ export function MeasureTool({ imageUrl, role, initial, onSave, onRemove, onClose
           <Undo2 className="w-4 h-4 mr-1.5" />{c.undo}
         </Button>
         <Button type="button" variant="ghost" className="rounded-full" disabled={busy} onClick={reset}>{c.reset}</Button>
+        {auto.state === "missing" && <Button type="button" variant="ghost" className="rounded-full" disabled={busy} onClick={() => { if (imgRef.current) detectCoin(imgRef.current, refPoints.length === 0); }}>{c.redetect}</Button>}
         {initial && onRemove && <Button type="button" variant="ghost" className="rounded-full text-destructive" disabled={busy} onClick={() => void onRemove()}>{c.remove}</Button>}
         <Button type="button" variant="ghost" className="rounded-full ml-auto" onClick={onClose}>{c.close}</Button>
       </div>

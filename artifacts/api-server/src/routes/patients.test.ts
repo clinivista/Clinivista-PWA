@@ -1128,6 +1128,22 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
       expect((await listPhases(lead.id))[0].views.find((view) => view.key === "frontal")?.photo).toMatchObject({ measurement: null });
     });
 
+    it("una moneda que se ve ovalada (foto inclinada) amplía el margen de error y queda registrado cómo se ubicó", async () => {
+      const lead = await patientWithPreEvaluation();
+      await markMeasure();
+      const photoId = await frontalPhotoId(lead.token);
+      const put = (extra: Record<string, unknown>) => request(app).put(`/api/patients/${lead.token}/photos/${photoId}/measurement`).send(body(extra)).expect(200);
+      const flat = await put({ detection: { auto: true, axisRatio: 1 } });
+      expect(flat.body.measurement.detection).toEqual({ auto: true, axisRatio: 1 });
+      const base = flat.body.measurement.uncertaintyPct as number;
+      const tilted = await put({ detection: { auto: true, axisRatio: 0.85 } });
+      expect(tilted.body.measurement.uncertaintyPct).toBe(base + 15);
+      // Valores absurdos del cliente se acotan y un texto no cuenta como "automática".
+      const odd = await put({ detection: { auto: "sí", axisRatio: -3 } });
+      expect(odd.body.measurement.detection).toEqual({ auto: false });
+      expect(odd.body.measurement.uncertaintyPct).toBe(base);
+    });
+
     it("rechaza lo que no sirve: foto sin la marca, moneda desconocida, puntos fuera de la foto o referencia propia del paciente", async () => {
       const lead = await patientWithPreEvaluation();
       await markMeasure();

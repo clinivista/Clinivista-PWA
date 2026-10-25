@@ -988,7 +988,7 @@
     },
     {
      "t": "p",
-     "text": "Hat die Klinik ein Foto in Phasen als «Messen» markiert, misst der Patient die Läsion zu Hause mit einer danebengelegten chilenischen Münze; Sie können sie mit der Schaltfläche «Messen» unter dem Foto messen oder korrigieren. Wählen Sie die Münze, tippen Sie zwei gegenüberliegende Ränder an, dann die beiden Enden der Läsion; Punkte lassen sich verschieben. Das Ergebnis zeigt die Fehlertoleranz (±). Es ist ein Näherungswert für die Verlaufskontrolle, nicht für die Diagnose: Foto frontal, ohne Neigung, Münze in gleicher Entfernung wie die Läsion. Für ein eigenes Lineal wählen Sie «Andere Referenz» und geben die Größe an."
+     "text": "Hat die Klinik ein Foto in Phasen als «Messen» markiert, misst der Patient die Läsion zu Hause mit einer danebengelegten chilenischen Münze; Sie können sie mit der Schaltfläche «Messen» unter dem Foto messen oder korrigieren. Wählen Sie die Münze, tippen Sie zwei gegenüberliegende Ränder an, dann die beiden Enden der Läsion; Punkte lassen sich verschieben. Das Ergebnis zeigt die Fehlertoleranz (±). Es ist ein Näherungswert für die Verlaufskontrolle, nicht für die Diagnose: Foto frontal, ohne Neigung, Münze in gleicher Entfernung wie die Läsion. Für ein eigenes Lineal wählen Sie «Andere Referenz» und geben die Größe an. Die App versucht, die Münze selbst zu finden, und schlägt ihre Ränder vor; wirkt die Münze oval, warnt sie vor einem geneigten Foto und vergrößert die Fehlertoleranz. Die Erkennung läuft auf dem Gerät selbst: Das Foto wird an keinen Dritten gesendet."
     },
     {
      "t": "h3",

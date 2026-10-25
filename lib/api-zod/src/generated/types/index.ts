@@ -115,6 +115,7 @@ export * from './photoEntry';
 export * from './photoMarkup';
 export * from './photoMeasurement';
 export * from './photoMeasurementBy';
+export * from './photoMeasurementDetection';
 export * from './photoMeasurementPoint';
 export * from './photoTranscription';
 export * from './photoTranscriptionTier';

@@ -988,7 +988,7 @@
     },
     {
      "t": "p",
-     "text": "If the clinic marked a photo as «Measure» in Phases, the patient measures the lesion at home by placing a Chilean coin next to it, and you can measure or correct it with the «Measure» button under the photo. Choose the coin, tap two opposite edges of it, then the two ends of the lesion; points can be dragged. The result shows its margin of error (±). It is an approximate measure, suitable for follow-up and not for diagnosis: the photo must be taken straight on, without tilt, with the coin at the same distance as the lesion. To use your own ruler choose «Other reference» and enter its size."
+     "text": "If the clinic marked a photo as «Measure» in Phases, the patient measures the lesion at home by placing a Chilean coin next to it, and you can measure or correct it with the «Measure» button under the photo. Choose the coin, tap two opposite edges of it, then the two ends of the lesion; points can be dragged. The result shows its margin of error (±). It is an approximate measure, suitable for follow-up and not for diagnosis: the photo must be taken straight on, without tilt, with the coin at the same distance as the lesion. To use your own ruler choose «Other reference» and enter its size. The app tries to find the coin by itself and suggests its edges; if the coin looks oval it warns that the photo is tilted and widens the margin of error. Detection runs on the device itself: the photo is not sent to any third party."
     },
     {
      "t": "h3",

@@ -217,6 +217,10 @@ export const GetLeadByIdResponse = zod.object({
   "imageHeight": zod.number(),
   "lengthMm": zod.number(),
   "uncertaintyPct": zod.number(),
+  "detection": zod.object({
+  "auto": zod.boolean(),
+  "axisRatio": zod.number().optional()
+}).optional(),
   "by": zod.enum(['patient', 'staff']),
   "byName": zod.string(),
   "at": zod.string()
@@ -311,6 +315,10 @@ export const PatchLeadResponse = zod.object({
   "imageHeight": zod.number(),
   "lengthMm": zod.number(),
   "uncertaintyPct": zod.number(),
+  "detection": zod.object({
+  "auto": zod.boolean(),
+  "axisRatio": zod.number().optional()
+}).optional(),
   "by": zod.enum(['patient', 'staff']),
   "byName": zod.string(),
   "at": zod.string()
@@ -410,6 +418,10 @@ export const GetLeadPhasesResponse = zod.object({
   "imageHeight": zod.number(),
   "lengthMm": zod.number(),
   "uncertaintyPct": zod.number(),
+  "detection": zod.object({
+  "auto": zod.boolean(),
+  "axisRatio": zod.number().optional()
+}).optional(),
   "by": zod.enum(['patient', 'staff']),
   "byName": zod.string(),
   "at": zod.string()
@@ -1756,6 +1768,10 @@ export const GetPatientPhotoStatusResponse = zod.object({
   "imageHeight": zod.number(),
   "lengthMm": zod.number(),
   "uncertaintyPct": zod.number(),
+  "detection": zod.object({
+  "auto": zod.boolean(),
+  "axisRatio": zod.number().optional()
+}).optional(),
   "by": zod.enum(['patient', 'staff']),
   "byName": zod.string(),
   "at": zod.string()
@@ -1813,6 +1829,10 @@ export const UploadPatientPhotoResponse = zod.object({
   "imageHeight": zod.number(),
   "lengthMm": zod.number(),
   "uncertaintyPct": zod.number(),
+  "detection": zod.object({
+  "auto": zod.boolean(),
+  "axisRatio": zod.number().optional()
+}).optional(),
   "by": zod.enum(['patient', 'staff']),
   "byName": zod.string(),
   "at": zod.string()
@@ -1910,6 +1930,10 @@ export const ConfirmPatientPhotoResponse = zod.object({
   "imageHeight": zod.number(),
   "lengthMm": zod.number(),
   "uncertaintyPct": zod.number(),
+  "detection": zod.object({
+  "auto": zod.boolean(),
+  "axisRatio": zod.number().optional()
+}).optional(),
   "by": zod.enum(['patient', 'staff']),
   "byName": zod.string(),
   "at": zod.string()
@@ -1963,6 +1987,10 @@ export const CreatePatientAdjustedPhotoResponse = zod.object({
   "imageHeight": zod.number(),
   "lengthMm": zod.number(),
   "uncertaintyPct": zod.number(),
+  "detection": zod.object({
+  "auto": zod.boolean(),
+  "axisRatio": zod.number().optional()
+}).optional(),
   "by": zod.enum(['patient', 'staff']),
   "byName": zod.string(),
   "at": zod.string()

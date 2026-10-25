@@ -988,7 +988,7 @@
     },
     {
      "t": "p",
-     "text": "Se a clínica marcou uma foto como «Medir» em Fases, o paciente mede a lesão em casa colocando uma moeda chilena ao lado dela, e você pode medi-la ou corrigi-la com o botão «Medir» sob a foto. Escolha a moeda, toque em duas bordas opostas dela e depois nas duas extremidades da lesão; os pontos podem ser arrastados. O resultado mostra a margem de erro (±). É uma medida aproximada, útil para acompanhamento e não para diagnóstico: a foto deve ser de frente, sem inclinação, com a moeda à mesma distância que a lesão. Para usar uma régua própria escolha «Outra referência» e informe o tamanho."
+     "text": "Se a clínica marcou uma foto como «Medir» em Fases, o paciente mede a lesão em casa colocando uma moeda chilena ao lado dela, e você pode medi-la ou corrigi-la com o botão «Medir» sob a foto. Escolha a moeda, toque em duas bordas opostas dela e depois nas duas extremidades da lesão; os pontos podem ser arrastados. O resultado mostra a margem de erro (±). É uma medida aproximada, útil para acompanhamento e não para diagnóstico: a foto deve ser de frente, sem inclinação, com a moeda à mesma distância que a lesão. Para usar uma régua própria escolha «Outra referência» e informe o tamanho. O app tenta achar a moeda sozinho e sugere suas bordas; se a moeda parecer oval, avisa que a foto está inclinada e amplia a margem de erro. A detecção ocorre no próprio dispositivo: a foto não é enviada a terceiros."
     },
     {
      "t": "h3",

@@ -32,6 +32,8 @@ export type PhotoMeasurement = {
   lengthMm: number;
   /** Margen de error estimado, en porcentaje de la medida. */
   uncertaintyPct: number;
+  /** Cómo se ubicó la moneda: sola (detección en el dispositivo) o a mano, y qué tan ovalada se veía (1 = de frente). */
+  detection?: { auto: boolean; axisRatio?: number };
   by: "patient" | "staff";
   byName: string;
   at: string;
@@ -75,6 +77,12 @@ export function computeMeasurement(body: unknown, by: "patient" | "staff", byNam
     shape = reference.shape;
   }
 
+  // Una moneda ovalada indica que la foto se tomó inclinada; el cliente lo mide y el servidor solo lo acota.
+  const rawDetection = (input.detection ?? {}) as { auto?: unknown; axisRatio?: unknown };
+  const ratio = Number(rawDetection.axisRatio);
+  const axisRatio = Number.isFinite(ratio) && ratio > 0 ? Math.min(1, Math.max(0.5, Math.round(ratio * 1000) / 1000)) : undefined;
+  const detection = { auto: rawDetection.auto === true, ...(axisRatio !== undefined ? { axisRatio } : {}) };
+
   const referencePx = distance(referencePoints[0], referencePoints[1]);
   const lesionPx = distance(lesionPoints[0], lesionPoints[1]);
   if (referencePx < 20) throw new MeasurementError("La moneda se ve muy pequeña: acerca la cámara y vuelve a marcar sus bordes.");
@@ -85,6 +93,8 @@ export function computeMeasurement(body: unknown, by: "patient" | "staff", byNam
   if (shape === "decagon") uncertaintyPct += 5;
   if (referenceMm < 20) uncertaintyPct += 4;
   if (referencePx < 60) uncertaintyPct += 4;
+  // Foto inclinada: el error crece más o menos como la pérdida de forma circular de la moneda.
+  if (axisRatio !== undefined && axisRatio < 0.97) uncertaintyPct += Math.min(15, Math.ceil((1 - axisRatio) * 100));
   return {
     referenceId: String(input.referenceId),
     referenceMm,
@@ -95,6 +105,7 @@ export function computeMeasurement(body: unknown, by: "patient" | "staff", byNam
     imageHeight: Math.round(imageHeight),
     lengthMm: round1((lesionPx / referencePx) * referenceMm),
     uncertaintyPct,
+    detection,
     by,
     byName: byName.slice(0, 100),
     at: now.toISOString(),

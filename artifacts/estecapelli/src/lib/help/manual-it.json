@@ -988,7 +988,7 @@
     },
     {
      "t": "p",
-     "text": "Se la clinica ha contrassegnato una foto come «Misura» in Fasi, il paziente misura la lesione a casa appoggiandovi accanto una moneta cilena, e tu puoi misurarla o correggerla con il pulsante «Misura» sotto la foto. Scegli la moneta, tocca due bordi opposti, poi le due estremità della lesione; i punti si possono trascinare. Il risultato mostra il margine di errore (±). È una misura approssimativa, utile per il controllo e non per la diagnosi: foto frontale, senza inclinazione, moneta alla stessa distanza della lesione. Per un righello proprio scegli «Altro riferimento» e indica la misura."
+     "text": "Se la clinica ha contrassegnato una foto come «Misura» in Fasi, il paziente misura la lesione a casa appoggiandovi accanto una moneta cilena, e tu puoi misurarla o correggerla con il pulsante «Misura» sotto la foto. Scegli la moneta, tocca due bordi opposti, poi le due estremità della lesione; i punti si possono trascinare. Il risultato mostra il margine di errore (±). È una misura approssimativa, utile per il controllo e non per la diagnosi: foto frontale, senza inclinazione, moneta alla stessa distanza della lesione. Per un righello proprio scegli «Altro riferimento» e indica la misura. L'app prova a trovare da sola la moneta e propone i suoi bordi; se la moneta appare ovale avvisa che la foto è inclinata e amplia il margine di errore. Il rilevamento avviene sul dispositivo: la foto non viene inviata a terzi."
     },
     {
      "t": "h3",

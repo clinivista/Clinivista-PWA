@@ -988,7 +988,7 @@
     },
     {
      "t": "p",
-     "text": "Klinik bir fotoğrafı Aşamalar'da «Ölç» olarak işaretlediyse hasta, lezyonun yanına Şili madeni parası koyarak evde ölçer; siz de fotoğrafın altındaki «Ölç» düğmesiyle ölçebilir veya düzeltebilirsiniz. Parayı seçin, karşılıklı iki kenarına, sonra lezyonun iki ucuna dokunun; noktalar sürüklenebilir. Sonuç hata payıyla (±) gösterilir. Yaklaşık bir ölçümdür, takip içindir, tanı için değil: fotoğraf karşıdan, eğimsiz çekilmeli ve para lezyonla aynı mesafede olmalı. Kendi cetvelinizi kullanmak için «Başka referans» seçip boyutunu girin."
+     "text": "Klinik bir fotoğrafı Aşamalar'da «Ölç» olarak işaretlediyse hasta, lezyonun yanına Şili madeni parası koyarak evde ölçer; siz de fotoğrafın altındaki «Ölç» düğmesiyle ölçebilir veya düzeltebilirsiniz. Parayı seçin, karşılıklı iki kenarına, sonra lezyonun iki ucuna dokunun; noktalar sürüklenebilir. Sonuç hata payıyla (±) gösterilir. Yaklaşık bir ölçümdür, takip içindir, tanı için değil: fotoğraf karşıdan, eğimsiz çekilmeli ve para lezyonla aynı mesafede olmalı. Kendi cetvelinizi kullanmak için «Başka referans» seçip boyutunu girin. Uygulama parayı kendisi bulmaya çalışır ve kenarlarını önerir; para oval görünüyorsa fotoğrafın eğik olduğunu bildirir ve hata payını artırır. Algılama cihazın kendisinde yapılır: fotoğraf üçüncü taraflara gönderilmez."
     },
     {
      "t": "h3",
