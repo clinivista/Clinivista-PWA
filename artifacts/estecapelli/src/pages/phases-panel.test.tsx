@@ -18,7 +18,7 @@ vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast }) }));
 
 import { PhasesPanel } from "./phases-panel";
 
-const view = (id: string, label: string, hasPhotos = false, position = 0) => ({ id, key: id, label, position, hasPhotos, document: false });
+const view = (id: string, label: string, hasPhotos = false, position = 0) => ({ id, key: id, label, position, hasPhotos, document: false, measure: false });
 const protocol = (canEdit: boolean) => ({
   canEdit,
   phases: [
@@ -81,10 +81,10 @@ describe("PhasesPanel", () => {
     expect(api.save.mock.calls[0][0]).toEqual({
       data: {
         phases: [
-          { id: "p1", name: "Pre-evaluación", views: [{ id: "v1", label: "Frontal", document: false }, { id: "v2", label: "Vértex", document: false }] },
+          { id: "p1", name: "Pre-evaluación", views: [{ id: "v1", label: "Frontal", document: false, measure: false }, { id: "v2", label: "Vértex", document: false, measure: false }] },
           { id: "p2", name: "Diagnóstico", views: [] },
-          { id: "p3", name: "Post-op y plan", views: [{ id: "v4", label: "Frontal", document: false }, { label: "Zona receptora", document: false }] },
-          { name: "Control 12 meses", views: [{ label: "Frontal", document: false }] },
+          { id: "p3", name: "Post-op y plan", views: [{ id: "v4", label: "Frontal", document: false, measure: false }, { label: "Zona receptora", document: false, measure: false }] },
+          { name: "Control 12 meses", views: [{ label: "Frontal", document: false, measure: false }] },
         ],
       },
     });
@@ -112,5 +112,18 @@ describe("PhasesPanel", () => {
     const sent = api.save.mock.calls[0][0].data.phases as Array<{ views: Array<{ label: string; document: boolean }> }>;
     expect(sent[2].views[0]).toMatchObject({ id: "v4", document: true });
     expect(sent[0].views.every((v) => v.document === false)).toBe(true);
+  });
+
+  it("marca una fotografía para medir la lesión con una moneda de referencia", async () => {
+    const user = userEvent.setup();
+    render(<PhasesPanel />);
+    const box = within(screen.getByRole("region", { name: "Fase 1" })).getByRole("checkbox", { name: "Medir la lesión: Frontal" });
+    expect(box).not.toBeChecked();
+    await user.click(box);
+    expect(box).toBeChecked();
+    await user.click(screen.getByRole("button", { name: "Guardar fases" }));
+    const sent = api.save.mock.calls[0][0].data.phases as Array<{ views: Array<{ measure: boolean; document: boolean }> }>;
+    expect(sent[0].views[0]).toMatchObject({ id: "v1", measure: true, document: false });
+    expect(sent[0].views[1].measure).toBe(false);
   });
 });

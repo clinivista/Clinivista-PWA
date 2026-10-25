@@ -168,7 +168,8 @@ router.get("/leads/:id/photos/:photoId", async (req, res): Promise<void> => {
     return;
   }
   try {
-    const file = await privatePhotoStorage.read(photo.derivativeObjectPath ?? photo.originalObjectPath);
+    // «?rendition=original»: la foto sin ajustes, que es sobre la que se mide.
+    const file = await privatePhotoStorage.read(req.query.rendition === "original" ? photo.originalObjectPath : (photo.derivativeObjectPath ?? photo.originalObjectPath));
     res.setHeader("Content-Type", file.contentType);
     res.setHeader("Cache-Control", "private, no-store");
     res.setHeader("X-Content-Type-Options", "nosniff");

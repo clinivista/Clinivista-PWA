@@ -14,6 +14,7 @@ export interface LeadPhaseView {
   label: string;
   required: boolean;
   document: boolean;
+  measure: boolean;
   transcription: PhotoTranscription | null;
   photo: PatientPhotoStatus | null;
 }

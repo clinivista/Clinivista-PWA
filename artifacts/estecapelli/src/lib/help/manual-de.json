@@ -984,6 +984,14 @@
     },
     {
      "t": "h3",
+     "text": "Läsion mit einer Münze messen"
+    },
+    {
+     "t": "p",
+     "text": "Hat die Klinik ein Foto in Phasen als «Messen» markiert, misst der Patient die Läsion zu Hause mit einer danebengelegten chilenischen Münze; Sie können sie mit der Schaltfläche «Messen» unter dem Foto messen oder korrigieren. Wählen Sie die Münze, tippen Sie zwei gegenüberliegende Ränder an, dann die beiden Enden der Läsion; Punkte lassen sich verschieben. Das Ergebnis zeigt die Fehlertoleranz (±). Es ist ein Näherungswert für die Verlaufskontrolle, nicht für die Diagnose: Foto frontal, ohne Neigung, Münze in gleicher Entfernung wie die Läsion. Für ein eigenes Lineal wählen Sie «Andere Referenz» und geben die Größe an."
+    },
+    {
+     "t": "h3",
      "text": "Am Handy fortfahren"
     },
     {
@@ -1312,6 +1320,10 @@
     {
      "t": "p",
      "text": "Setzen Sie bei einem Foto den Haken bei «Documento», wenn es ein Papier ist (Datenblatt, Einwilligung): darunter kann das Personal den Text transkribieren."
+    },
+    {
+     "t": "p",
+     "text": "Markieren Sie «Messen», wenn die Läsion auf diesem Foto gemessen werden soll: Der Patient sieht, wie er eine chilenische Referenzmünze verwendet, und kann selbst messen."
     },
     {
      "t": "h3",

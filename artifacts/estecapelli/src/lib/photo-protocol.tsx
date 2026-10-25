@@ -20,6 +20,8 @@ export type PhotoProtocolView = {
   distance: string;
   background: string;
   referenceVisual: ReactNode;
+  /** La clínica pidió medir la lesión en esta foto con una moneda de referencia. */
+  measure?: boolean;
 };
 
 const defaults = {
@@ -83,7 +85,7 @@ function GenericReference() {
   );
 }
 
-export type ConfiguredPhotoView = { key: string; label: string; required: boolean };
+export type ConfiguredPhotoView = { key: string; label: string; required: boolean; measure?: boolean };
 
 /**
  * The patient's photo list as the clinic configured it. Starting views keep
@@ -93,7 +95,7 @@ export type ConfiguredPhotoView = { key: string; label: string; required: boolea
 export function getConfiguredPhotoProtocol(t: AppTranslations, views: ConfiguredPhotoView[] | undefined, lang: LangCode = "es"): PhotoProtocolView[] {
   const base = getCapillaryPhotoProtocol(t);
   if (!views || views.length === 0) return base;
-  return views.map((view, index) => {
+  const built: PhotoProtocolView[] = views.map((view, index): PhotoProtocolView => {
     // Plastic surgery's starting views keep their translated guidance, like the hair ones.
     const plasticIndex = (PLASTIC_VIEW_KEYS as readonly string[]).indexOf(view.key);
     if (plasticIndex >= 0) {
@@ -159,4 +161,5 @@ export function getConfiguredPhotoProtocol(t: AppTranslations, views: Configured
       referenceVisual: <GenericReference />,
     };
   });
+  return built.map((item, index) => ({ ...item, measure: views[index].measure === true }));
 }

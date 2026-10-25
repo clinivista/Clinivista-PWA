@@ -984,6 +984,14 @@
     },
     {
      "t": "h3",
+     "text": "Misurare una lesione con una moneta"
+    },
+    {
+     "t": "p",
+     "text": "Se la clinica ha contrassegnato una foto come «Misura» in Fasi, il paziente misura la lesione a casa appoggiandovi accanto una moneta cilena, e tu puoi misurarla o correggerla con il pulsante «Misura» sotto la foto. Scegli la moneta, tocca due bordi opposti, poi le due estremità della lesione; i punti si possono trascinare. Il risultato mostra il margine di errore (±). È una misura approssimativa, utile per il controllo e non per la diagnosi: foto frontale, senza inclinazione, moneta alla stessa distanza della lesione. Per un righello proprio scegli «Altro riferimento» e indica la misura."
+    },
+    {
+     "t": "h3",
      "text": "Continua sul cellulare"
     },
     {
@@ -1312,6 +1320,10 @@
     {
      "t": "p",
      "text": "Spunta «Documento» accanto a una foto se è un foglio (scheda, consenso): sotto di essa il personale potrà trascriverne il testo."
+    },
+    {
+     "t": "p",
+     "text": "Spunta «Misura» se la lesione va misurata in quella foto: il paziente vedrà come usare una moneta cilena di riferimento e potrà misurarla da solo."
     },
     {
      "t": "h3",

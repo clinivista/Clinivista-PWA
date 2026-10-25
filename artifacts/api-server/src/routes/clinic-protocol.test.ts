@@ -254,6 +254,33 @@ describe("fotografías marcadas como documento", () => {
   });
 });
 
+describe("fotografías marcadas para medir", () => {
+  it("se marca al crear y al editar, y se conserva cuando la petición no lo menciona", async () => {
+    await seedUser("rep", "medico", "clinic-a", true);
+    const cookie = as("rep", "medico", "clinic-a");
+    const { phases } = await read(cookie);
+    expect(phases.flatMap((p) => p.views).every((v) => (v as { measure?: boolean }).measure === false)).toBe(true);
+
+    const next = toInput(phases) as Array<{ id: string; name: string; views: Array<{ id?: string; label: string; measure?: boolean; document?: boolean }> }>;
+    next[0].views[0].measure = true; // una foto de la pre-evaluación del paciente
+    next[3].views.push({ label: "Lesión con moneda", measure: true });
+    const saved = (await request(app).put("/api/clinic/protocol").set("Cookie", cookie).send({ phases: next }).expect(200)).body.phases as Array<{ views: Array<{ measure: boolean; document: boolean }> }>;
+    expect(saved[0].views[0].measure).toBe(true);
+    expect(saved[3].views.at(-1)?.measure).toBe(true);
+
+    // Guardar sin mencionar el campo no lo borra; documento y medir son independientes.
+    const again = (await request(app).put("/api/clinic/protocol").set("Cookie", cookie).send({ phases: toInput(saved as unknown as Phase[]) }).expect(200)).body.phases as typeof saved;
+    expect(again[0].views[0].measure).toBe(true);
+    expect(again[0].views[0].document).toBe(false);
+
+    const cleared = toInput(again as unknown as Phase[]) as typeof next;
+    cleared[0].views[0].measure = false;
+    const final = (await request(app).put("/api/clinic/protocol").set("Cookie", cookie).send({ phases: cleared }).expect(200)).body.phases as typeof saved;
+    expect(final[0].views[0].measure).toBe(false);
+    expect(final[3].views.at(-1)?.measure).toBe(true);
+  });
+});
+
 describe("cuota de transcripciones por clínica (supra-control)", () => {
   const supra = () => `clinivista_session=${createSession({ userId: "dir", centerId: null, role: "director" })}`;
 

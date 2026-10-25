@@ -7,6 +7,7 @@
  */
 import type { PatientPhotoStatusSource } from './patientPhotoStatusSource';
 import type { PatientPhotoStatusStatus } from './patientPhotoStatusStatus';
+import type { PhotoMeasurement } from './photoMeasurement';
 
 export interface PatientPhotoStatus {
   id: string;
@@ -27,6 +28,7 @@ export interface PatientPhotoStatus {
   /** @nullable */
   height?: number | null;
   captureMetadata?: unknown;
+  measurement?: PhotoMeasurement | null;
   /**
      * Optional description the patient wrote for this photo
      * @nullable

@@ -201,6 +201,26 @@ export const GetLeadByIdResponse = zod.object({
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
   "captureMetadata": zod.unknown().optional(),
+  "measurement": zod.union([zod.object({
+  "referenceId": zod.string(),
+  "referenceMm": zod.number(),
+  "referencePx": zod.number(),
+  "referencePoints": zod.array(zod.object({
+  "x": zod.number(),
+  "y": zod.number()
+})),
+  "lesionPoints": zod.array(zod.object({
+  "x": zod.number(),
+  "y": zod.number()
+})),
+  "imageWidth": zod.number(),
+  "imageHeight": zod.number(),
+  "lengthMm": zod.number(),
+  "uncertaintyPct": zod.number(),
+  "by": zod.enum(['patient', 'staff']),
+  "byName": zod.string(),
+  "at": zod.string()
+}),zod.null()]).optional(),
   "note": zod.string().nullish().describe('Optional description the patient wrote for this photo'),
   "editParams": zod.unknown().optional()
 })),
@@ -275,6 +295,26 @@ export const PatchLeadResponse = zod.object({
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
   "captureMetadata": zod.unknown().optional(),
+  "measurement": zod.union([zod.object({
+  "referenceId": zod.string(),
+  "referenceMm": zod.number(),
+  "referencePx": zod.number(),
+  "referencePoints": zod.array(zod.object({
+  "x": zod.number(),
+  "y": zod.number()
+})),
+  "lesionPoints": zod.array(zod.object({
+  "x": zod.number(),
+  "y": zod.number()
+})),
+  "imageWidth": zod.number(),
+  "imageHeight": zod.number(),
+  "lengthMm": zod.number(),
+  "uncertaintyPct": zod.number(),
+  "by": zod.enum(['patient', 'staff']),
+  "byName": zod.string(),
+  "at": zod.string()
+}),zod.null()]).optional(),
   "note": zod.string().nullish().describe('Optional description the patient wrote for this photo'),
   "editParams": zod.unknown().optional()
 })),
@@ -328,6 +368,7 @@ export const GetLeadPhasesResponse = zod.object({
   "label": zod.string(),
   "required": zod.boolean(),
   "document": zod.boolean(),
+  "measure": zod.boolean(),
   "transcription": zod.union([zod.object({
   "text": zod.string(),
   "tier": zod.enum(['basic', 'advanced', 'manual']),
@@ -353,6 +394,26 @@ export const GetLeadPhasesResponse = zod.object({
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
   "captureMetadata": zod.unknown().optional(),
+  "measurement": zod.union([zod.object({
+  "referenceId": zod.string(),
+  "referenceMm": zod.number(),
+  "referencePx": zod.number(),
+  "referencePoints": zod.array(zod.object({
+  "x": zod.number(),
+  "y": zod.number()
+})),
+  "lesionPoints": zod.array(zod.object({
+  "x": zod.number(),
+  "y": zod.number()
+})),
+  "imageWidth": zod.number(),
+  "imageHeight": zod.number(),
+  "lengthMm": zod.number(),
+  "uncertaintyPct": zod.number(),
+  "by": zod.enum(['patient', 'staff']),
+  "byName": zod.string(),
+  "at": zod.string()
+}),zod.null()]).optional(),
   "note": zod.string().nullish().describe('Optional description the patient wrote for this photo'),
   "editParams": zod.unknown().optional()
 }),zod.null()])
@@ -1473,7 +1534,8 @@ export const GetClinicProtocolResponse = zod.object({
   "label": zod.string(),
   "position": zod.number(),
   "hasPhotos": zod.boolean(),
-  "document": zod.boolean().describe('The photo is a document (e.g. a handwritten sheet) that staff can transcribe.')
+  "document": zod.boolean().describe('The photo is a document (e.g. a handwritten sheet) that staff can transcribe.'),
+  "measure": zod.boolean().describe('The lesion is measured on this photo with a reference coin next to it.')
 }))
 }))
 })
@@ -1493,7 +1555,8 @@ export const UpdateClinicProtocolBody = zod.object({
   "views": zod.array(zod.object({
   "id": zod.string().optional(),
   "label": zod.string(),
-  "document": zod.boolean().optional().describe('Mark the photo as a document. When omitted, an existing photo keeps its current value.')
+  "document": zod.boolean().optional().describe('Mark the photo as a document. When omitted, an existing photo keeps its current value.'),
+  "measure": zod.boolean().optional().describe('Mark the photo as one where the lesion is measured. When omitted, an existing photo keeps its current value.')
 }))
 }))
 })
@@ -1513,7 +1576,8 @@ export const UpdateClinicProtocolResponse = zod.object({
   "label": zod.string(),
   "position": zod.number(),
   "hasPhotos": zod.boolean(),
-  "document": zod.boolean().describe('The photo is a document (e.g. a handwritten sheet) that staff can transcribe.')
+  "document": zod.boolean().describe('The photo is a document (e.g. a handwritten sheet) that staff can transcribe.'),
+  "measure": zod.boolean().describe('The lesion is measured on this photo with a reference coin next to it.')
 }))
 }))
 })
@@ -1531,7 +1595,8 @@ export const GetPatientProtocolResponse = zod.object({
   "views": zod.array(zod.object({
   "key": zod.string(),
   "label": zod.string(),
-  "required": zod.boolean()
+  "required": zod.boolean(),
+  "measure": zod.boolean().optional().describe('The patient measures the lesion on this photo, with a coin next to it.')
 }))
 })
 
@@ -1675,6 +1740,26 @@ export const GetPatientPhotoStatusResponse = zod.object({
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
   "captureMetadata": zod.unknown().optional(),
+  "measurement": zod.union([zod.object({
+  "referenceId": zod.string(),
+  "referenceMm": zod.number(),
+  "referencePx": zod.number(),
+  "referencePoints": zod.array(zod.object({
+  "x": zod.number(),
+  "y": zod.number()
+})),
+  "lesionPoints": zod.array(zod.object({
+  "x": zod.number(),
+  "y": zod.number()
+})),
+  "imageWidth": zod.number(),
+  "imageHeight": zod.number(),
+  "lengthMm": zod.number(),
+  "uncertaintyPct": zod.number(),
+  "by": zod.enum(['patient', 'staff']),
+  "byName": zod.string(),
+  "at": zod.string()
+}),zod.null()]).optional(),
   "note": zod.string().nullish().describe('Optional description the patient wrote for this photo'),
   "editParams": zod.unknown().optional()
 }))
@@ -1712,6 +1797,26 @@ export const UploadPatientPhotoResponse = zod.object({
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
   "captureMetadata": zod.unknown().optional(),
+  "measurement": zod.union([zod.object({
+  "referenceId": zod.string(),
+  "referenceMm": zod.number(),
+  "referencePx": zod.number(),
+  "referencePoints": zod.array(zod.object({
+  "x": zod.number(),
+  "y": zod.number()
+})),
+  "lesionPoints": zod.array(zod.object({
+  "x": zod.number(),
+  "y": zod.number()
+})),
+  "imageWidth": zod.number(),
+  "imageHeight": zod.number(),
+  "lengthMm": zod.number(),
+  "uncertaintyPct": zod.number(),
+  "by": zod.enum(['patient', 'staff']),
+  "byName": zod.string(),
+  "at": zod.string()
+}),zod.null()]).optional(),
   "note": zod.string().nullish().describe('Optional description the patient wrote for this photo'),
   "editParams": zod.unknown().optional()
 })
@@ -1789,6 +1894,26 @@ export const ConfirmPatientPhotoResponse = zod.object({
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
   "captureMetadata": zod.unknown().optional(),
+  "measurement": zod.union([zod.object({
+  "referenceId": zod.string(),
+  "referenceMm": zod.number(),
+  "referencePx": zod.number(),
+  "referencePoints": zod.array(zod.object({
+  "x": zod.number(),
+  "y": zod.number()
+})),
+  "lesionPoints": zod.array(zod.object({
+  "x": zod.number(),
+  "y": zod.number()
+})),
+  "imageWidth": zod.number(),
+  "imageHeight": zod.number(),
+  "lengthMm": zod.number(),
+  "uncertaintyPct": zod.number(),
+  "by": zod.enum(['patient', 'staff']),
+  "byName": zod.string(),
+  "at": zod.string()
+}),zod.null()]).optional(),
   "note": zod.string().nullish().describe('Optional description the patient wrote for this photo'),
   "editParams": zod.unknown().optional()
 })
@@ -1822,6 +1947,26 @@ export const CreatePatientAdjustedPhotoResponse = zod.object({
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
   "captureMetadata": zod.unknown().optional(),
+  "measurement": zod.union([zod.object({
+  "referenceId": zod.string(),
+  "referenceMm": zod.number(),
+  "referencePx": zod.number(),
+  "referencePoints": zod.array(zod.object({
+  "x": zod.number(),
+  "y": zod.number()
+})),
+  "lesionPoints": zod.array(zod.object({
+  "x": zod.number(),
+  "y": zod.number()
+})),
+  "imageWidth": zod.number(),
+  "imageHeight": zod.number(),
+  "lengthMm": zod.number(),
+  "uncertaintyPct": zod.number(),
+  "by": zod.enum(['patient', 'staff']),
+  "byName": zod.string(),
+  "at": zod.string()
+}),zod.null()]).optional(),
   "note": zod.string().nullish().describe('Optional description the patient wrote for this photo'),
   "editParams": zod.unknown().optional()
 })
