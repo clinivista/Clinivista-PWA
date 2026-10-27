@@ -60,6 +60,15 @@ describe("Panel de supra-control con menú lateral", () => {
     return json({ centers: [] });
   }));
 
+  it("aplica el tema a portales solo mientras el panel está montado", () => {
+    stub();
+    const { unmount } = wrap(<DirectorPanel onLogout={() => {}} />);
+    expect(document.body).toHaveClass("supra-dashboard");
+    expect(document.body).not.toHaveClass("clinic-dashboard");
+    unmount();
+    expect(document.body).not.toHaveClass("supra-dashboard");
+  });
+
   it("abre en el dashboard y navega por el menú", async () => {
     stub();
     wrap(<DirectorPanel onLogout={() => {}} />);

@@ -133,15 +133,15 @@
 }
 
 /*
- * Clinical Premium — tokens del dashboard de clínica (pages/admin.tsx).
- * Solo aplican bajo .clinic-dashboard: el contenedor raíz del panel y, mientras el
+ * Clinical Premium — tokens compartidos de clínica y supra-control.
+ * Solo aplican bajo :is(.clinic-dashboard, .supra-dashboard): el contenedor raíz del panel y, mientras el
  * panel está montado, <body> (para que diálogos, menús y avisos de Radix, que se
  * renderizan en un portal, hereden la misma paleta). :root y .dark no cambian.
  * Contrastes (WCAG): texto #0F1E33 sobre #F3F6FA 15.4:1 · secundario #4F5E72 sobre
  * blanco 6.6:1 · azul #1D5FB8 con texto blanco 6.2:1 · turquesa #0F766E sobre
  * blanco 5.5:1 · navegación blanca sobre #0B1F33 16.7:1 (etiquetas al 60 % 6.7:1).
  */
-.clinic-dashboard {
+:is(.clinic-dashboard, .supra-dashboard) {
   --background: 214 41% 97%;
   --foreground: 215 55% 13%;
 
@@ -184,12 +184,12 @@
 }
 
 /* Sobre la navegación azul marino el foco se dibuja en turquesa claro (11.3:1). */
-.clinic-dashboard .cd-nav {
+:is(.clinic-dashboard, .supra-dashboard) .cd-nav {
   --ring: 171 77% 64%;
 }
 
 /* Foco de teclado visible en todo lo interactivo del panel (y de sus portales). */
-.clinic-dashboard :is(a, button, input, select, textarea, summary, [role="button"], [role="combobox"], [role="tab"], [role="option"], [tabindex]:not([tabindex="-1"])):focus-visible {
+:is(.clinic-dashboard, .supra-dashboard) :is(a, button, input, select, textarea, summary, [role="button"], [role="combobox"], [role="tab"], [role="option"], [tabindex]:not([tabindex="-1"])):focus-visible {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
 }
@@ -199,26 +199,61 @@
  * traen el beige y el borde cálido de la paleta anterior como colores fijos. Dentro
  * del dashboard se reasignan a las superficies gris azuladas; fuera, no cambian.
  */
-.clinic-dashboard .bg-\[\#F5F2EE\],
-.clinic-dashboard .hover\:bg-\[\#F5F2EE\]:hover {
+:is(.clinic-dashboard, .supra-dashboard) .bg-\[\#F5F2EE\],
+:is(.clinic-dashboard, .supra-dashboard) .hover\:bg-\[\#F5F2EE\]:hover {
   background-color: hsl(var(--muted));
 }
-.clinic-dashboard .border-\[\#E8E4DE\],
-.clinic-dashboard .divide-\[\#F5F2EE\] > :not(:last-child),
-.clinic-dashboard .divide-\[\#E8E4DE\] > :not(:last-child) {
+:is(.clinic-dashboard, .supra-dashboard) .border-\[\#E8E4DE\],
+:is(.clinic-dashboard, .supra-dashboard) .divide-\[\#F5F2EE\] > :not(:last-child),
+:is(.clinic-dashboard, .supra-dashboard) .divide-\[\#E8E4DE\] > :not(:last-child) {
   border-color: hsl(var(--border));
 }
-.clinic-dashboard .ring-\[\#E8E4DE\] {
+:is(.clinic-dashboard, .supra-dashboard) .ring-\[\#E8E4DE\] {
   --tw-ring-color: hsl(var(--border));
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .clinic-dashboard *,
-  .clinic-dashboard *::before,
-  .clinic-dashboard *::after {
+  :is(.clinic-dashboard, .supra-dashboard) *,
+  :is(.clinic-dashboard, .supra-dashboard) *::before,
+  :is(.clinic-dashboard, .supra-dashboard) *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Supra-control shares the approved clinical palette, including body portals. */
+.supra-dashboard .sd-sidebar {
+  background: linear-gradient(175deg, #102f4c, #0b1f33 65%);
+}
+.supra-dashboard :is(.rounded-3xl, .rounded-\[1\.75rem\]) {
+  border-radius: 1rem;
+}
+.supra-dashboard :is(button, a, input, select).rounded-full {
+  border-radius: 0.75rem;
+}
+.supra-dashboard :is(button, input, select, a.inline-flex) {
+  min-height: 2.75rem;
+}
+.supra-dashboard button:is(.w-8, .w-9, .w-10) {
+  min-width: 2.75rem;
+}
+.supra-dashboard .sd-tile {
+  box-shadow: var(--cd-shadow);
+  border-top: 3px solid hsl(var(--cd-teal));
+}
+.supra-dashboard .sd-card {
+  box-shadow: var(--cd-shadow);
+}
+.supra-dashboard .sd-nav-label {
+  white-space: normal;
+  line-height: 1.3;
+  text-align: left;
+}
+.supra-dashboard .sd-bar-row {
+  grid-template-columns: minmax(6rem, 8rem) minmax(2rem, 1fr) minmax(2rem, max-content);
+}
+.supra-dashboard .sd-bar-row > :last-child {
+  overflow-wrap: anywhere;
 }
