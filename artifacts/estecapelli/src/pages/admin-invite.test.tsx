@@ -58,6 +58,11 @@ function renderAdmin() {
   );
 }
 
+// Al entrar se ve Inicio: el botón "Copiar enlace" está en la cabecera de Pacientes.
+async function openPatients(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole("button", { name: "Pacientes" }));
+}
+
 function invitationRequests() {
   return fetchSpy.mock.calls.filter(([input]) => String(input).includes("/api/invitations"));
 }
@@ -71,6 +76,7 @@ describe("Admin — permanent self-registration link", () => {
     setClipboard({ writeText });
     renderAdmin();
 
+    await openPatients(user);
     await user.click(await screen.findByRole("button", { name: /Copiar enlace/i }));
 
     expect(writeText).toHaveBeenCalledWith(PUBLIC_LINK);
@@ -89,6 +95,7 @@ describe("Admin — permanent self-registration link", () => {
 
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     renderAdmin();
+    await openPatients(user);
     await user.click(await screen.findByRole("button", { name: /Copiar enlace/i }));
 
     expect(copiedValue).toBe(PUBLIC_LINK);
@@ -102,6 +109,7 @@ describe("Admin — permanent self-registration link", () => {
 
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     renderAdmin();
+    await openPatients(user);
     await user.click(await screen.findByRole("button", { name: /Copiar enlace/i }));
 
     await waitFor(() => expect(document.execCommand).toHaveBeenCalledWith("copy"));
@@ -115,6 +123,7 @@ describe("Admin — permanent self-registration link", () => {
 
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     renderAdmin();
+    await openPatients(user);
     await user.click(await screen.findByRole("button", { name: /Copiar enlace/i }));
 
     expect(screen.queryByPlaceholderText("+56 9 1234 5678")).not.toBeInTheDocument();

@@ -1043,6 +1043,11 @@ export interface LeadSummary {
   consent?: boolean;
   photoCount: number;
   photoKeys?: string[];
+  /**
+     * First confirmed pre-evaluation photo (or the first draft) for the clinic home thumbnail; null without photos. Served by GET /leads/{id}/photos/{photoId}.
+     * @nullable
+     */
+  coverPhotoId?: string | null;
   /** @nullable */
   hairLossTime?: string | null;
   /** @nullable */

@@ -628,6 +628,10 @@
      "text": "Ao entrar, você chega ao «Painel de Pacientes», a visão geral da sua clínica. À esquerda está o menu (Pacientes, Usuários, Relatório e, para o representante legal, Fases), o seletor de idioma e o botão de sair."
     },
     {
+     "t": "p",
+     "text": "Ao entrar em uma clínica você chega primeiro ao «Início»: uma saudação com a data de hoje, acessos rápidos (Novo paciente, Ver pacientes, Relatório e, conforme sua permissão, Fases e Usuários), os indicadores da clínica (pacientes no total, fotografias registradas, cadastros deste mês e, se você gerencia usuários, profissionais ativos) e os seis pacientes mais recentes; toque em um para abrir a ficha."
+    },
+    {
      "t": "legend",
      "items": [
       "Pacientes: lista e fichas.",

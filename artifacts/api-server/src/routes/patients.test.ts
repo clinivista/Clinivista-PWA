@@ -1277,6 +1277,29 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
     expect(await statusOf(lead.id)).toBe("contactado");
   });
 
+  it("el resumen de /leads trae la miniatura (coverPhotoId) solo a la clínica del paciente", async () => {
+    const withPhotos = await patientWithPreEvaluation(false);
+    const withoutPhotos = await createPatient({ documentId: "11.111.111-1", phone: "+56933333333", email: "otro@example.com" });
+    const own = (await request(app).get("/api/leads").set("Cookie", staff()).expect(200)).body.leads as Array<{ id: string; coverPhotoId: string | null }>;
+    const confirmed = (await request(app).get(`/api/leads/${withPhotos.id}`).set("Cookie", staff()).expect(200)).body.photos as Array<{ id: string; key: string; status: string }>;
+    const frontal = confirmed.find((photo) => photo.key === "frontal")!;
+    expect(frontal.status).toBe("confirmed");
+    expect(own.find((lead) => lead.id === withPhotos.id)?.coverPhotoId).toBe(frontal.id); // la primera confirmada
+    expect(own.find((lead) => lead.id === withoutPhotos.id)?.coverPhotoId).toBeNull();
+    // Se sirve con el endpoint existente, sin caché compartida.
+    const image = await request(app).get(`/api/leads/${withPhotos.id}/photos/${frontal.id}`).set("Cookie", staff()).expect(200);
+    expect(image.headers["cache-control"]).toBe("private, no-store");
+
+    // Otra clínica no ve al paciente, ni su miniatura, ni puede pedir la foto.
+    await pglite.exec(`INSERT INTO clinical_centers (id, name, slug, active) VALUES ('clinic-b', 'Clínica B', 'clinica-b', true);`);
+    const other = await request(app).get("/api/leads").set("Cookie", staff("clinic-b")).expect(200);
+    expect(other.body.leads).toEqual([]);
+    expect(JSON.stringify(other.body)).not.toContain(frontal.id);
+    await request(app).get(`/api/leads/${withPhotos.id}/photos/${frontal.id}`).set("Cookie", staff("clinic-b")).expect(404);
+    // Sin sesión de personal, nada.
+    await request(app).get("/api/leads").expect(401);
+  });
+
   it("lists the six phases; each opens only when the previous one is complete", async () => {
     const lead = await patientWithPreEvaluation(false);
     let list = await phases(lead.id);

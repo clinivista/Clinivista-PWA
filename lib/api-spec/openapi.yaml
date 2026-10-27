@@ -3598,6 +3598,9 @@ components:
           type: array
           items:
             type: string
+        coverPhotoId:
+          type: ["string", "null"]
+          description: First confirmed pre-evaluation photo (or the first draft) for the clinic home thumbnail; null without photos. Served by GET /leads/{id}/photos/{photoId}.
         hairLossTime:
           type: ["string", "null"]
         pattern:

@@ -41,12 +41,16 @@ async function leadSummary(lead: typeof leadsTable.$inferSelect, consult: Consul
     ? (photos as Array<{ key?: unknown }>).flatMap((photo) => typeof photo?.key === "string" ? [photo.key] : [])
     : [];
   const visibleClinical = clinicalPhotos.filter((photo) => ["draft", "confirmed"].includes(photo.status));
+  // Miniatura de la pantalla de Inicio: la primera foto confirmada (si no hay, el primer borrador).
+  const byAge = (a: { createdAt: Date }, b: { createdAt: Date }) => a.createdAt.getTime() - b.createdAt.getTime();
+  const cover = [...visibleClinical].sort((a, b) => Number(b.status === "confirmed") - Number(a.status === "confirmed") || byAge(a, b))[0];
   return {
     ...safe,
     consultTypeName: consult.typeName,
     consultCount: consult.count,
     photoCount: new Set([...legacyKeys, ...visibleClinical.map((photo) => photo.key)]).size,
     photoKeys: [...new Set([...legacyKeys, ...visibleClinical.map((photo) => photo.key)])],
+    coverPhotoId: cover?.id ?? null,
   };
 }
 

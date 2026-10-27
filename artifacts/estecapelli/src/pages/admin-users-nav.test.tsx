@@ -53,6 +53,23 @@ function renderAdmin() {
   );
 }
 
+describe("Admin — Inicio", () => {
+  it("es la vista por defecto y el primer ítem del menú, sin quitar los demás", async () => {
+    me = signedIn("administrativo", true);
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    renderAdmin();
+    expect(await screen.findByTestId("clinic-home")).toBeInTheDocument();
+    const nav = screen.getByRole("navigation");
+    const items = Array.from(nav.querySelectorAll("button")).map((b) => b.textContent?.trim());
+    expect(items[0]).toBe("Inicio");
+    expect(items).toEqual(expect.arrayContaining(["Pacientes", "Usuarios", "Informe", "Ayuda"]));
+    expect(screen.getByTestId("nav-home")).toHaveAttribute("aria-current", "page");
+    await user.click(screen.getByRole("button", { name: "Pacientes" }));
+    expect(await screen.findByRole("button", { name: /Copiar enlace/i })).toBeInTheDocument();
+    expect(screen.queryByTestId("clinic-home")).not.toBeInTheDocument();
+  });
+});
+
 describe("Admin — Usuarios option", () => {
   it("is offered to a person who can manage users, and opens the users list", async () => {
     me = signedIn("administrativo", true);
@@ -72,7 +89,8 @@ describe("Admin — Usuarios option", () => {
   it("is hidden from a médico who is not the legal representative", async () => {
     me = signedIn("medico", false);
     renderAdmin();
-    await screen.findByRole("button", { name: /Copiar enlace/i });
+    // Inicio es la vista por defecto: tampoco ofrece Usuarios ni pide la lista.
+    await screen.findByTestId("clinic-home");
     expect(screen.queryByRole("button", { name: "Usuarios" })).not.toBeInTheDocument();
     expect(fetchSpy.mock.calls.some(([url]) => String(url).includes("/api/clinic/users"))).toBe(false);
   });
