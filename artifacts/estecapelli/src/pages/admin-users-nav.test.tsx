@@ -70,6 +70,29 @@ describe("Admin — Inicio", () => {
   });
 });
 
+describe("Admin — dirección del texto", () => {
+  it("en árabe todo el panel y sus portales van de derecha a izquierda; al salir se restablece", async () => {
+    window.localStorage.setItem("clinivista_lang", "ar");
+    me = signedIn("administrativo", true);
+    const { container, unmount } = renderAdmin();
+    await screen.findByTestId("clinic-home");
+    expect(container.querySelector(".clinic-dashboard")).toHaveAttribute("dir", "rtl");
+    expect(screen.getByRole("navigation").closest("[dir]")).toHaveAttribute("dir", "rtl");
+    expect(document.body).toHaveAttribute("dir", "rtl");
+    unmount();
+    expect(document.body).not.toHaveAttribute("dir");
+    expect(document.body).not.toHaveClass("clinic-dashboard");
+  });
+
+  it("en español va de izquierda a derecha", async () => {
+    me = signedIn("administrativo", true);
+    const { container } = renderAdmin();
+    await screen.findByTestId("clinic-home");
+    expect(container.querySelector(".clinic-dashboard")).toHaveAttribute("dir", "ltr");
+    expect(document.body).toHaveAttribute("dir", "ltr");
+  });
+});
+
 describe("Admin — Usuarios option", () => {
   it("is offered to a person who can manage users, and opens the users list", async () => {
     me = signedIn("administrativo", true);

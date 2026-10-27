@@ -35,10 +35,10 @@ export function MeasureTrend({ phases }: { phases: TrendInput[] }) {
                         <div className="flex-1 h-2 rounded-full bg-black/5 overflow-hidden" aria-hidden="true">
                           <div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(4, (row.lengthMm / top) * 100)}%` }} />
                         </div>
-                        <span className="shrink-0 font-bold text-foreground">{formatMm(row.lengthMm, lang)} mm</span>
-                        <span className="shrink-0 text-muted-foreground">±{row.uncertaintyPct}%</span>
+                        <bdi dir="ltr" className="shrink-0 font-bold text-foreground">{formatMm(row.lengthMm, lang)} mm</bdi>
+                        <bdi dir="ltr" className="shrink-0 text-muted-foreground">±{row.uncertaintyPct}%</bdi>
                       </div>
-                      <p className="pl-[7.5rem] flex items-center gap-1 text-muted-foreground"><Icon className="w-3 h-3" aria-hidden="true" />{text}</p>
+                      <p className="ps-[7.5rem] flex items-center gap-1 text-muted-foreground"><Icon className="w-3 h-3" aria-hidden="true" />{text}</p>
                     </li>
                   );
                 })}

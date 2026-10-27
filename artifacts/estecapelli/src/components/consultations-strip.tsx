@@ -77,7 +77,7 @@ export function ConsultationsStrip({ leadId, onOpen }: { leadId: string; onOpen:
           </button>
         ))}
         <Button type="button" variant="outline" size="sm" className="rounded-full font-semibold" data-testid="add-consultation" onClick={() => setOpen(true)}>
-          <Plus className="w-4 h-4 mr-1.5" />{c.addConsult}
+          <Plus className="w-4 h-4 me-1.5" />{c.addConsult}
         </Button>
       </div>
       <Dialog open={open} onOpenChange={(next) => { if (!busy) setOpen(next); }}>
@@ -100,7 +100,7 @@ export function ConsultationsStrip({ leadId, onOpen }: { leadId: string; onOpen:
           <DialogFooter className="gap-2">
             <Button type="button" variant="ghost" className="rounded-full" disabled={busy} onClick={() => setOpen(false)}>{c.cancel}</Button>
             <Button type="button" className="rounded-full" disabled={busy} onClick={() => void add()} data-testid="consultation-add-confirm">
-              {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}{busy ? c.adding : c.addConsultBtn}
+              {busy && <Loader2 className="w-4 h-4 me-2 animate-spin" />}{busy ? c.adding : c.addConsultBtn}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -183,10 +183,10 @@ export function ReportPanel({ onOpenLead }: { onOpenLead: (leadId: string) => vo
           {canEdit && (
             <div className="flex flex-wrap gap-3">
               <Button className="rounded-full" onClick={save} disabled={update.isPending}>
-                {update.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Guardar configuración
+                {update.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}Guardar configuración
               </Button>
               <Button variant="outline" className="rounded-full" onClick={sendNow} disabled={send.isPending || data.config.recipients.length === 0}>
-                {send.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}Enviar ahora
+                {send.isPending ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <Send className="w-4 h-4 me-2" />}Enviar ahora
               </Button>
             </div>
           )}

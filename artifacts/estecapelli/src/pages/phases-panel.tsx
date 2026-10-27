@@ -184,7 +184,7 @@ export function PhasesPanel() {
             {!phase.diagnosis && <ul className="flex flex-col gap-2">
               {phase.views.map((view, viewIndex) => (
                 <li key={view.uid} className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="shrink-0 w-6 text-xs text-muted-foreground text-right">{viewIndex + 1}</span>
+                  <span className="shrink-0 w-6 text-xs text-muted-foreground text-end">{viewIndex + 1}</span>
                   <Input
                     aria-label={`Fotografía ${viewIndex + 1} de ${phase.name || `fase ${phaseIndex + 1}`}`}
                     className="h-9 rounded-full bg-[#F5F2EE] min-w-0"
@@ -250,7 +250,7 @@ export function PhasesPanel() {
             {canEdit && !phase.diagnosis && phase.views.length < MAX_VIEWS && (
               <Button variant="outline" size="sm" className="self-start rounded-full"
                 onClick={() => updatePhase(phaseIndex, (p) => ({ ...p, views: [...p.views, { uid: nextUid(), label: "", hasPhotos: false, document: false, measure: false }] }))}>
-                <Plus className="w-4 h-4 mr-1.5" /> Agregar fotografía
+                <Plus className="w-4 h-4 me-1.5" /> Agregar fotografía
               </Button>
             )}
           </section>
@@ -259,7 +259,7 @@ export function PhasesPanel() {
         {canEdit && draft && draft.length < MAX_PHASES && (
           <Button variant="outline" className="rounded-full h-12 font-bold self-start"
             onClick={() => setDraft((prev) => (prev ? [...prev, { uid: nextUid(), name: "", patientCaptured: false, views: [{ uid: nextUid(), label: "", hasPhotos: false, document: false, measure: false }] }] : prev))}>
-            <Plus className="w-4 h-4 mr-2" /> Agregar fase
+            <Plus className="w-4 h-4 me-2" /> Agregar fase
           </Button>
         )}
       </div>

@@ -22,6 +22,7 @@ import {
   usePatchLead, useDeleteLead, useGetClinicProtocol, getGetClinicProtocolQueryKey,
 } from "@workspace/api-client-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { DirectionProvider } from "@radix-ui/react-direction";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
 import { BrandLogo } from "@/components/brand-logo";
 import { buildPublicPatientLink, copyToClipboard } from "@/lib/clipboard";
@@ -63,7 +64,7 @@ const STATUS_COLORS: Record<string, string> = {
 // Botón de la barra lateral (azul marino): estado activo con indicador turquesa.
 const navItemClass = (active: boolean) =>
   `relative w-full justify-start gap-3 rounded-xl h-12 [&_svg]:size-5 px-4 font-medium text-[15px] transition-colors hover:text-white ${active
-    ? "bg-[hsl(var(--cd-nav-active))] text-white hover:bg-[hsl(var(--cd-nav-active))] before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-[hsl(var(--cd-teal-bright))]"
+    ? "bg-[hsl(var(--cd-nav-active))] text-white hover:bg-[hsl(var(--cd-nav-active))] before:absolute before:start-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-e-full before:bg-[hsl(var(--cd-teal-bright))]"
     : "bg-transparent text-white/75 hover:bg-white/10"}`;
 
 const cardClass = "bg-card rounded-2xl border border-[hsl(var(--card-border))] shadow-[var(--cd-shadow)]";
@@ -175,11 +176,14 @@ export default function Admin() {
   // se ve el dashboard de clínica, <body> lleva también la clase de sus tokens.
   const showsClinicDashboard = authStatus?.authenticated === true && !authStatus.user?.needsClinicChoice
     && authStatus.user?.role !== "director" && authStatus.user?.role !== "supra_admin";
+  // En árabe, todo el panel (y sus portales) va de derecha a izquierda.
+  const dir = lang === "ar" ? "rtl" : "ltr";
   useEffect(() => {
     if (!showsClinicDashboard) return;
     document.body.classList.add("clinic-dashboard");
-    return () => document.body.classList.remove("clinic-dashboard");
-  }, [showsClinicDashboard]);
+    document.body.dir = dir;
+    return () => { document.body.classList.remove("clinic-dashboard"); document.body.removeAttribute("dir"); };
+  }, [showsClinicDashboard, dir]);
 
   if (isAuthLoading || !authStatus?.authenticated) return <div className="clinic-dashboard min-h-[100dvh] bg-background" />;
 
@@ -249,7 +253,9 @@ export default function Admin() {
   };
 
   return (
-    <div className="clinic-dashboard h-[100dvh] bg-background text-foreground flex flex-col md:flex-row font-sans selection:bg-primary/20">
+    // DirectionProvider: los menús y diálogos de Radix (en portal) siguen la misma dirección.
+    <DirectionProvider dir={dir}>
+    <div dir={dir} className="clinic-dashboard h-[100dvh] bg-background text-foreground flex flex-col md:flex-row font-sans selection:bg-primary/20">
       {/* Mobile top bar */}
       <div className="cd-nav md:hidden bg-[hsl(var(--cd-nav))] text-white px-4 py-2.5 flex items-center justify-between shrink-0 z-30 shadow-md">
         <Link href="/">
@@ -274,7 +280,7 @@ export default function Admin() {
       )}
 
       {/* Sidebar */}
-      <aside className={`cd-nav fixed inset-y-0 left-0 w-72 max-w-[85vw] z-50 transition-transform duration-300 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} md:static md:translate-x-0 md:max-w-none md:w-64 lg:w-72 md:z-30 bg-[hsl(var(--cd-nav))] bg-gradient-to-b from-[hsl(var(--cd-nav))] to-[hsl(210_62%_9%)] text-white flex-shrink-0 flex flex-col md:min-h-[100dvh] shadow-2xl md:shadow-none md:border-r md:border-white/5 overflow-y-auto`}>
+      <aside className={`cd-nav fixed inset-y-0 start-0 w-72 max-w-[85vw] z-50 transition-transform duration-300 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full rtl:translate-x-full"} md:static md:translate-x-0 md:rtl:translate-x-0 md:max-w-none md:w-64 lg:w-72 md:z-30 bg-[hsl(var(--cd-nav))] bg-gradient-to-b from-[hsl(var(--cd-nav))] to-[hsl(210_62%_9%)] text-white flex-shrink-0 flex flex-col md:min-h-[100dvh] shadow-2xl md:shadow-none md:border-e md:border-white/5 overflow-y-auto`}>
         <div className="px-6 py-5 flex items-center justify-between gap-3 border-b border-white/10">
           <Link href="/">
             <div className="flex items-center cursor-pointer group">
@@ -355,7 +361,7 @@ export default function Admin() {
             >
               <LifeBuoy className="w-5 h-5" />
               {HELP_TEXT[lang].nav}
-              {helpUnread > 0 && <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold text-white" data-testid="help-unread">{helpUnread}</span>}
+              {helpUnread > 0 && <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold text-white" data-testid="help-unread">{helpUnread}</span>}
             </Button>
           </nav>
 
@@ -369,17 +375,17 @@ export default function Admin() {
                 className="w-full min-h-11 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/10 border border-white/10 text-white text-sm font-medium transition-colors"
               >
                 <span className="text-base">{currentLang.flag}</span>
-                <span className="flex-1 text-left">{currentLang.name}</span>
+                <span className="flex-1 text-start">{currentLang.name}</span>
                 <ChevronDown className={`w-4 h-4 text-white/60 transition-transform ${langOpen ? "rotate-180" : ""}`} />
               </button>
               {langOpen && (
                 <div className="absolute bottom-full left-0 right-0 mb-2 bg-[hsl(210_58%_17%)] rounded-xl shadow-xl border border-white/10 overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-150 max-h-56 overflow-y-auto">
                   {LANGS.map(l => (
                     <button key={l.code} onClick={() => { setLang(l.code as LangCode); setLangOpen(false); }}
-                      className={`w-full min-h-11 flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/10 text-left transition-colors ${lang === l.code ? "text-[hsl(var(--cd-teal-bright))] font-semibold" : "text-white/80"}`}>
+                      className={`w-full min-h-11 flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/10 text-start transition-colors ${lang === l.code ? "text-[hsl(var(--cd-teal-bright))] font-semibold" : "text-white/80"}`}>
                       <span>{l.flag}</span>
                       <span>{l.name}</span>
-                      {lang === l.code && <Check className="w-3.5 h-3.5 ml-auto text-[hsl(var(--cd-teal-bright))]" />}
+                      {lang === l.code && <Check className="w-3.5 h-3.5 ms-auto text-[hsl(var(--cd-teal-bright))]" />}
                     </button>
                   ))}
                 </div>
@@ -422,7 +428,7 @@ export default function Admin() {
             <Button
               size="sm"
               variant="outline"
-              className="rounded-full ml-auto min-h-11 md:min-h-9 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
+              className="rounded-full ms-auto min-h-11 md:min-h-9 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
               onClick={async () => {
                 await fetch("/api/auth/leave-clinic", { method: "POST", credentials: "include" });
                 queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== getGetAuthMeQueryKey()[0] });
@@ -528,10 +534,10 @@ export default function Admin() {
         {/* Filters */}
         <div className="px-4 sm:px-6 md:px-10 pb-4 flex flex-wrap gap-3 shrink-0">
           <div className="relative flex-1 basis-60 sm:max-w-sm">
-            <Search className="w-[18px] h-[18px] absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <Search className="w-[18px] h-[18px] absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
               placeholder={t.adminSearchPlaceholder}
-              className="pl-11 h-11 bg-card border-input rounded-xl text-base shadow-sm focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:border-primary"
+              className="ps-11 h-11 bg-card border-input rounded-xl text-base shadow-sm focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:border-primary"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -571,13 +577,13 @@ export default function Admin() {
                     <button
                       type="button"
                       onClick={() => setSelectedLeadId(lead.id)}
-                      className={`w-full text-left p-4 flex items-center gap-3 hover:bg-muted/60 transition-colors ${selectedLeadId === lead.id ? 'bg-accent shadow-[inset_3px_0_0_hsl(var(--primary))]' : ''}`}
+                      className={`w-full text-start p-4 flex items-center gap-3 hover:bg-muted/60 transition-colors ${selectedLeadId === lead.id ? 'bg-accent shadow-[inset_3px_0_0_hsl(var(--primary))] rtl:shadow-[inset_-3px_0_0_hsl(var(--primary))]' : ''}`}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
                             <div className="font-semibold text-foreground text-base truncate">{lead.name || "—"}</div>
-                            <div className="text-muted-foreground text-sm truncate tabular-nums">{lead.phone}</div>
+                            <div className="text-muted-foreground text-sm truncate tabular-nums"><bdi dir="ltr">{lead.phone}</bdi></div>
                             {lead.consultTypeName && <div className="text-xs font-semibold text-[hsl(var(--cd-teal))] truncate mt-0.5" data-testid="lead-consult">{consultLabel(lead)}</div>}
                           </div>
                           <span className={`px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 ring-1 ring-inset ring-black/5 ${STATUS_COLORS[lead.status]}`}>
@@ -590,25 +596,25 @@ export default function Admin() {
                             {lead.photoCount}/{photoTotal}
                           </span>
                           <span className="text-muted-foreground">
-                            {format(parseISO(lead.createdAt), "d MMM, yyyy", { locale: dateFnsEs })}
+                            <bdi dir="ltr">{format(parseISO(lead.createdAt), "d MMM, yyyy", { locale: dateFnsEs })}</bdi>
                           </span>
                         </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 rtl:rotate-180" />
                     </button>
                   </li>
                 ))}
               </ul>
 
               {/* Desktop: table */}
-              <table className="hidden md:table w-full text-sm text-left">
+              <table className="hidden md:table w-full text-sm text-start">
                 <thead className="bg-muted/60 text-muted-foreground font-semibold uppercase tracking-wider text-[11px] border-b border-border">
                   <tr>
                     <th className="px-6 py-3.5 font-semibold">{t.adminColPatient}</th>
                     <th className="px-6 py-3.5 font-semibold">{t.adminColStatus}</th>
                     <th className="px-6 py-3.5 font-semibold">{t.adminColPhotos}</th>
                     <th className="px-6 py-3.5 font-semibold">{t.adminColDate}</th>
-                    <th className="px-6 py-3.5 font-semibold text-right">{t.adminColAction}</th>
+                    <th className="px-6 py-3.5 font-semibold text-end">{t.adminColAction}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -616,13 +622,13 @@ export default function Admin() {
                     <tr
                       key={lead.id}
                       tabIndex={0}
-                      className={`hover:bg-muted/50 cursor-pointer transition-colors group focus-visible:-outline-offset-2 ${selectedLeadId === lead.id ? 'bg-accent shadow-[inset_3px_0_0_hsl(var(--primary))]' : ''}`}
+                      className={`hover:bg-muted/50 cursor-pointer transition-colors group focus-visible:-outline-offset-2 ${selectedLeadId === lead.id ? 'bg-accent shadow-[inset_3px_0_0_hsl(var(--primary))] rtl:shadow-[inset_-3px_0_0_hsl(var(--primary))]' : ''}`}
                       onClick={() => setSelectedLeadId(lead.id)}
                       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedLeadId(lead.id); } }}
                     >
                       <td className="px-6 py-4">
                         <div className="font-semibold text-foreground text-[15px] mb-0.5">{lead.name || "—"}</div>
-                        <div className="text-muted-foreground text-sm tabular-nums">{lead.phone}</div>
+                        <div className="text-muted-foreground text-sm tabular-nums"><bdi dir="ltr">{lead.phone}</bdi></div>
                         {lead.consultTypeName && <div className="text-xs font-semibold text-[hsl(var(--cd-teal))] mt-0.5" data-testid="lead-consult">{consultLabel(lead)}</div>}
                       </td>
                       <td className="px-6 py-4">
@@ -637,11 +643,11 @@ export default function Admin() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-muted-foreground tabular-nums">
-                        {format(parseISO(lead.createdAt), "d MMM, yyyy", { locale: dateFnsEs })}
+                        <bdi dir="ltr">{format(parseISO(lead.createdAt), "d MMM, yyyy", { locale: dateFnsEs })}</bdi>
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="w-8 h-8 rounded-lg border border-border bg-card flex items-center justify-center ml-auto text-muted-foreground group-hover:border-primary/40 group-hover:bg-accent group-hover:text-primary transition-colors">
-                          <ChevronRight className="w-4 h-4" />
+                      <td className="px-6 py-4 text-end">
+                        <div className="w-8 h-8 rounded-lg border border-border bg-card flex items-center justify-center ms-auto text-muted-foreground group-hover:border-primary/40 group-hover:bg-accent group-hover:text-primary transition-colors">
+                          <ChevronRight className="w-4 h-4 rtl:rotate-180" />
                         </div>
                       </td>
                     </tr>
@@ -659,13 +665,13 @@ export default function Admin() {
         {selectedLeadId && (
           <>
             <div className="absolute inset-0 bg-[hsl(var(--cd-nav)/0.35)] backdrop-blur-[2px] z-40 animate-in fade-in" onClick={() => setSelectedLeadId(null)} />
-            <div className="absolute inset-y-0 right-0 w-full md:w-[680px] bg-background shadow-2xl flex flex-col z-50 animate-in slide-in-from-right duration-300 md:border-l md:border-border overflow-hidden">
+            <div className="absolute inset-y-0 end-0 w-full md:w-[680px] bg-background shadow-2xl flex flex-col z-50 animate-in slide-in-from-end duration-300 md:border-s md:border-border overflow-hidden">
               {fullLead ? (
                 <>
                   <div className="px-5 py-5 md:px-8 md:py-6 flex items-center justify-between gap-4 bg-card border-b border-border shrink-0">
                     <div className="min-w-0">
                       <h2 className="text-xl md:text-2xl font-bold text-foreground tracking-tight break-words">{fullLead.name || "Paciente"}</h2>
-                      <p className="text-muted-foreground mt-1 tabular-nums">{fullLead.phone}</p>
+                      <p className="text-muted-foreground mt-1 tabular-nums"><bdi dir="ltr">{fullLead.phone}</bdi></p>
                     </div>
                     <button onClick={() => setSelectedLeadId(null)} aria-label={t.close} className="w-11 h-11 shrink-0 border border-border hover:bg-muted rounded-xl flex items-center justify-center transition-colors">
                       <X className="w-5 h-5 text-muted-foreground" />
@@ -753,7 +759,7 @@ export default function Admin() {
                       <h3 className="text-base md:text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                         <Camera className="w-5 h-5 text-primary" />
                         {t.adminPhotoReg}
-                        <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground tabular-nums">{fullLead.photos?.length || 0}/{photoTotal}</span>
+                        <span className="ms-1 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground tabular-nums">{fullLead.photos?.length || 0}/{photoTotal}</span>
                       </h3>
                       {fullLead.photos && fullLead.photos.length > 0 ? (
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -772,10 +778,10 @@ export default function Admin() {
                               <div className="aspect-[4/3] overflow-hidden bg-[hsl(var(--cd-nav)/0.06)]">
                                 <img src={photoUrl} alt={p.label} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
                               </div>
-                              <div className="px-3 py-2.5 text-xs font-semibold text-center text-foreground border-t border-border">{p.label}</div>
+                              <div className="px-3 py-2.5 text-xs font-semibold text-center text-foreground border-t border-border"><bdi>{p.label}</bdi></div>
                               {p.note && (
                                 <p className="px-3 pb-3 text-xs text-foreground whitespace-pre-wrap break-words" title={t.adminPhotoNote}>
-                                  <span className="font-semibold text-muted-foreground">{t.adminPhotoNote}: </span>{p.note}
+                                  <span className="font-semibold text-muted-foreground">{t.adminPhotoNote}: </span><bdi>{p.note}</bdi>
                                 </p>
                               )}
                             </div>
@@ -903,12 +909,13 @@ export default function Admin() {
       {/* Expanded Photo Modal */}
       {expandedPhoto && (
         <div className="fixed inset-0 bg-[hsl(210_65%_6%/0.95)] z-[100] flex items-center justify-center p-4 backdrop-blur-md" onClick={() => setExpandedPhoto(null)}>
-          <button aria-label={t.close} className="cd-nav absolute top-5 right-5 text-white w-12 h-12 flex items-center justify-center bg-white/10 rounded-xl hover:bg-white/20 transition-colors">
+          <button aria-label={t.close} className="cd-nav absolute top-5 end-5 text-white w-12 h-12 flex items-center justify-center bg-white/10 rounded-xl hover:bg-white/20 transition-colors">
             <X className="w-6 h-6" />
           </button>
           <img src={expandedPhoto} alt="" className="max-w-full max-h-full object-contain rounded-xl shadow-2xl" />
         </div>
       )}
     </div>
+    </DirectionProvider>
   );
 }

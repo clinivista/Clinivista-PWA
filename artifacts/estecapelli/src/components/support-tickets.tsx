@@ -139,7 +139,7 @@ export function SupportTickets({ onChanged }: { onChanged?: () => void }) {
                 <Input value={comment} onChange={(e) => setComment(e.target.value)} maxLength={500} placeholder={t.commentPh} aria-label={t.commentPh} className="h-11 rounded-2xl" />
                 {error && <p className="text-sm font-semibold text-red-600" role="alert">{error}</p>}
                 <Button type="button" disabled={busy || rating < 1} onClick={() => void rate()} className="rounded-full font-semibold" data-testid="ticket-rate-send">
-                  {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{t.rateSend}
+                  {busy && <Loader2 className="me-2 h-4 w-4 animate-spin" />}{t.rateSend}
                 </Button>
               </div>
             ) : undefined} />
@@ -160,7 +160,7 @@ export function SupportTickets({ onChanged }: { onChanged?: () => void }) {
           className="w-full resize-none rounded-2xl border border-[#E8E4DE] bg-[#F5F2EE] px-4 py-3 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00A9A5]/40" />
         {error && <p className="text-sm font-semibold text-red-600" role="alert">{error}</p>}
         <Button type="button" disabled={busy || subject.trim().length < 3 || !message.trim()} onClick={() => void create()} className="rounded-full font-semibold" data-testid="ticket-create">
-          {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{busy ? t.opening : t.open}
+          {busy && <Loader2 className="me-2 h-4 w-4 animate-spin" />}{busy ? t.opening : t.open}
         </Button>
       </div>
       <div className="space-y-2" data-testid="ticket-history">

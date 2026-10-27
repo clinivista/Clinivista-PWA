@@ -81,7 +81,7 @@ export function ClinicUsersPanel() {
         </div>
         {!adding && (
           <Button className="rounded-full h-12 px-6 font-bold w-full md:w-auto" onClick={() => setAdding(true)}>
-            <Plus className="w-4 h-4 mr-2" /> Agregar usuario
+            <Plus className="w-4 h-4 me-2" /> Agregar usuario
           </Button>
         )}
       </header>
@@ -156,7 +156,7 @@ export function ClinicUsersPanel() {
                 Cancelar
               </Button>
               <Button type="submit" className="rounded-full h-10 font-semibold" disabled={createUser.isPending}>
-                {createUser.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                {createUser.isPending && <Loader2 className="w-4 h-4 animate-spin me-2" />}
                 Crear usuario
               </Button>
             </div>
