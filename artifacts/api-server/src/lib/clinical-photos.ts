@@ -25,6 +25,9 @@ import {
 import { uid } from "./helpers";
 import { createObjectKey, privatePhotoStorage } from "./clinical-photo-storage";
 import { getSpecialty, type SpecialtyModule } from "./specialties";
+import { isVideoMime, type ParsedVideo } from "./video-upload";
+
+const isVideoView = (view: { requirements: unknown }) => (view.requirements as Record<string, unknown> | null)?.video === true;
 
 export const DEFAULT_CENTER_ID = process.env.DEFAULT_CENTER_ID ?? "default-center";
 export const DEFAULT_PROTOCOL_ID = process.env.DEFAULT_PROTOCOL_ID
@@ -61,6 +64,8 @@ export type PhotoStatus = {
   hasAdjusted: boolean;
   width: number | null;
   height: number | null;
+  /** Duración de un video (la informa el navegador que lo grabó); null en las fotos. */
+  durationMs: number | null;
   captureMetadata: unknown;
   /** Medida de la lesión sobre la foto (con una moneda de referencia), si alguien la marcó. */
   measurement: PhotoMeasurement | null;
@@ -84,6 +89,7 @@ function photoStatus(photo: ClinicalPhoto, view: { key: string; label: string })
     hasAdjusted: Boolean(photo.derivativeObjectPath),
     width: photo.width,
     height: photo.height,
+    durationMs: isVideoMime(photo.originalMimeType) ? (Number((photo.captureMetadata as Record<string, unknown> | null)?.durationMs) || null) : null,
     captureMetadata: photo.captureMetadata,
     measurement: readMeasurement(photo.captureMetadata),
     note: photo.note ?? null,
@@ -409,6 +415,7 @@ export async function createClinicalPhoto(input: {
   const { views: patientViews } = await getPatientPhaseViews(evaluation.protocolId);
   const view = patientViews.find((candidate) => candidate.key === input.key);
   if (!view) throw new Error("Unsupported protocol photo view.");
+  if (isVideoView(view)) throw new Error("This view is recorded as a video.");
 
   const hash = crypto.createHash("sha256").update(input.bytes).digest("hex");
   const stored = await privatePhotoStorage.put({
@@ -471,7 +478,7 @@ export async function createAdjustedPhoto(input: {
 }): Promise<PhotoStatus | null> {
   return serializePhotoMutation(input.photoId, async () => {
     const located = await findOwnedPatientPhoto(input.lead, input.photoId);
-    if (!located || located.photo.status !== "confirmed") return null;
+    if (!located || located.photo.status !== "confirmed" || isVideoMime(located.photo.originalMimeType)) return null;
 
     const rendered = await renderTrustedTechnicalDerivative(located.photo, input.editParams);
     const derivativeSha256 = crypto.createHash("sha256").update(rendered.bytes).digest("hex");
@@ -599,7 +606,8 @@ export async function getPatientPhotoFile(
   rendition: "original" | "adjusted",
 ): Promise<{ objectPath: string; mimeType: string } | null> {
   const located = await findOwnedPatientPhoto(lead, photoId);
-  if (!located || located.photo.status !== "confirmed") return null;
+  // Los videos tienen su propia ruta (por tramos); el camino de las fotos no los sirve.
+  if (!located || located.photo.status !== "confirmed" || isVideoMime(located.photo.originalMimeType)) return null;
   const objectPath = rendition === "original"
     ? located.photo.originalObjectPath
     : located.photo.derivativeObjectPath;
@@ -716,6 +724,8 @@ export type LeadPhaseView = {
   document: boolean;
   /** La clínica pidió medir la lesión en esta foto con una moneda de referencia. */
   measure: boolean;
+  /** Esta vista se registra con un video corto (plan Titanium) en vez de una foto. */
+  video: boolean;
   /** Transcripción de la foto actual (solo el personal la ve). */
   transcription: {
     text: string;
@@ -799,6 +809,7 @@ export async function getLeadPhases(lead: Lead): Promise<LeadPhase[]> {
           required: (view.requirements as Record<string, unknown> | null)?.required !== false,
           document: (view.requirements as Record<string, unknown> | null)?.document === true,
           measure: (view.requirements as Record<string, unknown> | null)?.measure === true,
+          video: isVideoView(view),
           transcription: photo && transcriptions.has(photo.id)
             ? (() => {
                 const row = transcriptions.get(photo.id)!;
@@ -870,6 +881,7 @@ export async function createStaffPhasePhoto(input: {
   if (!phase.staffCanCapture) throw new PhaseCaptureError("La pre-evaluación la toma el paciente desde su enlace.");
   if (!phase.enabled) throw new PhaseCaptureError("Completa la fase anterior antes de registrar esta.", 409);
   if (phase.attentionRequired && !phase.attention) throw new PhaseCaptureError("Registra la fecha de atención de esta fase antes de subir sus fotografías.", 409);
+  if (view.video) throw new PhaseCaptureError("Esta vista se registra en video, no con una foto.");
 
   const hash = crypto.createHash("sha256").update(input.bytes).digest("hex");
   const stored = await privatePhotoStorage.put({
@@ -974,7 +986,7 @@ export { MeasurementError };
  */
 export async function saveMeasurement(lead: Lead, photoId: string, actor: { type: "patient" | "staff"; id: string; name: string }, body: unknown | null): Promise<PhotoStatus | null> {
   const located = actor.type === "patient" ? await findOwnedPatientPhoto(lead, photoId) : await findOwnedPhoto(lead, photoId);
-  if (!located || !isVisible(located.photo.status)) return null;
+  if (!located || !isVisible(located.photo.status) || isVideoMime(located.photo.originalMimeType)) return null;
   if ((located.view.requirements as Record<string, unknown> | null)?.measure !== true) {
     throw new MeasurementError("Esta fotografía no está marcada para medir.");
   }
@@ -984,4 +996,103 @@ export async function saveMeasurement(lead: Lead, photoId: string, actor: { type
   const [photo] = await db.update(clinicalPhotosTable).set({ captureMetadata: metadata }).where(eq(clinicalPhotosTable.id, photoId)).returning();
   await writeAuditEvent(photo, body === null ? "measurement_removed" : "measured", actor.type, actor.id, body === null ? {} : { lengthMm: (metadata.measurement as PhotoMeasurement).lengthMm });
   return photoStatus(photo, located.view);
+}
+
+// ── Videos por vista (plan Titanium) ────────────────────────────────────
+// Se registran en clinical_photos (mismo ciclo de vida: borrador, confirmado,
+// reemplazado, descartado y borrado con los datos del paciente), con un
+// mimeType video/* y sin pasar por el procesamiento de imagen: no hay
+// derivadas, dimensiones ni sharp. La clínica debe tener la función «video»
+// para subir (lo comprueba la ruta); los ya guardados se siguen viendo aunque baje de plan.
+
+async function storeVideo(input: {
+  evaluation: { id: string; centerId: string };
+  viewId: string;
+  video: ParsedVideo;
+  status: "draft" | "confirmed";
+  source: "camera" | "upload";
+  capturedBy: "patient" | "staff";
+}): Promise<ClinicalPhoto> {
+  const hash = crypto.createHash("sha256").update(input.video.bytes).digest("hex");
+  const stored = await privatePhotoStorage.put({
+    key: createObjectKey({ centerId: input.evaluation.centerId, evaluationId: input.evaluation.id, kind: "video", contentType: input.video.contentType }),
+    bytes: input.video.bytes,
+    contentType: input.video.contentType,
+  });
+  await db.update(clinicalPhotosTable)
+    .set({ status: "superseded" })
+    .where(and(
+      eq(clinicalPhotosTable.evaluationId, input.evaluation.id),
+      eq(clinicalPhotosTable.viewId, input.viewId),
+      inArray(clinicalPhotosTable.status, ["draft", "confirmed"]),
+    ));
+  const now = new Date();
+  const [photo] = await db.insert(clinicalPhotosTable).values({
+    id: uid(18),
+    evaluationId: input.evaluation.id,
+    viewId: input.viewId,
+    status: input.status,
+    originalObjectPath: stored.objectPath,
+    originalMimeType: input.video.contentType,
+    originalBytes: input.video.bytes.length,
+    originalSha256: hash,
+    width: null,
+    height: null,
+    source: input.source,
+    captureMetadata: {
+      storage: privatePhotoStorage.mode,
+      capturedBy: input.capturedBy,
+      kind: "video",
+      ...(input.video.durationMs !== null ? { durationMs: input.video.durationMs } : {}),
+    },
+    createdAt: now,
+    ...(input.status === "confirmed" ? { confirmedAt: now } : {}),
+  }).returning();
+  return photo;
+}
+
+/** El paciente graba el video de una vista de su pre-evaluación (queda en borrador hasta que lo confirma, como una foto). */
+export async function createClinicalVideo(input: { lead: Lead; key: string; source: "camera" | "upload"; video: ParsedVideo }): Promise<PhotoStatus> {
+  const evaluation = await ensureEvaluationForLead(input.lead);
+  const { views } = await getPatientPhaseViews(evaluation.protocolId);
+  const view = views.find((candidate) => candidate.key === input.key);
+  if (!view) throw new PhaseCaptureError("Esa vista no existe en tu pre-evaluación.", 404);
+  if (!isVideoView(view)) throw new PhaseCaptureError("Esta vista se registra con una foto, no con un video.");
+  const photo = await storeVideo({ evaluation, viewId: view.id, video: input.video, status: "draft", source: input.source, capturedBy: "patient" });
+  await writeAuditEvent(photo, "uploaded", "patient", input.lead.id, { view: view.key, kind: "video", bytes: photo.originalBytes });
+  return photoStatus(photo, view);
+}
+
+/** El personal (tablet o «Continuar en el celular») graba el video de una vista; mismas reglas de orden que las fotos. */
+export async function createStaffPhaseVideo(input: { lead: Lead; viewId: string; staffUserId: string; source: "camera" | "upload"; video: ParsedVideo }): Promise<PhotoStatus> {
+  const evaluation = await ensureEvaluationForLead(input.lead);
+  const phases = await getLeadPhases(input.lead);
+  const phase = phases.find((candidate) => candidate.views.some((view) => view.id === input.viewId));
+  const view = phase?.views.find((candidate) => candidate.id === input.viewId);
+  if (!phase || !view) throw new PhaseCaptureError("Esa vista no existe en este proceso.", 404);
+  if (!phase.staffCanCapture) throw new PhaseCaptureError("La pre-evaluación la toma el paciente desde su enlace.");
+  if (!phase.enabled) throw new PhaseCaptureError("Completa la fase anterior antes de registrar esta.", 409);
+  if (phase.attentionRequired && !phase.attention) throw new PhaseCaptureError("Registra la fecha de atención de esta fase antes de subir sus fotografías.", 409);
+  if (!view.video) throw new PhaseCaptureError("Esta vista se registra con una foto, no con un video.");
+  const photo = await storeVideo({ evaluation, viewId: view.id, video: input.video, status: "confirmed", source: input.source, capturedBy: "staff" });
+  await writeAuditEvent(photo, "uploaded", "staff", input.staffUserId, { view: view.key, phase: phase.name, kind: "video", bytes: photo.originalBytes });
+  const [viewRow] = await db.select().from(protocolViewsTable).where(eq(protocolViewsTable.id, input.viewId));
+  return photoStatus(photo, viewRow);
+}
+
+export type StoredVideo = { objectPath: string; mimeType: string; size: number };
+
+const toStoredVideo = (photo: ClinicalPhoto): StoredVideo => ({ objectPath: photo.originalObjectPath, mimeType: photo.originalMimeType, size: photo.originalBytes });
+
+/** Un video del caso para el personal de su clínica (la ruta ya comprobó la clínica). */
+export async function getVideoForStaff(lead: Lead, photoId: string): Promise<StoredVideo | null> {
+  const photo = await getPhotoForStaff(lead, photoId);
+  return photo && isVideoMime(photo.originalMimeType) ? toStoredVideo(photo) : null;
+}
+
+/** Un video del propio paciente: solo los de su pre-evaluación, nunca los de las fases de la clínica. */
+export async function getVideoForPatient(lead: Lead, photoId: string): Promise<StoredVideo | null> {
+  const located = await findOwnedPatientPhoto(lead, photoId);
+  if (!located || !isVisible(located.photo.status) || !isVideoMime(located.photo.originalMimeType)) return null;
+  return toStoredVideo(located.photo);
 }

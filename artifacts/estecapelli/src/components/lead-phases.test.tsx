@@ -46,6 +46,33 @@ describe("LeadPhases", () => {
     expect(within(locked).queryByRole("button")).not.toBeInTheDocument();
   });
 
+  it("una vista de video se reproduce desde la ruta de video; grabar solo con el plan Titanium", () => {
+    const video = { id: "vid1", mimeType: "video/mp4", durationMs: 12000, measurement: null };
+    api.phases = [
+      phase("p1", "Pre-evaluación", { patientCaptured: true, enabled: true, complete: true, views: [view("p1-a", "Frontal", "f1")] }),
+      phase("p2", "Control 1", { enabled: true, views: [{ ...view("p2-a", "Movilidad"), video: true, photo: video }, view("p2-b", "Frontal")] }),
+    ];
+    const { unmount } = render(<LeadPhases leadId="lead-1" onExpand={vi.fn()} />);
+    const slot = screen.getByTestId("video-slot-p2-a");
+    expect(within(slot).getByTestId("video-player")).toHaveAttribute("src", "/api/leads/lead-1/videos/vid1");
+    expect(within(slot).getByTestId("video-player")).toHaveAttribute("controlslist", expect.stringContaining("nodownload"));
+    expect(within(slot).getByTestId("video-player")).toHaveAttribute("preload", "metadata");
+    expect(within(slot).getByTestId("video-plan-note")).toHaveTextContent("Disponible en el plan Titanium");
+    expect(within(slot).queryByTestId("video-record-p2-a")).not.toBeInTheDocument();
+    unmount();
+
+    render(<LeadPhases leadId="lead-1" onExpand={vi.fn()} canRecordVideo />);
+    expect(within(screen.getByTestId("video-slot-p2-a")).getByTestId("video-record-p2-a")).toHaveTextContent("Repetir video");
+  });
+
+  it("los videos que grabó el paciente se ven en su pre-evaluación", () => {
+    api.phases = [
+      phase("p1", "Pre-evaluación", { patientCaptured: true, enabled: true, complete: true, views: [view("p1-a", "Frontal", "f1"), { ...view("p1-b", "Movimiento"), video: true, photo: { id: "pv1", mimeType: "video/webm", durationMs: null } }] }),
+    ];
+    render(<LeadPhases leadId="lead-1" onExpand={vi.fn()} />);
+    expect(within(screen.getByTestId("patient-videos")).getByTestId("video-player")).toHaveAttribute("src", "/api/leads/lead-1/videos/pv1");
+  });
+
   it("ofrece medir con la moneda solo en las fotos marcadas para medir", () => {
     api.phases = [
       phase("p1", "Pre-evaluación", { patientCaptured: true, enabled: true, complete: true, views: [{ ...view("p1-a", "Lesión", "f1"), measure: true, photo: { id: "f1", measurement: null } }, view("p1-b", "General", "f2")] }),

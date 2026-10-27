@@ -30,7 +30,7 @@ beforeAll(async () => {
   await pglite.exec(`
     CREATE TABLE IF NOT EXISTS clinical_centers (
       id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
-      active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar',
+      active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', plan text NOT NULL DEFAULT 'basic' CHECK (plan IN ('basic', 'unlimited', 'titanium')),
       created_at timestamptz NOT NULL DEFAULT now()
     );
     CREATE TABLE IF NOT EXISTS users (
@@ -278,6 +278,82 @@ describe("fotografías marcadas para medir", () => {
     const final = (await request(app).put("/api/clinic/protocol").set("Cookie", cookie).send({ phases: cleared }).expect(200)).body.phases as typeof saved;
     expect(final[0].views[0].measure).toBe(false);
     expect(final[3].views.at(-1)?.measure).toBe(true);
+  });
+});
+
+describe("vistas marcadas como video (plan Titanium)", () => {
+  type VideoInput = Array<{ id?: string; name: string; views: Array<{ id?: string; label: string; video?: boolean; document?: boolean; measure?: boolean }> }>;
+  type VideoPhases = Array<{ id: string; name: string; views: Array<{ id: string; label: string; hasPhotos: boolean; document: boolean; measure: boolean; video: boolean }> }>;
+  const setPlan = (plan: string) => pglite.exec(`UPDATE clinical_centers SET plan = '${plan}' WHERE id = 'clinic-a';`);
+  const put = (cookie: string, phases: unknown) => request(app).put("/api/clinic/protocol").set("Cookie", cookie).send({ phases });
+
+  it("muestra el plan y sus funciones; sin Titanium rechaza marcar video (403)", async () => {
+    await seedUser("rep", "medico", "clinic-a", true);
+    const cookie = as("rep", "medico", "clinic-a");
+    const basic = (await request(app).get("/api/clinic/protocol").set("Cookie", cookie).expect(200)).body;
+    expect(basic).toMatchObject({ plan: "basic", features: [] });
+    expect(basic.phases.flatMap((p: VideoPhases[number]) => p.views).every((v: { video: boolean }) => v.video === false)).toBe(true);
+
+    const next = toInput(basic.phases) as VideoInput;
+    next[2].views[0].video = true;
+    const refused = await put(cookie, next).expect(403);
+    expect(refused.body.error).toMatch(/Titanium/);
+    next[2].views[0].video = undefined;
+    next[2].views.push({ label: "Movilidad", video: true });
+    await put(cookie, next).expect(403);
+
+    await setPlan("titanium");
+    const titanium = (await request(app).get("/api/clinic/protocol").set("Cookie", cookie).expect(200)).body;
+    expect(titanium).toMatchObject({ plan: "titanium", features: ["video"] });
+    const saved = (await put(cookie, next).expect(200)).body.phases as VideoPhases;
+    expect(saved[2].views.at(-1)).toMatchObject({ label: "Movilidad", video: true, document: false, measure: false });
+  });
+
+  it("video es excluyente con documento y medir", async () => {
+    await setPlan("titanium");
+    await seedUser("rep", "medico", "clinic-a", true);
+    const cookie = as("rep", "medico", "clinic-a");
+    const next = toInput((await read(cookie)).phases) as VideoInput;
+    next[2].views[0] = { ...next[2].views[0], video: true, document: true };
+    await put(cookie, next).expect(400);
+    next[2].views[0] = { ...next[2].views[0], document: false, measure: true };
+    await put(cookie, next).expect(400);
+    next[2].views[0] = { ...next[2].views[0], measure: false };
+    await put(cookie, next).expect(200);
+  });
+
+  it("se conserva cuando la petición no lo menciona, y si la clínica baja de plan sigue guardando sin perderlo", async () => {
+    await setPlan("titanium");
+    await seedUser("rep", "medico", "clinic-a", true);
+    const cookie = as("rep", "medico", "clinic-a");
+    const next = toInput((await read(cookie)).phases) as VideoInput;
+    next[3].views[1].video = true;
+    const saved = (await put(cookie, next).expect(200)).body.phases as VideoPhases;
+    const omitted = (await put(cookie, toInput(saved as unknown as Phase[])).expect(200)).body.phases as VideoPhases;
+    expect(omitted[3].views[1].video).toBe(true);
+
+    await setPlan("basic");
+    // Lo que ya era video se conserva (también si se envía explícitamente); solo marcar uno nuevo está bloqueado.
+    const keep = toInput(omitted as unknown as Phase[]) as VideoInput;
+    keep[3].views[1].video = true;
+    const kept = (await put(cookie, keep).expect(200)).body.phases as VideoPhases;
+    expect(kept[3].views[1].video).toBe(true);
+    keep[3].views[2].video = true;
+    await put(cookie, keep).expect(403);
+  });
+
+  it("no cambia entre foto y video una vista que ya tiene capturas", async () => {
+    await setPlan("titanium");
+    await seedUser("rep", "medico", "clinic-a", true);
+    const cookie = as("rep", "medico", "clinic-a");
+    const { phases } = await read(cookie);
+    const viewId = phases[2].views[0].id;
+    await pglite.exec(`INSERT INTO clinical_photos (id, evaluation_id, view_id, original_object_path, original_mime_type, original_bytes, original_sha256)
+      VALUES ('p-1', 'ev-1', '${viewId}', '/objects/clinical/x', 'image/jpeg', 10, 'abc');`);
+    const next = toInput((await read(cookie)).phases) as VideoInput;
+    next[2].views[0].video = true;
+    const res = await put(cookie, next).expect(400);
+    expect(res.body.error).toMatch(/capturas guardadas/);
   });
 });
 

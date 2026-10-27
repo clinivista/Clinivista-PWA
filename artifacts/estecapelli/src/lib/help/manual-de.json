@@ -1356,6 +1356,25 @@
   },
   {
    "id": "2.17",
+   "key": "video",
+   "title": "Video pro Foto (Titanium-Tarif)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Im Titanium-Tarif können Sie unter „Phasen“ bei einer Ansicht „Video“ markieren: Statt eines Fotos wird ein kurzes Video von bis zu 20 Sekunden aufgenommen (zum Beispiel, um eine Bewegung zu sehen). Nicht kombinierbar mit „Dokument“ oder „Messen“. In anderen Tarifen ist das Kästchen mit dem Hinweis „Im Titanium-Tarif verfügbar“ deaktiviert; den Tarif jeder Klinik legt die Supra-Kontrolle fest."
+    },
+    {
+     "t": "p",
+     "text": "Das Video wird in der App aufgenommen: vom Patienten in seiner Voruntersuchung und vom Personal auf dem Tablet oder mit „Auf dem Handy fortfahren“. Es gibt einen Countdown, einen Zähler und einen automatischen Stopp nach 20 Sekunden; vor dem Verwenden kann es angesehen und neu aufgenommen werden, und die Kamera schaltet sich beim Verlassen ab. Kann der Browser nicht aufnehmen, kann eine MP4-, WebM- oder MOV-Datei bis 25 MB hochgeladen werden. Das Video zählt als aufgenommen, um die Phase abzuschließen, und wird in der Patientenakte abgespielt."
+    },
+    {
+     "t": "note",
+     "text": "Wechselt die Klinik zu einem Tarif ohne Video, bleiben gespeicherte Videos erhalten und sichtbar; sie kann nur keine neuen Ansichten mehr als Video markieren und keine neuen Videos aufnehmen. Videos erscheinen nicht im Ergebnis-PDF und nicht im Verlaufsvergleich: Sie werden in der Akte angesehen."
+    }
+   ]
+  },
+  {
+   "id": "2.18",
    "title": "Nutzung auf dem Smartphone",
    "blocks": [
     {
@@ -1390,7 +1409,7 @@
    "key": "phone"
   },
   {
-   "id": "2.18",
+   "id": "2.19",
    "key": "support",
    "title": "Support-Tickets",
    "blocks": [
@@ -1414,7 +1433,7 @@
    ]
   },
   {
-   "id": "2.19",
+   "id": "2.20",
    "title": "Tipps und Fehlerbehebung",
    "blocks": [
     {

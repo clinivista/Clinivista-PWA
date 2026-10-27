@@ -1,4 +1,5 @@
-import { boolean, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { boolean, check, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -20,8 +21,14 @@ export const centersTable = pgTable("clinical_centers", {
   // La especialidad define el formulario del paciente, el protocolo de fotos y
   // las fases iniciales de la clínica. La fija supra-control al crearla.
   specialty: text("specialty").notNull().default("capilar"),
+  // Plan de la clínica (lo fija supra-control). Qué habilita cada uno está en
+  // artifacts/api-server/src/lib/plans.ts; hoy solo «titanium» agrega el video.
+  // Migración: lib/db/sql/sql0001-plan-de-clinica.sql.
+  plan: text("plan").notNull().default("basic"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => [
+  check("clinical_centers_plan_check", sql`${table.plan} in ('basic', 'unlimited', 'titanium')`),
+]);
 
 export const protocolsTable = pgTable("clinical_protocols", {
   id: text("id").primaryKey(),

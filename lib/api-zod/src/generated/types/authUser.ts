@@ -9,6 +9,8 @@ import type { AuthUserClinicsItem } from './authUserClinicsItem';
 import type { AuthUserRole } from './authUserRole';
 import type { AuthUserViewingClinic } from './authUserViewingClinic';
 import type { AuthUserViewingProfile } from './authUserViewingProfile';
+import type { ClinicPlan } from './clinicPlan';
+import type { PlanFeature } from './planFeature';
 
 export interface AuthUser {
   id: string;
@@ -28,4 +30,7 @@ export interface AuthUser {
   /** the profile a director entered the clinic with (chosen in supra-control, "Mi cuenta"). */
   viewingProfile?: AuthUserViewingProfile;
   viewingClinic?: AuthUserViewingClinic;
+  plan?: ClinicPlan;
+  /** Functions the current clinic's plan enables (the server decides; the interface only reflects it). Only present when a clinic is chosen. */
+  features?: PlanFeature[];
 }

@@ -1356,6 +1356,25 @@
   },
   {
    "id": "2.17",
+   "key": "video",
+   "title": "Fotoğraf başına video (Titanium paketi)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Titanium paketiyle «Aşamalar» bölümünde bir görünüm için «Video»yu işaretleyebilirsiniz: fotoğraf yerine en fazla 20 saniyelik kısa bir video kaydedilir (örneğin bir hareketi görmek için). «Belge» veya «Ölç» ile birlikte kullanılamaz. Diğer paketlerde kutu «Titanium paketinde mevcut» notuyla devre dışıdır; her kliniğin paketini süper kontrol belirler."
+    },
+    {
+     "t": "p",
+     "text": "Video uygulamanın içinde kaydedilir: hasta ön değerlendirmesinde, personel ise tablette veya «Telefonda devam et» ile. Geri sayım, sayaç ve 20 saniyede otomatik durdurma vardır; kullanmadan önce izlenip yeniden kaydedilebilir ve çıkarken kamera kapanır. Tarayıcı kayıt yapamıyorsa en fazla 25 MB'lık bir MP4, WebM veya MOV dosyası yüklenebilir. Video, aşamayı tamamlamak için çekilmiş sayılır ve hasta dosyasında oynatılır."
+    },
+    {
+     "t": "note",
+     "text": "Klinik videosuz bir pakete geçerse kayıtlı videolar korunur ve izlenmeye devam eder; yalnızca yeni görünümleri video olarak işaretleyemez ve yeni video kaydedemez. Videolar sonuç PDF'inde ve gelişim karşılaştırmasında yer almaz: dosyada izlenir."
+    }
+   ]
+  },
+  {
+   "id": "2.18",
    "title": "Telefondan kullanım",
    "blocks": [
     {
@@ -1390,7 +1409,7 @@
    "key": "phone"
   },
   {
-   "id": "2.18",
+   "id": "2.19",
    "key": "support",
    "title": "Destek biletleri",
    "blocks": [
@@ -1414,7 +1433,7 @@
    ]
   },
   {
-   "id": "2.19",
+   "id": "2.20",
    "title": "İpuçları ve sorun giderme",
    "blocks": [
     {

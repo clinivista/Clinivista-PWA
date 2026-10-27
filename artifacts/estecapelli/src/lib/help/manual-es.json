@@ -1356,6 +1356,25 @@
   },
   {
    "id": "2.17",
+   "key": "video",
+   "title": "Video por fotografía (plan Titanium)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Con el plan Titanium, en «Fases» puedes marcar «Video» en una vista: en vez de una foto se graba un video corto de hasta 20 segundos (por ejemplo, para ver un movimiento). No se combina con «Documento» ni «Medir». En otros planes la casilla aparece deshabilitada con el aviso «Disponible en el plan Titanium»; el plan de cada clínica lo fija supra-control."
+    },
+    {
+     "t": "p",
+     "text": "El video se graba dentro de la app: el paciente en su pre-evaluación, y el personal en la tablet o con «Continuar en el celular». Hay una cuenta regresiva, un contador y un corte automático a los 20 segundos; se puede revisar y volver a grabar antes de usarlo, y la cámara se apaga al salir. Si el navegador no puede grabar, se puede subir un archivo MP4, WebM o MOV de hasta 25 MB. El video cuenta como capturado para completar la fase y se reproduce en la ficha del paciente."
+    },
+    {
+     "t": "note",
+     "text": "Si la clínica cambia a un plan sin video, los videos guardados se conservan y se siguen viendo; solo deja de poder marcar vistas nuevas como video y de grabar videos nuevos. Los videos no aparecen en el PDF de resultados ni en el comparador de evolución: se ven en la ficha."
+    }
+   ]
+  },
+  {
+   "id": "2.18",
    "title": "Uso desde el teléfono",
    "blocks": [
     {
@@ -1390,7 +1409,7 @@
    "key": "phone"
   },
   {
-   "id": "2.18",
+   "id": "2.19",
    "key": "support",
    "title": "Tickets de soporte",
    "blocks": [
@@ -1414,7 +1433,7 @@
    ]
   },
   {
-   "id": "2.19",
+   "id": "2.20",
    "title": "Consejos y solución de problemas",
    "blocks": [
     {

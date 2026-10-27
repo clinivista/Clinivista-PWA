@@ -11,11 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { ConsultTypesBar } from "./consult-types-bar";
+import { useLanguage } from "@/lib/language";
+import { VIDEO_TEXT } from "@/lib/video-i18n";
 
 const MAX_PHASES = 12;
 const MAX_VIEWS = 12;
 
-type DraftView = { uid: string; id?: string; label: string; hasPhotos: boolean; document: boolean; measure: boolean };
+type DraftView = { uid: string; id?: string; label: string; hasPhotos: boolean; document: boolean; measure: boolean; video: boolean };
 type DraftPhase = { uid: string; id?: string; name: string; patientCaptured: boolean; diagnosis?: boolean; views: DraftView[] };
 
 let counter = 0;
@@ -28,7 +30,7 @@ function toDraft(protocol: ClinicProtocol): DraftPhase[] {
     name: phase.name,
     patientCaptured: phase.patientCaptured,
     diagnosis: phase.kind === "diagnosis",
-    views: phase.views.map((view) => ({ uid: view.id, id: view.id, label: view.label, hasPhotos: view.hasPhotos, document: view.document, measure: view.measure })),
+    views: phase.views.map((view) => ({ uid: view.id, id: view.id, label: view.label, hasPhotos: view.hasPhotos, document: view.document, measure: view.measure, video: view.video === true })),
   }));
 }
 
@@ -37,7 +39,7 @@ const payload = (phases: DraftPhase[]) =>
     ...(phase.id ? { id: phase.id } : {}),
     name: phase.name.trim(),
     // The diagnosis phase has no photo list: the doctor marks up the patient's photos.
-    views: phase.diagnosis ? [] : phase.views.map((view) => ({ ...(view.id ? { id: view.id } : {}), label: view.label.trim(), document: view.document, measure: view.measure })),
+    views: phase.diagnosis ? [] : phase.views.map((view) => ({ ...(view.id ? { id: view.id } : {}), label: view.label.trim(), document: view.document, measure: view.measure, video: view.video })),
   }));
 
 function move<T>(items: T[], from: number, to: number): T[] {
@@ -58,6 +60,10 @@ export function PhasesPanel() {
   const params = typeId ? { typeId } : undefined;
   const { data, isLoading, isError } = useGetClinicProtocol(params);
   const save = useUpdateClinicProtocol();
+  const { lang } = useLanguage();
+  const v = VIDEO_TEXT[lang];
+  // El servidor decide: la casilla solo refleja si el plan de la clínica incluye video.
+  const videoEnabled = data?.features?.includes("video") === true;
   const [draft, setDraft] = useState<DraftPhase[] | null>(null);
 
   useEffect(() => { setDraft(null); }, [typeId]);
@@ -134,7 +140,11 @@ export function PhasesPanel() {
             La primera fase es la pre-evaluación que el paciente toma desde el enlace de la clínica; las demás las registra el personal, en orden.
             Marca «Documento» en las fotografías que son papeles (fichas, consentimientos): bajo ellas el personal podrá transcribir el texto.
             Marca «Medir» en las fotografías de lesiones: el paciente recibe un instructivo para fotografiar una moneda de referencia junto a la lesión, y luego él y el personal pueden medirla sobre la foto.
+            {" "}{v.phasesHint}
           </p>
+        )}
+        {data && !videoEnabled && draft?.some((phase) => phase.views.some((view) => view.video)) && (
+          <p className="text-sm rounded-2xl bg-amber-50 text-amber-900 p-4" role="status" data-testid="video-plan-lost">{v.lostPlanWarning}</p>
         )}
 
         {draft?.map((phase, phaseIndex) => (
@@ -205,7 +215,7 @@ export function PhasesPanel() {
                       disabled={!canEdit}
                       onChange={(event) => updatePhase(phaseIndex, (p) => ({
                         ...p,
-                        views: p.views.map((v, i) => (i === viewIndex ? { ...v, document: event.target.checked } : v)),
+                        views: p.views.map((v, i) => (i === viewIndex ? { ...v, document: event.target.checked, video: event.target.checked ? false : v.video } : v)),
                       }))}
                     />
                     Documento
@@ -219,11 +229,36 @@ export function PhasesPanel() {
                       disabled={!canEdit}
                       onChange={(event) => updatePhase(phaseIndex, (p) => ({
                         ...p,
-                        views: p.views.map((v, i) => (i === viewIndex ? { ...v, measure: event.target.checked } : v)),
+                        views: p.views.map((v, i) => (i === viewIndex ? { ...v, measure: event.target.checked, video: event.target.checked ? false : v.video } : v)),
                       }))}
                     />
                     Medir
                   </label>
+                  {(() => {
+                    // Sin el plan solo se puede desmarcar una vista que ya era video, nunca marcar una nueva.
+                    const locked = !canEdit || (!videoEnabled && !view.video);
+                    return (
+                      <label className={`shrink-0 flex items-center gap-1.5 text-xs font-medium ${locked && canEdit ? "text-muted-foreground/70" : "text-muted-foreground"}`} title={videoEnabled ? v.checkboxTitle : v.onlyTitanium}>
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 accent-[#2A9D8F]"
+                          aria-label={v.checkboxAria(view.label || `${viewIndex + 1}`)}
+                          aria-describedby={!videoEnabled && canEdit ? `video-plan-${view.uid}` : undefined}
+                          checked={view.video}
+                          disabled={locked}
+                          data-testid="video-checkbox"
+                          onChange={(event) => updatePhase(phaseIndex, (p) => ({
+                            ...p,
+                            views: p.views.map((item, i) => (i === viewIndex
+                              ? { ...item, video: event.target.checked, ...(event.target.checked ? { document: false, measure: false } : {}) }
+                              : item)),
+                          }))}
+                        />
+                        {v.checkbox}
+                        {!videoEnabled && canEdit && <span id={`video-plan-${view.uid}`} className="text-[11px] text-muted-foreground/80">({v.onlyTitanium})</span>}
+                      </label>
+                    );
+                  })()}
                   {canEdit && (
                     <div className="flex shrink-0">
                       <Button variant="ghost" size="icon" aria-label="Subir fotografía" disabled={viewIndex === 0}
@@ -249,7 +284,7 @@ export function PhasesPanel() {
             </ul>}
             {canEdit && !phase.diagnosis && phase.views.length < MAX_VIEWS && (
               <Button variant="outline" size="sm" className="self-start rounded-full"
-                onClick={() => updatePhase(phaseIndex, (p) => ({ ...p, views: [...p.views, { uid: nextUid(), label: "", hasPhotos: false, document: false, measure: false }] }))}>
+                onClick={() => updatePhase(phaseIndex, (p) => ({ ...p, views: [...p.views, { uid: nextUid(), label: "", hasPhotos: false, document: false, measure: false, video: false }] }))}>
                 <Plus className="w-4 h-4 me-1.5" /> Agregar fotografía
               </Button>
             )}
@@ -258,7 +293,7 @@ export function PhasesPanel() {
 
         {canEdit && draft && draft.length < MAX_PHASES && (
           <Button variant="outline" className="rounded-full h-12 font-bold self-start"
-            onClick={() => setDraft((prev) => (prev ? [...prev, { uid: nextUid(), name: "", patientCaptured: false, views: [{ uid: nextUid(), label: "", hasPhotos: false, document: false, measure: false }] }] : prev))}>
+            onClick={() => setDraft((prev) => (prev ? [...prev, { uid: nextUid(), name: "", patientCaptured: false, views: [{ uid: nextUid(), label: "", hasPhotos: false, document: false, measure: false, video: false }] }] : prev))}>
             <Plus className="w-4 h-4 me-2" /> Agregar fase
           </Button>
         )}

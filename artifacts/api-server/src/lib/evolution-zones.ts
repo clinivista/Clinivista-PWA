@@ -2,6 +2,7 @@
 import type { LeadPhase } from "./clinical-photos";
 import type { DiagnosisPhoto } from "./diagnosis";
 import { zoneKeyOf } from "./evolution-i18n";
+import { isVideoMime } from "./video-upload";
 
 export type EvolutionCell = {
   phaseKey: string;
@@ -42,7 +43,8 @@ export function groupEvolutionZones(phases: LeadPhase[], diagnosisPhotos: Diagno
       continue;
     }
     for (const view of phase.views) {
-      if (!view.photo) continue;
+      // El comparador y su PDF son de imágenes: los videos se ven en la ficha.
+      if (!view.photo || isVideoMime(view.photo.mimeType)) continue;
       add(zoneKeyOf(view.key, phase.key), view.label, {
         phaseKey: phase.key, phaseName: phase.name, phaseKind: "capture", viewKey: view.key, viewLabel: view.label,
         photoId: view.photo.id, edited: false, createdAt: view.photo.createdAt ?? null,

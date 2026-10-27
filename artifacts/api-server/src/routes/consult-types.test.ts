@@ -94,7 +94,7 @@ beforeAll(async () => {
       WHERE document_normalized IS NOT NULL AND document_normalized <> '';
      CREATE TABLE IF NOT EXISTS clinical_centers (
        id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
-       active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar',
+       active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', plan text NOT NULL DEFAULT 'basic' CHECK (plan IN ('basic', 'unlimited', 'titanium')),
        created_at timestamptz NOT NULL DEFAULT now()
      );
      CREATE TABLE IF NOT EXISTS clinical_protocols (template_key text NOT NULL DEFAULT '', 

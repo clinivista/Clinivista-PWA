@@ -2546,10 +2546,26 @@ components:
           properties:
             id: {type: string}
             name: {type: string}
+        plan:
+          $ref: "#/components/schemas/ClinicPlan"
+        features:
+          type: array
+          description: Functions the current clinic's plan enables (the server decides; the interface only reflects it). Only present when a clinic is chosen.
+          items:
+            $ref: "#/components/schemas/PlanFeature"
+
+    ClinicPlan:
+      type: string
+      enum: [basic, unlimited, titanium]
+      description: The clinic's plan. Today only "titanium" adds a function (video); no plan removes anything a clinic already used.
+
+    PlanFeature:
+      type: string
+      enum: [video]
 
     DirectorCenterSummary:
       type: object
-      required: [id, name, slug, active, createdAt, patientCount, staffCount, paidUntil, paymentStatus, logoDataUrl, specialty]
+      required: [id, name, slug, active, createdAt, patientCount, staffCount, paidUntil, paymentStatus, logoDataUrl, specialty, plan]
       properties:
         id:
           type: string
@@ -2582,6 +2598,8 @@ components:
           type: string
           enum: [capilar, plastica, dermatologia]
           description: The clinic's specialty; it decides the patient form, the photo protocol and the starting phases.
+        plan:
+          $ref: "#/components/schemas/ClinicPlan"
 
     DirectorCenterIdentityBody:
       type: object
@@ -2616,7 +2634,7 @@ components:
 
     ClinicProtocolView:
       type: object
-      required: [id, key, label, position, hasPhotos, document, measure]
+      required: [id, key, label, position, hasPhotos, document, measure, video]
       properties:
         id: {type: string}
         key: {type: string}
@@ -2629,6 +2647,9 @@ components:
         measure:
           type: boolean
           description: The lesion is measured on this photo with a reference coin next to it.
+        video:
+          type: boolean
+          description: This view is recorded as a short video (up to 20 s) instead of a photo. Titanium plan only.
 
     ClinicProtocolPhase:
       type: object
@@ -2652,6 +2673,12 @@ components:
       required: [canEdit, phases]
       properties:
         canEdit: {type: boolean}
+        plan:
+          $ref: "#/components/schemas/ClinicPlan"
+        features:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlanFeature"
         phases:
           type: array
           items:
@@ -2669,6 +2696,9 @@ components:
         measure:
           type: boolean
           description: Mark the photo as one where the lesion is measured. When omitted, an existing photo keeps its current value.
+        video:
+          type: boolean
+          description: Record this view as a video instead of a photo (excludes document and measure). Needs the clinic's "video" function to turn on; when omitted, an existing view keeps its current value.
 
     ClinicProtocolPhaseInput:
       type: object
@@ -2700,6 +2730,9 @@ components:
         measure:
           type: boolean
           description: The patient measures the lesion on this photo, with a coin next to it.
+        video:
+          type: boolean
+          description: The patient records a short video for this view instead of a photo.
 
     PatientProtocol:
       type: object
@@ -2727,10 +2760,12 @@ components:
 
     DirectorCenterPatch:
       type: object
-      required: [active]
+      description: Send at least one of the fields.
       properties:
         active:
           type: boolean
+        plan:
+          $ref: "#/components/schemas/ClinicPlan"
 
     ClinicUser:
       type: object
@@ -3093,6 +3128,9 @@ components:
           type: ["number", "null"]
         height:
           type: ["number", "null"]
+        durationMs:
+          type: ["number", "null"]
+          description: Length of a video (as reported by the recorder); null for photos.
         captureMetadata: {}
         measurement:
           oneOf:
@@ -3464,7 +3502,7 @@ components:
 
     LeadPhaseView:
       type: object
-      required: [id, key, label, required, document, measure, transcription, photo]
+      required: [id, key, label, required, document, measure, video, transcription, photo]
       properties:
         id: {type: string}
         key: {type: string}
@@ -3472,6 +3510,9 @@ components:
         required: {type: boolean}
         document: {type: boolean}
         measure: {type: boolean}
+        video:
+          type: boolean
+          description: The view is a short video; its "photo" (when present) has a video/* mimeType and is played from GET /leads/{id}/videos/{photoId}.
         transcription:
           oneOf:
             - $ref: "#/components/schemas/PhotoTranscription"

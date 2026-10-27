@@ -2,11 +2,13 @@ import express, { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, leadsTable } from "@workspace/db";
 import { requireStaffAuth } from "./auth";
-import { DEFAULT_CENTER_ID, PhaseCaptureError, createStaffPhasePhoto } from "../lib/clinical-photos";
+import { DEFAULT_CENTER_ID, PhaseCaptureError, createStaffPhasePhoto, createStaffPhaseVideo } from "../lib/clinical-photos";
 import { closeCaptureSession, createCaptureSession, openCaptureSession } from "../lib/capture-sessions";
 import { syncLeadStatus } from "../lib/lead-status";
 import { MAX_PHOTO_BYTES, parseImageRequest } from "../lib/image-upload";
 import { throttled } from "../lib/patient-accounts";
+import { VIDEO_PLAN_MESSAGE, centerHasFeature } from "../lib/plans";
+import { VIDEO_INVALID, parseVideoRequest, rawVideo, videoUploadSlot } from "../lib/video-upload";
 
 const router: IRouter = Router();
 const ID = /^[\w.-]{1,200}$/;
@@ -61,7 +63,7 @@ router.get("/capture/:token", async (req, res): Promise<void> => {
     clinicName: session.clinicName,
     expiresAt: session.expiresAt.toISOString(),
     phase: { key: session.phase.key, name: session.phase.name },
-    views: session.phase.views.map((view) => ({ id: view.id, key: view.key, label: view.label, required: view.required, taken: view.photo !== null })),
+    views: session.phase.views.map((view) => ({ id: view.id, key: view.key, label: view.label, required: view.required, video: view.video, taken: view.photo !== null })),
   });
 });
 
@@ -83,6 +85,48 @@ router.post("/capture/:token/views/:viewId/photo", RAW_IMAGE, async (req, res): 
   }
   try {
     await createStaffPhasePhoto({ lead: session.lead, viewId: req.params.viewId, staffUserId: session.userId, source: "camera", ...image });
+    await syncLeadStatus(session.lead.id);
+    res.status(201).json({ ok: true });
+  } catch (error) {
+    if (error instanceof PhaseCaptureError) {
+      res.status(error.status).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+// The phone records the short video of a view of that phase (Titanium plan).
+// Link, view and plan are checked before the body (up to 25 MB) is read.
+const captureVideoGate = async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
+  if (!guard(req, res)) return;
+  const session = await openCaptureSession(String(req.params.token));
+  if (!session) {
+    res.status(410).json(GONE);
+    return;
+  }
+  const viewId = String(req.params.viewId);
+  if (!ID.test(viewId) || !session.phase.views.some((view) => view.id === viewId)) {
+    res.status(404).json({ error: "Esa vista no pertenece a esta fase." });
+    return;
+  }
+  if (!(await centerHasFeature(session.lead.centerId ?? DEFAULT_CENTER_ID, "video"))) {
+    res.status(403).json({ error: VIDEO_PLAN_MESSAGE });
+    return;
+  }
+  res.locals.session = session;
+  next();
+};
+
+router.post("/capture/:token/views/:viewId/video", videoUploadSlot, captureVideoGate, rawVideo, async (req, res): Promise<void> => {
+  const video = parseVideoRequest(req);
+  if (!video) {
+    res.status(400).json({ error: VIDEO_INVALID });
+    return;
+  }
+  const session = res.locals.session as NonNullable<Awaited<ReturnType<typeof openCaptureSession>>>;
+  try {
+    await createStaffPhaseVideo({ lead: session.lead, viewId: String(req.params.viewId), staffUserId: session.userId, source: "camera", video });
     await syncLeadStatus(session.lead.id);
     res.status(201).json({ ok: true });
   } catch (error) {

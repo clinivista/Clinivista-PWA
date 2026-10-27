@@ -47,6 +47,25 @@ export const AuthUserViewingProfile = {
   representante_legal: 'representante_legal',
 } as const;
 
+/**
+ * The clinic's plan. Today only "titanium" adds a function (video); no plan removes anything a clinic already used.
+ */
+export type ClinicPlan = typeof ClinicPlan[keyof typeof ClinicPlan];
+
+
+export const ClinicPlan = {
+  basic: 'basic',
+  unlimited: 'unlimited',
+  titanium: 'titanium',
+} as const;
+
+export type PlanFeature = typeof PlanFeature[keyof typeof PlanFeature];
+
+
+export const PlanFeature = {
+  video: 'video',
+} as const;
+
 export type AuthUserClinicsItem = {
   id: string;
   name: string;
@@ -76,6 +95,9 @@ export interface AuthUser {
   /** the profile a director entered the clinic with (chosen in supra-control, "Mi cuenta"). */
   viewingProfile?: AuthUserViewingProfile;
   viewingClinic?: AuthUserViewingClinic;
+  plan?: ClinicPlan;
+  /** Functions the current clinic's plan enables (the server decides; the interface only reflects it). Only present when a clinic is chosen. */
+  features?: PlanFeature[];
 }
 
 export interface AuthStatus {
@@ -119,6 +141,7 @@ export interface DirectorCenterSummary {
   logoDataUrl: string | null;
   /** The clinic's specialty; it decides the patient form, the photo protocol and the starting phases. */
   specialty: DirectorCenterSummarySpecialty;
+  plan: ClinicPlan;
 }
 
 export interface DirectorCenterIdentityBody {
@@ -160,6 +183,8 @@ export interface ClinicProtocolView {
   document: boolean;
   /** The lesion is measured on this photo with a reference coin next to it. */
   measure: boolean;
+  /** This view is recorded as a short video (up to 20 s) instead of a photo. Titanium plan only. */
+  video: boolean;
 }
 
 export type ClinicProtocolPhaseKind = typeof ClinicProtocolPhaseKind[keyof typeof ClinicProtocolPhaseKind];
@@ -182,6 +207,8 @@ export interface ClinicProtocolPhase {
 
 export interface ClinicProtocol {
   canEdit: boolean;
+  plan?: ClinicPlan;
+  features?: PlanFeature[];
   phases: ClinicProtocolPhase[];
 }
 
@@ -192,6 +219,8 @@ export interface ClinicProtocolViewInput {
   document?: boolean;
   /** Mark the photo as one where the lesion is measured. When omitted, an existing photo keeps its current value. */
   measure?: boolean;
+  /** Record this view as a video instead of a photo (excludes document and measure). Needs the clinic's "video" function to turn on; when omitted, an existing view keeps its current value. */
+  video?: boolean;
 }
 
 export interface ClinicProtocolPhaseInput {
@@ -210,6 +239,8 @@ export interface PatientProtocolView {
   required: boolean;
   /** The patient measures the lesion on this photo, with a coin next to it. */
   measure?: boolean;
+  /** The patient records a short video for this view instead of a photo. */
+  video?: boolean;
 }
 
 export interface PatientProtocol {
@@ -236,8 +267,12 @@ export interface PatientClinic {
   specialty: PatientClinicSpecialty;
 }
 
+/**
+ * Send at least one of the fields.
+ */
 export interface DirectorCenterPatch {
-  active: boolean;
+  active?: boolean;
+  plan?: ClinicPlan;
 }
 
 export type ClinicUserRole = typeof ClinicUserRole[keyof typeof ClinicUserRole];
@@ -585,6 +620,11 @@ export interface PatientPhotoStatus {
   width?: number | null;
   /** @nullable */
   height?: number | null;
+  /**
+     * Length of a video (as reported by the recorder); null for photos.
+     * @nullable
+     */
+  durationMs?: number | null;
   captureMetadata?: unknown;
   measurement?: PhotoMeasurement | null;
   /**
@@ -936,6 +976,8 @@ export interface LeadPhaseView {
   required: boolean;
   document: boolean;
   measure: boolean;
+  /** The view is a short video; its "photo" (when present) has a video/* mimeType and is played from GET /leads/{id}/videos/{photoId}. */
+  video: boolean;
   transcription: PhotoTranscription | null;
   photo: PatientPhotoStatus | null;
 }

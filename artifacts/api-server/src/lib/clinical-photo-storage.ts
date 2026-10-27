@@ -12,6 +12,8 @@ export interface PrivatePhotoStorage {
   readonly mode: "s3-private-bucket" | "local-development-only";
   put(input: { key: string; bytes: Buffer; contentType: string }): Promise<StoredPhotoObject>;
   read(objectPath: string): Promise<{ bytes: Buffer; contentType: string }>;
+  /** Bytes [start, end] (inclusive) of the object, without loading the rest (videos are served by range). */
+  readRange(objectPath: string, start: number, end: number): Promise<Buffer>;
   remove(objectPath: string): Promise<void>;
 }
 
@@ -46,6 +48,17 @@ class LocalDevelopmentPhotoStorage implements PrivatePhotoStorage {
     const [bytes, rawMetadata] = await Promise.all([fs.readFile(file), fs.readFile(`${file}.json`, "utf8")]);
     const metadata = JSON.parse(rawMetadata) as { contentType?: string };
     return { bytes, contentType: metadata.contentType ?? "application/octet-stream" };
+  }
+
+  async readRange(objectPath: string, start: number, end: number): Promise<Buffer> {
+    const handle = await fs.open(this.toFile(objectPath), "r");
+    try {
+      const buffer = Buffer.alloc(end - start + 1);
+      const { bytesRead } = await handle.read(buffer, 0, buffer.length, start);
+      return buffer.subarray(0, bytesRead);
+    } finally {
+      await handle.close();
+    }
   }
 
   async remove(objectPath: string): Promise<void> {
@@ -136,6 +149,18 @@ export class S3PhotoStorage implements PrivatePhotoStorage {
     };
   }
 
+  async readRange(objectPath: string, start: number, end: number): Promise<Buffer> {
+    // The Range header is not part of a query-string signature, so the same presigned GET works.
+    const response = await fetch(await this.signedUrl(objectPath, "GET"), {
+      headers: { Range: `bytes=${start}-${end}` },
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (!response.ok) throw new Error(`Private video was unavailable (${response.status}).`);
+    const bytes = Buffer.from(await response.arrayBuffer());
+    // A provider that ignores Range answers 200 with the whole object: keep only the slice.
+    return response.status === 206 ? bytes : bytes.subarray(start, end + 1);
+  }
+
   async remove(objectPath: string): Promise<void> {
     const response = await fetch(await this.signedUrl(objectPath, "DELETE"), {
       method: "DELETE",
@@ -182,6 +207,12 @@ function extensionForContentType(contentType: string): string {
       return ".webp";
     case "application/pdf":
       return ".pdf";
+    case "video/mp4":
+      return ".mp4";
+    case "video/webm":
+      return ".webm";
+    case "video/quicktime":
+      return ".mov";
     default:
       return "";
   }
@@ -201,7 +232,7 @@ function extensionForContentType(contentType: string): string {
 export function createObjectKey(input: {
   centerId: string;
   evaluationId: string;
-  kind: "original" | "adjusted" | "annotation" | "result" | "legacy-quarantine";
+  kind: "original" | "adjusted" | "annotation" | "result" | "legacy-quarantine" | "video";
   contentType: string;
 }): string {
   const ext = extensionForContentType(input.contentType);

@@ -5,6 +5,7 @@
  * Estecapelli API — Preevaluación capilar
  * OpenAPI spec version: 0.1.0
  */
+import type { ClinicPlan } from './clinicPlan';
 import type { DirectorCenterSummaryPaymentStatus } from './directorCenterSummaryPaymentStatus';
 import type { DirectorCenterSummarySpecialty } from './directorCenterSummarySpecialty';
 
@@ -23,4 +24,5 @@ export interface DirectorCenterSummary {
   logoDataUrl: string | null;
   /** The clinic's specialty; it decides the patient form, the photo protocol and the starting phases. */
   specialty: DirectorCenterSummarySpecialty;
+  plan: ClinicPlan;
 }

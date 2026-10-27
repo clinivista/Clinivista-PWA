@@ -5,9 +5,13 @@
  * Estecapelli API — Preevaluación capilar
  * OpenAPI spec version: 0.1.0
  */
+import type { ClinicPlan } from './clinicPlan';
 import type { ClinicProtocolPhase } from './clinicProtocolPhase';
+import type { PlanFeature } from './planFeature';
 
 export interface ClinicProtocol {
   canEdit: boolean;
+  plan?: ClinicPlan;
+  features?: PlanFeature[];
   phases: ClinicProtocolPhase[];
 }
