@@ -628,6 +628,10 @@
      "text": "Al ingresar llegas al «Dashboard Pacientes», la vista general de tu clínica. A la izquierda está el menú (Pacientes, Usuarios, Informe y, para el representante legal, Fases), el selector de idioma y el cierre de sesión."
     },
     {
+     "t": "p",
+     "text": "Al entrar a una clínica llegas primero a «Inicio»: un saludo con la fecha de hoy, accesos rápidos (Nuevo paciente, Ver pacientes, Informe y, según tu permiso, Fases y Usuarios), los indicadores de la clínica (pacientes totales, fotografías registradas, registros de este mes y, si gestionas usuarios, profesionales activos) y los seis pacientes más recientes; toca uno para abrir su ficha."
+    },
+    {
      "t": "legend",
      "items": [
       "Pacientes: lista y fichas.",

@@ -628,6 +628,10 @@
      "text": "En vous connectant, vous arrivez sur le «Tableau de bord Patients», la vue d'ensemble de votre clinique. À gauche se trouvent le menu (Patients, Utilisateurs, Rapport et, pour le représentant légal, Phases), le sélecteur de langue et la déconnexion."
     },
     {
+     "t": "p",
+     "text": "En entrant dans une clinique, vous arrivez d'abord sur « Accueil » : un message de bienvenue avec la date du jour, des accès rapides (Nouveau patient, Voir les patients, Rapport et, selon vos droits, Phases et Utilisateurs), les indicateurs de la clinique (patients au total, photos enregistrées, inscriptions du mois et, si vous gérez les utilisateurs, professionnels actifs) et les six patients les plus récents ; touchez-en un pour ouvrir son dossier."
+    },
+    {
      "t": "legend",
      "items": [
       "Patients : liste et dossiers.",

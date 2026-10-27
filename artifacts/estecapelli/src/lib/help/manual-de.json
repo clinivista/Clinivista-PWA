@@ -628,6 +628,10 @@
      "text": "Nach der Anmeldung gelangen Sie zum «Patienten-Dashboard», der Gesamtansicht Ihrer Klinik. Links befindet sich das Menü (Patienten, Benutzer, Bericht und, für den gesetzlichen Vertreter, Phasen), die Sprachauswahl und die Abmeldung."
     },
     {
+     "t": "p",
+     "text": "Beim Öffnen einer Klinik landen Sie zuerst auf „Start“: eine Begrüßung mit dem heutigen Datum, Schnellzugriffe (Neuer Patient, Patienten ansehen, Bericht und je nach Berechtigung Phasen und Benutzer), die Kennzahlen der Klinik (Patienten gesamt, erfasste Fotos, Neuzugänge dieses Monats und, wenn Sie Benutzer verwalten, aktive Fachkräfte) sowie die sechs neuesten Patienten; tippen Sie einen an, um seine Akte zu öffnen."
+    },
+    {
      "t": "legend",
      "items": [
       "Patienten: Liste und Akten.",

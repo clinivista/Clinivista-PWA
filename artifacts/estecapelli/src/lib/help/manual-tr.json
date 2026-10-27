@@ -628,6 +628,10 @@
      "text": "Giriş yaptığında kliniğinin genel görünümü olan «Hasta Panosu» ekranına gelirsin. Solda menü (Hastalar, Kullanıcılar, Rapor ve yasal temsilci için Aşamalar), dil seçici ve oturum kapatma bulunur."
     },
     {
+     "t": "p",
+     "text": "Bir kliniğe girdiğinizde önce «Ana sayfa» açılır: bugünün tarihiyle bir karşılama, hızlı erişimler (Yeni hasta, Hastaları gör, Rapor ve yetkinize göre Aşamalar ile Kullanıcılar), kliniğin göstergeleri (toplam hasta, kayıtlı fotoğraflar, bu ayki kayıtlar ve kullanıcıları yönetiyorsanız aktif uzmanlar) ve en son altı hasta; dosyasını açmak için birine dokunun."
+    },
+    {
      "t": "legend",
      "items": [
       "Hastalar: liste ve dosyalar.",

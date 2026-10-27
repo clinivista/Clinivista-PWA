@@ -5,7 +5,7 @@ import { es as dateFnsEs } from "date-fns/locale";
 import {
   Users, UserCog, Layers, LogOut,
   Search, ChevronRight, X, Phone, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu, Copy,
-  ClipboardList, LifeBuoy, UserPlus, Building2,
+  ClipboardList, LifeBuoy, UserPlus, Building2, Home,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,8 @@ import { CLINIC_ACCESS_TEXT } from "@/lib/clinic-access-i18n";
 import { STAFF_FLOW_TEXT } from "@/lib/staff-flow-i18n";
 import { LeadEvolution } from "@/components/lead-evolution";
 import { NAV_TEXT } from "@/lib/phases-i18n";
+import { ClinicHome } from "@/components/clinic-home";
+import { HOME_TEXT } from "@/lib/home-i18n";
 
 const STATUS_COLORS: Record<string, string> = {
   nuevo: "bg-blue-100 text-blue-700",
@@ -75,7 +77,7 @@ export default function Admin() {
   const { t, lang, setLang } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [view, setView] = useState<"patients" | "users" | "phases" | "report" | "help">("patients");
+  const [view, setView] = useState<"home" | "patients" | "users" | "phases" | "report" | "help">("home");
   const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
 
   const [search, setSearch] = useState("");
@@ -140,6 +142,11 @@ export default function Admin() {
     const lead = new URLSearchParams(window.location.search).get("lead");
     setLocation(lead ? `/admin/login?next=${encodeURIComponent(`/admin?lead=${lead}`)}` : "/admin/login");
   }, [isAuthLoading, authStatus, setLocation]);
+
+  // Al entrar a una clínica (o cambiar de clínica) se llega a Inicio.
+  useEffect(() => {
+    if (authStatus?.user?.centerId) setView("home");
+  }, [authStatus?.user?.centerId]);
 
   // Open the patient named by /admin?lead=… (the link in the pending-diagnosis report).
   useEffect(() => {
@@ -291,6 +298,16 @@ export default function Admin() {
           <nav className="space-y-1">
             <Button
               variant="ghost"
+              onClick={() => { setView("home"); setMobileNavOpen(false); }}
+              aria-current={view === "home" ? "page" : undefined}
+              className={navItemClass(view === "home")}
+              data-testid="nav-home"
+            >
+              <Home className="w-5 h-5" />
+              {HOME_TEXT[lang].nav}
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => { setView("patients"); setMobileNavOpen(false); }}
               aria-current={view === "patients" ? "page" : undefined}
               className={navItemClass(view === "patients")}
@@ -428,7 +445,20 @@ export default function Admin() {
             </Button>
           </div>
         )}
-        {view === "help" ? <HelpPanel initialTab={helpUnread > 0 ? "support" : "manual"} specialty={myClinic?.specialty} /> : view === "report" ? <ReportPanel onOpenLead={(id) => { setView("patients"); setSelectedLeadId(id); }} /> : view === "users" && canManageUsers ? <ClinicUsersPanel /> : view === "phases" && canEditPhases ? <PhasesPanel /> : (
+        <AddPatientDialog open={addPatientOpen} onOpenChange={setAddPatientOpen} onCreated={(id) => { setStatusFilter("all"); setSearch(""); setView("patients"); setSelectedLeadId(id); }} />
+        {view === "home" ? (
+          <ClinicHome
+            userName={authStatus.user?.name ?? ""}
+            canManageUsers={canManageUsers}
+            canEditPhases={canEditPhases}
+            onNewPatient={() => setAddPatientOpen(true)}
+            onOpenPatients={() => setView("patients")}
+            onOpenReport={() => setView("report")}
+            onOpenPhases={() => setView("phases")}
+            onOpenUsers={() => setView("users")}
+            onOpenLead={(id) => { setView("patients"); setSelectedLeadId(id); }}
+          />
+        ) : view === "help" ? <HelpPanel initialTab={helpUnread > 0 ? "support" : "manual"} specialty={myClinic?.specialty} /> : view === "report" ? <ReportPanel onOpenLead={(id) => { setView("patients"); setSelectedLeadId(id); }} /> : view === "users" && canManageUsers ? <ClinicUsersPanel /> : view === "phases" && canEditPhases ? <PhasesPanel /> : (
           <>
         {/* Mobile: whole content scrolls; desktop: only the patient list scrolls */}
         <div className="flex-1 min-h-0 flex flex-col overflow-y-auto md:overflow-hidden">
@@ -457,7 +487,6 @@ export default function Admin() {
             </Button>
           </div>
         </header>
-        <AddPatientDialog open={addPatientOpen} onOpenChange={setAddPatientOpen} onCreated={(id) => { setStatusFilter("all"); setSearch(""); setSelectedLeadId(id); }} />
 
         {/* Indicadores: los de estado filtran la lista */}
         <div className="px-4 sm:px-6 md:px-10 pt-5 pb-4 md:pt-6 shrink-0 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">

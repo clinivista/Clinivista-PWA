@@ -628,6 +628,10 @@
      "text": "Quando accedi arrivi alla «Dashboard Pazienti», la vista generale della tua clinica. A sinistra c'è il menu (Pazienti, Utenti, Report e, per il rappresentante legale, Fasi), il selettore della lingua e l'uscita dall'account."
     },
     {
+     "t": "p",
+     "text": "Entrando in una clinica arrivi prima alla «Home»: un saluto con la data di oggi, accessi rapidi (Nuovo paziente, Vedi pazienti, Report e, in base ai tuoi permessi, Fasi e Utenti), gli indicatori della clinica (pazienti totali, fotografie registrate, registrazioni del mese e, se gestisci gli utenti, professionisti attivi) e i sei pazienti più recenti; toccane uno per aprire la sua scheda."
+    },
+    {
      "t": "legend",
      "items": [
       "Pazienti: elenco e schede.",

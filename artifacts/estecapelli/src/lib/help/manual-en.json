@@ -628,6 +628,10 @@
      "text": "When you sign in you arrive at the «Patient Dashboard», the general view of your clinic. On the left is the menu (Patients, Users, Report and, for the legal representative, Phases), the language selector and the sign-out button."
     },
     {
+     "t": "p",
+     "text": "When you enter a clinic you first land on “Home”: a greeting with today's date, quick actions (New patient, View patients, Report and, depending on your permissions, Phases and Users), the clinic's figures (total patients, photos recorded, registrations this month and, if you manage users, active professionals) and the six most recent patients; tap one to open their record."
+    },
+    {
      "t": "legend",
      "items": [
       "Patients: list and records.",
