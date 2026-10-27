@@ -625,11 +625,11 @@
    "blocks": [
     {
      "t": "p",
-     "text": "When you sign in you arrive at the «Patient Dashboard», the general view of your clinic. On the left is the menu (Patients, Users, Report and, for the legal representative, Phases), the language selector and the sign-out button."
+     "text": "When you sign in you arrive at the «Patient Dashboard», the general view of your clinic. On the left is the menu (Home, Patients, Users, Report, Phases for the legal representative, and Help), with the “My clinic” card (name and specialty) and access to manuals and support. At the top is the bar with the patient search, the support notices bell and your name: tap it to change the language or sign out."
     },
     {
      "t": "p",
-     "text": "When you enter a clinic you first land on “Home”: a greeting with today's date, quick actions (New patient, View patients, Report and, depending on your permissions, Phases and Users), the clinic's figures (total patients, photos recorded, registrations this month and, if you manage users, active professionals) and the six most recent patients; tap one to open their record."
+     "text": "When you enter a clinic you first land on “Home”: a welcome with today's date; quick actions (New patient, View patients, Report and, depending on your permission, Phases and Users); the clinic's key figures (total patients, photos recorded, registered this month and, if you manage users, active professionals) with their trend over the last six months and the change from last month when it can be calculated; the “Photo activity” chart with each month's new patients and photos (choose 3, 6 or 12 months); “Recent activity” (photos recorded, new patients, measurements and discharges) and the most recent patients with their photo. Everything comes from your clinic's real data; if there is no data yet, you will see zeros. Tap a patient or an event to open their record. Typing in the search takes you to Patients with that filter, and the bell opens Help → Support."
     },
     {
      "t": "legend",

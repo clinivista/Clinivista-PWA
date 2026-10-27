@@ -625,11 +625,11 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Al ingresar llegas al «Dashboard Pacientes», la vista general de tu clínica. A la izquierda está el menú (Pacientes, Usuarios, Informe y, para el representante legal, Fases), el selector de idioma y el cierre de sesión."
+     "text": "Al ingresar llegas al «Dashboard Pacientes», la vista general de tu clínica. A la izquierda está el menú (Inicio, Pacientes, Usuarios, Informe, Fases para el representante legal y Ayuda), con la tarjeta «Mi clínica» (nombre y especialidad) y el acceso a manuales y soporte. Arriba está la barra con el buscador de pacientes, la campana de avisos de soporte y tu nombre: tócalo para cambiar el idioma o cerrar sesión."
     },
     {
      "t": "p",
-     "text": "Al entrar a una clínica llegas primero a «Inicio»: un saludo con la fecha de hoy, accesos rápidos (Nuevo paciente, Ver pacientes, Informe y, según tu permiso, Fases y Usuarios), los indicadores de la clínica (pacientes totales, fotografías registradas, registros de este mes y, si gestionas usuarios, profesionales activos) y los seis pacientes más recientes; toca uno para abrir su ficha."
+     "text": "Al entrar a una clínica llegas primero a «Inicio»: la bienvenida con la fecha de hoy; accesos rápidos (Nuevo paciente, Ver pacientes, Informe y, según tu permiso, Fases y Usuarios); los indicadores de la clínica (pacientes totales, fotografías registradas, registros de este mes y, si gestionas usuarios, profesionales activos) con su evolución de los últimos seis meses y la variación respecto al mes anterior cuando se puede calcular; el gráfico «Actividad fotográfica» con los pacientes nuevos y las fotografías de cada mes (elige 3, 6 o 12 meses); la «Actividad reciente» (fotos registradas, pacientes nuevos, mediciones y altas) y los pacientes más recientes con su foto. Todo sale de los datos reales de tu clínica; si aún no hay datos, verás ceros. Toca un paciente o un evento para abrir su ficha. Al escribir en el buscador pasas a Pacientes con ese filtro, y la campana abre Ayuda → Soporte."
     },
     {
      "t": "legend",

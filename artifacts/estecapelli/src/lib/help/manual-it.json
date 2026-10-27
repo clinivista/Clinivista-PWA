@@ -625,11 +625,11 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Quando accedi arrivi alla «Dashboard Pazienti», la vista generale della tua clinica. A sinistra c'è il menu (Pazienti, Utenti, Report e, per il rappresentante legale, Fasi), il selettore della lingua e l'uscita dall'account."
+     "text": "Quando accedi arrivi alla «Dashboard Pazienti», la panoramica della tua clinica. A sinistra c'è il menu (Home, Pazienti, Utenti, Report, Fasi per il rappresentante legale e Aiuto), con la scheda «La mia clinica» (nome e specialità) e l'accesso a manuali e supporto. In alto c'è la barra con la ricerca dei pazienti, la campanella degli avvisi del supporto e il tuo nome: toccalo per cambiare lingua o uscire."
     },
     {
      "t": "p",
-     "text": "Entrando in una clinica arrivi prima alla «Home»: un saluto con la data di oggi, accessi rapidi (Nuovo paziente, Vedi pazienti, Report e, in base ai tuoi permessi, Fasi e Utenti), gli indicatori della clinica (pazienti totali, fotografie registrate, registrazioni del mese e, se gestisci gli utenti, professionisti attivi) e i sei pazienti più recenti; toccane uno per aprire la sua scheda."
+     "text": "Quando entri in una clinica arrivi prima alla «Home»: il benvenuto con la data di oggi; gli accessi rapidi (Nuovo paziente, Vedi pazienti, Report e, secondo i tuoi permessi, Fasi e Utenti); gli indicatori della clinica (pazienti totali, fotografie registrate, registrati questo mese e, se gestisci gli utenti, professionisti attivi) con l'andamento degli ultimi sei mesi e la variazione rispetto al mese precedente quando si può calcolare; il grafico «Attività fotografica» con i nuovi pazienti e le fotografie di ogni mese (scegli 3, 6 o 12 mesi); l'«Attività recente» (foto registrate, nuovi pazienti, misurazioni e dimissioni) e i pazienti più recenti con la loro foto. Tutto proviene dai dati reali della tua clinica; se non ci sono ancora dati vedrai degli zeri. Tocca un paziente o un evento per aprirne la scheda. Scrivendo nella ricerca passi a Pazienti con quel filtro, e la campanella apre Aiuto → Supporto."
     },
     {
      "t": "legend",

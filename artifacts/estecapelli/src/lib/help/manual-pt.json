@@ -625,11 +625,11 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Ao entrar, você chega ao «Painel de Pacientes», a visão geral da sua clínica. À esquerda está o menu (Pacientes, Usuários, Relatório e, para o representante legal, Fases), o seletor de idioma e o botão de sair."
+     "text": "Ao entrar, você chega ao «Painel de Pacientes», a visão geral da sua clínica. À esquerda fica o menu (Início, Pacientes, Usuários, Relatório, Fases para o representante legal e Ajuda), com o cartão «Minha clínica» (nome e especialidade) e o acesso a manuais e suporte. No alto fica a barra com a busca de pacientes, o sino de avisos de suporte e o seu nome: toque nele para mudar o idioma ou sair."
     },
     {
      "t": "p",
-     "text": "Ao entrar em uma clínica você chega primeiro ao «Início»: uma saudação com a data de hoje, acessos rápidos (Novo paciente, Ver pacientes, Relatório e, conforme sua permissão, Fases e Usuários), os indicadores da clínica (pacientes no total, fotografias registradas, cadastros deste mês e, se você gerencia usuários, profissionais ativos) e os seis pacientes mais recentes; toque em um para abrir a ficha."
+     "text": "Ao entrar em uma clínica, você chega primeiro ao «Início»: as boas-vindas com a data de hoje; acessos rápidos (Novo paciente, Ver pacientes, Relatório e, conforme sua permissão, Fases e Usuários); os indicadores da clínica (pacientes no total, fotografias registradas, cadastros deste mês e, se você gerencia usuários, profissionais ativos) com sua evolução nos últimos seis meses e a variação em relação ao mês anterior quando pode ser calculada; o gráfico «Atividade fotográfica» com os novos pacientes e as fotografias de cada mês (escolha 3, 6 ou 12 meses); a «Atividade recente» (fotos registradas, novos pacientes, medições e altas) e os pacientes mais recentes com sua foto. Tudo vem dos dados reais da sua clínica; se ainda não houver dados, você verá zeros. Toque em um paciente ou evento para abrir a ficha. Ao digitar na busca você vai para Pacientes com esse filtro, e o sino abre Ajuda → Suporte."
     },
     {
      "t": "legend",
