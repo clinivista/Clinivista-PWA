@@ -57,7 +57,7 @@ export function SkipPhaseButton({ leadId, phase }: { leadId: string; phase: Lead
   return (
     <>
       <Button type="button" size="sm" variant="outline" className="rounded-full h-8 px-3 text-xs" onClick={() => setOpen(true)}>
-        <SkipForward className="w-3.5 h-3.5 mr-1.5" />{s.skipStage}
+        <SkipForward className="w-3.5 h-3.5 me-1.5" />{s.skipStage}
       </Button>
       <Dialog open={open} onOpenChange={(next) => { if (!busy) setOpen(next); }}>
         <DialogContent className="rounded-3xl">
@@ -72,7 +72,7 @@ export function SkipPhaseButton({ leadId, phase }: { leadId: string; phase: Lead
           <DialogFooter className="gap-2">
             <Button type="button" variant="ghost" className="rounded-full" disabled={busy} onClick={() => setOpen(false)}>{s.cancel}</Button>
             <Button type="button" className="rounded-full" disabled={busy || reason.trim().length < 3} onClick={submit}>
-              {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}{s.skipConfirm}
+              {busy && <Loader2 className="w-4 h-4 me-2 animate-spin" />}{s.skipConfirm}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -106,8 +106,8 @@ export function SkippedNote({ leadId, phase, canUndo }: { leadId: string; phase:
       <span className="font-bold text-foreground">{s.skippedBadge}</span>
       <span className="min-w-0 break-words">{skip ? `${s.by} ${skip.byName} · ${formatWhen(skip.at, lang)} — ${skip.reason}` : ""}</span>
       {canUndo && (
-        <Button type="button" size="sm" variant="ghost" className="ml-auto rounded-full h-8 px-3 text-xs" disabled={busy} onClick={undo}>
-          <RotateCcw className="w-3.5 h-3.5 mr-1.5" />{s.undoSkip}
+        <Button type="button" size="sm" variant="ghost" className="ms-auto rounded-full h-8 px-3 text-xs" disabled={busy} onClick={undo}>
+          <RotateCcw className="w-3.5 h-3.5 me-1.5" />{s.undoSkip}
         </Button>
       )}
     </div>
@@ -163,11 +163,11 @@ export function DischargeControl({ leadId, status, isDoctor, afterDiagnosis, dis
       {isDoctor && (discharged ? (
         <Button type="button" size="sm" variant="outline" className="rounded-full" disabled={busy}
           onClick={() => run(() => call(`/api/leads/${encodeURIComponent(leadId)}/discharge`, "DELETE"), s.reopenedToast)}>
-          <RotateCcw className="w-4 h-4 mr-1.5" />{s.reopenProcess}
+          <RotateCcw className="w-4 h-4 me-1.5" />{s.reopenProcess}
         </Button>
       ) : (
         <Button type="button" size="sm" className="rounded-full" onClick={() => setOpen(true)}>
-          <BadgeCheck className="w-4 h-4 mr-1.5" />{s.discharge}
+          <BadgeCheck className="w-4 h-4 me-1.5" />{s.discharge}
         </Button>
       ))}
       <Dialog open={open} onOpenChange={(next) => { if (!busy) setOpen(next); }}>
@@ -184,7 +184,7 @@ export function DischargeControl({ leadId, status, isDoctor, afterDiagnosis, dis
             <Button type="button" variant="ghost" className="rounded-full" disabled={busy} onClick={() => setOpen(false)}>{s.cancel}</Button>
             <Button type="button" className="rounded-full" disabled={busy}
               onClick={() => run(() => call(`/api/leads/${encodeURIComponent(leadId)}/discharge`, "POST", { note: note.trim() }), s.dischargedToast)}>
-              {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}{s.dischargeConfirm}
+              {busy && <Loader2 className="w-4 h-4 me-2 animate-spin" />}{s.dischargeConfirm}
             </Button>
           </DialogFooter>
         </DialogContent>

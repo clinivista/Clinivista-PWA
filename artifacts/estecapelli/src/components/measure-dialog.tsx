@@ -55,7 +55,7 @@ export function MeasureDialog({ endpoint, imageUrl, role, measurement, onChanged
         </p>
       )}
       <Button type="button" size="sm" variant="outline" className="rounded-full h-8 px-3 text-xs" disabled={disabled} onClick={() => setOpen(true)} data-testid="measure-open">
-        <Ruler className="w-3.5 h-3.5 mr-1.5" />{role === "patient" ? (measurement ? c.remeasureButton : c.measureButton) : (measurement ? c.remeasureButton : c.staffMeasure)}
+        <Ruler className="w-3.5 h-3.5 me-1.5" />{role === "patient" ? (measurement ? c.remeasureButton : c.measureButton) : (measurement ? c.remeasureButton : c.staffMeasure)}
       </Button>
       {role === "patient" && !measurement && !compact && <p className="text-xs text-muted-foreground">{c.optionalNote}</p>}
       <Dialog open={open} onOpenChange={setOpen}>

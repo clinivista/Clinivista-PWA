@@ -133,7 +133,7 @@ export function AddPatientDialog({ open, onOpenChange, onCreated }: {
           <DialogFooter className="gap-2">
             <Button type="button" variant="ghost" className="rounded-full" disabled={busy} onClick={() => onOpenChange(false)}>{s.cancel}</Button>
             <Button type="submit" className="rounded-full" disabled={!canSave}>
-              {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}{busy ? s.saving : s.save}
+              {busy && <Loader2 className="w-4 h-4 me-2 animate-spin" />}{busy ? s.saving : s.save}
             </Button>
           </DialogFooter>
         </form>

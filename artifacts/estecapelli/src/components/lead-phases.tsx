@@ -144,11 +144,11 @@ function ViewSlot({ leadId, phase, view, disabled, onExpand }: {
             />
             <Button type="button" size="sm" variant="outline" className="rounded-full h-8 px-3 text-xs" disabled={busy}
               onClick={() => cameraRef.current?.click()}>
-              <Camera className="w-3.5 h-3.5 mr-1.5" />{view.photo ? p.repeat : p.takePhoto}
+              <Camera className="w-3.5 h-3.5 me-1.5" />{view.photo ? p.repeat : p.takePhoto}
             </Button>
             <Button type="button" size="sm" variant="outline" className="rounded-full h-8 px-3 text-xs" disabled={busy}
               onClick={() => inputRef.current?.click()}>
-              <Upload className="w-3.5 h-3.5 mr-1.5" />{p.upload}
+              <Upload className="w-3.5 h-3.5 me-1.5" />{p.upload}
             </Button>
             {view.photo && (
               <Button type="button" size="icon" variant="ghost" className="rounded-full h-8 w-8 text-destructive" disabled={busy || remove.isPending}
@@ -223,7 +223,7 @@ export function LeadPhases({ leadId, onExpand, diagnosisLead, process }: { leadI
               <div className="flex items-center gap-2">
                 <span className="shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-extrabold flex items-center justify-center">{index + 1}</span>
                 <h4 className="font-bold text-foreground min-w-0 break-words">{phaseName(phase, lang)}</h4>
-                <span className="ml-auto shrink-0 flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
+                <span className="ms-auto shrink-0 flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
                   {phase.complete ? <CheckCircle2 className="w-4 h-4 text-primary" /> : phase.skipped ? <SkipForward className="w-4 h-4" /> : !phase.enabled ? <Lock className="w-4 h-4" /> : null}
                   {phase.skipped ? s.skippedBadge : phase.kind === "diagnosis" ? (phase.complete ? p.closed : p.open) : `${taken}/${phase.views.length}`}
                 </span>

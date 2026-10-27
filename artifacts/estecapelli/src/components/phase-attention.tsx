@@ -60,7 +60,7 @@ export function PhaseAttention({ leadId, phase, readOnly = false }: { leadId: st
         </div>
         {!readOnly && (
           <Button type="button" size="sm" className="rounded-full h-10 px-4" disabled={busy || !date || !dirty} onClick={save}>
-            {busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}{busy ? a.saving : a.save}
+            {busy && <Loader2 className="w-4 h-4 me-2 animate-spin" />}{busy ? a.saving : a.save}
           </Button>
         )}
       </div>

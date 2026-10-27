@@ -88,7 +88,7 @@ export function ChatThread({ listUrl, postUrl, own, labels, dir, onChanged, read
             className="min-h-[52px] flex-1 resize-none rounded-2xl border border-[#E8E4DE] bg-[#F5F2EE] px-4 py-3 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00A9A5]/40"
           />
           <Button type="button" onClick={() => void send()} disabled={sending || !text.trim()} className="h-12 rounded-full px-5 font-semibold" data-testid="support-send">
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="mr-2 h-4 w-4 rtl:rotate-180" />{labels.send}</>}
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="me-2 h-4 w-4 rtl:rotate-180" />{labels.send}</>}
           </Button>
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">{labels.hint}</p>

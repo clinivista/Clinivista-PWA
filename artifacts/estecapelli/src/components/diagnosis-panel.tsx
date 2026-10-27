@@ -79,21 +79,21 @@ function ResultsDelivery_({ leadId }: { leadId: string }) {
       </p>
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" className="rounded-full" asChild>
-          <a href={`/api/leads/${encodeURIComponent(leadId)}/results/pdf`} target="_blank" rel="noreferrer"><FileText className="w-4 h-4 mr-1.5" />{p.viewPdf}</a>
+          <a href={`/api/leads/${encodeURIComponent(leadId)}/results/pdf`} target="_blank" rel="noreferrer"><FileText className="w-4 h-4 me-1.5" />{p.viewPdf}</a>
         </Button>
         <Button type="button" variant={preferred("email") ? "default" : "outline"} className="rounded-full" disabled={deliver.isPending || !data.email} onClick={() => send("email")}
           title={data.email ? undefined : p.noEmailTitle}>
-          <Mail className="w-4 h-4 mr-1.5" />{p.sendEmail}
+          <Mail className="w-4 h-4 me-1.5" />{p.sendEmail}
         </Button>
         <Button type="button" variant={preferred("whatsapp") ? "default" : "outline"} className="rounded-full" disabled={deliver.isPending || !data.phone} onClick={() => send("whatsapp")}>
-          <MessageCircle className="w-4 h-4 mr-1.5" />{p.sendWhatsapp}
+          <MessageCircle className="w-4 h-4 me-1.5" />{p.sendWhatsapp}
         </Button>
         {deliver.isPending && <Loader2 className="w-4 h-4 animate-spin self-center" />}
       </div>
       {!data.emailConfigured && <p className="text-xs text-amber-700">{p.emailNotConfigured}</p>}
       {last?.whatsappUrl && (
         <Button type="button" className="rounded-full self-start" asChild>
-          <a href={last.whatsappUrl} target="_blank" rel="noreferrer"><ExternalLink className="w-4 h-4 mr-1.5" />{p.openWhatsapp}</a>
+          <a href={last.whatsappUrl} target="_blank" rel="noreferrer"><ExternalLink className="w-4 h-4 me-1.5" />{p.openWhatsapp}</a>
         </Button>
       )}
       {data.deliveries.length > 0 && (
@@ -194,7 +194,7 @@ export function DiagnosisPanel({ leadId, onExpand, lead }: { leadId: string; onE
                     <Button type="button" size="sm" variant="outline" className="rounded-full h-8 px-3 text-xs"
                       aria-label={p.annotateAria(photo.hasAnnotation, labelOf(photo))}
                       onClick={() => setMarking(photo)}>
-                      <Pencil className="w-3.5 h-3.5 mr-1.5" />{photo.hasAnnotation ? p.editDrawing : p.annotate}
+                      <Pencil className="w-3.5 h-3.5 me-1.5" />{photo.hasAnnotation ? p.editDrawing : p.annotate}
                     </Button>
                     {photo.hasAnnotation && (
                       <Button type="button" size="icon" variant="ghost" className="rounded-full h-8 w-8 text-destructive"
@@ -283,7 +283,7 @@ export function DiagnosisPanel({ leadId, onExpand, lead }: { leadId: string; onE
                     onError: fail(p.cantClose),
                   });
                 }}>
-                {close.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle2 className="w-4 h-4 mr-1.5" />{p.closeDiagnosis}</>}
+                {close.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle2 className="w-4 h-4 me-1.5" />{p.closeDiagnosis}</>}
               </Button>
             </>
           ) : (
@@ -295,7 +295,7 @@ export function DiagnosisPanel({ leadId, onExpand, lead }: { leadId: string; onE
                   onError: fail(p.cantReopen),
                 });
               }}>
-              {reopen.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Unlock className="w-4 h-4 mr-1.5" />{p.reopen}</>}
+              {reopen.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Unlock className="w-4 h-4 me-1.5" />{p.reopen}</>}
             </Button>
           )}
         </div>

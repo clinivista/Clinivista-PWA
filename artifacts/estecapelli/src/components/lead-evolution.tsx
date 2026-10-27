@@ -67,7 +67,7 @@ export function LeadEvolution({ leadId, onExpand }: { leadId: string; onExpand: 
               <Button key={candidate.key} type="button" size="sm" variant={candidate.key === zone.key ? "default" : "outline"} className="rounded-full"
                 aria-pressed={candidate.key === zone.key} onClick={() => setSelected(candidate.key)}>
                 {zoneName(candidate)}
-                <span className="ml-1.5 text-xs opacity-70">{candidate.cells.length}</span>
+                <span className="ms-1.5 text-xs opacity-70">{candidate.cells.length}</span>
               </Button>
             ))}
           </div>
@@ -84,7 +84,7 @@ export function LeadEvolution({ leadId, onExpand }: { leadId: string; onExpand: 
                     <button type="button" className="relative block rounded-2xl overflow-hidden bg-[#F5F2EE] hover:ring-2 hover:ring-primary/50 transition-all aspect-[3/4]"
                       onClick={() => onExpand(photoUrl(leadId, cell))} aria-label={`${u.expand}: ${label}`}>
                       <img src={photoUrl(leadId, cell)} alt={`${label} — ${zoneName(zone)}`} className="w-full h-full object-cover" loading="lazy" />
-                      <Maximize2 className="absolute right-2 top-2 w-4 h-4 text-white drop-shadow" aria-hidden />
+                      <Maximize2 className="absolute end-2 top-2 w-4 h-4 text-white drop-shadow" aria-hidden />
                     </button>
                   ) : (
                     <div className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-border aspect-[3/4] text-xs text-muted-foreground">
@@ -113,8 +113,8 @@ export function LeadEvolution({ leadId, onExpand }: { leadId: string; onExpand: 
             <div className="flex flex-wrap items-end gap-2">
               <Button type="button" variant="outline" className="rounded-full" disabled={!exportable} asChild={exportable}>
                 {exportable ? (
-                  <a href={`/api/leads/${encodeURIComponent(leadId)}/evolution/pdf${zonesParam}`} target="_blank" rel="noreferrer"><FileText className="w-4 h-4 mr-1.5" />{u.exportPdf}</a>
-                ) : (<span><FileText className="w-4 h-4 mr-1.5" />{u.exportPdf}</span>)}
+                  <a href={`/api/leads/${encodeURIComponent(leadId)}/evolution/pdf${zonesParam}`} target="_blank" rel="noreferrer"><FileText className="w-4 h-4 me-1.5" />{u.exportPdf}</a>
+                ) : (<span><FileText className="w-4 h-4 me-1.5" />{u.exportPdf}</span>)}
               </Button>
             </div>
             <div className="flex flex-col gap-1.5">
@@ -123,7 +123,7 @@ export function LeadEvolution({ leadId, onExpand }: { leadId: string; onExpand: 
                 <Input id="evolution-email" type="email" inputMode="email" autoComplete="off" className="flex-1 min-w-[14rem] rounded-full" value={email ?? data.patientEmail ?? ""}
                   onChange={(event) => setEmail(event.target.value)} aria-invalid={recipient !== "" && !validEmail} />
                 <Button type="button" className="rounded-full" disabled={!exportable || !validEmail || send.isPending} onClick={submit}>
-                  {send.isPending ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Mail className="w-4 h-4 mr-1.5" />}{u.send}
+                  {send.isPending ? <Loader2 className="w-4 h-4 me-1.5 animate-spin" /> : <Mail className="w-4 h-4 me-1.5" />}{u.send}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">{recipient !== "" && !validEmail ? u.invalidEmail : u.emailHint}</p>

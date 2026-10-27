@@ -253,15 +253,15 @@ export function MeasureTool({ imageUrl, role, initial, onSave, onRemove, onClose
 
       <div className="flex flex-wrap gap-2">
         <Button type="button" className="rounded-full" disabled={busy || !estimate} onClick={() => void save()} data-testid="measure-save">
-          {busy && <Loader2 className="w-4 h-4 animate-spin mr-2" />}{busy ? c.saving : c.save}
+          {busy && <Loader2 className="w-4 h-4 animate-spin me-2" />}{busy ? c.saving : c.save}
         </Button>
         <Button type="button" variant="outline" className="rounded-full" disabled={busy || (refPoints.length === 0 && lesionPoints.length === 0)} onClick={undo}>
-          <Undo2 className="w-4 h-4 mr-1.5" />{c.undo}
+          <Undo2 className="w-4 h-4 me-1.5" />{c.undo}
         </Button>
         <Button type="button" variant="ghost" className="rounded-full" disabled={busy} onClick={reset}>{c.reset}</Button>
         {auto.state === "missing" && <Button type="button" variant="ghost" className="rounded-full" disabled={busy} onClick={() => { if (imgRef.current) detectCoin(imgRef.current, refPoints.length === 0); }}>{c.redetect}</Button>}
         {initial && onRemove && <Button type="button" variant="ghost" className="rounded-full text-destructive" disabled={busy} onClick={() => void onRemove()}>{c.remove}</Button>}
-        <Button type="button" variant="ghost" className="rounded-full ml-auto" onClick={onClose}>{c.close}</Button>
+        <Button type="button" variant="ghost" className="rounded-full ms-auto" onClick={onClose}>{c.close}</Button>
       </div>
     </div>
   );
