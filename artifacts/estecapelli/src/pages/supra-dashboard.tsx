@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, CircleHelp, Headphones, Loader2, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CircleHelp, Headphones, Loader2, XCircle, Building2, Users, UserRound, Files, Inbox } from "lucide-react";
 import { Stars } from "@/components/support-tickets";
 
 type Status = "ok" | "warn" | "fail" | "unknown";
@@ -42,11 +42,14 @@ function minutesText(m: number | null): string {
 }
 const monthName = (m: string) => { const [y, mo] = m.split("-").map(Number) as [number, number]; return new Date(y, mo - 1, 1).toLocaleDateString("es-CL", { month: "long", year: "numeric" }); };
 
-function Tile({ label, value, sub, testId }: { label: string; value: string; sub?: string; testId?: string }) {
+function Tile({ label, value, sub, testId, Icon }: { label: string; value: string; sub?: string; testId?: string; Icon: typeof Building2 }) {
   return (
-    <div className="rounded-3xl border border-[#E8E4DE] bg-white p-5 shadow-sm" data-testid={testId}>
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-1 text-3xl font-bold tabular-nums text-foreground">{value}</p>
+    <div className="sd-tile rounded-2xl border border-border bg-white p-5 shadow-sm" data-testid={testId}>
+      <div className="mb-4 flex items-start justify-between gap-2">
+        <p className="min-h-8 text-xs font-semibold uppercase tracking-wide text-muted-foreground break-words">{label}</p>
+        <Icon className="h-5 w-5 shrink-0 text-[hsl(var(--cd-teal))]" aria-hidden />
+      </div>
+      <p className="text-3xl font-bold tabular-nums text-foreground break-words">{value}</p>
       {sub && <p className="mt-1 text-sm text-muted-foreground">{sub}</p>}
     </div>
   );
@@ -54,8 +57,8 @@ function Tile({ label, value, sub, testId }: { label: string; value: string; sub
 
 function Card({ title, children, testId }: { title: string; children: React.ReactNode; testId?: string }) {
   return (
-    <section className="rounded-3xl border border-[#E8E4DE] bg-white p-5 shadow-sm" data-testid={testId}>
-      <h3 className="mb-3 text-sm font-bold text-foreground">{title}</h3>
+    <section className="sd-card rounded-2xl border border-border bg-white p-5 sm:p-6 shadow-sm" data-testid={testId}>
+      <h3 className="mb-4 text-base font-bold text-foreground">{title}</h3>
       {children}
     </section>
   );
@@ -67,9 +70,9 @@ function Bars({ rows }: { rows: { label: string; value: number }[] }) {
   return (
     <ul className="space-y-3">
       {rows.map((r) => (
-        <li key={r.label} className="grid grid-cols-[7.5rem_1fr_2.5rem] items-center gap-3 text-sm">
+        <li key={r.label} className="sd-bar-row grid items-center gap-3 text-sm">
           <span className="text-muted-foreground">{r.label}</span>
-          <span className="h-2 rounded-full bg-[#F5F2EE]"><span className="block h-2 rounded-full bg-[#00A9A5]" style={{ width: `${(r.value / max) * 100}%` }} /></span>
+          <span className="h-2 rounded-full bg-[#F5F2EE]"><span className="block h-2 rounded-full bg-[hsl(var(--cd-teal))]" style={{ width: `${(r.value / max) * 100}%` }} /></span>
           <span className="text-right font-bold tabular-nums">{num(r.value)}</span>
         </li>
       ))}
@@ -98,10 +101,10 @@ export function SupraDashboard({ onNavigate }: { onNavigate?: (view: "support" |
   return (
     <div className="space-y-6" data-testid="supra-dashboard">
       <section className={`flex flex-col gap-4 rounded-3xl border p-5 ${light.cls}`} data-testid="traffic-light" data-light={data.services.light}>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3">
           <span className={`h-5 w-5 shrink-0 rounded-full ${light.dot}`} aria-hidden />
           <light.Icon className="h-7 w-7 shrink-0" aria-hidden />
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 basis-44">
             <p className="text-lg font-bold" data-testid="traffic-light-title">{light.title}</p>
             <p className="text-sm opacity-80">{light.hint}</p>
           </div>
@@ -119,12 +122,12 @@ export function SupraDashboard({ onNavigate }: { onNavigate?: (view: "support" |
         </ul>
       </section>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <Tile testId="tile-clinics" label="Clínicas" value={num(data.clinics.total)} sub={`${num(data.clinics.active)} activas · ${num(data.clinics.suspended)} suspendidas`} />
-        <Tile testId="tile-users" label="Usuarios" value={num(data.users.total)} sub={`${num(data.users.medicos)} médicos · ${num(data.users.administrativos)} administrativos`} />
-        <Tile testId="tile-patients" label="Pacientes" value={num(data.patients.total)} sub={`${num(data.patients.newThisMonth)} nuevos este mes`} />
-        <Tile testId="tile-documents" label="Documentos transcritos" value={num(data.documents?.transcribed ?? 0)} sub={`${num(data.documents?.transcribedThisMonth ?? 0)} este mes`} />
-        <Tile testId="tile-pending" label="Tickets por resolver" value={num(t.pending)} sub={`${num(t.waiting)} en espera · ${num(t.attending)} en atención`} />
+      <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-4 xl:grid-cols-5">
+        <Tile Icon={Building2} testId="tile-clinics" label="Clínicas" value={num(data.clinics.total)} sub={`${num(data.clinics.active)} activas · ${num(data.clinics.suspended)} suspendidas`} />
+        <Tile Icon={Users} testId="tile-users" label="Usuarios" value={num(data.users.total)} sub={`${num(data.users.medicos)} médicos · ${num(data.users.administrativos)} administrativos`} />
+        <Tile Icon={UserRound} testId="tile-patients" label="Pacientes" value={num(data.patients.total)} sub={`${num(data.patients.newThisMonth)} nuevos este mes`} />
+        <Tile Icon={Files} testId="tile-documents" label="Documentos transcritos" value={num(data.documents?.transcribed ?? 0)} sub={`${num(data.documents?.transcribedThisMonth ?? 0)} este mes`} />
+        <Tile Icon={Inbox} testId="tile-pending" label="Tickets por resolver" value={num(t.pending)} sub={`${num(t.waiting)} en espera · ${num(t.attending)} en atención`} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

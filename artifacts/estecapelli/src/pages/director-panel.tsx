@@ -84,6 +84,21 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
   const patchCenter = usePatchDirectorCenter();
   const recordPayment = useRecordDirectorCenterPayment();
 
+  // Theme portals while this panel is mounted; clinic view keeps its own scope.
+  useEffect(() => {
+    document.body.classList.add("supra-dashboard");
+    return () => document.body.classList.remove("supra-dashboard");
+  }, []);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileNavOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileNavOpen]);
+
   const handleToggle = (id: string, nextActive: boolean) => {
     setPendingId(id);
     patchCenter.mutate(
@@ -161,7 +176,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
   const titles: Record<SupraView, string> = { dashboard: "Resumen de la plataforma", clinics: "Clínicas", support: "Soporte (tickets de las clínicas)", team: "Equipo de supra-control", admin: "Administración: servicios y finanzas", account: "Mi cuenta", manual: "Manual de supra-control" };
 
   return (
-    <div className="h-[100dvh] bg-[#F5F2EE] flex flex-col md:flex-row font-sans">
+    <div className="supra-dashboard h-[100dvh] bg-background text-foreground flex flex-col md:flex-row font-sans">
       <div className="md:hidden bg-[#0B1F33] text-white px-4 py-3 flex items-center justify-between shrink-0 z-30">
         <div className="flex items-center gap-3">
           <BrandLogo className="h-10 w-10 rounded-lg" />
@@ -173,10 +188,10 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
       </div>
       {mobileNavOpen && <div className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setMobileNavOpen(false)} />}
 
-      <aside className={`fixed inset-y-0 left-0 w-72 max-w-[85vw] z-50 transition-transform duration-300 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} md:static md:translate-x-0 md:max-w-none md:z-30 bg-[#0B1F33] text-white flex-shrink-0 flex flex-col md:min-h-[100dvh] shadow-2xl rounded-r-[2rem] md:rounded-r-[2.5rem] overflow-y-auto`} data-testid="supra-sidebar">
-        <div className="p-7 flex items-center justify-between gap-3 border-b border-white/10">
+      <aside className={`fixed inset-y-0 left-0 w-72 max-w-[85vw] z-50 transition-transform duration-300 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} md:static md:translate-x-0 md:max-w-none md:z-30 bg-[#0B1F33] text-white flex-shrink-0 flex flex-col md:min-h-[100dvh] shadow-xl overflow-y-auto cd-nav sd-sidebar`} data-testid="supra-sidebar">
+        <div className="p-6 flex items-center justify-between gap-3 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <BrandLogo className="h-14 w-14 rounded-xl" />
+            <BrandLogo className="h-12 w-12 rounded-xl" />
             <div>
               <p className="font-bold tracking-tight leading-tight">Supra-control</p>
               <p className="text-xs text-white/60 font-medium">Todas las clínicas</p>
@@ -187,7 +202,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
           </button>
         </div>
         <div className="p-6 flex-1">
-          <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-4">Panel</p>
+          <p className="text-xs font-bold text-white/65 uppercase tracking-widest mb-4">Panel</p>
           <nav className="space-y-2">
             {navItems.filter((item) => item.show).map(({ id, label, Icon, badge }) => (
               <Button
@@ -196,11 +211,11 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                 data-testid={`supra-nav-${id}`}
                 aria-current={view === id ? "page" : undefined}
                 onClick={() => go(id)}
-                className={`w-full justify-start text-white hover:bg-white/20 hover:text-white font-medium rounded-2xl h-12 ${view === id ? "bg-white/10" : "bg-transparent"}`}
+                className={`w-full justify-start text-white hover:bg-white/10 hover:text-white font-medium rounded-xl min-h-12 h-auto py-3 ${view === id ? "bg-[hsl(var(--cd-nav-active))] ring-1 ring-white/15" : "bg-transparent"}`}
               >
-                <Icon className="w-5 h-5 mr-3" />
-                {label}
-                {badge ? <span className="ml-auto rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-white" data-testid="supra-nav-badge">{badge}</span> : null}
+                <Icon className="w-5 h-5 mr-3 shrink-0 text-[hsl(var(--cd-teal-bright))]" />
+                <span className="sd-nav-label">{label}</span>
+                {badge ? <span className="ml-auto rounded-full bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-950" data-testid="supra-nav-badge">{badge}</span> : null}
               </Button>
             ))}
           </nav>
@@ -231,8 +246,12 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
         {canManageUsers && <SupportAlerts />}
         {canManageUsers && <AdminBanner />}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10">
-          <div className="max-w-5xl w-full mx-auto">
-            <h1 className="text-2xl font-bold tracking-tight mb-6" data-testid="supra-title">{titles[view]}</h1>
+          <div className="max-w-7xl w-full mx-auto">
+            <header className="mb-7 border-b border-border pb-6">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[hsl(var(--cd-teal))]">Clinivista · Supra-control</p>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight" data-testid="supra-title">{titles[view]}</h1>
+              <p className="mt-2 text-sm text-muted-foreground">{view === "dashboard" ? "Actividad, soporte y estado de las clínicas en un solo lugar." : view === "clinics" ? "Gestiona el acceso, la identidad y la vigencia de cada clínica." : "Gestión y seguimiento de la plataforma."}</p>
+            </header>
             {view === "dashboard" && <SupraDashboard onNavigate={(next) => go(next === "support" ? "support" : next === "admin" && canManageUsers ? "admin" : "clinics")} />}
             {view === "support" && <SupraInbox embedded openTicketId={openTicketId} />}
             {view === "team" && canManageUsers && <SupraTeam embedded />}
@@ -270,7 +289,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
           {centers.map((center) => (
             <div
               key={center.id}
-              className="bg-white rounded-[1.75rem] shadow-sm border border-[#E8E4DE] p-6 flex flex-col gap-5"
+              className="sd-card bg-white rounded-2xl shadow-sm border border-border p-5 sm:p-6 flex flex-col gap-5"
             >
               <div className="flex flex-col gap-5" data-testid={`center-card-${center.id}`}>
                 <div className="min-w-0">
