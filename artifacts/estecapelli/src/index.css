@@ -131,3 +131,94 @@
     @apply font-semibold tracking-tight;
   }
 }
+
+/*
+ * Clinical Premium — tokens del dashboard de clínica (pages/admin.tsx).
+ * Solo aplican bajo .clinic-dashboard: el contenedor raíz del panel y, mientras el
+ * panel está montado, <body> (para que diálogos, menús y avisos de Radix, que se
+ * renderizan en un portal, hereden la misma paleta). :root y .dark no cambian.
+ * Contrastes (WCAG): texto #0F1E33 sobre #F3F6FA 15.4:1 · secundario #4F5E72 sobre
+ * blanco 6.6:1 · azul #1D5FB8 con texto blanco 6.2:1 · turquesa #0F766E sobre
+ * blanco 5.5:1 · navegación blanca sobre #0B1F33 16.7:1 (etiquetas al 60 % 6.7:1).
+ */
+.clinic-dashboard {
+  --background: 214 41% 97%;
+  --foreground: 215 55% 13%;
+
+  --border: 213 31% 87%;
+  --input: 214 18% 57%;
+  --ring: 214 73% 42%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 215 55% 13%;
+  --card-border: 213 31% 89%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 215 55% 13%;
+  --popover-border: 213 31% 87%;
+
+  --primary: 214 73% 42%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 171 39% 93%;
+  --secondary-foreground: 175 77% 26%;
+
+  --muted: 212 42% 94%;
+  --muted-foreground: 214 18% 38%;
+
+  --accent: 212 42% 94%;
+  --accent-foreground: 214 73% 32%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Radios más contenidos que el resto de la app (1rem): rounded-xl = 14px. */
+  --radius: 0.625rem;
+
+  /* Propios del panel */
+  --cd-nav: 210 65% 12%;
+  --cd-nav-active: 210 60% 23%;
+  --cd-teal: 175 77% 26%;
+  --cd-teal-bright: 171 77% 64%;
+  --cd-shadow: 0 1px 2px hsl(215 55% 13% / 0.04), 0 4px 16px -4px hsl(215 55% 13% / 0.08);
+}
+
+/* Sobre la navegación azul marino el foco se dibuja en turquesa claro (11.3:1). */
+.clinic-dashboard .cd-nav {
+  --ring: 171 77% 64%;
+}
+
+/* Foco de teclado visible en todo lo interactivo del panel (y de sus portales). */
+.clinic-dashboard :is(a, button, input, select, textarea, summary, [role="button"], [role="combobox"], [role="tab"], [role="option"], [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/*
+ * Los paneles hijos (fases, evolución, consultas, ayuda, informe…) son compartidos y
+ * traen el beige y el borde cálido de la paleta anterior como colores fijos. Dentro
+ * del dashboard se reasignan a las superficies gris azuladas; fuera, no cambian.
+ */
+.clinic-dashboard .bg-\[\#F5F2EE\],
+.clinic-dashboard .hover\:bg-\[\#F5F2EE\]:hover {
+  background-color: hsl(var(--muted));
+}
+.clinic-dashboard .border-\[\#E8E4DE\],
+.clinic-dashboard .divide-\[\#F5F2EE\] > :not(:last-child),
+.clinic-dashboard .divide-\[\#E8E4DE\] > :not(:last-child) {
+  border-color: hsl(var(--border));
+}
+.clinic-dashboard .ring-\[\#E8E4DE\] {
+  --tw-ring-color: hsl(var(--border));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clinic-dashboard *,
+  .clinic-dashboard *::before,
+  .clinic-dashboard *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
