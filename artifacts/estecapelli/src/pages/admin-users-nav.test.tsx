@@ -4,7 +4,7 @@
  * mocked, so the real react-query pipeline runs.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LanguageProvider } from "@/lib/language";
@@ -12,6 +12,8 @@ import Admin from "./admin";
 
 let fetchSpy: ReturnType<typeof vi.spyOn>;
 let me: object;
+let unread: number;
+let loggedOut: boolean;
 
 function jsonResponse(body: object, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -19,13 +21,21 @@ function jsonResponse(body: object, status = 200) {
 
 beforeEach(() => {
   window.localStorage.clear();
+  unread = 0;
+  loggedOut = false;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fetchSpy = vi.spyOn(globalThis as any, "fetch").mockImplementation(async (input) => {
     const url = String(input);
     if (url.endsWith("/api/auth/me")) return jsonResponse(me);
+    if (url.includes("/api/clinic/overview")) return jsonResponse({ monthly: [], totals: { patients: 0, photos: 0, thisMonth: 0, activeProfessionals: null } });
+    if (url.includes("/api/clinic/activity")) return jsonResponse({ events: [] });
+    if (url.endsWith("/api/support/unread")) return jsonResponse({ unread });
+    if (url.includes("/api/support/")) return jsonResponse({ messages: [], tickets: [] });
+    if (url.endsWith("/api/clinic/protocol")) return jsonResponse({ canEdit: false, phases: [] });
+    if (url.endsWith("/api/auth/logout")) { loggedOut = true; return jsonResponse({ ok: true }); }
     if (url.includes("/api/leads/stats")) return jsonResponse({ total: 0, counts: {} });
     if (url.includes("/api/leads")) return jsonResponse({ leads: [] });
-    if (url.endsWith("/api/clinic/me")) return jsonResponse({ name: "Clínica", slug: "clinica", logoDataUrl: null });
+    if (url.endsWith("/api/clinic/me")) return jsonResponse({ name: "Clínica Ejemplo", slug: "clinica", logoDataUrl: null, specialty: "dermatologia" });
     if (url.endsWith("/api/clinic/users")) {
       return jsonResponse({
         users: [{ id: "u1", email: "ana@x.cl", name: "Ana Pérez", role: "medico", active: true, legalRepresentative: false, isSelf: false, createdAt: "2026-01-01T00:00:00Z" }],
@@ -116,5 +126,78 @@ describe("Admin — Usuarios option", () => {
     await screen.findByTestId("clinic-home");
     expect(screen.queryByRole("button", { name: "Usuarios" })).not.toBeInTheDocument();
     expect(fetchSpy.mock.calls.some(([url]) => String(url).includes("/api/clinic/users"))).toBe(false);
+  });
+});
+
+describe("Admin — barra superior y menú lateral", () => {
+  it("la campana muestra los avisos de soporte sin leer y abre Ayuda → Soporte", async () => {
+    unread = 3;
+    me = signedIn("medico", false);
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    renderAdmin();
+    const bell = await screen.findByRole("button", { name: "Avisos de soporte: 3 sin leer" });
+    expect(screen.getByTestId("topbar-unread")).toHaveTextContent("3");
+    await user.click(bell);
+    expect(screen.getByTestId("nav-help")).toHaveAttribute("aria-current", "page");
+    expect((await screen.findByTestId("help-tab-support")).className).toContain("bg-[#00A9A5]");
+  });
+
+  it("sin avisos la campana no muestra contador", async () => {
+    me = signedIn("medico", false);
+    renderAdmin();
+    expect(await screen.findByRole("button", { name: "Avisos de soporte: ninguno sin leer" })).toBeInTheDocument();
+    expect(screen.queryByTestId("topbar-unread")).not.toBeInTheDocument();
+  });
+
+  it("el buscador lleva a Pacientes con el filtro aplicado", async () => {
+    me = signedIn("administrativo", true);
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    renderAdmin();
+    await screen.findByTestId("clinic-home");
+    await user.type(screen.getByTestId("topbar-search"), "Ana");
+    expect(screen.queryByTestId("clinic-home")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pacientes" })).toHaveAttribute("aria-current", "page");
+    // El filtro de la lista tiene el mismo texto y la consulta lo usa.
+    const listSearch = screen.getByRole("textbox", { name: "Buscar pacientes" });
+    expect(listSearch).toHaveValue("Ana");
+    expect(listSearch).toHaveFocus();
+    await waitFor(() => expect(fetchSpy.mock.calls.some(([url]) => String(url).includes("/api/leads?search=Ana"))).toBe(true));
+  });
+
+  it("Enter en el buscador vacío también lleva a Pacientes", async () => {
+    me = signedIn("administrativo", true);
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    renderAdmin();
+    await screen.findByTestId("clinic-home");
+    await user.type(screen.getByTestId("topbar-search"), "{Enter}");
+    expect(screen.getByRole("button", { name: "Pacientes" })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("el menú de la cuenta muestra nombre y rol, cambia el idioma y cierra la sesión", async () => {
+    me = signedIn("administrativo", true);
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    renderAdmin();
+    const account = await screen.findByTestId("topbar-account");
+    expect(account).toHaveTextContent("Yo");
+    expect(account).toHaveTextContent("Administrativo");
+    await user.click(account);
+    await user.click(within(screen.getByTestId("account-menu")).getByRole("button", { name: /English/ }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Welcome, Yo" })).toBeInTheDocument();
+    await user.click(screen.getByTestId("topbar-account"));
+    await user.click(within(screen.getByTestId("account-menu")).getByRole("button", { name: /out/i }));
+    await waitFor(() => expect(loggedOut).toBe(true));
+  });
+
+  it("«Mi clínica» muestra el nombre y la especialidad reales, sin plan; la tarjeta de ayuda abre los manuales", async () => {
+    me = signedIn("administrativo", true);
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    renderAdmin();
+    const card = await screen.findByTestId("my-clinic");
+    await waitFor(() => expect(card).toHaveTextContent("Clínica Ejemplo"));
+    expect(card).toHaveTextContent("Dermatología");
+    expect(card.textContent).not.toMatch(/Plan/i);
+    await user.click(screen.getByTestId("help-card"));
+    expect(screen.getByTestId("nav-help")).toHaveAttribute("aria-current", "page");
+    expect((await screen.findByTestId("help-tab-manual")).className).toContain("bg-[#00A9A5]");
   });
 });

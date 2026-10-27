@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, Link } from "wouter";
 import { format, parseISO } from "date-fns";
 import { es as dateFnsEs } from "date-fns/locale";
 import {
-  Users, UserCog, Layers, LogOut,
-  Search, ChevronRight, X, Phone, Camera, Mail, CreditCard, Trash2, ChevronDown, Check, Menu, Copy,
-  ClipboardList, LifeBuoy, UserPlus, Building2, Home,
+  Users, UserCog, Layers,
+  Search, ChevronRight, X, Phone, Camera, Mail, CreditCard, Trash2, Check, Copy,
+  ClipboardList, LifeBuoy, UserPlus, Building2, Home, CircleHelp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DirectionProvider } from "@radix-ui/react-direction";
-import { useLanguage, LANGS, type LangCode } from "@/lib/language";
+import { useLanguage } from "@/lib/language";
 import { BrandLogo } from "@/components/brand-logo";
 import { buildPublicPatientLink, copyToClipboard } from "@/lib/clipboard";
 import { DirectorPanel } from "./director-panel";
@@ -47,6 +47,7 @@ import { LeadEvolution } from "@/components/lead-evolution";
 import { NAV_TEXT } from "@/lib/phases-i18n";
 import { ClinicHome } from "@/components/clinic-home";
 import { HOME_TEXT } from "@/lib/home-i18n";
+import { ClinicTopbar } from "@/components/clinic-topbar";
 
 const STATUS_COLORS: Record<string, string> = {
   nuevo: "bg-blue-100 text-blue-700",
@@ -61,10 +62,10 @@ const STATUS_COLORS: Record<string, string> = {
   cerrado: "bg-gray-100 text-gray-600"
 };
 
-// Botón de la barra lateral (azul marino): estado activo con indicador turquesa.
+// Botón de la barra lateral (azul marino): el activo va en azul (texto blanco 5.2:1).
 const navItemClass = (active: boolean) =>
   `relative w-full justify-start gap-3 rounded-xl h-12 [&_svg]:size-5 px-4 font-medium text-[15px] transition-colors hover:text-white ${active
-    ? "bg-[hsl(var(--cd-nav-active))] text-white hover:bg-[hsl(var(--cd-nav-active))] before:absolute before:start-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-e-full before:bg-[hsl(var(--cd-teal-bright))]"
+    ? "bg-[#2563EB] text-white hover:bg-[#2563EB] shadow-[0_6px_16px_-6px_rgba(37,99,235,0.7)]"
     : "bg-transparent text-white/75 hover:bg-white/10"}`;
 
 const cardClass = "bg-card rounded-2xl border border-[hsl(var(--card-border))] shadow-[var(--cd-shadow)]";
@@ -75,13 +76,16 @@ export default function Admin() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { t, lang, setLang } = useLanguage();
-  const [langOpen, setLangOpen] = useState(false);
+  const { t, lang } = useLanguage();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [view, setView] = useState<"home" | "patients" | "users" | "phases" | "report" | "help">("home");
-  const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
+  // Pestaña con la que se abre Ayuda: la campana lleva a Soporte; la tarjeta del menú, a los manuales.
+  const [helpTab, setHelpTab] = useState<"manual" | "support" | null>(null);
 
   const [search, setSearch] = useState("");
+  // Al escribir en la barra superior se pasa a Pacientes y se sigue escribiendo en su buscador.
+  const listSearchRef = useRef<HTMLInputElement>(null);
+  const [focusListSearch, setFocusListSearch] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -160,6 +164,13 @@ export default function Admin() {
   }, [authStatus?.authenticated]);
 
   useEffect(() => {
+    if (!focusListSearch || view !== "patients") return;
+    const input = listSearchRef.current;
+    if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
+    setFocusListSearch(false);
+  }, [focusListSearch, view]);
+
+  useEffect(() => {
     if (!linkCopied) return;
     const timer = window.setTimeout(() => setLinkCopied(false), 2000);
     return () => window.clearTimeout(timer);
@@ -213,6 +224,17 @@ export default function Admin() {
 
   // Administrativos y representante legal (aunque sea médico) gestionan los usuarios de la clínica.
   const canManageUsers = authStatus.user?.canManageUsers === true;
+  const homeText = HOME_TEXT[lang];
+  const clinicName = myClinic?.name ?? authStatus.user?.clinics?.find((c) => c.id === authStatus.user?.centerId)?.name ?? "";
+  const accessText = CLINIC_ACCESS_TEXT[lang];
+  const roleLabel = authStatus.user?.viewingAsDirector
+    ? (authStatus.user.viewingProfile === "representante_legal" ? accessText.roleLegal : authStatus.user.viewingProfile === "administrativo" ? accessText.roleAdministrativo : accessText.roleMedico)
+    : authStatus.user?.role === "administrativo" ? accessText.roleAdministrativo : accessText.roleMedico;
+  const go = (next: typeof view, tab: "manual" | "support" | null = null) => {
+    setView(next);
+    setHelpTab(next === "help" ? tab : null);
+    setMobileNavOpen(false);
+  };
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
@@ -256,65 +278,46 @@ export default function Admin() {
     // DirectionProvider: los menús y diálogos de Radix (en portal) siguen la misma dirección.
     <DirectionProvider dir={dir}>
     <div dir={dir} className="clinic-dashboard h-[100dvh] bg-background text-foreground flex flex-col md:flex-row font-sans selection:bg-primary/20">
-      {/* Mobile top bar */}
-      <div className="cd-nav md:hidden bg-[hsl(var(--cd-nav))] text-white px-4 py-2.5 flex items-center justify-between shrink-0 z-30 shadow-md">
-        <Link href="/">
-          <div className="flex items-center cursor-pointer">
-            <BrandLogo className="h-10 w-10 rounded-lg" />
-          </div>
-        </Link>
-        <button
-          type="button"
-          onClick={() => setMobileNavOpen(true)}
-          aria-label={t.adminMenuOpen}
-          aria-expanded={mobileNavOpen}
-          className="w-11 h-11 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
-      </div>
-
       {/* Mobile nav overlay */}
       {mobileNavOpen && (
         <div className="md:hidden fixed inset-0 bg-[hsl(var(--cd-nav)/0.6)] backdrop-blur-sm z-40" onClick={() => setMobileNavOpen(false)} />
       )}
 
       {/* Sidebar */}
-      <aside className={`cd-nav fixed inset-y-0 start-0 w-72 max-w-[85vw] z-50 transition-transform duration-300 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full rtl:translate-x-full"} md:static md:translate-x-0 md:rtl:translate-x-0 md:max-w-none md:w-64 lg:w-72 md:z-30 bg-[hsl(var(--cd-nav))] bg-gradient-to-b from-[hsl(var(--cd-nav))] to-[hsl(210_62%_9%)] text-white flex-shrink-0 flex flex-col md:min-h-[100dvh] shadow-2xl md:shadow-none md:border-e md:border-white/5 overflow-y-auto`}>
-        <div className="px-6 py-5 flex items-center justify-between gap-3 border-b border-white/10">
-          <Link href="/">
-            <div className="flex items-center cursor-pointer group">
-              <BrandLogo
-                className="h-12 w-12 rounded-xl ring-1 ring-white/15 group-hover:scale-105 transition-transform"
-              />
-            </div>
+      <aside className={`cd-nav fixed inset-y-0 start-0 w-72 max-w-[85vw] z-50 transition-transform duration-300 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full rtl:translate-x-full"} md:static md:translate-x-0 md:rtl:translate-x-0 md:max-w-none md:w-64 lg:w-[272px] md:z-30 bg-[hsl(var(--cd-nav))] bg-gradient-to-b from-[hsl(var(--cd-nav))] to-[hsl(212_70%_9%)] text-white flex-shrink-0 flex flex-col md:min-h-[100dvh] shadow-2xl md:shadow-none overflow-y-auto`}>
+        <div className="px-5 pt-6 pb-5 flex items-center justify-between gap-3">
+          <Link href="/" className="flex items-center gap-3 min-w-0 rounded-xl group">
+            <BrandLogo alt="" className="h-11 w-11 group-hover:scale-105 transition-transform" />
+            <span className="min-w-0">
+              <span className="block text-[22px] leading-none font-bold tracking-tight">Clinivista</span>
+              <span className="block text-[11px] text-white/70 mt-1 truncate">{homeText.brandTagline}</span>
+            </span>
           </Link>
           <button
             type="button"
             onClick={() => setMobileNavOpen(false)}
             aria-label={t.adminMenuClose}
-            className="md:hidden w-11 h-11 rounded-xl hover:bg-white/10 flex items-center justify-center text-white/75 hover:text-white transition-colors"
+            className="md:hidden w-11 h-11 shrink-0 rounded-xl hover:bg-white/10 flex items-center justify-center text-white/75 hover:text-white transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="px-4 py-6 flex-1">
-          <p className="px-4 text-[11px] font-semibold text-white/60 uppercase tracking-[0.14em] mb-3">{t.adminSection}</p>
-          <nav className="space-y-1">
+        <div className="px-4 py-2 flex-1">
+          <nav className="space-y-1" aria-label={t.adminSection}>
             <Button
               variant="ghost"
-              onClick={() => { setView("home"); setMobileNavOpen(false); }}
+              onClick={() => go("home")}
               aria-current={view === "home" ? "page" : undefined}
               className={navItemClass(view === "home")}
               data-testid="nav-home"
             >
               <Home className="w-5 h-5" />
-              {HOME_TEXT[lang].nav}
+              {homeText.nav}
             </Button>
             <Button
               variant="ghost"
-              onClick={() => { setView("patients"); setMobileNavOpen(false); }}
+              onClick={() => go("patients")}
               aria-current={view === "patients" ? "page" : undefined}
               className={navItemClass(view === "patients")}
             >
@@ -324,7 +327,7 @@ export default function Admin() {
             {canManageUsers && (
               <Button
                 variant="ghost"
-                onClick={() => { setView("users"); setMobileNavOpen(false); }}
+                onClick={() => go("users")}
                 aria-current={view === "users" ? "page" : undefined}
                 className={navItemClass(view === "users")}
               >
@@ -334,7 +337,7 @@ export default function Admin() {
             )}
             <Button
               variant="ghost"
-              onClick={() => { setView("report"); setMobileNavOpen(false); }}
+              onClick={() => go("report")}
               aria-current={view === "report" ? "page" : undefined}
               className={navItemClass(view === "report")}
             >
@@ -344,7 +347,7 @@ export default function Admin() {
             {canEditPhases && (
               <Button
                 variant="ghost"
-                onClick={() => { setView("phases"); setMobileNavOpen(false); }}
+                onClick={() => go("phases")}
                 aria-current={view === "phases" ? "page" : undefined}
                 className={navItemClass(view === "phases")}
               >
@@ -354,7 +357,7 @@ export default function Admin() {
             )}
             <Button
               variant="ghost"
-              onClick={() => { setView("help"); setMobileNavOpen(false); }}
+              onClick={() => go("help")}
               aria-current={view === "help" ? "page" : undefined}
               className={navItemClass(view === "help")}
               data-testid="nav-help"
@@ -364,44 +367,27 @@ export default function Admin() {
               {helpUnread > 0 && <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold text-white" data-testid="help-unread">{helpUnread}</span>}
             </Button>
           </nav>
-
-          {/* Language selector */}
-          <div className="mt-6 pt-5 border-t border-white/10">
-            <p className="px-4 text-[11px] font-semibold text-white/60 uppercase tracking-[0.14em] mb-3">{NAV_TEXT[lang].language}</p>
-            <div className="relative">
-              <button
-                onClick={() => setLangOpen(v => !v)}
-                aria-expanded={langOpen}
-                className="w-full min-h-11 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.06] hover:bg-white/10 border border-white/10 text-white text-sm font-medium transition-colors"
-              >
-                <span className="text-base">{currentLang.flag}</span>
-                <span className="flex-1 text-start">{currentLang.name}</span>
-                <ChevronDown className={`w-4 h-4 text-white/60 transition-transform ${langOpen ? "rotate-180" : ""}`} />
-              </button>
-              {langOpen && (
-                <div className="absolute bottom-full left-0 right-0 mb-2 bg-[hsl(210_58%_17%)] rounded-xl shadow-xl border border-white/10 overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-150 max-h-56 overflow-y-auto">
-                  {LANGS.map(l => (
-                    <button key={l.code} onClick={() => { setLang(l.code as LangCode); setLangOpen(false); }}
-                      className={`w-full min-h-11 flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/10 text-start transition-colors ${lang === l.code ? "text-[hsl(var(--cd-teal-bright))] font-semibold" : "text-white/80"}`}>
-                      <span>{l.flag}</span>
-                      <span>{l.name}</span>
-                      {lang === l.code && <Check className="w-3.5 h-3.5 ms-auto text-[hsl(var(--cd-teal-bright))]" />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
         </div>
 
-        <div className="px-4 py-5 border-t border-white/10">
-          {(authStatus.user?.clinics?.length ?? 0) > 1 && (
-            <div className="mb-3">
-              <p className="px-4 text-[11px] font-semibold text-white/60 uppercase tracking-[0.14em] mb-1">{CLINIC_ACCESS_TEXT[lang].currentClinic}</p>
-              <p className="px-4 text-sm font-semibold text-white break-words mb-2">{authStatus.user?.clinics?.find((c) => c.id === authStatus.user?.centerId)?.name ?? ""}</p>
+        <div className="px-4 pb-5 pt-4 space-y-4">
+          {/* Mi clínica: nombre y especialidad (el plan aún no existe por clínica en main). */}
+          <div className="pt-4 border-t border-white/10">
+            <p className="px-1 text-[11px] font-semibold text-white/60 uppercase tracking-[0.14em] mb-2">{homeText.myClinic}</p>
+            <div className="flex items-center gap-3 rounded-2xl bg-white/[0.07] border border-white/10 p-3" data-testid="my-clinic">
+              {myClinic?.logoDataUrl ? (
+                <img src={myClinic.logoDataUrl} alt="" className="h-11 w-11 shrink-0 rounded-xl bg-white object-contain p-1" />
+              ) : (
+                <span aria-hidden="true" className="h-11 w-11 shrink-0 rounded-xl bg-white/15 flex items-center justify-center text-lg font-bold">{(clinicName || "C").trim().charAt(0).toUpperCase()}</span>
+              )}
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold break-words leading-snug">{clinicName}</span>
+                {myClinic?.specialty && <span className="block text-xs text-white/70 mt-0.5">{homeText.specialty[myClinic.specialty]}</span>}
+              </span>
+            </div>
+            {(authStatus.user?.clinics?.length ?? 0) > 1 && (
               <Button
                 variant="ghost"
-                className="w-full justify-start gap-3 text-white hover:bg-white/15 hover:text-white font-medium rounded-xl h-11 bg-white/[0.06] [&_svg]:size-5"
+                className="mt-2 w-full justify-start gap-3 text-white/85 hover:bg-white/10 hover:text-white font-medium rounded-xl h-11 [&_svg]:size-5"
                 data-testid="switch-clinic"
                 onClick={async () => {
                   if (await selectClinic(null)) { queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== getGetAuthMeQueryKey()[0] }); queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() }); }
@@ -411,12 +397,20 @@ export default function Admin() {
                 <Building2 className="w-5 h-5" />
                 {CLINIC_ACCESS_TEXT[lang].switchClinic}
               </Button>
-            </div>
-          )}
-          <Button variant="ghost" className="w-full justify-start gap-3 px-4 text-white/70 hover:text-white hover:bg-white/10 font-medium rounded-xl h-12 transition-colors [&_svg]:size-5" onClick={handleLogout}>
-            <LogOut className="w-5 h-5" />
-            {t.logout}
-          </Button>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => go("help", "manual")}
+            className="w-full min-h-11 flex items-center gap-3 rounded-2xl bg-white/[0.07] hover:bg-white/[0.12] border border-white/10 p-3 text-start transition-colors"
+            data-testid="help-card"
+          >
+            <CircleHelp className="w-6 h-6 shrink-0 text-white/85" aria-hidden="true" />
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold">{homeText.helpTitle}</span>
+              <span className="block text-xs text-white/70">{homeText.helpDesc}</span>
+            </span>
+          </button>
         </div>
       </aside>
 
@@ -451,12 +445,29 @@ export default function Admin() {
             </Button>
           </div>
         )}
+        <ClinicTopbar
+          userName={authStatus.user?.name ?? ""}
+          roleLabel={roleLabel}
+          search={search}
+          onSearch={(value, submit) => {
+            setSearch(value);
+            if (submit || value.trim()) { setSelectedLeadId(null); setView("patients"); setFocusListSearch(true); }
+          }}
+          showSearch={view !== "patients"}
+          showMobileSearch={view === "home"}
+          helpUnread={helpUnread}
+          onOpenSupport={() => go("help", "support")}
+          onLogout={handleLogout}
+          onOpenMenu={() => setMobileNavOpen(true)}
+          menuOpen={mobileNavOpen}
+        />
         <AddPatientDialog open={addPatientOpen} onOpenChange={setAddPatientOpen} onCreated={(id) => { setStatusFilter("all"); setSearch(""); setView("patients"); setSelectedLeadId(id); }} />
         {view === "home" ? (
           <ClinicHome
             userName={authStatus.user?.name ?? ""}
             canManageUsers={canManageUsers}
             canEditPhases={canEditPhases}
+            specialty={myClinic?.specialty}
             onNewPatient={() => setAddPatientOpen(true)}
             onOpenPatients={() => setView("patients")}
             onOpenReport={() => setView("report")}
@@ -464,7 +475,7 @@ export default function Admin() {
             onOpenUsers={() => setView("users")}
             onOpenLead={(id) => { setView("patients"); setSelectedLeadId(id); }}
           />
-        ) : view === "help" ? <HelpPanel initialTab={helpUnread > 0 ? "support" : "manual"} specialty={myClinic?.specialty} /> : view === "report" ? <ReportPanel onOpenLead={(id) => { setView("patients"); setSelectedLeadId(id); }} /> : view === "users" && canManageUsers ? <ClinicUsersPanel /> : view === "phases" && canEditPhases ? <PhasesPanel /> : (
+        ) : view === "help" ? <HelpPanel key={helpTab ?? "auto"} initialTab={helpTab ?? (helpUnread > 0 ? "support" : "manual")} specialty={myClinic?.specialty} /> : view === "report" ? <ReportPanel onOpenLead={(id) => { setView("patients"); setSelectedLeadId(id); }} /> : view === "users" && canManageUsers ? <ClinicUsersPanel /> : view === "phases" && canEditPhases ? <PhasesPanel /> : (
           <>
         {/* Mobile: whole content scrolls; desktop: only the patient list scrolls */}
         <div className="flex-1 min-h-0 flex flex-col overflow-y-auto md:overflow-hidden">
@@ -536,6 +547,8 @@ export default function Admin() {
           <div className="relative flex-1 basis-60 sm:max-w-sm">
             <Search className="w-[18px] h-[18px] absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
+              ref={listSearchRef}
+              aria-label={HOME_TEXT[lang].searchLabel}
               placeholder={t.adminSearchPlaceholder}
               className="ps-11 h-11 bg-card border-input rounded-xl text-base shadow-sm focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:border-primary"
               value={search}
