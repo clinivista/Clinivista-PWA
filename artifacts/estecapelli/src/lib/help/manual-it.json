@@ -388,6 +388,31 @@
   },
   {
    "id": "1.7",
+   "key": "measure",
+   "title": "Misurare la tua lesione con una moneta",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Se la tua clinica lo chiede, in alcune foto compare il pulsante «Misura la mia lesione». Serve a sapere quanto è grande, usando come riferimento una moneta cilena di dimensione nota."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Prima di scattare, appoggia una moneta pulita accanto alla lesione, senza coprirla. Vanno bene le monete da $500, $100 (nuova o vecchia), $50 e $10; quelle da $500 e $100 sono le più facili da vedere.",
+      "Scatta di fronte, con il telefono parallelo alla pelle a circa 15–20 cm, con buona luce e senza flash diretto. La lesione e la moneta devono essere visibili per intero.",
+      "Tocca «Misura la mia lesione» e scegli la moneta usata. L'app cerca da sola la moneta e ne segna i bordi; controlla che siano giusti o trascinali per correggerli.",
+      "Segna la lesione: tocca «Segna la lesione automaticamente» e poi un punto al suo interno, oppure tocca tu le due estremità lungo il lato più lungo. Puoi anche trascinare i punti.",
+      "Vedrai la misura con il suo margine di errore (±) e tocchi «Salva misura». Puoi misurare di nuovo o rimuovere la misura quando vuoi."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Se la moneta appare ovale, la foto è inclinata: rifalla con il telefono parallelo alla pelle per una misura più precisa. La misura è approssimativa, non sostituisce la valutazione del tuo medico e il tuo team la controllerà."
+    }
+   ]
+  },
+  {
+   "id": "1.7",
    "title": "Domande frequenti dei pazienti",
    "blocks": [
     {

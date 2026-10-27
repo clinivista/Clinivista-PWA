@@ -388,6 +388,31 @@
   },
   {
    "id": "1.7",
+   "key": "measure",
+   "title": "Lezyonunuzu bir madeni parayla ölçmek",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Kliniğiniz isterse bazı fotoğraflarda «Lezyonumu ölç» düğmesi görünür. Boyutu bilinen bir Şili madeni parasını referans alarak lezyonun ne kadar büyük olduğunu öğrenmenizi sağlar."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Fotoğrafı çekmeden önce temiz bir parayı lezyonun hemen yanına, üzerini kapatmadan koyun. $500, $100 (yeni veya eski), $50 ve $10 paraları uygundur; $500 ve $100 en kolay görülenlerdir.",
+      "Fotoğrafı karşıdan, telefon cilde paralel ve yaklaşık 15–20 cm uzaktan, iyi ışıkta ve doğrudan flaş kullanmadan çekin. Lezyon ve para tamamen görünmelidir.",
+      "«Lezyonumu ölç» düğmesine dokunun ve kullandığınız parayı seçin. Uygulama parayı kendisi bulur ve kenarlarını işaretler; doğru olduklarını kontrol edin veya sürükleyerek ayarlayın.",
+      "Lezyonu işaretleyin: «Lezyonu otomatik işaretle» düğmesine, sonra lezyonun içinde bir noktaya dokunun; ya da en uzun olduğu yönde iki ucuna kendiniz dokunun. Noktaları sürükleyebilirsiniz.",
+      "Ölçümü hata payıyla (±) göreceksiniz ve «Ölçümü kaydet» düğmesine dokunacaksınız. İstediğiniz zaman yeniden ölçebilir veya ölçümü kaldırabilirsiniz."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Para oval görünüyorsa fotoğraf eğiktir: daha doğru ölçüm için telefonu cilde paralel tutarak yeniden çekin. Ölçüm yaklaşıktır, doktorunuzun değerlendirmesinin yerini tutmaz ve ekibiniz onu inceleyecektir."
+    }
+   ]
+  },
+  {
+   "id": "1.7",
    "title": "Hastalar için sık sorulan sorular",
    "blocks": [
     {
