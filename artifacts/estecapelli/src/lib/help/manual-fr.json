@@ -650,7 +650,7 @@
    "blocks": [
     {
      "t": "p",
-     "text": "En vous connectant, vous arrivez sur le «Tableau de bord Patients», la vue générale de votre clinique. À gauche se trouve le menu (Accueil, Patients, Utilisateurs, Rapport, Phases pour le représentant légal et Aide), avec la carte « Ma clinique » (nom et spécialité) et l'accès aux manuels et au support. En haut se trouve la barre avec la recherche de patients, la cloche des avis du support et votre nom : touchez-le pour changer de langue ou vous déconnecter."
+     "text": "En vous connectant, vous arrivez sur le «Tableau de bord Patients», la vue générale de votre clinique. À gauche se trouve le menu (Accueil, Patients, Utilisateurs, Rapport, Phases pour le représentant légal et Aide), avec la carte « Ma clinique » (nom, spécialité et forfait) et l'accès aux manuels et au support. En haut se trouve la barre avec la recherche de patients, la cloche des avis du support et votre nom : touchez-le pour changer de langue ou vous déconnecter."
     },
     {
      "t": "p",

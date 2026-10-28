@@ -188,14 +188,35 @@ describe("Admin — barra superior y menú lateral", () => {
     await waitFor(() => expect(loggedOut).toBe(true));
   });
 
-  it("«Mi clínica» muestra el nombre y la especialidad reales, sin plan; la tarjeta de ayuda abre los manuales", async () => {
+  it.each([
+    ["basic", "Plan Básico"],
+    ["unlimited", "Plan Ilimitado"],
+    ["titanium", "Plan Titanium"],
+  ] as const)("«Mi clínica» muestra el plan real de la clínica (%s)", async (plan, label) => {
+    me = { ...signedIn("administrativo", true), user: { ...signedIn("administrativo", true).user, plan, features: plan === "titanium" ? ["video"] : [] } };
+    renderAdmin();
+    expect(await screen.findByTestId("my-clinic-plan")).toHaveTextContent(label);
+  });
+
+  it("«Mi clínica» traduce el plan (inglés y árabe)", async () => {
+    window.localStorage.setItem("clinivista_lang", "en");
+    me = { ...signedIn("administrativo", true), user: { ...signedIn("administrativo", true).user, plan: "unlimited", features: [] } };
+    const { unmount } = renderAdmin();
+    expect(await screen.findByTestId("my-clinic-plan")).toHaveTextContent("Plan Unlimited");
+    unmount();
+    window.localStorage.setItem("clinivista_lang", "ar");
+    renderAdmin();
+    expect(await screen.findByTestId("my-clinic-plan")).toHaveTextContent("الباقة غير المحدودة");
+  });
+
+  it("«Mi clínica» muestra el nombre y la especialidad reales; sin plan en la sesión no inventa uno; la tarjeta de ayuda abre los manuales", async () => {
     me = signedIn("administrativo", true);
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     renderAdmin();
     const card = await screen.findByTestId("my-clinic");
     await waitFor(() => expect(card).toHaveTextContent("Clínica Ejemplo"));
     expect(card).toHaveTextContent("Dermatología");
-    expect(card.textContent).not.toMatch(/Plan/i);
+    expect(screen.queryByTestId("my-clinic-plan")).not.toBeInTheDocument();
     await user.click(screen.getByTestId("help-card"));
     expect(screen.getByTestId("nav-help")).toHaveAttribute("aria-current", "page");
     expect((await screen.findByTestId("help-tab-manual")).className).toContain("bg-[#00A9A5]");

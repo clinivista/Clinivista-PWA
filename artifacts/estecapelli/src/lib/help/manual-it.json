@@ -650,7 +650,7 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Quando accedi arrivi alla «Dashboard Pazienti», la panoramica della tua clinica. A sinistra c'è il menu (Home, Pazienti, Utenti, Report, Fasi per il rappresentante legale e Aiuto), con la scheda «La mia clinica» (nome e specialità) e l'accesso a manuali e supporto. In alto c'è la barra con la ricerca dei pazienti, la campanella degli avvisi del supporto e il tuo nome: toccalo per cambiare lingua o uscire."
+     "text": "Quando accedi arrivi alla «Dashboard Pazienti», la panoramica della tua clinica. A sinistra c'è il menu (Home, Pazienti, Utenti, Report, Fasi per il rappresentante legale e Aiuto), con la scheda «La mia clinica» (nome, specialità e piano) e l'accesso a manuali e supporto. In alto c'è la barra con la ricerca dei pazienti, la campanella degli avvisi del supporto e il tuo nome: toccalo per cambiare lingua o uscire."
     },
     {
      "t": "p",

@@ -650,7 +650,7 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Ao entrar, você chega ao «Painel de Pacientes», a visão geral da sua clínica. À esquerda fica o menu (Início, Pacientes, Usuários, Relatório, Fases para o representante legal e Ajuda), com o cartão «Minha clínica» (nome e especialidade) e o acesso a manuais e suporte. No alto fica a barra com a busca de pacientes, o sino de avisos de suporte e o seu nome: toque nele para mudar o idioma ou sair."
+     "text": "Ao entrar, você chega ao «Painel de Pacientes», a visão geral da sua clínica. À esquerda fica o menu (Início, Pacientes, Usuários, Relatório, Fases para o representante legal e Ajuda), com o cartão «Minha clínica» (nome, especialidade e plano) e o acesso a manuais e suporte. No alto fica a barra com a busca de pacientes, o sino de avisos de suporte e o seu nome: toque nele para mudar o idioma ou sair."
     },
     {
      "t": "p",

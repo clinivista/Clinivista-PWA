@@ -650,7 +650,7 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Giriş yaptığınızda kliniğinizin genel görünümü olan «Hasta Paneli»ne gelirsiniz. Solda menü (Ana sayfa, Hastalar, Kullanıcılar, Rapor, yasal temsilci için Aşamalar ve Yardım), “Kliniğim” kartı (ad ve uzmanlık alanı) ile kılavuzlara ve desteğe erişim bulunur. Üstte hasta arama kutusu, destek bildirimleri zili ve adınızın bulunduğu çubuk vardır: dili değiştirmek veya çıkış yapmak için adınıza dokunun."
+     "text": "Giriş yaptığınızda kliniğinizin genel görünümü olan «Hasta Paneli»ne gelirsiniz. Solda menü (Ana sayfa, Hastalar, Kullanıcılar, Rapor, yasal temsilci için Aşamalar ve Yardım), “Kliniğim” kartı (ad, uzmanlık alanı ve paket) ile kılavuzlara ve desteğe erişim bulunur. Üstte hasta arama kutusu, destek bildirimleri zili ve adınızın bulunduğu çubuk vardır: dili değiştirmek veya çıkış yapmak için adınıza dokunun."
     },
     {
      "t": "p",
