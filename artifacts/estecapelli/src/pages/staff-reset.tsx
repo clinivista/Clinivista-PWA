@@ -40,7 +40,7 @@ export default function StaffReset() {
   const several = clinics.length > 1;
 
   return (
-    <div className="min-h-[100dvh] bg-[#F5F2EE] px-4 py-10 flex justify-center" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <div className="min-h-[100dvh] cv-page px-4 py-10 flex justify-center" dir={lang === "ar" ? "rtl" : "ltr"}>
       <div className="w-full max-w-md flex flex-col gap-5">
         <div className="flex items-center justify-between">
           <BrandLogo variant="logo-sin-lema" className="h-11" />
@@ -50,7 +50,7 @@ export default function StaffReset() {
         {done ? (
           <div className="rounded-2xl bg-white p-5 shadow-sm flex flex-col gap-4">
             <p role="status">{text.done}</p>
-            <Link href="/admin/login"><Button className="rounded-full font-bold w-full">{text.goLogin}</Button></Link>
+            <Link href="/admin/login"><Button className="rounded-xl font-bold w-full">{text.goLogin}</Button></Link>
           </div>
         ) : (
           <form className="rounded-2xl bg-white p-5 shadow-sm flex flex-col gap-3"
@@ -63,10 +63,10 @@ export default function StaffReset() {
               });
             }}>
             <label className="text-sm font-bold" htmlFor="staff-new-password">{text.newPassword}</label>
-            <PasswordInput id="staff-new-password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-2xl" />
+            <PasswordInput id="staff-new-password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-xl" />
             <p className="text-xs text-muted-foreground">{text.minLength}</p>
             <label className="text-sm font-bold" htmlFor="staff-repeat-password">{text.repeatPassword}</label>
-            <PasswordInput id="staff-repeat-password" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} className="h-12 rounded-2xl" />
+            <PasswordInput id="staff-repeat-password" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} className="h-12 rounded-xl" />
             {several && (
               <fieldset className="flex flex-col gap-2 rounded-2xl bg-[#F5F2EE] p-3" data-testid="reset-clinics">
                 <legend className="text-sm font-bold px-1">{text.clinicsTitle}</legend>
@@ -83,7 +83,7 @@ export default function StaffReset() {
             )}
             {mismatch && <p role="alert" className="text-sm text-destructive">{text.mismatch}</p>}
             {error && <p role="alert" className="text-sm text-destructive">{error} <Link href="/admin/login" className="underline">{text.forgotLink}</Link></p>}
-            <Button type="submit" className="rounded-full font-bold" disabled={reset.isPending || password.length < 8 || password !== again || !token || (several && chosen.length === 0)}>
+            <Button type="submit" className="rounded-xl font-bold" disabled={reset.isPending || password.length < 8 || password !== again || !token || (several && chosen.length === 0)}>
               {reset.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : text.save}
             </Button>
           </form>

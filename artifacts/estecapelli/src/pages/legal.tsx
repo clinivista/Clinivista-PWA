@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/components/brand-logo";
 import type { ReactNode } from "react";
 import { Link } from "wouter";
 import { LanguagePicker } from "@/components/language-picker";
@@ -26,10 +27,13 @@ function Document({ doc }: { doc: (text: (typeof LEGAL_TEXT)["es"]) => LegalDoc 
     });
 
   return (
-    <div className="min-h-[100dvh] bg-[#F5F2EE] px-4 py-10 flex justify-center" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <div className="min-h-[100dvh] cv-page px-4 py-10 flex justify-center" dir={lang === "ar" ? "rtl" : "ltr"}>
       <article className="w-full max-w-2xl flex flex-col gap-5 text-sm leading-relaxed text-foreground">
-        <LanguagePicker label={portal.language} />
-        <header className="flex flex-col gap-1">
+        <div className="flex items-center justify-between gap-3">
+          <Link href="/" aria-label="Clinivista"><BrandLogo variant="logo-sin-lema" alt="Clinivista" className="h-9" /></Link>
+          <LanguagePicker label={portal.language} />
+        </div>
+                <header className="flex flex-col gap-1">
           <h1 className="text-3xl font-extrabold tracking-tight">{current.title}</h1>
           <p className="text-xs text-muted-foreground">
             {text.company} · {text.updated}: {UPDATED.toLocaleDateString(LOCALES[lang], { dateStyle: "long", timeZone: "UTC" })}

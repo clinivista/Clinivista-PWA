@@ -1,3 +1,5 @@
+import { BrandLogo } from "@/components/brand-logo";
+import { storedSystemText } from "@/lib/system-pages-i18n";
 import {
   Component,
   type ComponentType,
@@ -36,28 +38,25 @@ function toError(value: unknown): Error {
 }
 
 function DefaultFallback({ error, resetError }: ErrorFallbackProps) {
+  const { text, rtl } = storedSystemText();
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-6">
-      <div className="max-w-lg w-full text-center">
-        <h1 className="text-xl font-semibold text-gray-900">
-          Something went wrong
-        </h1>
-        <p className="mt-2 text-sm text-gray-600">
-          This part of the app hit an error. The rest of the app is still
-          running.
-        </p>
+    <div className="cv-page min-h-screen w-full flex items-center justify-center p-6" dir={rtl ? "rtl" : "ltr"} data-testid="error-fallback">
+      <div className="max-w-lg w-full text-center rounded-3xl bg-white p-8 shadow-[0_18px_44px_-18px_rgba(10,31,77,0.25)] ring-1 ring-slate-200/70">
+        <BrandLogo variant="logo-sin-lema" alt="Clinivista" className="mx-auto mb-5 h-8" />
+        <h1 className="text-xl font-bold text-[#0A1F4D]">{text.errorTitle}</h1>
+        <p className="mt-2 text-sm text-[#4A5F82]">{text.errorDesc}</p>
         {/* Dev only: messages can carry API responses and other internals. */}
         {import.meta.env.DEV ? (
-          <pre className="mt-4 overflow-x-auto rounded bg-gray-100 p-3 text-left text-xs text-gray-800">
+          <pre className="mt-4 overflow-x-auto rounded-lg bg-slate-100 p-3 text-left text-xs text-slate-800" dir="ltr">
             {error.message || String(error)}
           </pre>
         ) : null}
         <button
           type="button"
           onClick={resetError}
-          className="mt-4 rounded bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700"
+          className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-[#0B63E5] px-6 text-sm font-semibold text-white hover:bg-[#0A55C4] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B63E5]"
         >
-          Try again
+          {text.retry}
         </button>
       </div>
     </div>

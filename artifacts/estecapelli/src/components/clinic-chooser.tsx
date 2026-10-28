@@ -55,8 +55,8 @@ export function ClinicChooser({ clinics, onChosen, director = false }: { clinics
   const choose = (id: string) => run(id, () => (director ? post("/api/auth/enter-clinic", { centerId: id }) : selectClinic(id)));
 
   return (
-    <div className="min-h-[100dvh] bg-[#F5F2EE] flex items-center justify-center p-4" data-testid="clinic-chooser">
-      <div className="w-full max-w-md bg-white rounded-[2rem] shadow-sm p-6 sm:p-8">
+    <div className="min-h-[100dvh] cv-page flex items-center justify-center p-4" data-testid="clinic-chooser">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-[0_18px_44px_-18px_rgba(10,31,77,0.25)] ring-1 ring-slate-200/70 p-6 sm:p-8">
         <BrandLogo variant="logo-sin-lema" className="h-11 mb-5" />
         <h1 className="text-xl font-extrabold text-foreground">{c.title}</h1>
         <p className="text-sm text-muted-foreground mt-1 mb-5">{director ? c.subtitleDirector : c.subtitle}</p>
@@ -67,7 +67,7 @@ export function ClinicChooser({ clinics, onChosen, director = false }: { clinics
               <p className="font-bold break-words">{c.supraName}</p>
               <p className="text-xs text-white/70">{c.supraSub}</p>
             </div>
-            <Button type="button" variant="secondary" className="rounded-full shrink-0" disabled={busy !== null} onClick={() => run("supra", () => post("/api/auth/leave-clinic"))}>
+            <Button type="button" variant="secondary" className="rounded-xl shrink-0" disabled={busy !== null} onClick={() => run("supra", () => post("/api/auth/leave-clinic"))}>
               {busy === "supra" && <Loader2 className="w-4 h-4 animate-spin mr-2" />}{c.enter}
             </Button>
           </div>
@@ -83,7 +83,7 @@ export function ClinicChooser({ clinics, onChosen, director = false }: { clinics
                 <p className="font-bold text-foreground break-words">{clinic.name}</p>
                 {!director && <p className="text-xs text-muted-foreground">{clinic.role === "medico" ? c.roleMedico : c.roleAdministrativo}</p>}
               </div>
-              <Button type="button" className="rounded-full shrink-0" disabled={busy !== null} onClick={() => choose(clinic.id)} aria-label={`${c.enter}: ${clinic.name}`}>
+              <Button type="button" className="rounded-xl shrink-0" disabled={busy !== null} onClick={() => choose(clinic.id)} aria-label={`${c.enter}: ${clinic.name}`}>
                 {busy === clinic.id && <Loader2 className="w-4 h-4 animate-spin mr-2" />}{c.enter}
               </Button>
             </li>
