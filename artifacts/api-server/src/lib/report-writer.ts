@@ -309,10 +309,17 @@ export async function createReportWriter(input: ReportWriterOptions) {
 
   // ---- Páginas ----
 
-  /** A new page with a small running header: the clinic's name and the document's title. */
+  /** Title block of the document (clinic, badge, title, subtitle). Every page repeats it with the same sizes. */
+  let brand: { title: string; subtitle: string; badge?: Badge } | null = null;
+
+  /** A new page: it repeats the cover's header (same logo, clinic name and title sizes), so every page reads as the same document. */
   const newPage = async () => {
     page = pdf.addPage([PAGE.width, PAGE.height]);
     y = PAGE.height - PAGE.margin;
+    if (brand) {
+      await drawBrand(brand);
+      return;
+    }
     const name = await prepare(input.clinicName, { size: 9, bold: true, color: "navy" }, PAGE.margin, contentWidth / 2 - 8);
     const title = await prepare(input.documentTitle, { size: 8.5, color: "muted" }, PAGE.margin + contentWidth / 2 + 8, contentWidth / 2 - 8, "end");
     for (const item of name.slice(0, 1)) await item.draw(page, y);
@@ -388,7 +395,7 @@ export async function createReportWriter(input: ReportWriterOptions) {
   // ---- Bloques ----
 
   /** First page: the clinic (logo or initials, name, specialty), a status badge, the title and subtitle. */
-  const cover = async (options: { title: string; subtitle: string; badge?: Badge }) => {
+  const drawBrand = async (options: { title: string; subtitle: string; badge?: Badge }) => {
     await prepareFonts([input.clinicName, input.clinicTagline ?? "", options.badge?.text ?? ""].join(" "));
     const top = y;
     const LOGO = 50;
@@ -455,6 +462,11 @@ export async function createReportWriter(input: ReportWriterOptions) {
     y -= 8;
     rule(page, y);
     y -= 14;
+  };
+
+  const cover = async (options: { title: string; subtitle: string; badge?: Badge }) => {
+    brand = options;
+    await drawBrand(options);
   };
 
   /** Identification row: label over value, in columns divided by thin lines. Empty values are left out by the caller. */

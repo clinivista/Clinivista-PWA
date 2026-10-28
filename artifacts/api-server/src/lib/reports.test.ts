@@ -74,8 +74,11 @@ describe("Informe de diagnóstico", () => {
     const text = pages.join(" ");
     for (let i = 1; i <= 60; i += 1) expect(text).toContain(`Párrafo ${i}:`);
     expect(text).toContain("miniaturización en la región frontal; se sugiere control fotográfico y seguimiento según indicación médica.");
-    // Las páginas que siguen llevan el encabezado corto con la clínica.
-    expect(pages[1]).toContain("Clínica Ñandú");
+    // Cada página repite el mismo encabezado: la clínica y el nombre del informe.
+    for (const page of pages) {
+      expect(page).toContain("Clínica Ñandú");
+      expect(page).toContain("Informe de diagnóstico");
+    }
     expect(pages[pages.length - 1]).toContain(`Página ${pages.length} de ${pages.length}`);
   });
 
@@ -290,6 +293,7 @@ describe("Informe de pacientes pendientes (uso interno)", () => {
     const pages = await pagesText(pdf);
     expect(pages.length).toBeGreaterThan(2);
     for (const page of pages.slice(0, -1)) expect(page).toMatch(/Paciente RUT Ingreso Espera Estado/);
+    for (const page of pages) expect(page).toContain("Pacientes pendientes de diagnóstico");
     const text = pages.join(" ");
     for (let i = 1; i <= 70; i += 1) expect(text).toContain(`Paciente ${i} `);
     expect(text).toContain("No hay resultados pendientes de envío.");
