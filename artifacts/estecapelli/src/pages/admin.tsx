@@ -46,6 +46,7 @@ import { STAFF_FLOW_TEXT } from "@/lib/staff-flow-i18n";
 import { LeadEvolution } from "@/components/lead-evolution";
 import { NAV_TEXT } from "@/lib/phases-i18n";
 import { ClinicHome } from "@/components/clinic-home";
+import { VideoPlayer } from "@/components/video-player";
 import { HOME_TEXT } from "@/lib/home-i18n";
 import { ClinicTopbar } from "@/components/clinic-topbar";
 
@@ -778,6 +779,13 @@ export default function Admin() {
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                           {fullLead.photos.map(p => {
                             const photoUrl = `/api/leads/${encodeURIComponent(fullLead.id)}/photos/${encodeURIComponent(p.id)}`;
+                            // Un video de la pre-evaluación se reproduce aquí mismo (por tramos, sin descarga).
+                            if (p.mimeType?.startsWith("video/")) return (
+                              <figure key={p.id} className="col-span-2 flex flex-col rounded-xl overflow-hidden bg-card border border-border" data-testid="lead-video">
+                                <VideoPlayer src={`/api/leads/${encodeURIComponent(fullLead.id)}/videos/${encodeURIComponent(p.id)}`} label={p.label} durationMs={p.durationMs} className="aspect-video" />
+                                <figcaption className="px-3 py-2.5 text-xs font-semibold text-center text-foreground border-t border-border"><bdi>{p.label}</bdi></figcaption>
+                              </figure>
+                            );
                             return (
                             <div
                               key={p.id}
@@ -810,6 +818,7 @@ export default function Admin() {
 
                     <LeadPhases
                       leadId={fullLead.id}
+                      canRecordVideo={authStatus.user?.features?.includes("video") === true}
                       onExpand={setExpandedPhoto}
                       diagnosisLead={{
                         norwood: fullLead.norwood,

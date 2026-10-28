@@ -15,6 +15,8 @@ export interface LeadPhaseView {
   required: boolean;
   document: boolean;
   measure: boolean;
+  /** The view is a short video; its "photo" (when present) has a video/* mimeType and is played from GET /leads/{id}/videos/{photoId}. */
+  video: boolean;
   transcription: PhotoTranscription | null;
   photo: PatientPhotoStatus | null;
 }

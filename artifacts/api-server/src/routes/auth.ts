@@ -1,3 +1,4 @@
+import { centerPlanInfo } from "../lib/plans";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { AdminLoginBody } from "@workspace/api-zod";
@@ -112,6 +113,11 @@ function isClinicStaff(user: typeof usersTable.$inferSelect): boolean {
   return user.role === "medico" || user.role === "administrativo";
 }
 
+/** Adds the current clinic's plan and the functions it enables (only when a clinic is chosen). */
+async function withPlan<T extends { centerId: string | null }>(user: T): Promise<T | (T & Awaited<ReturnType<typeof centerPlanInfo>>)> {
+  return user.centerId ? { ...user, ...(await centerPlanInfo(user.centerId)) } : user;
+}
+
 router.get("/auth/me", async (req, res): Promise<void> => {
   const token = getToken(req);
   const session = getSession(token);
@@ -129,7 +135,7 @@ router.get("/auth/me", async (req, res): Promise<void> => {
     if (session.viewingCenterId) {
       const [center] = await db.select({ id: centersTable.id, name: centersTable.name }).from(centersTable).where(eq(centersTable.id, session.viewingCenterId));
       if (center) {
-        res.json({ authenticated: true, user: { ...authUser(user, { centerId: center.id, role: session.viewingRole ?? "medico" }), canManageUsers: false, viewingAsDirector: true, viewingClinic: center, viewingProfile: session.viewingLegal ? "representante_legal" : session.viewingRole ?? "medico" } });
+        res.json({ authenticated: true, user: await withPlan({ ...authUser(user, { centerId: center.id, role: session.viewingRole ?? "medico" }), canManageUsers: false, viewingAsDirector: true, viewingClinic: center, viewingProfile: session.viewingLegal ? "representante_legal" : session.viewingRole ?? "medico" }) });
         return;
       }
       setSessionDirectorChoice(token);
@@ -156,7 +162,7 @@ router.get("/auth/me", async (req, res): Promise<void> => {
     if (target.userId !== session.userId || target.centerId !== session.centerId || target.role !== session.role) {
       setSessionAccount(token, { userId: target.userId, centerId: target.centerId, role: target.role });
     }
-    res.json({ authenticated: true, user: authUser(target.user, { centerId: target.centerId, role: target.role }, { clinics: clinicsOf(accesses), needsClinicChoice: false }) });
+    res.json({ authenticated: true, user: await withPlan(authUser(target.user, { centerId: target.centerId, role: target.role }, { clinics: clinicsOf(accesses), needsClinicChoice: false })) });
     return;
   }
   const first = accesses.find((access) => access.userId === session.userId) ?? accesses[0];

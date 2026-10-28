@@ -22,6 +22,8 @@ export type PhotoProtocolView = {
   referenceVisual: ReactNode;
   /** La clínica pidió medir la lesión en esta foto con una moneda de referencia. */
   measure?: boolean;
+  /** Esta vista se registra con un video corto (plan Titanium) en vez de una foto. */
+  video?: boolean;
 };
 
 const defaults = {
@@ -85,7 +87,7 @@ function GenericReference() {
   );
 }
 
-export type ConfiguredPhotoView = { key: string; label: string; required: boolean; measure?: boolean };
+export type ConfiguredPhotoView = { key: string; label: string; required: boolean; measure?: boolean; video?: boolean };
 
 /**
  * The patient's photo list as the clinic configured it. Starting views keep
@@ -161,5 +163,5 @@ export function getConfiguredPhotoProtocol(t: AppTranslations, views: Configured
       referenceVisual: <GenericReference />,
     };
   });
-  return built.map((item, index) => ({ ...item, measure: views[index].measure === true }));
+  return built.map((item, index) => ({ ...item, measure: views[index].measure === true, video: views[index].video === true }));
 }

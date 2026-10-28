@@ -11,6 +11,7 @@ import {
 import { uid } from "./helpers";
 import { createObjectKey, privatePhotoStorage } from "./clinical-photo-storage";
 import { ensureEvaluationForLead, getLeadPhases, type PhotoStatus } from "./clinical-photos";
+import { isVideoMime } from "./video-upload";
 
 export const MAX_RESPONSE_LENGTH = 8000;
 const MAX_STROKES = 400;
@@ -106,7 +107,8 @@ export async function getDiagnosisState(lead: Lead): Promise<DiagnosisState> {
   const preEvaluation = phases[0];
   const diagnosis = await findDiagnosis(evaluation.id);
 
-  const withPhoto = (preEvaluation?.views ?? []).filter((view) => view.photo !== null);
+  // Solo fotos: un video de la pre-evaluación no se anota ni va al PDF de resultados (se ve en la ficha).
+  const withPhoto = (preEvaluation?.views ?? []).filter((view) => view.photo !== null && !isVideoMime(view.photo.mimeType));
   const annotations = new Map<string, typeof photoAnnotationsTable.$inferSelect>();
   for (const view of withPhoto) {
     const [annotation] = await db.select().from(photoAnnotationsTable).where(eq(photoAnnotationsTable.photoId, view.photo!.id));
@@ -188,7 +190,7 @@ export async function reopenDiagnosis(lead: Lead, userId: string) {
 
 async function patientPhotoOf(lead: Lead, photoId: string) {
   const phases = await getLeadPhases(lead);
-  const view = phases[0]?.views.find((candidate) => candidate.photo?.id === photoId);
+  const view = phases[0]?.views.find((candidate) => candidate.photo?.id === photoId && !isVideoMime(candidate.photo.mimeType));
   if (!view) throw new DiagnosisError("Esa foto no es parte de la pre-evaluación del paciente.", 404);
   return view;
 }

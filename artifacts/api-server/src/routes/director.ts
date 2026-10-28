@@ -31,6 +31,8 @@ import { clean, uid } from "../lib/helpers";
 import { PHONE_ERROR, parseUserPhone } from "../lib/user-phone";
 import { destroySessionsForUser } from "../lib/sessions";
 import { resetToTemporaryPassword } from "../lib/user-management";
+import { toPlan } from "../lib/plans";
+import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
@@ -77,6 +79,7 @@ async function centerSummaries() {
         paymentStatus: paymentStatus(center?.paidUntil ?? null),
         logoDataUrl: center?.logoDataUrl ?? null,
         specialty: toSpecialtyId(center?.specialty),
+        plan: toPlan(center?.plan),
       };
     }),
   );
@@ -182,14 +185,18 @@ router.patch("/director/centers/:id", async (req, res): Promise<void> => {
 
   const params = PatchDirectorCenterParams.safeParse(req.params);
   const body = PatchDirectorCenterBody.safeParse(req.body);
-  if (!params.success || !body.success) {
+  if (!params.success || !body.success || (body.data.active === undefined && body.data.plan === undefined)) {
     res.status(400).json({ error: "Datos inválidos." });
     return;
   }
+  const changes = {
+    ...(body.data.active !== undefined ? { active: body.data.active } : {}),
+    ...(body.data.plan !== undefined ? { plan: body.data.plan } : {}),
+  };
 
   const [existing] = await db.select().from(centersTable).where(eq(centersTable.id, params.data.id));
   if (existing) {
-    await db.update(centersTable).set({ active: body.data.active }).where(eq(centersTable.id, params.data.id));
+    await db.update(centersTable).set(changes).where(eq(centersTable.id, params.data.id));
   } else {
     // A clinic that only exists implicitly (via leads/users) gets its row
     // created here, the first time a director touches its status.
@@ -197,8 +204,12 @@ router.patch("/director/centers/:id", async (req, res): Promise<void> => {
       id: params.data.id,
       name: params.data.id === DEFAULT_CENTER_ID ? "Centro principal" : params.data.id,
       slug: params.data.id,
-      active: body.data.active,
+      ...changes,
     }).onConflictDoNothing();
+  }
+  // No hay historial de auditoría de clínicas: el cambio de plan queda en el registro del servidor.
+  if (body.data.plan !== undefined && toPlan(existing?.plan) !== body.data.plan) {
+    logger.info({ event: "clinic_plan_changed", centerId: params.data.id, from: toPlan(existing?.plan), to: body.data.plan, byUserId: context.userId }, "Clinic plan changed");
   }
 
   const summaries = await centerSummaries();

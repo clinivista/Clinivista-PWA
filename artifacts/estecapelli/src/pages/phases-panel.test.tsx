@@ -81,10 +81,10 @@ describe("PhasesPanel", () => {
     expect(api.save.mock.calls[0][0]).toEqual({
       data: {
         phases: [
-          { id: "p1", name: "Pre-evaluación", views: [{ id: "v1", label: "Frontal", document: false, measure: false }, { id: "v2", label: "Vértex", document: false, measure: false }] },
+          { id: "p1", name: "Pre-evaluación", views: [{ id: "v1", label: "Frontal", document: false, measure: false, video: false }, { id: "v2", label: "Vértex", document: false, measure: false, video: false }] },
           { id: "p2", name: "Diagnóstico", views: [] },
-          { id: "p3", name: "Post-op y plan", views: [{ id: "v4", label: "Frontal", document: false, measure: false }, { label: "Zona receptora", document: false, measure: false }] },
-          { name: "Control 12 meses", views: [{ label: "Frontal", document: false, measure: false }] },
+          { id: "p3", name: "Post-op y plan", views: [{ id: "v4", label: "Frontal", document: false, measure: false, video: false }, { label: "Zona receptora", document: false, measure: false, video: false }] },
+          { name: "Control 12 meses", views: [{ label: "Frontal", document: false, measure: false, video: false }] },
         ],
       },
     });
@@ -125,5 +125,47 @@ describe("PhasesPanel", () => {
     const sent = api.save.mock.calls[0][0].data.phases as Array<{ views: Array<{ measure: boolean; document: boolean }> }>;
     expect(sent[0].views[0]).toMatchObject({ id: "v1", measure: true, document: false });
     expect(sent[0].views[1].measure).toBe(false);
+  });
+
+  describe("casilla «Video» (plan Titanium)", () => {
+    it("fuera de Titanium se ve deshabilitada con «Disponible en el plan Titanium»", () => {
+      api.protocol = { ...protocol(true), plan: "basic", features: [] };
+      render(<PhasesPanel />);
+      const box = screen.getAllByLabelText("Grabar video: Frontal", { selector: "input" })[0] as HTMLInputElement;
+      expect(box).toBeDisabled();
+      expect(box).toHaveAccessibleDescription(/Disponible en el plan Titanium/);
+      expect(screen.getAllByText(/Disponible en el plan Titanium/).length).toBeGreaterThan(0);
+    });
+
+    it("con Titanium se marca, desmarca documento y medir, y se envía al guardar", async () => {
+      api.protocol = { ...protocol(true), plan: "titanium", features: ["video"] };
+      const user = userEvent.setup();
+      render(<PhasesPanel />);
+      await user.click(screen.getAllByLabelText("Medir la lesión: Frontal", { selector: "input" })[0]);
+      const video = screen.getAllByLabelText("Grabar video: Frontal", { selector: "input" })[0] as HTMLInputElement;
+      expect(video).toBeEnabled();
+      await user.click(video);
+      expect(video).toBeChecked();
+      expect(screen.getAllByLabelText("Medir la lesión: Frontal", { selector: "input" })[0]).not.toBeChecked();
+      // Marcar documento desmarca el video.
+      await user.click(screen.getAllByLabelText("Es un documento: Frontal", { selector: "input" })[0]);
+      expect(video).not.toBeChecked();
+      await user.click(video);
+      await user.click(screen.getByRole("button", { name: "Guardar fases" }));
+      const sent = api.save.mock.calls[0][0].data.phases as Array<{ views: Array<{ video: boolean; document: boolean; measure: boolean }> }>;
+      expect(sent[0].views[0]).toMatchObject({ id: "v1", video: true, document: false, measure: false });
+    });
+
+    it("si la clínica bajó de plan avisa y deja desmarcar (no marcar) las vistas de video", async () => {
+      const p = protocol(true);
+      p.phases[2].views[0] = { ...p.phases[2].views[0], video: true } as typeof p.phases[2]["views"][0];
+      api.protocol = { ...p, plan: "basic", features: [] };
+      render(<PhasesPanel />);
+      expect(screen.getByTestId("video-plan-lost")).toHaveTextContent(/ya no incluye video/);
+      const boxes = screen.getAllByTestId("video-checkbox") as HTMLInputElement[];
+      expect(boxes.filter((box) => box.checked)).toHaveLength(1);
+      expect(boxes.find((box) => box.checked)).toBeEnabled();
+      expect(boxes.filter((box) => !box.checked).every((box) => box.disabled)).toBe(true);
+    });
   });
 });

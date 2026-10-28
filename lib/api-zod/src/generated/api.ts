@@ -39,7 +39,9 @@ export const GetAuthMeResponse = zod.object({
   "viewingClinic": zod.object({
   "id": zod.string(),
   "name": zod.string()
-}).optional()
+}).optional(),
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).optional().describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.'),
+  "features": zod.array(zod.enum(['video'])).optional().describe('Functions the current clinic\'s plan enables (the server decides; the interface only reflects it). Only present when a clinic is chosen.')
 }).optional()
 })
 
@@ -72,7 +74,9 @@ export const AdminLoginResponse = zod.object({
   "viewingClinic": zod.object({
   "id": zod.string(),
   "name": zod.string()
-}).optional()
+}).optional(),
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).optional().describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.'),
+  "features": zod.array(zod.enum(['video'])).optional().describe('Functions the current clinic\'s plan enables (the server decides; the interface only reflects it). Only present when a clinic is chosen.')
 })
 })
 
@@ -201,6 +205,7 @@ export const GetLeadByIdResponse = zod.object({
   "hasAdjusted": zod.boolean(),
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
+  "durationMs": zod.number().nullish().describe('Length of a video (as reported by the recorder); null for photos.'),
   "captureMetadata": zod.unknown().optional(),
   "measurement": zod.union([zod.object({
   "referenceId": zod.string(),
@@ -299,6 +304,7 @@ export const PatchLeadResponse = zod.object({
   "hasAdjusted": zod.boolean(),
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
+  "durationMs": zod.number().nullish().describe('Length of a video (as reported by the recorder); null for photos.'),
   "captureMetadata": zod.unknown().optional(),
   "measurement": zod.union([zod.object({
   "referenceId": zod.string(),
@@ -378,6 +384,7 @@ export const GetLeadPhasesResponse = zod.object({
   "required": zod.boolean(),
   "document": zod.boolean(),
   "measure": zod.boolean(),
+  "video": zod.boolean().describe('The view is a short video; its \"photo\" (when present) has a video\/\* mimeType and is played from GET \/leads\/{id}\/videos\/{photoId}.'),
   "transcription": zod.union([zod.object({
   "text": zod.string(),
   "tier": zod.enum(['basic', 'advanced', 'manual']),
@@ -402,6 +409,7 @@ export const GetLeadPhasesResponse = zod.object({
   "hasAdjusted": zod.boolean(),
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
+  "durationMs": zod.number().nullish().describe('Length of a video (as reported by the recorder); null for photos.'),
   "captureMetadata": zod.unknown().optional(),
   "measurement": zod.union([zod.object({
   "referenceId": zod.string(),
@@ -917,7 +925,8 @@ export const GetDirectorCentersResponse = zod.object({
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
   "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
-  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
+  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.'),
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.')
 }))
 })
 
@@ -955,7 +964,8 @@ export const CreateDirectorCenterResponse = zod.object({
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
   "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
-  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
+  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.'),
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.')
 })
 
 
@@ -967,8 +977,9 @@ export const PatchDirectorCenterParams = zod.object({
 })
 
 export const PatchDirectorCenterBody = zod.object({
-  "active": zod.boolean()
-})
+  "active": zod.boolean().optional(),
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).optional().describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.')
+}).describe('Send at least one of the fields.')
 
 export const PatchDirectorCenterResponse = zod.object({
   "id": zod.string(),
@@ -981,7 +992,8 @@ export const PatchDirectorCenterResponse = zod.object({
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
   "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
-  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
+  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.'),
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.')
 })
 
 
@@ -1224,7 +1236,8 @@ export const UpdateDirectorCenterIdentityResponse = zod.object({
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
   "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
-  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
+  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.'),
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.')
 })
 
 
@@ -1250,7 +1263,8 @@ export const RecordDirectorCenterPaymentResponse = zod.object({
   "paidUntil": zod.coerce.date().nullable().describe('Manually recorded — the clinic is considered paid through this date. Null if a director has never recorded a payment.'),
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
   "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
-  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
+  "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.'),
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.')
 })
 
 
@@ -1537,6 +1551,8 @@ export const GetClinicProtocolQueryParams = zod.object({
 
 export const GetClinicProtocolResponse = zod.object({
   "canEdit": zod.boolean(),
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).optional().describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.'),
+  "features": zod.array(zod.enum(['video'])).optional(),
   "phases": zod.array(zod.object({
   "id": zod.string(),
   "key": zod.string(),
@@ -1551,7 +1567,8 @@ export const GetClinicProtocolResponse = zod.object({
   "position": zod.number(),
   "hasPhotos": zod.boolean(),
   "document": zod.boolean().describe('The photo is a document (e.g. a handwritten sheet) that staff can transcribe.'),
-  "measure": zod.boolean().describe('The lesion is measured on this photo with a reference coin next to it.')
+  "measure": zod.boolean().describe('The lesion is measured on this photo with a reference coin next to it.'),
+  "video": zod.boolean().describe('This view is recorded as a short video (up to 20 s) instead of a photo. Titanium plan only.')
 }))
 }))
 })
@@ -1572,13 +1589,16 @@ export const UpdateClinicProtocolBody = zod.object({
   "id": zod.string().optional(),
   "label": zod.string(),
   "document": zod.boolean().optional().describe('Mark the photo as a document. When omitted, an existing photo keeps its current value.'),
-  "measure": zod.boolean().optional().describe('Mark the photo as one where the lesion is measured. When omitted, an existing photo keeps its current value.')
+  "measure": zod.boolean().optional().describe('Mark the photo as one where the lesion is measured. When omitted, an existing photo keeps its current value.'),
+  "video": zod.boolean().optional().describe('Record this view as a video instead of a photo (excludes document and measure). Needs the clinic\'s \"video\" function to turn on; when omitted, an existing view keeps its current value.')
 }))
 }))
 })
 
 export const UpdateClinicProtocolResponse = zod.object({
   "canEdit": zod.boolean(),
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).optional().describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.'),
+  "features": zod.array(zod.enum(['video'])).optional(),
   "phases": zod.array(zod.object({
   "id": zod.string(),
   "key": zod.string(),
@@ -1593,7 +1613,8 @@ export const UpdateClinicProtocolResponse = zod.object({
   "position": zod.number(),
   "hasPhotos": zod.boolean(),
   "document": zod.boolean().describe('The photo is a document (e.g. a handwritten sheet) that staff can transcribe.'),
-  "measure": zod.boolean().describe('The lesion is measured on this photo with a reference coin next to it.')
+  "measure": zod.boolean().describe('The lesion is measured on this photo with a reference coin next to it.'),
+  "video": zod.boolean().describe('This view is recorded as a short video (up to 20 s) instead of a photo. Titanium plan only.')
 }))
 }))
 })
@@ -1612,7 +1633,8 @@ export const GetPatientProtocolResponse = zod.object({
   "key": zod.string(),
   "label": zod.string(),
   "required": zod.boolean(),
-  "measure": zod.boolean().optional().describe('The patient measures the lesion on this photo, with a coin next to it.')
+  "measure": zod.boolean().optional().describe('The patient measures the lesion on this photo, with a coin next to it.'),
+  "video": zod.boolean().optional().describe('The patient records a short video for this view instead of a photo.')
 }))
 })
 
@@ -1757,6 +1779,7 @@ export const GetPatientPhotoStatusResponse = zod.object({
   "hasAdjusted": zod.boolean(),
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
+  "durationMs": zod.number().nullish().describe('Length of a video (as reported by the recorder); null for photos.'),
   "captureMetadata": zod.unknown().optional(),
   "measurement": zod.union([zod.object({
   "referenceId": zod.string(),
@@ -1818,6 +1841,7 @@ export const UploadPatientPhotoResponse = zod.object({
   "hasAdjusted": zod.boolean(),
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
+  "durationMs": zod.number().nullish().describe('Length of a video (as reported by the recorder); null for photos.'),
   "captureMetadata": zod.unknown().optional(),
   "measurement": zod.union([zod.object({
   "referenceId": zod.string(),
@@ -1920,6 +1944,7 @@ export const ConfirmPatientPhotoResponse = zod.object({
   "hasAdjusted": zod.boolean(),
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
+  "durationMs": zod.number().nullish().describe('Length of a video (as reported by the recorder); null for photos.'),
   "captureMetadata": zod.unknown().optional(),
   "measurement": zod.union([zod.object({
   "referenceId": zod.string(),
@@ -1977,6 +2002,7 @@ export const CreatePatientAdjustedPhotoResponse = zod.object({
   "hasAdjusted": zod.boolean(),
   "width": zod.number().nullish(),
   "height": zod.number().nullish(),
+  "durationMs": zod.number().nullish().describe('Length of a video (as reported by the recorder); null for photos.'),
   "captureMetadata": zod.unknown().optional(),
   "measurement": zod.union([zod.object({
   "referenceId": zod.string(),

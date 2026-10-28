@@ -32,6 +32,7 @@ async function documentPhoto(centerId: string, leadId: string, photoId: string) 
   if (!lead || (lead.centerId ?? DEFAULT_CENTER_ID) !== centerId) return undefined;
   const photo = await getPhotoForStaff(lead, photoId);
   if (!photo) return undefined;
+  if (photo.originalMimeType.toLowerCase().startsWith("video/")) return null;
   const [view] = await db.select().from(protocolViewsTable).where(eq(protocolViewsTable.id, photo.viewId));
   if (!(view?.requirements as Record<string, unknown> | null)?.document) return null;
   return photo;

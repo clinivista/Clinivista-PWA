@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CameraModal } from "@/components/camera-modal";
+import { PatientVideoCard } from "@/components/patient-video-card";
 import { PhotoEditor } from "@/components/photo-editor";
 import { MeasureDialog } from "@/components/measure-dialog";
 import { MeasureProtocol } from "@/components/measure-protocol";
@@ -508,6 +509,7 @@ type ServerPhotoState = {
   editParams?: unknown;
   note?: string | null;
   measurement?: PhotoMeasurement | null;
+  durationMs?: number | null;
 };
 
 // ---------- Resume token (this device only) ----------
@@ -678,13 +680,13 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
     let alive = true;
     fetch(`/api/patients/${encodeURIComponent(token)}/photos`)
       .then(response => response.ok ? response.json() : Promise.reject(new Error("No photo state")))
-      .then((payload: { photos?: Array<{ id: string; key: string; status: string; hasAdjusted?: boolean; width?: number | null; height?: number | null; mimeType?: string; sizeBytes?: number; editParams?: unknown; measurement?: PhotoMeasurement | null; captureMetadata?: { technicalReview?: { warningCodes?: string[] } } }> }) => {
+      .then((payload: { photos?: Array<{ id: string; key: string; status: string; hasAdjusted?: boolean; width?: number | null; height?: number | null; mimeType?: string; sizeBytes?: number; durationMs?: number | null; editParams?: unknown; measurement?: PhotoMeasurement | null; captureMetadata?: { technicalReview?: { warningCodes?: string[] } } }> }) => {
         if (!alive) return;
         const confirmed = (payload.photos ?? []).filter(photo => photo.status === "confirmed");
         setSavedKeys(new Set(confirmed.map(photo => photo.key)));
         setServerPhotoStates(Object.fromEntries(confirmed.map(photo => [photo.key, {
           status: photo.status, review: photo.captureMetadata?.technicalReview, hasAdjusted: photo.hasAdjusted,
-          id: photo.id, width: photo.width, height: photo.height, mimeType: photo.mimeType, sizeBytes: photo.sizeBytes, editParams: photo.editParams, measurement: photo.measurement ?? null,
+          id: photo.id, width: photo.width, height: photo.height, mimeType: photo.mimeType, sizeBytes: photo.sizeBytes, durationMs: photo.durationMs ?? null, editParams: photo.editParams, measurement: photo.measurement ?? null,
         }])));
         if (confirmed.length > 0) setResumeOffer(true);
       })
@@ -1652,7 +1654,27 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
               )}
             </div>
 
-            {/* Active photo card */}
+            {/* Active photo card (o la tarjeta de video, si la clínica pidió esta vista en video) */}
+            {activeReq.video ? (
+              <PatientVideoCard
+                key={activeReq.key}
+                viewKey={activeReq.key}
+                title={activeReq.title}
+                photoOfLabel={t.pPhotoOf.replace("{n}", String(currentPhotoIndex + 1)).replace("{total}", String(photoTotal))}
+                token={patientToken}
+                saved={savedKeys.has(activeReq.key) && serverPhotoStates[activeReq.key]?.id
+                  ? { id: serverPhotoStates[activeReq.key]!.id!, mimeType: serverPhotoStates[activeReq.key]!.mimeType ?? "video/mp4", durationMs: serverPhotoStates[activeReq.key]!.durationMs ?? null }
+                  : null}
+                onSaved={(key, video) => {
+                  setSavedKeys(prev => new Set([...prev, key]));
+                  setServerPhotoStates(prev => ({ ...prev, [key]: { status: "confirmed", id: video.id, mimeType: video.mimeType, durationMs: video.durationMs } }));
+                  saveDraft();
+                  const nextMissing = PHOTO_REQUIREMENTS.findIndex(r => r.key !== key && !photos[r.key] && !savedKeys.has(r.key));
+                  if (nextMissing !== -1) setCurrentPhotoIndex(nextMissing);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              />
+            ) : (
             <ActivePhotoCard
               key={activeReq.key}
               view={activeReq}
@@ -1673,6 +1695,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
               patientToken={patientToken}
               onMeasured={(key, measurement) => setServerPhotoStates((current) => ({ ...current, [key]: { ...current[key], measurement } }))}
             />
+            )}
 
             {/* Accepted photo thumbnails */}
             {completedPhotos > 0 && (

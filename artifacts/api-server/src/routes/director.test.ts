@@ -37,7 +37,7 @@ beforeAll(async () => {
   await pglite.exec(`
     CREATE TABLE IF NOT EXISTS clinical_centers (
       id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
-      active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar',
+      active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', plan text NOT NULL DEFAULT 'basic' CHECK (plan IN ('basic', 'unlimited', 'titanium')),
       created_at timestamptz NOT NULL DEFAULT now()
     );
     CREATE TABLE IF NOT EXISTS clinical_protocols (template_key text NOT NULL DEFAULT '', 
@@ -161,6 +161,39 @@ describe("GET /api/director/centers", () => {
     // Fase 6 (manual billing): a clinic that has never had a payment
     // recorded shows up as "sin_registro", never a false "atrasada".
     expect(byId["clinic-a"]).toMatchObject({ paidUntil: null, paymentStatus: "sin_registro" });
+  });
+});
+
+describe("plan de cada clínica (supra-control)", () => {
+  const director = () => `clinivista_session=${directorSession()}`;
+
+  it("lo muestra (basic por defecto), lo cambia y lo refleja en /auth/me del personal", async () => {
+    await seedClinic("clinic-a", { staff: 1 });
+    const list = await request(app).get("/api/director/centers").set("Cookie", director()).expect(200);
+    expect(list.body.centers.find((c: { id: string }) => c.id === "clinic-a").plan).toBe("basic");
+
+    const staff = `clinivista_session=${createSession({ userId: "clinic-a-staff-0", centerId: "clinic-a", role: "administrativo" })}`;
+    const before = (await request(app).get("/api/auth/me").set("Cookie", staff).expect(200)).body.user;
+    expect(before).toMatchObject({ plan: "basic", features: [] });
+
+    const updated = await request(app).patch("/api/director/centers/clinic-a").set("Cookie", director()).send({ plan: "titanium" }).expect(200);
+    expect(updated.body).toMatchObject({ id: "clinic-a", plan: "titanium", active: true });
+    const after = (await request(app).get("/api/auth/me").set("Cookie", staff).expect(200)).body.user;
+    expect(after).toMatchObject({ plan: "titanium", features: ["video"] });
+
+    // Cambiar el estado no toca el plan, y viceversa.
+    await request(app).patch("/api/director/centers/clinic-a").set("Cookie", director()).send({ active: false }).expect(200)
+      .then((r) => expect(r.body).toMatchObject({ active: false, plan: "titanium" }));
+  });
+
+  it("rechaza un plan desconocido o una petición vacía, y solo supra-control puede cambiarlo", async () => {
+    await seedClinic("clinic-a");
+    await request(app).patch("/api/director/centers/clinic-a").set("Cookie", director()).send({ plan: "gold" }).expect(400);
+    await request(app).patch("/api/director/centers/clinic-a").set("Cookie", director()).send({}).expect(400);
+    const staff = createSession({ userId: "s1", centerId: "clinic-a", role: "administrativo" });
+    await request(app).patch("/api/director/centers/clinic-a").set("Cookie", `clinivista_session=${staff}`).send({ plan: "titanium" }).expect(403);
+    const rows = (await pglite.exec(`SELECT plan FROM clinical_centers WHERE id = 'clinic-a';`)) as Array<{ rows: Array<{ plan: string }> }>;
+    expect(rows[0].rows[0].plan).toBe("basic");
   });
 });
 

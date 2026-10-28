@@ -5,6 +5,7 @@ import { UpdateClinicProtocolBody } from "@workspace/api-zod";
 import { CONSULT_TEMPLATES, createCustomType, deleteType, enableTemplate, listConsultTypes, updateType } from "../lib/consult-types";
 import { canManageClinicUsers, requireStaffAuth } from "./auth";
 import { ProtocolConfigError, getProtocolStructure, replaceProtocolStructure } from "../lib/protocol-config";
+import { PlanFeatureError, centerPlanInfo } from "../lib/plans";
 
 const router: IRouter = Router();
 
@@ -24,7 +25,7 @@ router.get("/clinic/protocol", async (req, res): Promise<void> => {
   if (!staff) return;
   try {
     const { phases } = await getProtocolStructure(staff.centerId, typeParam(req));
-    res.json({ canEdit: await isLegalRepresentative(staff), phases });
+    res.json({ canEdit: await isLegalRepresentative(staff), ...(await centerPlanInfo(staff.centerId)), phases });
   } catch (error) {
     if (error instanceof ProtocolConfigError) { res.status(404).json({ error: error.message }); return; }
     throw error;
@@ -50,10 +51,14 @@ router.put("/clinic/protocol", async (req, res): Promise<void> => {
       res.status(400).json({ error: error.message });
       return;
     }
+    if (error instanceof PlanFeatureError) {
+      res.status(403).json({ error: error.message });
+      return;
+    }
     throw error;
   }
   const { phases } = await getProtocolStructure(staff.centerId, typeParam(req));
-  res.json({ canEdit: true, phases });
+  res.json({ canEdit: true, ...(await centerPlanInfo(staff.centerId)), phases });
 });
 
 // ── Tipos de consulta (dermatología) ────────────────────────────────────

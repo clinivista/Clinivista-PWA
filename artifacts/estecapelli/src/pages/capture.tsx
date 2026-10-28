@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "wouter";
-import { Camera, CheckCircle2, Loader2 } from "lucide-react";
+import { Camera, CheckCircle2, Loader2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/brand-logo";
 import { useLanguage } from "@/lib/language";
 import { phaseName, viewLabel } from "@/lib/phases-i18n";
 import { CAPTURE_TEXT } from "@/lib/capture-i18n";
+import { VideoRecorder } from "@/components/video-recorder";
+import { VIDEO_TEXT } from "@/lib/video-i18n";
+import { uploadVideo, type RecordedVideo } from "@/lib/video-capture";
 
-type CaptureView = { id: string; key: string; label: string; required: boolean; taken: boolean };
+type CaptureView = { id: string; key: string; label: string; required: boolean; video?: boolean; taken: boolean };
 type CaptureInfo = { clinicName: string; expiresAt: string; phase: { key: string; name: string }; views: CaptureView[] };
 
 const MAX_SIDE = 2400;
@@ -40,6 +43,8 @@ export default function Capture() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const pending = useRef<string | null>(null);
+  const v = VIDEO_TEXT[lang];
+  const [recordingView, setRecordingView] = useState<CaptureView | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -70,6 +75,22 @@ export default function Capture() {
     } finally {
       setBusyId(null);
       if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  const saveVideo = async (view: CaptureView, video: RecordedVideo) => {
+    setBusyId(view.id);
+    setError("");
+    try {
+      const result = await uploadVideo(`/api/capture/${encodeURIComponent(token)}/views/${encodeURIComponent(view.id)}/video`, video);
+      if (!result.ok && result.status === 410) { setGone(true); return; }
+      if (!result.ok) throw new Error(result.error ?? v.saveFailed);
+      setRecordingView(null);
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : v.saveFailed);
+    } finally {
+      setBusyId(null);
     }
   };
 
@@ -116,18 +137,22 @@ export default function Capture() {
           const label = viewLabel(view, info.phase.key, lang, t);
           return (
             <li key={view.id} className="bg-white rounded-2xl p-4 flex items-center gap-3">
-              {view.taken ? <CheckCircle2 className="w-5 h-5 text-primary shrink-0" aria-label={c.taken} /> : <Camera className="w-5 h-5 text-muted-foreground shrink-0" />}
+              {view.taken ? <CheckCircle2 className="w-5 h-5 text-primary shrink-0" aria-label={c.taken} /> : view.video ? <Video className="w-5 h-5 text-muted-foreground shrink-0" /> : <Camera className="w-5 h-5 text-muted-foreground shrink-0" />}
               <span className="min-w-0 flex-1 font-bold break-words">{label}{!view.required && c.optional}</span>
               <Button type="button" className="rounded-full shrink-0" variant={view.taken ? "outline" : "default"} disabled={busyId !== null}
                 data-testid={`capture-${view.key}`}
-                onClick={() => { pending.current = view.id; inputRef.current?.click(); }}>
-                {busyId === view.id ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />{c.saving}</> : view.taken ? c.retake : c.take}
+                onClick={() => { if (view.video) { setRecordingView(view); return; } pending.current = view.id; inputRef.current?.click(); }}>
+                {busyId === view.id ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />{c.saving}</> : view.video ? (view.taken ? v.recordAgain : v.record) : view.taken ? c.retake : c.take}
               </Button>
             </li>
           );
         })}
       </ul>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      {recordingView && (
+        <VideoRecorder title={v.recorderTitle(viewLabel(recordingView, info.phase.key, lang, t))} busy={busyId !== null}
+          onClose={() => setRecordingView(null)} onUse={(video) => void saveVideo(recordingView, video)} />
+      )}
       <Button type="button" className="rounded-full h-12" disabled={busyId !== null} onClick={() => void finish()} data-testid="capture-finish">{c.finish}</Button>
     </>,
   );

@@ -107,7 +107,7 @@ beforeAll(async () => {
       WHERE document_normalized IS NOT NULL AND document_normalized <> '';
      CREATE TABLE IF NOT EXISTS clinical_centers (
        id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
-       active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar',
+       active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', plan text NOT NULL DEFAULT 'basic' CHECK (plan IN ('basic', 'unlimited', 'titanium')),
        created_at timestamptz NOT NULL DEFAULT now()
      );
      CREATE TABLE IF NOT EXISTS clinical_protocols (template_key text NOT NULL DEFAULT '', 
@@ -977,9 +977,9 @@ describe("Dermatología (tercera especialidad)", () => {
     const lead = (await register({ clinicalData: answers }).expect(201)).body.lead;
     const protocol = await request(app).get(`/api/patients/${lead.token}/protocol`).expect(200);
     expect(protocol.body.views).toEqual([
-      { key: "dermOverview", label: "Vista panorámica", required: true, measure: false },
-      { key: "dermClose", label: "Primer plano con referencia", required: true, measure: false },
-      { key: "dermDermoscopy", label: "Dermatoscopía", required: false, measure: false },
+      { key: "dermOverview", label: "Vista panorámica", required: true, measure: false, video: false },
+      { key: "dermClose", label: "Primer plano con referencia", required: true, measure: false, video: false },
+      { key: "dermDermoscopy", label: "Dermatoscopía", required: false, measure: false, video: false },
     ]);
     const phases = (await pglite.exec(`SELECT name FROM clinical_protocol_phases WHERE protocol_id LIKE 'derma-a%' ORDER BY position;`)) as Array<{ rows: Array<{ name: string }> }>;
     expect(phases[0].rows.map((r) => r.name)).toEqual(["Pre-evaluación", "Diagnóstico", "Tratamiento", "Control 1", "Control 2"]);
@@ -1298,6 +1298,179 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
     await request(app).get(`/api/leads/${withPhotos.id}/photos/${frontal.id}`).set("Cookie", staff("clinic-b")).expect(404);
     // Sin sesión de personal, nada.
     await request(app).get("/api/leads").expect(401);
+  });
+
+  describe("video por vista (plan Titanium)", () => {
+    // Contenedores mínimos con la cabecera real de cada formato (no son videos reproducibles, pero sí detectables).
+    const MP4 = Buffer.concat([Buffer.from([0, 0, 0, 0x18]), Buffer.from("ftypisom", "latin1"), Buffer.alloc(4000, 7)]);
+    const WEBM = Buffer.concat([Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 0x9f, 0x42, 0x86, 0x81]), Buffer.from("\x01B\x82\x84webm", "latin1"), Buffer.alloc(2000, 3)]);
+    const setPlan = (plan: string, centerId = DEFAULT_CENTER_ID) =>
+      pglite.exec(`INSERT INTO clinical_centers (id, name, slug, plan) VALUES ('${centerId}', 'Clínica ${centerId}', '${centerId}', '${plan}')
+        ON CONFLICT (id) DO UPDATE SET plan = EXCLUDED.plan;`);
+    const markVideo = (viewId: string) => pglite.exec(`UPDATE clinical_protocol_views SET requirements = requirements || '{"video": true}'::jsonb WHERE id = '${viewId}';`);
+    const videoRows = async () => ((await pglite.exec(`SELECT id, original_object_path, original_mime_type, status FROM clinical_photos WHERE original_mime_type LIKE 'video/%' ORDER BY created_at;`)) as Array<{ rows: Array<{ id: string; original_object_path: string; original_mime_type: string; status: string }> }>)[0].rows;
+    const staffVideo = (leadId: string, viewId: string, body: Buffer, type = "video/mp4", cookie = staff()) =>
+      request(app).post(`/api/leads/${leadId}/views/${viewId}/video`).set("Cookie", cookie).set("Content-Type", type).set("x-video-duration-ms", "12000").send(body);
+    /** Paciente listo para que el personal registre la fase 3, con su primera vista marcada como video. */
+    async function staffVideoView() {
+      const lead = await patientReadyForCapture();
+      const view = (await phases(lead.id))[2].views[0];
+      await markVideo(view.id);
+      return { lead, viewId: view.id };
+    }
+
+    it("sin el plan Titanium no se acepta el video (403) y no se guarda nada", async () => {
+      const { lead, viewId } = await staffVideoView();
+      const res = await staffVideo(lead.id, viewId, MP4).expect(403);
+      expect(res.body.error).toMatch(/Titanium/);
+      expect(await videoRows()).toEqual([]);
+    });
+
+    it("con Titanium se graba, cuenta como capturada y se reproduce por tramos (Range) con cabeceras privadas", async () => {
+      await setPlan("titanium");
+      const { lead, viewId } = await staffVideoView();
+      const saved = (await staffVideo(lead.id, viewId, MP4).expect(201)).body;
+      expect(saved).toMatchObject({ mimeType: "video/mp4", sizeBytes: MP4.length, durationMs: 12000, width: null, height: null, status: "confirmed" });
+      expect(saved.sha256).toBe(createHash("sha256").update(MP4).digest("hex"));
+      const view = (await phases(lead.id))[2].views[0];
+      expect(view.video).toBe(true);
+      expect(view.photo?.id).toBe(saved.id);
+
+      const part = await request(app).get(`/api/leads/${lead.id}/videos/${saved.id}`).set("Cookie", staff()).set("Range", "bytes=0-99")
+        .buffer(true).parse((res, done) => { const chunks: Buffer[] = []; res.on("data", (c: Buffer) => chunks.push(c)); res.on("end", () => done(null, Buffer.concat(chunks))); });
+      expect(part.status).toBe(206);
+      expect(part.headers["content-range"]).toBe(`bytes 0-99/${MP4.length}`);
+      expect(part.headers["accept-ranges"]).toBe("bytes");
+      expect(part.headers["content-type"]).toBe("video/mp4");
+      expect(part.headers["cache-control"]).toBe("private, no-store");
+      expect(part.headers["x-content-type-options"]).toBe("nosniff");
+      expect(Buffer.compare(part.body as Buffer, MP4.subarray(0, 100))).toBe(0);
+
+      const tail = await request(app).get(`/api/leads/${lead.id}/videos/${saved.id}`).set("Cookie", staff()).set("Range", "bytes=-10");
+      expect(tail.status).toBe(206);
+      expect(tail.headers["content-range"]).toBe(`bytes ${MP4.length - 10}-${MP4.length - 1}/${MP4.length}`);
+      const whole = await request(app).get(`/api/leads/${lead.id}/videos/${saved.id}`).set("Cookie", staff());
+      expect(whole.status).toBe(200);
+      expect(Number(whole.headers["content-length"])).toBe(MP4.length);
+      const outside = await request(app).get(`/api/leads/${lead.id}/videos/${saved.id}`).set("Cookie", staff()).set("Range", `bytes=${MP4.length + 5}-`);
+      expect(outside.status).toBe(416);
+      expect(outside.headers["content-range"]).toBe(`bytes */${MP4.length}`);
+      // El camino de las fotos nunca sirve un video.
+      await request(app).get(`/api/leads/${lead.id}/photos/${saved.id}`).set("Cookie", staff()).expect(404);
+    });
+
+    it("rechaza el tipo inválido (por cabecera real, no por Content-Type), el tope de 25 MB y fotos en vistas de video", async () => {
+      await setPlan("titanium");
+      const { lead, viewId } = await staffVideoView();
+      await staffVideo(lead.id, viewId, JPEG, "video/mp4").expect(400); // dice mp4, pero es un JPEG
+      await staffVideo(lead.id, viewId, WEBM, "video/mp4").expect(400); // dice mp4, pero es WebM
+      await staffVideo(lead.id, viewId, MP4, "video/avi").expect(400);
+      await staffVideo(lead.id, viewId, WEBM, "video/webm").expect(201);
+      const big = await staffVideo(lead.id, viewId, Buffer.concat([MP4, Buffer.alloc(25 * 1024 * 1024)])).expect(413);
+      expect(big.body.error).toMatch(/25 MB/);
+      await staffVideo(lead.id, viewId, MP4).set("x-video-duration-ms", "60000").expect(400); // más de 20 s
+      // Una vista de video no recibe fotos, y una vista de foto no recibe videos.
+      await capture(lead.id, viewId).expect(400);
+      const photoView = (await phases(lead.id))[2].views[1];
+      await staffVideo(lead.id, photoView.id, MP4).expect(400);
+      expect((await videoRows()).map((row) => row.original_mime_type)).toEqual(["video/webm"]);
+    });
+
+    it("otra clínica no ve ni sube videos de este paciente", async () => {
+      await setPlan("titanium");
+      await setPlan("titanium", "clinic-b");
+      const { lead, viewId } = await staffVideoView();
+      const saved = (await staffVideo(lead.id, viewId, MP4).expect(201)).body;
+      await request(app).get(`/api/leads/${lead.id}/videos/${saved.id}`).set("Cookie", staff("clinic-b")).expect(404);
+      await staffVideo(lead.id, viewId, MP4, "video/mp4", staff("clinic-b")).expect(404);
+      await request(app).get(`/api/leads/${lead.id}/videos/${saved.id}`).expect(401);
+    });
+
+    it("el paciente graba el video de su pre-evaluación (borrador → confirmado) y solo ve los suyos", async () => {
+      await setPlan("titanium");
+      const lead = await createPatient();
+      const list = await listPhases(lead.id);
+      const donor = list[0].views.find((view) => view.key === "donor")!;
+      await markVideo(donor.id);
+      for (const key of KEYS.filter((key) => key !== "donor")) {
+        const draft = await request(app).post(`/api/patients/${lead.token}/photos`)
+          .set("Content-Type", "image/jpeg").set("x-photo-key", key).set("x-photo-source", "upload").send(JPEG).expect(201);
+        await request(app).post(`/api/patients/${lead.token}/photos/${draft.body.id}/confirm`).expect(200);
+      }
+      // Una foto no entra en la vista de video.
+      await request(app).post(`/api/patients/${lead.token}/photos`).set("Content-Type", "image/jpeg").set("x-photo-key", "donor").set("x-photo-source", "upload").send(JPEG).expect(400);
+      const draft = await request(app).post(`/api/patients/${lead.token}/videos`).set("Content-Type", "video/mp4").set("x-photo-key", "donor").set("x-video-duration-ms", "9000").send(MP4).expect(201);
+      expect(draft.body.status).toBe("draft");
+      await request(app).post(`/api/patients/${lead.token}/photos/${draft.body.id}/confirm`).expect(200);
+      expect((await listPhases(lead.id))[0].complete).toBe(true); // el video cuenta como capturado
+
+      const own = await request(app).get(`/api/patients/${lead.token}/videos/${draft.body.id}`).set("Range", "bytes=0-9");
+      expect(own.status).toBe(206);
+      const other = await createPatient({ documentId: "11.111.111-1", phone: "+56933333333", email: "otro@example.com" });
+      await request(app).get(`/api/patients/${other.token}/videos/${draft.body.id}`).expect(404);
+      // El camino de las fotos del paciente tampoco sirve el video.
+      await request(app).get(`/api/patients/${lead.token}/photos/${draft.body.id}/original`).expect(404);
+      // Los videos no se anotan ni van al diagnóstico.
+      const diagnosis = (await request(app).get(`/api/leads/${lead.id}/diagnosis`).set("Cookie", staff()).expect(200)).body;
+      expect(diagnosis.photos.map((photo: { viewKey: string }) => photo.viewKey)).not.toContain("donor");
+    });
+
+    it("el PDF de resultados y la evolución no fallan con un video (se omite)", async () => {
+      await setPlan("titanium");
+      const lead = await createPatient();
+      const donor = (await listPhases(lead.id))[0].views.find((view) => view.key === "donor")!;
+      await markVideo(donor.id);
+      for (const key of KEYS.filter((key) => key !== "donor")) {
+        const draft = await request(app).post(`/api/patients/${lead.token}/photos`)
+          .set("Content-Type", "image/jpeg").set("x-photo-key", key).set("x-photo-source", "upload").send(JPEG).expect(201);
+        await request(app).post(`/api/patients/${lead.token}/photos/${draft.body.id}/confirm`).expect(200);
+      }
+      const video = await request(app).post(`/api/patients/${lead.token}/videos`).set("Content-Type", "video/mp4").set("x-photo-key", "donor").send(MP4).expect(201);
+      await request(app).post(`/api/patients/${lead.token}/photos/${video.body.id}/confirm`).expect(200);
+      await closeDiagnosis(lead.id);
+      const pdf = await request(app).get(`/api/leads/${lead.id}/results/pdf`).set("Cookie", staff())
+        .buffer(true).parse((res, done) => { const chunks: Buffer[] = []; res.on("data", (c: Buffer) => chunks.push(c)); res.on("end", () => done(null, Buffer.concat(chunks))); });
+      expect(pdf.status).toBe(200);
+      expect((pdf.body as Buffer).subarray(0, 4).toString()).toBe("%PDF");
+      const evolution = (await request(app).get(`/api/leads/${lead.id}/evolution`).set("Cookie", staff()).expect(200)).body;
+      expect(JSON.stringify(evolution)).not.toContain(video.body.id);
+    });
+
+    it("si la clínica baja de plan, los videos se conservan y se siguen viendo; solo se bloquea subir nuevos", async () => {
+      await setPlan("titanium");
+      const { lead, viewId } = await staffVideoView();
+      const saved = (await staffVideo(lead.id, viewId, MP4).expect(201)).body;
+      await setPlan("basic");
+      expect((await phases(lead.id))[2].views[0].photo?.id).toBe(saved.id);
+      await request(app).get(`/api/leads/${lead.id}/videos/${saved.id}`).set("Cookie", staff()).set("Range", "bytes=0-9").expect(206);
+      await staffVideo(lead.id, viewId, MP4).expect(403);
+      expect((await videoRows()).map((row) => row.status)).toEqual(["confirmed"]);
+    });
+
+    it("«Continuar en el celular» graba video en la vista de su fase (y respeta el plan)", async () => {
+      const { lead, viewId } = await staffVideoView();
+      const phaseId = (await phases(lead.id))[2].id;
+      const { token } = (await request(app).post(`/api/leads/${lead.id}/phases/${phaseId}/capture-session`).set("Cookie", staff()).expect(201)).body;
+      const info = (await request(app).get(`/api/capture/${token}`).expect(200)).body;
+      expect(info.views.find((view: { id: string }) => view.id === viewId).video).toBe(true);
+      const post = () => request(app).post(`/api/capture/${token}/views/${viewId}/video`).set("Content-Type", "video/mp4").send(MP4);
+      await post().expect(403);
+      await setPlan("titanium");
+      await post().expect(201);
+      expect((await request(app).get(`/api/capture/${token}`).expect(200)).body.views.find((view: { id: string }) => view.id === viewId).taken).toBe(true);
+    });
+
+    it("al borrar el paciente se eliminan también los objetos de video del almacenamiento", async () => {
+      await setPlan("titanium");
+      const { lead, viewId } = await staffVideoView();
+      await staffVideo(lead.id, viewId, MP4).expect(201);
+      const [row] = await videoRows();
+      const { privatePhotoStorage } = await import("../lib/clinical-photo-storage");
+      expect((await privatePhotoStorage.read(row.original_object_path)).bytes.length).toBe(MP4.length);
+      await request(app).delete(`/api/leads/${lead.id}`).set("Cookie", staff()).expect(200);
+      await expect(privatePhotoStorage.read(row.original_object_path)).rejects.toThrow();
+      expect(await videoRows()).toEqual([]);
+    });
   });
 
   it("lists the six phases; each opens only when the previous one is complete", async () => {

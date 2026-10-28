@@ -13,4 +13,6 @@ export interface ClinicProtocolViewInput {
   document?: boolean;
   /** Mark the photo as one where the lesion is measured. When omitted, an existing photo keeps its current value. */
   measure?: boolean;
+  /** Record this view as a video instead of a photo (excludes document and measure). Needs the clinic's "video" function to turn on; when omitted, an existing view keeps its current value. */
+  video?: boolean;
 }

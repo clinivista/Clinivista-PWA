@@ -25,6 +25,7 @@ import { SupraDashboard } from "./supra-dashboard";
 import { SupportAlerts } from "@/components/support-alerts";
 import { SupraAdmin, AdminBanner } from "./supra-admin";
 import { ClinicIdentityEditor } from "./clinic-identity-editor";
+import { ClinicPlanSelect } from "@/components/clinic-plan-select";
 import { CenterTranscription } from "@/components/center-transcription";
 
 // Fase 6 (facturación, alcance manual): no hay pasarela de pago ni cobro
@@ -411,6 +412,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                 </div>
               </div>
 
+              <ClinicPlanSelect center={center} />
               <CenterTranscription centerId={center.id} />
 
               {identityOpenId === center.id && (

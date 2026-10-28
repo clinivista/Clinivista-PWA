@@ -1381,6 +1381,25 @@
   },
   {
    "id": "2.17",
+   "key": "video",
+   "title": "Vidéo par photo (forfait Titanium)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Avec le forfait Titanium, dans « Phases », vous pouvez cocher « Vidéo » sur une vue : au lieu d'une photo, une courte vidéo de 20 secondes maximum est enregistrée (par exemple pour voir un mouvement). Elle ne se combine pas avec « Document » ni « Mesurer ». Avec les autres forfaits, la case est désactivée avec la mention « Disponible avec le forfait Titanium » ; le forfait de chaque clinique est fixé par le supra-contrôle."
+    },
+    {
+     "t": "p",
+     "text": "La vidéo s'enregistre dans l'application : par le patient lors de sa pré-évaluation, et par l'équipe sur la tablette ou avec « Continuer sur le téléphone ». Il y a un compte à rebours, un compteur et un arrêt automatique à 20 secondes ; on peut la revoir et la refaire avant de l'utiliser, et la caméra s'éteint en quittant. Si le navigateur ne peut pas enregistrer, on peut envoyer un fichier MP4, WebM ou MOV de 25 Mo maximum. La vidéo compte comme capturée pour terminer la phase et se lit dans le dossier du patient."
+    },
+    {
+     "t": "note",
+     "text": "Si la clinique passe à un forfait sans vidéo, les vidéos enregistrées sont conservées et restent visibles ; elle ne peut simplement plus marquer de nouvelles vues comme vidéo ni enregistrer de nouvelles vidéos. Les vidéos n'apparaissent pas dans le PDF des résultats ni dans le comparateur d'évolution : elles se regardent dans le dossier."
+    }
+   ]
+  },
+  {
+   "id": "2.18",
    "title": "Utilisation depuis le téléphone",
    "blocks": [
     {
@@ -1415,7 +1434,7 @@
    "key": "phone"
   },
   {
-   "id": "2.18",
+   "id": "2.19",
    "key": "support",
    "title": "Tickets d'assistance",
    "blocks": [
@@ -1439,7 +1458,7 @@
    ]
   },
   {
-   "id": "2.19",
+   "id": "2.20",
    "title": "Conseils et dépannage",
    "blocks": [
     {

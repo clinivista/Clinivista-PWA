@@ -35,7 +35,10 @@ import {
   getPhotoStatusesForLead,
   getRequiredViewKeysForLead,
 } from "../lib/clinical-photos";
+import { PhaseCaptureError, createClinicalVideo, getVideoForPatient } from "../lib/clinical-photos";
 import { privatePhotoStorage } from "../lib/clinical-photo-storage";
+import { VIDEO_PLAN_MESSAGE, centerHasFeature } from "../lib/plans";
+import { VIDEO_INVALID, parseVideoRequest, rawVideo, sendPrivateVideo, videoUploadSlot } from "../lib/video-upload";
 import { toMailLanguage } from "../lib/mail-i18n";
 import { ensurePatientAccountForLead } from "../lib/patient-accounts";
 import { baseUrl } from "./results";
@@ -364,6 +367,7 @@ router.get("/patients/:token/protocol", async (req, res): Promise<void> => {
       label: view.label,
       required: (view.requirements as Record<string, unknown> | null)?.required !== false,
       measure: (view.requirements as Record<string, unknown> | null)?.measure === true,
+      video: (view.requirements as Record<string, unknown> | null)?.video === true,
     })),
   });
 });
@@ -481,6 +485,55 @@ router.post("/patients/:token/photos", express.raw({ type: ["image/jpeg", "image
   } catch {
     res.status(400).json({ error: "No pudimos guardar esa foto para esta vista." });
   }
+});
+
+// ── Video de una vista de la pre-evaluación (plan Titanium) ──────────────
+// Antes de recibir los bytes se comprueba el enlace y el plan de la clínica: sin
+// la función «video» no se acepta (403), aunque los videos ya guardados se sigan viendo.
+const patientVideoGate = async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
+  const params = UploadPatientPhotoParams.safeParse(req.params);
+  const lead = params.success ? await findLeadByToken(params.data.token) : undefined;
+  if (!lead) {
+    res.status(404).json({ error: "Este enlace ya no está disponible." });
+    return;
+  }
+  if (!(await centerHasFeature(lead.centerId || DEFAULT_CENTER_ID, "video"))) {
+    res.status(403).json({ error: VIDEO_PLAN_MESSAGE });
+    return;
+  }
+  res.locals.lead = lead;
+  next();
+};
+
+router.post("/patients/:token/videos", videoUploadSlot, patientVideoGate, rawVideo, async (req, res): Promise<void> => {
+  const video = parseVideoRequest(req);
+  const key = typeof req.headers["x-photo-key"] === "string" ? req.headers["x-photo-key"] : "";
+  if (!video || !/^[\w.-]{1,120}$/.test(key)) {
+    res.status(400).json({ error: VIDEO_INVALID });
+    return;
+  }
+  try {
+    const photo = await createClinicalVideo({ lead: res.locals.lead, key, source: req.headers["x-photo-source"] === "upload" ? "upload" : "camera", video });
+    res.status(201).json(photo);
+  } catch (error) {
+    if (error instanceof PhaseCaptureError) {
+      res.status(error.status).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+});
+
+// El paciente solo reproduce sus propios videos de la pre-evaluación.
+router.get("/patients/:token/videos/:photoId", async (req, res): Promise<void> => {
+  const params = ConfirmPatientPhotoParams.safeParse(req.params);
+  const lead = params.success ? await findLeadByToken(params.data.token) : undefined;
+  const video = lead && params.success ? await getVideoForPatient(lead, params.data.photoId) : null;
+  if (!video) {
+    res.status(404).json({ error: "Video no encontrado." });
+    return;
+  }
+  await sendPrivateVideo(req, res, video);
 });
 
 const MAX_PHOTO_NOTE_LENGTH = 500;

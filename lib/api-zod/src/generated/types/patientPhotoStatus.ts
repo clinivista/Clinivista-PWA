@@ -27,6 +27,11 @@ export interface PatientPhotoStatus {
   width?: number | null;
   /** @nullable */
   height?: number | null;
+  /**
+     * Length of a video (as reported by the recorder); null for photos.
+     * @nullable
+     */
+  durationMs?: number | null;
   captureMetadata?: unknown;
   measurement?: PhotoMeasurement | null;
   /**

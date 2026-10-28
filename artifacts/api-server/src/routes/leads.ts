@@ -11,7 +11,8 @@ import {
 } from "@workspace/api-zod";
 import { requireStaffAuth } from "./auth";
 import { clean } from "../lib/helpers";
-import { DEFAULT_CENTER_ID, deleteClinicalDataForLead, ensureClinicalConfiguration, getPhotoForStaff, getPhotoStatusesForLead } from "../lib/clinical-photos";
+import { DEFAULT_CENTER_ID, deleteClinicalDataForLead, ensureClinicalConfiguration, getPhotoForStaff, getPhotoStatusesForLead, getVideoForStaff } from "../lib/clinical-photos";
+import { isVideoMime, sendPrivateVideo } from "../lib/video-upload";
 import { privatePhotoStorage } from "../lib/clinical-photo-storage";
 import { syncLeadStatus } from "../lib/lead-status";
 import { LEAD_STATUSES } from "../lib/lead-status-rules";
@@ -41,9 +42,9 @@ async function leadSummary(lead: typeof leadsTable.$inferSelect, consult: Consul
     ? (photos as Array<{ key?: unknown }>).flatMap((photo) => typeof photo?.key === "string" ? [photo.key] : [])
     : [];
   const visibleClinical = clinicalPhotos.filter((photo) => ["draft", "confirmed"].includes(photo.status));
-  // Miniatura de la pantalla de Inicio: la primera foto confirmada (si no hay, el primer borrador).
+  // Miniatura de la pantalla de Inicio: la primera foto confirmada (si no hay, el primer borrador). Nunca un video.
   const byAge = (a: { createdAt: Date }, b: { createdAt: Date }) => a.createdAt.getTime() - b.createdAt.getTime();
-  const cover = [...visibleClinical].sort((a, b) => Number(b.status === "confirmed") - Number(a.status === "confirmed") || byAge(a, b))[0];
+  const cover = visibleClinical.filter((photo) => !isVideoMime(photo.mimeType)).sort((a, b) => Number(b.status === "confirmed") - Number(a.status === "confirmed") || byAge(a, b))[0];
   return {
     ...safe,
     consultTypeName: consult.typeName,
@@ -167,7 +168,8 @@ router.get("/leads/:id/photos/:photoId", async (req, res): Promise<void> => {
     return;
   }
   const photo = await getPhotoForStaff(lead, params.data.photoId);
-  if (!photo) {
+  // Un video se sirve por tramos desde /leads/:id/videos/:photoId, nunca por el camino de las fotos.
+  if (!photo || isVideoMime(photo.originalMimeType)) {
     res.status(404).json({ error: "Foto no encontrada." });
     return;
   }
@@ -182,6 +184,25 @@ router.get("/leads/:id/photos/:photoId", async (req, res): Promise<void> => {
   } catch {
     res.status(404).json({ error: "Foto no encontrada." });
   }
+});
+
+// Video de una vista (plan Titanium), por tramos. Misma autorización que las
+// fotos: personal de la clínica del paciente. Se sigue viendo aunque la clínica baje de plan.
+router.get("/leads/:id/videos/:photoId", async (req, res): Promise<void> => {
+  const context = requireStaffAuth(req, res);
+  if (!context) return;
+  const params = GetLeadPhotoFileParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Solicitud inválida." });
+    return;
+  }
+  const [lead] = await db.select().from(leadsTable).where(eq(leadsTable.id, params.data.id));
+  const video = lead && (lead.centerId ?? DEFAULT_CENTER_ID) === context.centerId ? await getVideoForStaff(lead, params.data.photoId) : null;
+  if (!video) {
+    res.status(404).json({ error: "Video no encontrado." });
+    return;
+  }
+  await sendPrivateVideo(req, res, video);
 });
 
 router.delete("/leads/:id", async (req, res): Promise<void> => {

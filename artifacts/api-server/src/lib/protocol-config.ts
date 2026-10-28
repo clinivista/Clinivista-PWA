@@ -2,13 +2,14 @@ import crypto from "crypto";
 import { and, asc, eq, inArray, ne } from "drizzle-orm";
 import { db, clinicalPhotosTable, protocolPhasesTable, protocolViewsTable, protocolsTable } from "@workspace/db";
 import { defaultProtocolIdForCenter, ensureClinicalConfiguration } from "./clinical-photos";
+import { PlanFeatureError, VIDEO_PLAN_MESSAGE, centerHasFeature } from "./plans";
 
 export const MAX_PHASES = 12;
 export const MAX_VIEWS_PER_PHASE = 12;
 export const MIN_NAME_LENGTH = 2;
 export const MAX_NAME_LENGTH = 60;
 
-export type PhaseInput = { id?: string; name: string; views: Array<{ id?: string; label: string; document?: boolean; measure?: boolean }> };
+export type PhaseInput = { id?: string; name: string; views: Array<{ id?: string; label: string; document?: boolean; measure?: boolean; video?: boolean }> };
 
 export type ProtocolPhaseDto = {
   id: string;
@@ -19,7 +20,7 @@ export type ProtocolPhaseDto = {
   patientCaptured: boolean;
   /** "diagnosis": the doctor marks up the patient's photos; it has no photo list of its own. */
   kind: "capture" | "diagnosis";
-  views: Array<{ id: string; key: string; label: string; position: number; hasPhotos: boolean; document: boolean; measure: boolean }>;
+  views: Array<{ id: string; key: string; label: string; position: number; hasPhotos: boolean; document: boolean; measure: boolean; video: boolean }>;
 };
 
 export class ProtocolConfigError extends Error {}
@@ -61,7 +62,7 @@ export async function getProtocolStructure(centerId: string, typeId?: string): P
       views: views
         .filter((view) => view.phaseId === phase.id || (index === 0 && view.phaseId === null))
         .sort((a, b) => a.position - b.position)
-        .map((view, position) => ({ id: view.id, key: view.key, label: view.label, position, hasPhotos: withPhotos.has(view.id), document: (view.requirements as Record<string, unknown> | null)?.document === true, measure: (view.requirements as Record<string, unknown> | null)?.measure === true })),
+        .map((view, position) => ({ id: view.id, key: view.key, label: view.label, position, hasPhotos: withPhotos.has(view.id), document: (view.requirements as Record<string, unknown> | null)?.document === true, measure: (view.requirements as Record<string, unknown> | null)?.measure === true, video: (view.requirements as Record<string, unknown> | null)?.video === true })),
     })),
   };
 }
@@ -117,6 +118,14 @@ export async function replaceProtocolStructure(centerId: string, input: PhaseInp
   const currentById = new Map(current.phases.map((phase) => [phase.id, phase]));
   const currentViewDocument = new Map(current.phases.flatMap((phase) => phase.views).map((view) => [view.id, view.document]));
   const currentViewMeasure = new Map(current.phases.flatMap((phase) => phase.views).map((view) => [view.id, view.measure]));
+  const currentViewVideo = new Map(current.phases.flatMap((phase) => phase.views).map((view) => [view.id, view.video]));
+  const currentViewHasPhotos = new Map(current.phases.flatMap((phase) => phase.views).map((view) => [view.id, view.hasPhotos]));
+  // Lo que quedará marcado en cada vista (sin valor en la petición se conserva lo que tenía).
+  const effective = (view: PhaseInput["views"][number]) => ({
+    document: view.document ?? (view.id ? currentViewDocument.get(view.id) : undefined) ?? false,
+    measure: view.measure ?? (view.id ? currentViewMeasure.get(view.id) : undefined) ?? false,
+    video: view.video ?? (view.id ? currentViewVideo.get(view.id) : undefined) ?? false,
+  });
   // The first phase is the patient's pre-evaluación: it stays first.
   if (current.phases.length > 0 && input[0].id !== current.phases[0].id) {
     throw new ProtocolConfigError("La primera fase es la pre-evaluación del paciente y no se puede mover ni reemplazar.");
@@ -128,6 +137,26 @@ export async function replaceProtocolStructure(centerId: string, input: PhaseInp
       if (view.id && !known.has(view.id)) throw new ProtocolConfigError("Una fotografía no pertenece a esa fase.");
     }
   }
+  let turnsOnVideo = false;
+  for (const phase of input) {
+    if (isDiagnosis(phase)) continue;
+    for (const view of phase.views) {
+      const marks = effective(view);
+      const label = normalize(view.label);
+      if (marks.video && (marks.document || marks.measure)) {
+        throw new ProtocolConfigError(`“${label}” no puede ser video y a la vez documento o medir.`);
+      }
+      const wasVideo = view.id ? currentViewVideo.get(view.id) === true : false;
+      // Una foto guardada nunca queda bajo una vista de video (ni al revés): para cambiar, se crea otra vista.
+      if (view.id && marks.video !== wasVideo && currentViewHasPhotos.get(view.id)) {
+        throw new ProtocolConfigError(`“${label}” ya tiene capturas guardadas: para cambiar entre foto y video, agrega una vista nueva.`);
+      }
+      if (marks.video && !wasVideo) turnsOnVideo = true;
+    }
+  }
+  // Solo marcar vistas NUEVAS como video exige el plan: si la clínica bajó de plan, lo que ya era video se conserva.
+  if (turnsOnVideo && !(await centerHasFeature(centerId, "video"))) throw new PlanFeatureError(VIDEO_PLAN_MESSAGE);
+
   const seenPhaseIds = input.flatMap((phase) => (phase.id ? [phase.id] : []));
   if (new Set(seenPhaseIds).size !== seenPhaseIds.length) throw new ProtocolConfigError("Una fase está repetida.");
   for (const phase of current.phases) {
@@ -156,10 +185,10 @@ export async function replaceProtocolStructure(centerId: string, input: PhaseInp
           const [existing] = await tx.select({ requirements: protocolViewsTable.requirements }).from(protocolViewsTable).where(eq(protocolViewsTable.id, view.id));
           const requirements = { ...((existing?.requirements as Record<string, unknown> | null) ?? {}) };
           // Sin valor en la petición se conserva lo que ya tenía la foto.
-          const document = view.document ?? currentViewDocument.get(view.id) ?? false;
+          const { document, measure, video } = effective(view);
           if (document) requirements.document = true; else delete requirements.document;
-          const measure = view.measure ?? currentViewMeasure.get(view.id) ?? false;
           if (measure) requirements.measure = true; else delete requirements.measure;
+          if (video) requirements.video = true; else delete requirements.video;
           await tx.update(protocolViewsTable).set({ label, position: viewIndex, requirements }).where(eq(protocolViewsTable.id, view.id));
         } else {
           const key = `${phaseIndex === 0 ? "vista" : phaseId.split("-phase-")[1]}-${shortId()}`;
@@ -170,7 +199,7 @@ export async function replaceProtocolStructure(centerId: string, input: PhaseInp
             key,
             label,
             position: viewIndex,
-            requirements: { required: true, ...(view.document ? { document: true } : {}), ...(view.measure ? { measure: true } : {}) },
+            requirements: { required: true, ...(view.document ? { document: true } : {}), ...(view.measure ? { measure: true } : {}), ...(view.video ? { video: true } : {}) },
           });
         }
       }

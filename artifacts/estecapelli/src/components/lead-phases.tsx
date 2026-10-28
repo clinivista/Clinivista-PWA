@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Camera, CheckCircle2, Loader2, Lock, SkipForward, Trash2, Upload } from "lucide-react";
+import { Camera, CheckCircle2, Loader2, Lock, SkipForward, Trash2, Upload, Video } from "lucide-react";
 import {
   useDeleteLeadPhasePhoto,
   useGetLeadPhases,
@@ -19,6 +19,12 @@ import { PhotoTranscription } from "@/components/photo-transcription";
 import { CaptureHandoff } from "@/components/capture-handoff";
 import { MeasureDialog } from "@/components/measure-dialog";
 import { MeasureTrend } from "@/components/measure-trend";
+import { VideoPlayer } from "@/components/video-player";
+import { VideoRecorder } from "@/components/video-recorder";
+import { VIDEO_TEXT } from "@/lib/video-i18n";
+import { uploadVideo, type RecordedVideo } from "@/lib/video-capture";
+
+const videoUrl = (leadId: string, photoId: string) => `/api/leads/${encodeURIComponent(leadId)}/videos/${encodeURIComponent(photoId)}`;
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const MAX_SIDE = 2400;
@@ -65,7 +71,101 @@ function PatientMeasureList({ leadId, phase }: { leadId: string; phase: LeadPhas
   );
 }
 
-function ViewSlot({ leadId, phase, view, disabled, onExpand }: {
+/** Videos que grabó el paciente en su pre-evaluación (el personal los ve aquí). */
+function PatientVideoList({ leadId, phase }: { leadId: string; phase: LeadPhase }) {
+  const { lang, t } = useLanguage();
+  const videos = phase.views.filter((view) => view.video && view.photo);
+  if (videos.length === 0) return null;
+  return (
+    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="patient-videos">
+      {videos.map((view) => {
+        const label = viewLabel(view, phase.key, lang, t);
+        return (
+          <figure key={view.id} className="rounded-2xl overflow-hidden bg-[#F5F2EE]">
+            <VideoPlayer src={videoUrl(leadId, view.photo!.id)} label={label} durationMs={view.photo!.durationMs} className="aspect-video" />
+            <figcaption className="p-2 text-xs font-bold text-center text-muted-foreground break-words">{label}</figcaption>
+          </figure>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Vista marcada como video: reproductor y, si el plan lo permite, grabar o reemplazar. */
+function VideoViewSlot({ leadId, phase, view, disabled, canRecordVideo }: { leadId: string; phase: LeadPhase; view: LeadPhaseView; disabled: boolean; canRecordVideo: boolean }) {
+  const { toast } = useToast();
+  const { lang, t } = useLanguage();
+  const p = PHASES_TEXT[lang];
+  const v = VIDEO_TEXT[lang];
+  const label = viewLabel(view, phase.key, lang, t);
+  const queryClient = useQueryClient();
+  const remove = useDeleteLeadPhasePhoto();
+  const [recording, setRecording] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const save = async (video: RecordedVideo) => {
+    setBusy(true);
+    try {
+      const result = await uploadVideo(`/api/leads/${encodeURIComponent(leadId)}/views/${encodeURIComponent(view.id)}/video`, video);
+      if (!result.ok) throw new Error(result.error ?? v.saveFailed);
+      setRecording(false);
+      await refreshLeadViews(queryClient);
+    } catch (error) {
+      toast({ variant: "destructive", title: v.saveFailed, description: error instanceof Error ? error.message : p.tryAgain });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="col-span-2 rounded-2xl bg-[#F5F2EE] overflow-hidden flex flex-col" data-testid={`video-slot-${view.key}`}>
+      <VideoPlayer src={view.photo ? videoUrl(leadId, view.photo.id) : null} label={label} durationMs={view.photo?.durationMs} className="aspect-video w-full" />
+      <div className="p-2.5 flex flex-col gap-2">
+        <span className="flex items-center justify-center gap-1.5 text-xs font-bold text-center text-muted-foreground break-words">
+          <Video className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />{label}{!view.required && p.optional}
+        </span>
+        {!disabled && (canRecordVideo ? (
+          <div className="flex flex-wrap gap-1.5 justify-center">
+            <Button type="button" size="sm" variant="outline" className="rounded-full h-8 px-3 text-xs" disabled={busy} onClick={() => setRecording(true)} data-testid={`video-record-${view.key}`}>
+              <Video className="w-3.5 h-3.5 me-1.5" />{view.photo ? v.recordAgain : v.record}
+            </Button>
+            {view.photo && (
+              <Button type="button" size="icon" variant="ghost" className="rounded-full h-8 w-8 text-destructive" disabled={busy || remove.isPending}
+                aria-label={p.removeAria(label)}
+                onClick={() => {
+                  if (!view.photo || !window.confirm(p.confirmRemovePhoto(label))) return;
+                  remove.mutate({ id: leadId, photoId: view.photo.id }, {
+                    onSuccess: () => { void refreshLeadViews(queryClient); },
+                    onError: () => toast({ variant: "destructive", title: p.cantRemovePhoto }),
+                  });
+                }}>
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        ) : (
+          <p className="text-[11px] text-center text-muted-foreground" data-testid="video-plan-note">{v.onlyTitanium}</p>
+        ))}
+      </div>
+      {recording && <VideoRecorder title={v.recorderTitle(label)} busy={busy} onClose={() => setRecording(false)} onUse={(video) => void save(video)} />}
+      <span className="sr-only">{phaseName(phase, lang)}</span>
+    </div>
+  );
+}
+
+function ViewSlot({ leadId, phase, view, disabled, onExpand, canRecordVideo = false }: {
+  leadId: string;
+  phase: LeadPhase;
+  view: LeadPhaseView;
+  disabled: boolean;
+  onExpand: (url: string) => void;
+  canRecordVideo?: boolean;
+}) {
+  if (view.video) return <VideoViewSlot leadId={leadId} phase={phase} view={view} disabled={disabled} canRecordVideo={canRecordVideo} />;
+  return <PhotoViewSlot leadId={leadId} phase={phase} view={view} disabled={disabled} onExpand={onExpand} />;
+}
+
+function PhotoViewSlot({ leadId, phase, view, disabled, onExpand }: {
   leadId: string;
   phase: LeadPhase;
   view: LeadPhaseView;
@@ -193,7 +293,7 @@ export type LeadPhasesProcess = {
   dischargeNote?: string | null;
 };
 
-export function LeadPhases({ leadId, onExpand, diagnosisLead, process }: { leadId: string; onExpand: (url: string) => void; diagnosisLead?: DiagnosisLeadData; process?: LeadPhasesProcess }) {
+export function LeadPhases({ leadId, onExpand, diagnosisLead, process, canRecordVideo = false }: { leadId: string; onExpand: (url: string) => void; diagnosisLead?: DiagnosisLeadData; process?: LeadPhasesProcess; canRecordVideo?: boolean }) {
   const { lang, t } = useLanguage();
   const p = PHASES_TEXT[lang];
   const s = STAFF_FLOW_TEXT[lang];
@@ -236,6 +336,7 @@ export function LeadPhases({ leadId, onExpand, diagnosisLead, process }: { leadI
                     {p.patientTakes}{phase.complete ? p.patientDone : p.patientPending}
                   </p>
                   <PatientMeasureList leadId={leadId} phase={phase} />
+                  <PatientVideoList leadId={leadId} phase={phase} />
                 </>
               ) : !phase.enabled ? (
                 <p className="text-xs text-muted-foreground mt-2">
@@ -253,7 +354,7 @@ export function LeadPhases({ leadId, onExpand, diagnosisLead, process }: { leadI
                   {phase.staffCanCapture && <div className="mt-3 flex justify-end"><CaptureHandoff leadId={leadId} phase={phase} /></div>}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
                     {phase.views.map((view) => (
-                      <ViewSlot key={view.id} leadId={leadId} phase={phase} view={view} disabled={false} onExpand={onExpand} />
+                      <ViewSlot key={view.id} leadId={leadId} phase={phase} view={view} disabled={false} onExpand={onExpand} canRecordVideo={canRecordVideo} />
                     ))}
                   </div>
                 </>

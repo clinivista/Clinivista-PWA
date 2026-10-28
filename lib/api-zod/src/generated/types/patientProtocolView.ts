@@ -12,4 +12,6 @@ export interface PatientProtocolView {
   required: boolean;
   /** The patient measures the lesion on this photo, with a coin next to it. */
   measure?: boolean;
+  /** The patient records a short video for this view instead of a photo. */
+  video?: boolean;
 }

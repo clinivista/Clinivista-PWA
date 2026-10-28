@@ -1381,6 +1381,25 @@
   },
   {
    "id": "2.17",
+   "key": "video",
+   "title": "Video per photo (Titanium plan)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "With the Titanium plan, you can tick “Video” on a view in “Phases”: instead of a photo, a short video of up to 20 seconds is recorded (for example, to see a movement). It cannot be combined with “Document” or “Measure”. On other plans the box is disabled with the note “Available on the Titanium plan”; each clinic's plan is set by supra-control."
+    },
+    {
+     "t": "p",
+     "text": "The video is recorded inside the app: the patient in their pre-evaluation, and the staff on the tablet or with “Continue on the phone”. There is a countdown, a timer and an automatic stop at 20 seconds; it can be reviewed and recorded again before using it, and the camera turns off on leaving. If the browser cannot record, an MP4, WebM or MOV file of up to 25 MB can be uploaded. The video counts as captured to complete the phase and is played in the patient's record."
+    },
+    {
+     "t": "note",
+     "text": "If the clinic moves to a plan without video, saved videos are kept and can still be watched; it can only no longer mark new views as video or record new videos. Videos do not appear in the results PDF or in the evolution comparison: they are watched in the record."
+    }
+   ]
+  },
+  {
+   "id": "2.18",
    "title": "Using it from the phone",
    "blocks": [
     {
@@ -1415,7 +1434,7 @@
    "key": "phone"
   },
   {
-   "id": "2.18",
+   "id": "2.19",
    "key": "support",
    "title": "Support tickets",
    "blocks": [
@@ -1439,7 +1458,7 @@
    ]
   },
   {
-   "id": "2.19",
+   "id": "2.20",
    "title": "Tips and troubleshooting",
    "blocks": [
     {
