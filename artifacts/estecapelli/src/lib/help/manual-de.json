@@ -650,7 +650,7 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Nach der Anmeldung gelangen Sie zum «Patienten-Dashboard», der Übersicht Ihrer Klinik. Links befindet sich das Menü (Start, Patienten, Benutzer, Bericht, Phasen für den gesetzlichen Vertreter und Hilfe) mit der Karte „Meine Klinik“ (Name und Fachrichtung) und dem Zugang zu Handbüchern und Support. Oben ist die Leiste mit der Patientensuche, der Glocke für Support-Hinweise und Ihrem Namen: Tippen Sie darauf, um die Sprache zu wechseln oder sich abzumelden."
+     "text": "Nach der Anmeldung gelangen Sie zum «Patienten-Dashboard», der Übersicht Ihrer Klinik. Links befindet sich das Menü (Start, Patienten, Benutzer, Bericht, Phasen für den gesetzlichen Vertreter und Hilfe) mit der Karte „Meine Klinik“ (Name, Fachrichtung und Tarif) und dem Zugang zu Handbüchern und Support. Oben ist die Leiste mit der Patientensuche, der Glocke für Support-Hinweise und Ihrem Namen: Tippen Sie darauf, um die Sprache zu wechseln oder sich abzumelden."
     },
     {
      "t": "p",

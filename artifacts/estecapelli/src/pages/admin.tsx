@@ -49,6 +49,7 @@ import { ClinicHome } from "@/components/clinic-home";
 import { VideoPlayer } from "@/components/video-player";
 import { HOME_TEXT } from "@/lib/home-i18n";
 import { ClinicTopbar } from "@/components/clinic-topbar";
+import { VIDEO_TEXT } from "@/lib/video-i18n";
 
 const STATUS_COLORS: Record<string, string> = {
   nuevo: "bg-blue-100 text-blue-700",
@@ -228,6 +229,7 @@ export default function Admin() {
   const homeText = HOME_TEXT[lang];
   const clinicName = myClinic?.name ?? authStatus.user?.clinics?.find((c) => c.id === authStatus.user?.centerId)?.name ?? "";
   const accessText = CLINIC_ACCESS_TEXT[lang];
+  const clinicPlan = authStatus.user?.plan;
   const roleLabel = authStatus.user?.viewingAsDirector
     ? (authStatus.user.viewingProfile === "representante_legal" ? accessText.roleLegal : authStatus.user.viewingProfile === "administrativo" ? accessText.roleAdministrativo : accessText.roleMedico)
     : authStatus.user?.role === "administrativo" ? accessText.roleAdministrativo : accessText.roleMedico;
@@ -371,7 +373,7 @@ export default function Admin() {
         </div>
 
         <div className="px-4 pb-5 pt-4 space-y-4">
-          {/* Mi clínica: nombre y especialidad (el plan aún no existe por clínica en main). */}
+          {/* Mi clínica: nombre, especialidad y plan de la clínica. */}
           <div className="pt-4 border-t border-white/10">
             <p className="px-1 text-[11px] font-semibold text-white/60 uppercase tracking-[0.14em] mb-2">{homeText.myClinic}</p>
             <div className="flex items-center gap-3 rounded-2xl bg-white/[0.07] border border-white/10 p-3" data-testid="my-clinic">
@@ -383,6 +385,11 @@ export default function Admin() {
               <span className="min-w-0">
                 <span className="block text-sm font-semibold break-words leading-snug">{clinicName}</span>
                 {myClinic?.specialty && <span className="block text-xs text-white/70 mt-0.5">{homeText.specialty[myClinic.specialty]}</span>}
+                {clinicPlan && (
+                  <span className="mt-1.5 inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-white/90 ring-1 ring-inset ring-white/15" data-testid="my-clinic-plan">
+                    {VIDEO_TEXT[lang].planLabel} {VIDEO_TEXT[lang].planNames[clinicPlan]}
+                  </span>
+                )}
               </span>
             </div>
             {(authStatus.user?.clinics?.length ?? 0) > 1 && (
