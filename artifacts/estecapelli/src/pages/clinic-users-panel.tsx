@@ -16,6 +16,8 @@ import { PasswordInput } from "@/components/password-input";
 import { useToast } from "@/hooks/use-toast";
 import { UserRow } from "./user-row";
 
+import { loadErrorDetail } from "@/lib/load-error";
+
 const EMPTY_DRAFT = {
   name: "",
   phone: "",
@@ -31,7 +33,7 @@ const EMPTY_DRAFT = {
 export function ClinicUsersPanel() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { data, isLoading, isError } = useGetClinicUsers();
+  const { data, isLoading, isError, error } = useGetClinicUsers();
   const createUser = useCreateClinicUser();
   const patchUser = usePatchClinicUser();
   const resetPassword = useResetClinicUserPassword();
@@ -168,7 +170,7 @@ export function ClinicUsersPanel() {
             <Loader2 className="w-4 h-4 animate-spin" /> Cargando usuarios…
           </div>
         )}
-        {isError && <p className="text-sm font-medium text-red-600">No pudimos cargar los usuarios.</p>}
+        {isError && <p role="alert" className="text-sm font-medium text-red-600" data-testid="users-load-error">No pudimos cargar los usuarios.{loadErrorDetail(error) && <span className="block text-xs font-normal text-red-700/80">{loadErrorDetail(error)}</span>}</p>}
 
         {users.map((user) => (
           <UserRow

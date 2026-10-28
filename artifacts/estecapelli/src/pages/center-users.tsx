@@ -16,6 +16,8 @@ import { PasswordInput } from "@/components/password-input";
 import { useToast } from "@/hooks/use-toast";
 import { UserRow } from "./user-row";
 
+import { loadErrorDetail } from "@/lib/load-error";
+
 const EMPTY_DRAFT = { name: "", phone: "", email: "", password: "", role: "medico" as "medico" | "administrativo", legalRepresentative: false };
 
 // Se monta solo cuando el director despliega "Usuarios", así la lista se pide
@@ -23,7 +25,7 @@ const EMPTY_DRAFT = { name: "", phone: "", email: "", password: "", role: "medic
 export function CenterUsers({ centerId }: { centerId: string }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { data, isLoading, isError } = useGetDirectorCenterUsers(centerId);
+  const { data, isLoading, isError, error } = useGetDirectorCenterUsers(centerId);
   const createUser = useCreateDirectorCenterUser();
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState(EMPTY_DRAFT);
@@ -134,7 +136,7 @@ export function CenterUsers({ centerId }: { centerId: string }) {
           <Loader2 className="w-4 h-4 animate-spin" /> Cargando usuarios…
         </div>
       )}
-      {isError && <p className="text-sm font-medium text-red-600">No pudimos cargar los usuarios.</p>}
+      {isError && <p role="alert" className="text-sm font-medium text-red-600" data-testid="users-load-error">No pudimos cargar los usuarios.{loadErrorDetail(error) && <span className="block text-xs font-normal text-red-700/80">{loadErrorDetail(error)}</span>}</p>}
       {!isLoading && !isError && users.length === 0 && (
         <p className="text-sm text-muted-foreground font-medium">Esta clínica todavía no tiene usuarios.</p>
       )}
