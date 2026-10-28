@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import {
-  UserPlus, Users, ClipboardList, Layers, UserCog, Camera, CalendarPlus, Stethoscope, ChevronRight,
+  UserPlus, Users, ClipboardList, Layers, Link2, Camera, CalendarPlus, Stethoscope, ChevronRight,
   AlertCircle, RotateCw, Ruler, BadgeCheck,
 } from "lucide-react";
 import {
@@ -40,7 +40,7 @@ type Props = {
   onOpenPatients: () => void;
   onOpenReport: () => void;
   onOpenPhases: () => void;
-  onOpenUsers: () => void;
+  onCopyAccess: () => void;
   onOpenLead: (id: string) => void;
 };
 
@@ -78,7 +78,7 @@ const EVENT_STYLE: Record<ClinicActivityEvent["type"], { icon: ReactNode; tone: 
   discharged: { icon: <BadgeCheck />, tone: "bg-emerald-50 text-emerald-700" },
 };
 
-export function ClinicHome({ userName, canManageUsers, canEditPhases, specialty, onNewPatient, onOpenPatients, onOpenReport, onOpenPhases, onOpenUsers, onOpenLead }: Props) {
+export function ClinicHome({ userName, canManageUsers, canEditPhases, specialty, onNewPatient, onOpenPatients, onOpenReport, onOpenPhases, onCopyAccess, onOpenLead }: Props) {
   const { t, lang } = useLanguage();
   const text = HOME_TEXT[lang];
   const consultText = CONSULT_TEXT[lang];
@@ -109,7 +109,7 @@ export function ClinicHome({ userName, canManageUsers, canEditPhases, specialty,
     { key: "patients", title: text.patientsTitle, desc: text.patientsDesc, icon: <Users />, tone: "bg-[#7C3AED]", onClick: onOpenPatients, testId: "home-patients" },
     { key: "report", title: NAV_TEXT[lang].report, desc: text.reportDesc, icon: <ClipboardList />, tone: "bg-[#0D9488]", onClick: onOpenReport, testId: "home-report" },
     ...(canEditPhases ? [{ key: "phases", title: t.adminPhases, desc: text.phasesDesc, icon: <Layers />, tone: "bg-[#64748B]", onClick: onOpenPhases, testId: "home-phases" }] : []),
-    ...(canManageUsers ? [{ key: "users", title: t.adminUsers, desc: text.usersDesc, icon: <UserCog />, tone: "bg-[#4F46E5]", onClick: onOpenUsers, testId: "home-users" }] : []),
+    { key: "access", title: text.copyAccess, desc: text.copyAccessDesc, icon: <Link2 />, tone: "bg-[#4F46E5]", onClick: onCopyAccess, testId: "home-copy-access" },
   ];
 
   const indicators: StatItem[] = [

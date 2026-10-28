@@ -14,7 +14,8 @@ export type HomeText = {
   patientsDesc: string;
   reportDesc: string;
   phasesDesc: string;
-  usersDesc: string;
+  copyAccess: string;
+  copyAccessDesc: string;
   statsTitle: string;
   totalPatients: string;
   photos: string;
@@ -59,7 +60,7 @@ export const HOME_TEXT: Record<LangCode, HomeText> = {
     subtitle: "Gestiona tus pacientes y registros fotográficos clínicos en un solo lugar.",
     quickTitle: "Accesos rápidos", newPatientDesc: "Crear ficha clínica",
     patientsTitle: "Ver pacientes", patientsDesc: "Lista y fichas",
-    reportDesc: "Etapas pendientes", phasesDesc: "Protocolo fotográfico", usersDesc: "Acceso del equipo",
+    reportDesc: "Etapas pendientes", phasesDesc: "Protocolo fotográfico", copyAccess: "Copiar acceso", copyAccessDesc: "Enlace para tus pacientes",
     statsTitle: "Indicadores", totalPatients: "Pacientes totales", photos: "Fotografías registradas", thisMonth: "Registros este mes", professionals: "Profesionales activos",
     change: (p) => `${p} respecto al mes anterior`, noData: "Aún sin datos",
     chartTitle: "Actividad fotográfica", chartPatients: "Nuevos pacientes", chartPhotos: "Fotografías",
@@ -79,7 +80,7 @@ export const HOME_TEXT: Record<LangCode, HomeText> = {
     subtitle: "Manage your patients and clinical photo records in one place.",
     quickTitle: "Quick actions", newPatientDesc: "Create a clinical record",
     patientsTitle: "View patients", patientsDesc: "List and records",
-    reportDesc: "Pending stages", phasesDesc: "Photo protocol", usersDesc: "Team access",
+    reportDesc: "Pending stages", phasesDesc: "Photo protocol", copyAccess: "Copy access", copyAccessDesc: "Link for your patients",
     statsTitle: "Key figures", totalPatients: "Total patients", photos: "Photos recorded", thisMonth: "Registered this month", professionals: "Active professionals",
     change: (p) => `${p} compared with last month`, noData: "No data yet",
     chartTitle: "Photo activity", chartPatients: "New patients", chartPhotos: "Photos",
@@ -99,7 +100,7 @@ export const HOME_TEXT: Record<LangCode, HomeText> = {
     subtitle: "Gerencie seus pacientes e registros fotográficos clínicos em um só lugar.",
     quickTitle: "Acessos rápidos", newPatientDesc: "Criar ficha clínica",
     patientsTitle: "Ver pacientes", patientsDesc: "Lista e fichas",
-    reportDesc: "Etapas pendentes", phasesDesc: "Protocolo fotográfico", usersDesc: "Acesso da equipe",
+    reportDesc: "Etapas pendentes", phasesDesc: "Protocolo fotográfico", copyAccess: "Copiar acesso", copyAccessDesc: "Link para seus pacientes",
     statsTitle: "Indicadores", totalPatients: "Pacientes no total", photos: "Fotografias registradas", thisMonth: "Cadastros este mês", professionals: "Profissionais ativos",
     change: (p) => `${p} em relação ao mês anterior`, noData: "Ainda sem dados",
     chartTitle: "Atividade fotográfica", chartPatients: "Novos pacientes", chartPhotos: "Fotografias",
@@ -119,7 +120,7 @@ export const HOME_TEXT: Record<LangCode, HomeText> = {
     subtitle: "Gérez vos patients et vos dossiers photo cliniques au même endroit.",
     quickTitle: "Accès rapides", newPatientDesc: "Créer un dossier clinique",
     patientsTitle: "Voir les patients", patientsDesc: "Liste et dossiers",
-    reportDesc: "Étapes en attente", phasesDesc: "Protocole photo", usersDesc: "Accès de l'équipe",
+    reportDesc: "Étapes en attente", phasesDesc: "Protocole photo", copyAccess: "Copier l’accès", copyAccessDesc: "Lien pour vos patients",
     statsTitle: "Indicateurs", totalPatients: "Patients au total", photos: "Photos enregistrées", thisMonth: "Inscriptions ce mois-ci", professionals: "Professionnels actifs",
     change: (p) => `${p} par rapport au mois précédent`, noData: "Pas encore de données",
     chartTitle: "Activité photo", chartPatients: "Nouveaux patients", chartPhotos: "Photos",
@@ -139,7 +140,7 @@ export const HOME_TEXT: Record<LangCode, HomeText> = {
     subtitle: "Verwalten Sie Ihre Patienten und klinischen Fotodokumentationen an einem Ort.",
     quickTitle: "Schnellzugriff", newPatientDesc: "Patientenakte anlegen",
     patientsTitle: "Patienten ansehen", patientsDesc: "Liste und Akten",
-    reportDesc: "Offene Schritte", phasesDesc: "Fotoprotokoll", usersDesc: "Zugang des Teams",
+    reportDesc: "Offene Schritte", phasesDesc: "Fotoprotokoll", copyAccess: "Zugang kopieren", copyAccessDesc: "Link für Ihre Patienten",
     statsTitle: "Kennzahlen", totalPatients: "Patienten gesamt", photos: "Erfasste Fotos", thisMonth: "Neu in diesem Monat", professionals: "Aktive Fachkräfte",
     change: (p) => `${p} gegenüber dem Vormonat`, noData: "Noch keine Daten",
     chartTitle: "Fotoaktivität", chartPatients: "Neue Patienten", chartPhotos: "Fotos",
@@ -159,7 +160,7 @@ export const HOME_TEXT: Record<LangCode, HomeText> = {
     subtitle: "Gestisci i tuoi pazienti e i registri fotografici clinici in un unico posto.",
     quickTitle: "Accessi rapidi", newPatientDesc: "Crea una scheda clinica",
     patientsTitle: "Vedi pazienti", patientsDesc: "Elenco e schede",
-    reportDesc: "Fasi in sospeso", phasesDesc: "Protocollo fotografico", usersDesc: "Accesso del team",
+    reportDesc: "Fasi in sospeso", phasesDesc: "Protocollo fotografico", copyAccess: "Copia accesso", copyAccessDesc: "Link per i tuoi pazienti",
     statsTitle: "Indicatori", totalPatients: "Pazienti totali", photos: "Fotografie registrate", thisMonth: "Registrati questo mese", professionals: "Professionisti attivi",
     change: (p) => `${p} rispetto al mese precedente`, noData: "Ancora nessun dato",
     chartTitle: "Attività fotografica", chartPatients: "Nuovi pazienti", chartPhotos: "Fotografie",
@@ -179,7 +180,7 @@ export const HOME_TEXT: Record<LangCode, HomeText> = {
     subtitle: "Hastalarınızı ve klinik fotoğraf kayıtlarınızı tek bir yerden yönetin.",
     quickTitle: "Hızlı erişim", newPatientDesc: "Klinik dosya oluştur",
     patientsTitle: "Hastaları gör", patientsDesc: "Liste ve dosyalar",
-    reportDesc: "Bekleyen aşamalar", phasesDesc: "Fotoğraf protokolü", usersDesc: "Ekip erişimi",
+    reportDesc: "Bekleyen aşamalar", phasesDesc: "Fotoğraf protokolü", copyAccess: "Erişimi kopyala", copyAccessDesc: "Hastalarınız için bağlantı",
     statsTitle: "Göstergeler", totalPatients: "Toplam hasta", photos: "Kayıtlı fotoğraflar", thisMonth: "Bu ayki kayıtlar", professionals: "Aktif uzmanlar",
     change: (p) => `geçen aya göre ${p}`, noData: "Henüz veri yok",
     chartTitle: "Fotoğraf etkinliği", chartPatients: "Yeni hastalar", chartPhotos: "Fotoğraflar",
@@ -199,7 +200,7 @@ export const HOME_TEXT: Record<LangCode, HomeText> = {
     subtitle: "أدِر مرضاك وسجلاتك الفوتوغرافية السريرية في مكان واحد.",
     quickTitle: "وصول سريع", newPatientDesc: "إنشاء ملف سريري",
     patientsTitle: "عرض المرضى", patientsDesc: "القائمة والملفات",
-    reportDesc: "المراحل المعلّقة", phasesDesc: "بروتوكول التصوير", usersDesc: "وصول الفريق",
+    reportDesc: "المراحل المعلّقة", phasesDesc: "بروتوكول التصوير", copyAccess: "نسخ رابط الدخول", copyAccessDesc: "رابط لمرضاك",
     statsTitle: "المؤشرات", totalPatients: "إجمالي المرضى", photos: "الصور المسجّلة", thisMonth: "التسجيلات هذا الشهر", professionals: "المهنيون النشطون",
     change: (p) => `${p} مقارنةً بالشهر السابق`, noData: "لا توجد بيانات بعد",
     chartTitle: "النشاط الفوتوغرافي", chartPatients: "مرضى جدد", chartPhotos: "الصور",
@@ -219,7 +220,7 @@ export const HOME_TEXT: Record<LangCode, HomeText> = {
     subtitle: "在一个地方管理您的患者和临床照片记录。",
     quickTitle: "快捷入口", newPatientDesc: "创建临床档案",
     patientsTitle: "查看患者", patientsDesc: "列表和档案",
-    reportDesc: "待处理阶段", phasesDesc: "拍照流程", usersDesc: "团队访问",
+    reportDesc: "待处理阶段", phasesDesc: "拍照流程", copyAccess: "复制访问链接", copyAccessDesc: "发给患者的链接",
     statsTitle: "指标", totalPatients: "患者总数", photos: "已登记照片", thisMonth: "本月登记", professionals: "在职专业人员",
     change: (p) => `较上月 ${p}`, noData: "暂无数据",
     chartTitle: "照片活动", chartPatients: "新患者", chartPhotos: "照片",
