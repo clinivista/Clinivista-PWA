@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/components/brand-logo";
 import { useState, type ReactNode } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
@@ -35,10 +36,13 @@ function failure(text: PortalText, error: unknown, byStatus: Record<number, stri
 function Shell({ title, children }: { title: string; children: ReactNode }) {
   const { text, lang } = usePortalText();
   return (
-    <div className="min-h-[100dvh] bg-[#F5F2EE] px-4 py-10 flex justify-center" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <div className="min-h-[100dvh] cv-page px-4 py-10 flex justify-center" dir={lang === "ar" ? "rtl" : "ltr"}>
       <div className="w-full max-w-md flex flex-col gap-5">
-        <LanguagePicker label={text.language} />
-        <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{title}</h1>
+        <div className="flex items-center justify-between gap-3">
+          <Link href="/" aria-label="Clinivista"><BrandLogo variant="logo-sin-lema" alt="Clinivista" className="h-9" /></Link>
+          <LanguagePicker label={text.language} />
+        </div>
+                <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{title}</h1>
         {children}
         <p className="text-xs text-muted-foreground flex gap-4">
           <Link href="/privacidad" className="underline">{text.privacy}</Link>
@@ -83,7 +87,7 @@ export default function Portal() {
   };
 
   if (isLoading) {
-    return <div className="min-h-[100dvh] flex items-center justify-center bg-[#F5F2EE]"><Loader2 className="w-8 h-8 animate-spin text-primary" aria-label={text.loading} /></div>;
+    return <div className="min-h-[100dvh] flex items-center justify-center cv-page"><Loader2 className="w-8 h-8 animate-spin text-primary" aria-label={text.loading} /></div>;
   }
 
   if (me) {
@@ -113,7 +117,7 @@ export default function Portal() {
             )}
           </section>
         ))}
-        <Button variant="outline" className="rounded-full self-start" disabled={logout.isPending}
+        <Button variant="outline" className="rounded-xl self-start" disabled={logout.isPending}
           onClick={() => logout.mutate(undefined, { onSuccess: refresh })}>
           <LogOut className="w-4 h-4 me-1.5" />{text.logout}
         </Button>
@@ -140,12 +144,12 @@ export default function Portal() {
           });
         }}>
         <label className="text-sm font-bold" htmlFor="portal-email">{text.emailLabel}</label>
-        <Input id="portal-email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="h-12 rounded-2xl" />
+        <Input id="portal-email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="h-12 rounded-xl" />
         <label className="text-sm font-bold" htmlFor="portal-password">{text.passwordLabel}</label>
-        <PasswordInput id="portal-password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} className="h-12 rounded-2xl" />
+        <PasswordInput id="portal-password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} className="h-12 rounded-xl" />
         {shownError && <p role="alert" className="text-sm text-destructive">{shownError}</p>}
         {message && <p role="status" className="text-sm text-[#007f7c]">{message}</p>}
-        <Button type="submit" className="rounded-full font-bold" disabled={login.isPending || !email || !password}>
+        <Button type="submit" className="rounded-xl font-bold" disabled={login.isPending || !email || !password}>
           {login.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : text.enter}
         </Button>
         <button type="button" className="text-sm text-primary underline self-start disabled:opacity-50" disabled={forgot.isPending || !email.includes("@")}
@@ -182,12 +186,12 @@ export function PortalSetPassword() {
           });
         }}>
         <label className="text-sm font-bold" htmlFor="new-password">{text.newPassword}</label>
-        <PasswordInput id="new-password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} className="h-12 rounded-2xl" />
+        <PasswordInput id="new-password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} className="h-12 rounded-xl" />
         <label className="text-sm font-bold" htmlFor="repeat-password">{text.repeatPassword}</label>
-        <PasswordInput id="repeat-password" autoComplete="new-password" value={again} onChange={(event) => setAgain(event.target.value)} className="h-12 rounded-2xl" />
+        <PasswordInput id="repeat-password" autoComplete="new-password" value={again} onChange={(event) => setAgain(event.target.value)} className="h-12 rounded-xl" />
         {mismatch && <p role="alert" className="text-sm text-destructive">{text.mismatch}</p>}
         {error && <p role="alert" className="text-sm text-destructive">{error} <Link href="/paciente" className="underline">{text.requestNew}</Link></p>}
-        <Button type="submit" className="rounded-full font-bold" disabled={setup.isPending || password.length < 8 || password !== again || !token}>
+        <Button type="submit" className="rounded-xl font-bold" disabled={setup.isPending || password.length < 8 || password !== again || !token}>
           {setup.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : text.savePassword}
         </Button>
       </form>

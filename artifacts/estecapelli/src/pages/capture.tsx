@@ -100,19 +100,19 @@ export default function Capture() {
   };
 
   const shell = (children: React.ReactNode) => (
-    <div className="min-h-[100dvh] bg-[#F5F2EE] flex flex-col items-center p-4 sm:p-6" data-testid="capture-page">
+    <div className="min-h-[100dvh] cv-page flex flex-col items-center p-4 sm:p-6" data-testid="capture-page">
       <div className="w-full max-w-md flex flex-col gap-4">{children}</div>
     </div>
   );
 
   if (gone) return shell(
-    <div className="bg-white rounded-[2rem] p-6 text-center flex flex-col gap-2 mt-10" role="alert">
+    <div className="bg-white rounded-3xl ring-1 ring-slate-200/70 p-6 text-center flex flex-col gap-2 mt-10" role="alert">
       <h1 className="text-xl font-extrabold">{c.goneTitle}</h1>
       <p className="text-sm text-muted-foreground">{c.goneText}</p>
     </div>,
   );
   if (done) return shell(
-    <div className="bg-white rounded-[2rem] p-6 text-center flex flex-col items-center gap-2 mt-10">
+    <div className="bg-white rounded-3xl ring-1 ring-slate-200/70 p-6 text-center flex flex-col items-center gap-2 mt-10">
       <CheckCircle2 className="w-10 h-10 text-primary" />
       <h1 className="text-xl font-extrabold">{c.doneTitle}</h1>
       <p className="text-sm text-muted-foreground">{c.doneText}</p>
@@ -139,7 +139,7 @@ export default function Capture() {
             <li key={view.id} className="bg-white rounded-2xl p-4 flex items-center gap-3">
               {view.taken ? <CheckCircle2 className="w-5 h-5 text-primary shrink-0" aria-label={c.taken} /> : view.video ? <Video className="w-5 h-5 text-muted-foreground shrink-0" /> : <Camera className="w-5 h-5 text-muted-foreground shrink-0" />}
               <span className="min-w-0 flex-1 font-bold break-words">{label}{!view.required && c.optional}</span>
-              <Button type="button" className="rounded-full shrink-0" variant={view.taken ? "outline" : "default"} disabled={busyId !== null}
+              <Button type="button" className="rounded-xl shrink-0" variant={view.taken ? "outline" : "default"} disabled={busyId !== null}
                 data-testid={`capture-${view.key}`}
                 onClick={() => { if (view.video) { setRecordingView(view); return; } pending.current = view.id; inputRef.current?.click(); }}>
                 {busyId === view.id ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />{c.saving}</> : view.video ? (view.taken ? v.recordAgain : v.record) : view.taken ? c.retake : c.take}
@@ -153,7 +153,7 @@ export default function Capture() {
         <VideoRecorder title={v.recorderTitle(viewLabel(recordingView, info.phase.key, lang, t))} busy={busyId !== null}
           onClose={() => setRecordingView(null)} onUse={(video) => void saveVideo(recordingView, video)} />
       )}
-      <Button type="button" className="rounded-full h-12" disabled={busyId !== null} onClick={() => void finish()} data-testid="capture-finish">{c.finish}</Button>
+      <Button type="button" className="rounded-xl h-12" disabled={busyId !== null} onClick={() => void finish()} data-testid="capture-finish">{c.finish}</Button>
     </>,
   );
 }
