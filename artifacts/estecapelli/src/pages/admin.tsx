@@ -441,7 +441,7 @@ export default function Admin() {
             onOpenPatients={() => setView("patients")}
             onOpenReport={() => setView("report")}
             onOpenPhases={() => setView("phases")}
-            onOpenUsers={() => setView("users")}
+            onCopyAccess={handleCopyGenericLink}
             onOpenLead={(id) => { setView("patients"); setSelectedLeadId(id); }}
           />
         ) : view === "help" ? <HelpPanel key={helpTab ?? "auto"} initialTab={helpTab ?? (helpUnread > 0 ? "support" : "manual")} specialty={myClinic?.specialty} /> : view === "report" ? <ReportPanel onOpenLead={(id) => { setView("patients"); setSelectedLeadId(id); }} /> : view === "users" && canManageUsers ? <ClinicUsersPanel /> : view === "phases" && canEditPhases ? <PhasesPanel /> : (

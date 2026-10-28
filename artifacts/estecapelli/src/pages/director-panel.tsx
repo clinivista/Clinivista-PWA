@@ -400,9 +400,15 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                     <span className="flex items-center gap-1.5 whitespace-nowrap">
                       <Building2 className="w-4 h-4" /> {center.patientCount} pacientes
                     </span>
-                    <span className="flex items-center gap-1.5">
-                      <Users className="w-4 h-4" /> {center.staffCount} personal
-                    </span>
+                    {canManageUsers ? (
+                      <button type="button" className="flex items-center gap-1.5 rounded-md underline-offset-2 hover:underline hover:text-foreground" aria-label={`${center.staffCount} personal: ver usuarios`} onClick={() => setUsersOpenId(center.id)}>
+                        <Users className="w-4 h-4" /> {center.staffCount} personal
+                      </button>
+                    ) : (
+                      <span className="flex items-center gap-1.5">
+                        <Users className="w-4 h-4" /> {center.staffCount} personal
+                      </span>
+                    )}
                     {formatPaidUntil(center.paidUntil) && (
                       <span className="flex items-center gap-1.5">
                         <CreditCard className="w-4 h-4" />
@@ -497,13 +503,18 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                 </div>
               </div>
 
+              {/* Los usuarios se abren justo bajo los botones de la tarjeta: debajo del plan y la transcripción quedaban fuera de vista. */}
+              {canManageUsers && usersOpenId === center.id && (
+                <section aria-label={`Usuarios de ${center.name}`} data-testid={`center-users-${center.id}`} ref={(el) => { if (el) el.scrollIntoView?.({ block: "nearest", behavior: "smooth" }); }}>
+                  <CenterUsers centerId={center.id} />
+                </section>
+              )}
               <ClinicPlanSelect center={center} />
               <CenterTranscription centerId={center.id} />
 
               {identityOpenId === center.id && (
                 <ClinicIdentityEditor center={center} onClose={() => setIdentityOpenId(null)} />
               )}
-              {canManageUsers && usersOpenId === center.id && <CenterUsers centerId={center.id} />}
             </div>
           ))}
         </div>

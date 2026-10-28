@@ -64,7 +64,7 @@ afterEach(() => vi.restoreAllMocks());
 function renderHome(over: Partial<React.ComponentProps<typeof ClinicHome>> = {}) {
   const props = {
     userName: "Usuaria Prueba", canManageUsers: true, canEditPhases: false, specialty: "dermatologia" as const,
-    onNewPatient: vi.fn(), onOpenPatients: vi.fn(), onOpenReport: vi.fn(), onOpenPhases: vi.fn(), onOpenUsers: vi.fn(), onOpenLead: vi.fn(),
+    onNewPatient: vi.fn(), onOpenPatients: vi.fn(), onOpenReport: vi.fn(), onOpenPhases: vi.fn(), onCopyAccess: vi.fn(), onOpenLead: vi.fn(),
     ...over,
   };
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -223,13 +223,13 @@ describe("Inicio del dashboard de clínica", () => {
 
   it.each([
     // Administrativo: gestiona usuarios, no edita fases.
-    ["administrativo", { canManageUsers: true, canEditPhases: false }, ["home-new-patient", "home-patients", "home-report", "home-users"], true],
+    ["administrativo", { canManageUsers: true, canEditPhases: false }, ["home-new-patient", "home-patients", "home-report", "home-copy-access"], true],
     // Médico sin representación legal: solo lo común.
-    ["médico", { canManageUsers: false, canEditPhases: false }, ["home-new-patient", "home-patients", "home-report"], false],
+    ["médico", { canManageUsers: false, canEditPhases: false }, ["home-new-patient", "home-patients", "home-report", "home-copy-access"], false],
     // Representante legal: todo.
-    ["representante legal", { canManageUsers: true, canEditPhases: true }, ["home-new-patient", "home-patients", "home-report", "home-phases", "home-users"], true],
-    // Director dentro de la clínica: fases según su perfil, nunca Usuarios.
-    ["director", { canManageUsers: false, canEditPhases: true }, ["home-new-patient", "home-patients", "home-report", "home-phases"], false],
+    ["representante legal", { canManageUsers: true, canEditPhases: true }, ["home-new-patient", "home-patients", "home-report", "home-phases", "home-copy-access"], true],
+    // Director dentro de la clínica: fases según su perfil, nunca Usuarios (el acceso rápido es «Copiar acceso» para todos).
+    ["director", { canManageUsers: false, canEditPhases: true }, ["home-new-patient", "home-patients", "home-report", "home-phases", "home-copy-access"], false],
   ] as const)("un %s ve solo los accesos e indicadores que le corresponden", async (_role, perms, expected, seesProfessionals) => {
     if (!seesProfessionals) overview = { ...overview, totals: { ...overview.totals, activeProfessionals: null } };
     renderHome(perms);
@@ -243,8 +243,8 @@ describe("Inicio del dashboard de clínica", () => {
   it("los accesos llevan a las pantallas existentes", async () => {
     const user = userEvent.setup();
     const props = renderHome({ canEditPhases: true });
-    for (const id of ["home-new-patient", "home-patients", "home-report", "home-phases", "home-users"]) await user.click(screen.getByTestId(id));
-    for (const fn of [props.onNewPatient, props.onOpenPatients, props.onOpenReport, props.onOpenPhases, props.onOpenUsers]) expect(fn).toHaveBeenCalledTimes(1);
+    for (const id of ["home-new-patient", "home-patients", "home-report", "home-phases", "home-copy-access"]) await user.click(screen.getByTestId(id));
+    for (const fn of [props.onNewPatient, props.onOpenPatients, props.onOpenReport, props.onOpenPhases, props.onCopyAccess]) expect(fn).toHaveBeenCalledTimes(1);
   });
 
   it("en árabe va de derecha a izquierda, pero el eje del tiempo del gráfico no se invierte", async () => {
