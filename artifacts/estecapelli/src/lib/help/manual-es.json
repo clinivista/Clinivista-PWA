@@ -388,6 +388,31 @@
   },
   {
    "id": "1.7",
+   "key": "measure",
+   "title": "Medir tu lesión con una moneda",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Si tu clínica lo pide, en algunas fotografías verás el botón «Medir mi lesión». Sirve para saber cuánto mide, usando una moneda chilena de tamaño conocido como referencia."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Antes de tomar la foto, apoya una moneda limpia pegada junto a la lesión, sin taparla. Sirven la de $500, $100 (nueva o antigua), $50 y $10; las de $500 y $100 son las más fáciles de ver.",
+      "Toma la foto de frente, con el celular paralelo a la piel y a unos 15–20 cm, con buena luz y sin flash directo. Que se vean enteras la lesión y la moneda.",
+      "Pulsa «Medir mi lesión» y elige qué moneda usaste. La aplicación busca la moneda sola y marca sus bordes; revisa que queden bien o arrástralos para ajustarlos.",
+      "Marca la lesión: pulsa «Marcar la lesión automáticamente» y toca un punto dentro de ella, o toca tú los dos extremos por donde es más larga. También puedes arrastrar los puntos.",
+      "Verás la medida con su margen de error (±) y pulsas «Guardar medida». Puedes volver a medir o quitar la medida cuando quieras."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Si la moneda se ve ovalada, la foto está inclinada: repítela con el celular paralelo a la piel para que la medida sea más precisa. La medida es aproximada, no reemplaza la evaluación de tu médico y tu equipo la revisará."
+    }
+   ]
+  },
+  {
+   "id": "1.7",
    "title": "Preguntas frecuentes del paciente",
    "blocks": [
     {

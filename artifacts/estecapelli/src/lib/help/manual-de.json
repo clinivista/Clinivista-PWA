@@ -388,6 +388,31 @@
   },
   {
    "id": "1.7",
+   "key": "measure",
+   "title": "Ihre Läsion mit einer Münze messen",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Wenn Ihre Klinik es verlangt, zeigen manche Fotos die Schaltfläche «Meine Läsion messen». Damit erfahren Sie die Größe, mit einer chilenischen Münze bekannter Größe als Referenz."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Legen Sie vor dem Foto eine saubere Münze direkt neben die Läsion, ohne sie zu verdecken. Geeignet sind $500, $100 (neu oder alt), $50 und $10; $500 und $100 sind am besten zu erkennen.",
+      "Fotografieren Sie von vorne, das Handy parallel zur Haut und etwa 15–20 cm entfernt, bei gutem Licht und ohne direkten Blitz. Läsion und Münze müssen vollständig sichtbar sein.",
+      "Tippen Sie auf «Meine Läsion messen» und wählen Sie die verwendete Münze. Die App sucht die Münze selbst und markiert ihre Ränder; prüfen Sie sie oder ziehen Sie sie zurecht.",
+      "Markieren Sie die Läsion: Tippen Sie auf «Läsion automatisch markieren» und dann auf einen Punkt in ihr, oder tippen Sie selbst auf ihre beiden Enden entlang der längsten Seite. Die Punkte lassen sich auch verschieben.",
+      "Sie sehen die Messung mit ihrer Fehlertoleranz (±) und tippen auf «Messung speichern». Sie können jederzeit erneut messen oder die Messung entfernen."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Wirkt die Münze oval, ist das Foto geneigt: Nehmen Sie es mit dem Handy parallel zur Haut neu auf, damit die Messung genauer wird. Die Messung ist ein Näherungswert, ersetzt nicht die Untersuchung durch Ihre Ärztin oder Ihren Arzt, und Ihr Team prüft sie."
+    }
+   ]
+  },
+  {
+   "id": "1.7",
    "title": "Häufige Fragen von Patienten",
    "blocks": [
     {

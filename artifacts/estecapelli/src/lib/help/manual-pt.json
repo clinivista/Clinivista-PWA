@@ -388,6 +388,31 @@
   },
   {
    "id": "1.7",
+   "key": "measure",
+   "title": "Medir sua lesão com uma moeda",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Se a sua clínica pedir, em algumas fotos aparece o botão «Medir minha lesão». Ele serve para saber quanto a lesão mede, usando como referência uma moeda chilena de tamanho conhecido."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Antes de tirar a foto, coloque uma moeda limpa bem junto à lesão, sem cobri-la. Servem as de $500, $100 (nova ou antiga), $50 e $10; as de $500 e $100 são as mais fáceis de ver.",
+      "Tire a foto de frente, com o celular paralelo à pele e a cerca de 15–20 cm, com boa luz e sem flash direto. A lesão e a moeda devem aparecer inteiras.",
+      "Toque em «Medir minha lesão» e escolha qual moeda usou. O app procura a moeda sozinho e marca suas bordas; confira se estão certas ou arraste-as para ajustar.",
+      "Marque a lesão: toque em «Marcar a lesão automaticamente» e depois em um ponto dentro dela, ou toque você mesmo nas duas extremidades, pelo lado mais comprido. Também pode arrastar os pontos.",
+      "Você verá a medida com sua margem de erro (±) e toca em «Salvar medida». Pode medir de novo ou remover a medida quando quiser."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Se a moeda parecer oval, a foto está inclinada: tire-a de novo com o celular paralelo à pele para uma medida mais precisa. A medida é aproximada, não substitui a avaliação do seu médico e sua equipe a revisará."
+    }
+   ]
+  },
+  {
+   "id": "1.7",
    "title": "Perguntas frequentes do paciente",
    "blocks": [
     {

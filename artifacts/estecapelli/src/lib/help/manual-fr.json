@@ -388,6 +388,31 @@
   },
   {
    "id": "1.7",
+   "key": "measure",
+   "title": "Mesurer votre lésion avec une pièce",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Si votre clinique le demande, certaines photos affichent le bouton «Mesurer ma lésion». Il permet de connaître sa taille en utilisant comme référence une pièce chilienne de taille connue."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Avant de prendre la photo, posez une pièce propre juste à côté de la lésion, sans la recouvrir. Les pièces de $500, $100 (nouvelle ou ancienne), $50 et $10 conviennent; celles de $500 et $100 sont les plus faciles à voir.",
+      "Prenez la photo de face, téléphone parallèle à la peau et à environ 15–20 cm, avec une bonne lumière et sans flash direct. La lésion et la pièce doivent être entièrement visibles.",
+      "Touchez «Mesurer ma lésion» et choisissez la pièce utilisée. L'application cherche la pièce seule et marque ses bords; vérifiez-les ou faites-les glisser pour les ajuster.",
+      "Marquez la lésion : touchez «Marquer la lésion automatiquement» puis un point à l'intérieur, ou touchez vous-même ses deux extrémités, là où elle est la plus longue. Vous pouvez aussi faire glisser les points.",
+      "Vous verrez la mesure avec sa marge d'erreur (±) et touchez «Enregistrer la mesure». Vous pouvez mesurer à nouveau ou supprimer la mesure quand vous voulez."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Si la pièce paraît ovale, la photo est inclinée : reprenez-la avec le téléphone parallèle à la peau pour une mesure plus précise. La mesure est approximative, ne remplace pas l'évaluation de votre médecin et votre équipe la vérifiera."
+    }
+   ]
+  },
+  {
+   "id": "1.7",
    "title": "Questions fréquentes des patients",
    "blocks": [
     {
