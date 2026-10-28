@@ -5,6 +5,66 @@
  * Estecapelli API — Preevaluación capilar
  * OpenAPI spec version: 0.1.0
  */
+export interface SupraOverviewMonth {
+  /** YYYY-MM in Chile time */
+  month: string;
+  patients: number;
+  photos: number;
+  clinics: number;
+}
+
+export interface SupraOverviewMonthly {
+  monthly: SupraOverviewMonth[];
+}
+
+export type SupraActivityEventType = typeof SupraActivityEventType[keyof typeof SupraActivityEventType];
+
+
+export const SupraActivityEventType = {
+  clinic_created: 'clinic_created',
+  ticket_opened: 'ticket_opened',
+  ticket_resolved: 'ticket_resolved',
+  service_alert: 'service_alert',
+} as const;
+
+export interface SupraActivityEvent {
+  type: SupraActivityEventType;
+  clinicName: string | null;
+  /** Only for service_alert */
+  serviceLabel: string | null;
+  at: string;
+}
+
+export interface SupraActivity {
+  events: SupraActivityEvent[];
+}
+
+/**
+ * The clinic's plan. Today only "titanium" adds a function (video); no plan removes anything a clinic already used.
+ */
+export type ClinicPlan = typeof ClinicPlan[keyof typeof ClinicPlan];
+
+
+export const ClinicPlan = {
+  basic: 'basic',
+  unlimited: 'unlimited',
+  titanium: 'titanium',
+} as const;
+
+export interface SupraRecentClinic {
+  id: string;
+  name: string;
+  specialty: string;
+  patients: number;
+  logo: string | null;
+  createdAt: string;
+  plan: ClinicPlan;
+}
+
+export interface SupraRecentClinics {
+  clinics: SupraRecentClinic[];
+}
+
 export interface ClinicOverviewMonth {
   /** Calendar month in the clinic's time zone, YYYY-MM */
   month: string;
@@ -93,18 +153,6 @@ export const AuthUserViewingProfile = {
   medico: 'medico',
   administrativo: 'administrativo',
   representante_legal: 'representante_legal',
-} as const;
-
-/**
- * The clinic's plan. Today only "titanium" adds a function (video); no plan removes anything a clinic already used.
- */
-export type ClinicPlan = typeof ClinicPlan[keyof typeof ClinicPlan];
-
-
-export const ClinicPlan = {
-  basic: 'basic',
-  unlimited: 'unlimited',
-  titanium: 'titanium',
 } as const;
 
 export type PlanFeature = typeof PlanFeature[keyof typeof PlanFeature];
@@ -1316,6 +1364,36 @@ export const GetClinicOverviewMonths = {
 export type GetClinicActivityParams = {
 /**
  * Maximum number of events (1 to 20; default 8)
+ */
+limit?: number;
+};
+
+export type GetSupraOverviewMonthlyParams = {
+/**
+ * 3, 6 or 12 calendar months, the current one included (default 6)
+ */
+months?: GetSupraOverviewMonthlyMonths;
+};
+
+export type GetSupraOverviewMonthlyMonths = typeof GetSupraOverviewMonthlyMonths[keyof typeof GetSupraOverviewMonthlyMonths];
+
+
+export const GetSupraOverviewMonthlyMonths = {
+  NUMBER_3: 3,
+  NUMBER_6: 6,
+  NUMBER_12: 12,
+} as const;
+
+export type GetSupraActivityParams = {
+/**
+ * 1 to 20 (default 8)
+ */
+limit?: number;
+};
+
+export type GetSupraRecentClinicsParams = {
+/**
+ * 1 to 20 (default 6)
  */
 limit?: number;
 };

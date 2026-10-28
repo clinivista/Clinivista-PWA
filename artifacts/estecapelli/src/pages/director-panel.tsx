@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
-import { LogOut, LogIn, Building2, Users, Download, ShieldOff, ShieldCheck, Loader2, CreditCard, Plus, ChevronDown, Palette, LayoutDashboard, Headphones, UserCog, BriefcaseBusiness, Menu, X, Repeat, BookOpen, UserRound } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { LogOut, LogIn, Building2, Users, Download, ShieldOff, ShieldCheck, Loader2, CreditCard, Plus, ChevronDown, Palette, LayoutDashboard, Headphones, UserCog, BriefcaseBusiness, Repeat, BookOpen, UserRound, SearchX, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   useGetDirectorCenters,
+  useGetAuthMe,
   getGetAuthMeQueryKey,
   getGetDirectorCentersQueryKey,
   usePatchDirectorCenter,
@@ -13,7 +14,11 @@ import {
   getGetDirectorCenterExportUrl,
   type DirectorCenterSummary,
 } from "@workspace/api-client-react";
-import { BrandLogo } from "@/components/brand-logo";
+import { DashboardTopbar, initialsOf } from "@/components/dashboard/topbar";
+import { cardClass } from "@/components/dashboard/cards";
+import {
+  navItemClass, sidebarClass, SidebarOverlay, SidebarBrand, SidebarSectionLabel, SidebarIdentityCard, SidebarHelpCard, NavCount,
+} from "@/components/dashboard/sidebar";
 import { selectClinic } from "@/components/clinic-chooser";
 import { CreateCenterForm } from "./create-center-form";
 import { CenterUsers } from "./center-users";
@@ -66,6 +71,9 @@ function chileEndOfDayIso(dateValue: string): string {
   return new Date(reference.getTime() + utcOffsetMs(reference, CLINIC_TIME_ZONE)).toISOString();
 }
 
+/** Búsqueda de clínicas por nombre, sin distinguir mayúsculas ni tildes. */
+export const normalizeName = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
 // Un director gestiona además a las personas (usuarios de clínica y equipo de
 // supra-control); un administrativo de supra-control solo opera el panel.
 type SupraView = "dashboard" | "clinics" | "support" | "team" | "admin" | "account" | "manual";
@@ -81,7 +89,15 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
   const [usersOpenId, setUsersOpenId] = useState<string | null>(null);
   const [identityOpenId, setIdentityOpenId] = useState<string | null>(null);
   const [paymentDraft, setPaymentDraft] = useState<Record<string, string>>({});
+  const [search, setSearch] = useState("");
+  // Clínica elegida en «Clínicas recientes»: se lleva a la vista y se resalta un momento.
+  const [focusClinicId, setFocusClinicId] = useState<string | null>(null);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const highlightTimer = useRef<number | null>(null);
   const { data, isLoading, isError } = useGetDirectorCenters();
+  const { data: me } = useGetAuthMe();
+  const userName = me?.user?.name ?? "";
+  const roleLabel = me?.user?.role === "supra_admin" ? "Supra-control" : "Director";
   const patchCenter = usePatchDirectorCenter();
   const recordPayment = useRecordDirectorCenterPayment();
 
@@ -143,6 +159,8 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
   };
 
   const centers = data?.centers ?? [];
+  const query = normalizeName(search);
+  const shownCenters = query ? centers.filter((center) => normalizeName(center.name).includes(query)) : centers;
 
   // "Atender ahora" (aviso de tickets): lleva a Soporte y abre ese ticket.
   useEffect(() => {
@@ -174,37 +192,41 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
     { id: "manual", label: "Manual", Icon: BookOpen, show: true },
   ];
   const go = (next: SupraView) => { setView(next); setMobileNavOpen(false); if (next !== "support") setOpenTicketId(null); };
+  const openClinic = (id: string) => { setSearch(""); setFocusClinicId(id); go("clinics"); };
+
+  useEffect(() => {
+    if (view !== "clinics" || !focusClinicId || isLoading) return;
+    const card = document.querySelector(`[data-testid="center-card-${focusClinicId}"]`);
+    card?.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    setHighlightId(focusClinicId);
+    setFocusClinicId(null);
+    if (highlightTimer.current) window.clearTimeout(highlightTimer.current);
+    highlightTimer.current = window.setTimeout(() => setHighlightId(null), 2500);
+  }, [view, focusClinicId, isLoading]);
+  useEffect(() => () => { if (highlightTimer.current) window.clearTimeout(highlightTimer.current); }, []);
+
+  const switchClinic = async () => {
+    await selectClinic(null);
+    queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() });
+  };
+  const subtitles: Partial<Record<SupraView, string>> = {
+    clinics: "Gestiona el acceso, la identidad y la vigencia de cada clínica.",
+    support: "Tickets de las clínicas: atiende, responde y resuelve.",
+    team: "Personas con acceso a supra-control.",
+    admin: "Servicios contratados, su estado y los movimientos del mes.",
+    account: "Tu cuenta y el perfil con que entras a las clínicas.",
+    manual: "Cómo usar supra-control.",
+  };
   const titles: Record<SupraView, string> = { dashboard: "Resumen de la plataforma", clinics: "Clínicas", support: "Soporte (tickets de las clínicas)", team: "Equipo de supra-control", admin: "Administración: servicios y finanzas", account: "Mi cuenta", manual: "Manual de supra-control" };
 
   return (
     <div className="supra-dashboard h-[100dvh] bg-background text-foreground flex flex-col md:flex-row font-sans">
-      <div className="md:hidden bg-[#0B1F33] text-white px-4 py-3 flex items-center justify-between shrink-0 z-30">
-        <div className="flex items-center gap-3">
-          <BrandLogo className="h-10 w-10 rounded-lg" />
-          <span className="font-bold">Supra-control</span>
-        </div>
-        <button type="button" onClick={() => setMobileNavOpen(true)} aria-label="Abrir menú" aria-expanded={mobileNavOpen} data-testid="supra-menu-open" className="w-11 h-11 rounded-2xl bg-white/10 hover:bg-white/20 flex items-center justify-center">
-          <Menu className="w-6 h-6" />
-        </button>
-      </div>
-      {mobileNavOpen && <div className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={() => setMobileNavOpen(false)} />}
+      <SidebarOverlay open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
 
-      <aside className={`fixed inset-y-0 left-0 w-72 max-w-[85vw] z-50 transition-transform duration-300 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} md:static md:translate-x-0 md:max-w-none md:z-30 bg-[#0B1F33] text-white flex-shrink-0 flex flex-col md:min-h-[100dvh] shadow-xl overflow-y-auto cd-nav sd-sidebar`} data-testid="supra-sidebar">
-        <div className="p-6 flex items-center justify-between gap-3 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <BrandLogo className="h-12 w-12 rounded-xl" />
-            <div>
-              <p className="font-bold tracking-tight leading-tight">Supra-control</p>
-              <p className="text-xs text-white/60 font-medium">Todas las clínicas</p>
-            </div>
-          </div>
-          <button type="button" onClick={() => setMobileNavOpen(false)} aria-label="Cerrar menú" className="md:hidden w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="p-6 flex-1">
-          <p className="text-xs font-bold text-white/65 uppercase tracking-widest mb-4">Panel</p>
-          <nav className="space-y-2">
+      <aside className={sidebarClass(mobileNavOpen)} data-testid="supra-sidebar">
+        <SidebarBrand tagline="Supra-control · Todas las clínicas" closeLabel="Cerrar menú" onClose={() => setMobileNavOpen(false)} />
+        <div className="px-4 py-2 flex-1">
+          <nav className="space-y-1" aria-label="Panel">
             {navItems.filter((item) => item.show).map(({ id, label, Icon, badge }) => (
               <Button
                 key={id}
@@ -212,48 +234,96 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                 data-testid={`supra-nav-${id}`}
                 aria-current={view === id ? "page" : undefined}
                 onClick={() => go(id)}
-                className={`w-full justify-start text-white hover:bg-white/10 hover:text-white font-medium rounded-xl min-h-12 h-auto py-3 ${view === id ? "bg-[hsl(var(--cd-nav-active))] ring-1 ring-white/15" : "bg-transparent"}`}
+                className={`${navItemClass(view === id)} h-auto min-h-12 py-2.5`}
               >
-                <Icon className="w-5 h-5 mr-3 shrink-0 text-[hsl(var(--cd-teal-bright))]" />
+                <Icon className="w-5 h-5 shrink-0" />
                 <span className="sd-nav-label">{label}</span>
-                {badge ? <span className="ml-auto rounded-full bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-950" data-testid="supra-nav-badge">{badge}</span> : null}
+                <NavCount count={badge ?? 0} testId="supra-nav-badge" />
               </Button>
             ))}
           </nav>
         </div>
-        <div className="p-6 border-t border-white/10 space-y-2">
-          {canManageUsers && (
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10 font-medium rounded-2xl h-12"
-              data-testid="director-choose-clinic"
-              onClick={async () => {
-                await selectClinic(null);
-                queryClient.invalidateQueries({ queryKey: getGetAuthMeQueryKey() });
-              }}
-            >
-              <Repeat className="w-5 h-5 mr-3" />
-              Cambiar de clínica
-            </Button>
-          )}
-          <Button variant="ghost" className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10 font-medium rounded-2xl h-12" data-testid="supra-logout" onClick={onLogout}>
-            <LogOut className="w-5 h-5 mr-3" />
-            Salir
-          </Button>
+        <div className="px-4 pb-5 pt-4 space-y-4">
+          <div className="pt-4 border-t border-white/10">
+            <SidebarSectionLabel>Mi cuenta</SidebarSectionLabel>
+            <SidebarIdentityCard
+              testId="supra-account-card"
+              initial={initialsOf(userName)}
+              title={userName || roleLabel}
+              subtitle={roleLabel}
+              onClick={canManageUsers ? () => go("account") : undefined}
+              label={canManageUsers ? `Abrir Mi cuenta: ${userName}` : undefined}
+            />
+            {canManageUsers && (
+              <Button
+                variant="ghost"
+                className="mt-2 w-full justify-start gap-3 text-white/85 hover:bg-white/10 hover:text-white font-medium rounded-xl h-11 [&_svg]:size-5"
+                data-testid="director-choose-clinic"
+                onClick={switchClinic}
+              >
+                <Repeat className="w-5 h-5" />
+                Cambiar de clínica
+              </Button>
+            )}
+          </div>
+          <SidebarHelpCard title="¿Necesitas ayuda?" desc="Ver el manual de supra-control" onClick={() => go("manual")} testId="supra-help-card" />
         </div>
       </aside>
 
-      <div className="flex-1 min-w-0 flex flex-col md:h-[100dvh] overflow-hidden">
+      <div className="flex-1 min-w-0 flex flex-col min-h-0 md:h-[100dvh] overflow-hidden">
         {canManageUsers && <SupportAlerts />}
         {canManageUsers && <AdminBanner />}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10">
+        <DashboardTopbar
+          testId="supra-topbar"
+          menu={{ open: mobileNavOpen, label: "Abrir menú", onOpen: () => setMobileNavOpen(true), testId: "supra-menu-open" }}
+          search={{
+            value: search,
+            placeholder: "Buscar clínicas por nombre…",
+            label: "Buscar clínicas",
+            onSearch: (value, submit) => { setSearch(value); if ((submit || value.trim()) && view !== "clinics") go("clinics"); },
+            show: true,
+            showMobile: view === "dashboard" || view === "clinics",
+          }}
+          bell={{ count: waiting, label: waiting === 0 ? "Tickets en espera: ninguno" : `Tickets en espera: ${waiting}`, onClick: () => go("support") }}
+          account={{
+            name: userName || roleLabel,
+            role: roleLabel,
+            label: "Menú de la cuenta",
+            content: (close) => (
+              <div className="py-1">
+                {canManageUsers && (
+                  <button type="button" onClick={() => { close(); go("account"); }} className="w-full min-h-11 flex items-center gap-2.5 px-4 text-sm text-start text-foreground hover:bg-muted transition-colors" data-testid="supra-menu-account">
+                    <UserRound className="w-4 h-4" aria-hidden="true" />Mi cuenta
+                  </button>
+                )}
+                {canManageUsers && (
+                  <button type="button" onClick={() => { close(); void switchClinic(); }} className="w-full min-h-11 flex items-center gap-2.5 px-4 text-sm text-start text-foreground hover:bg-muted transition-colors" data-testid="supra-menu-switch">
+                    <Repeat className="w-4 h-4" aria-hidden="true" />Cambiar de clínica
+                  </button>
+                )}
+                <button type="button" onClick={() => { close(); onLogout(); }} className="w-full min-h-12 flex items-center gap-2.5 px-4 border-t border-border text-sm font-semibold text-red-700 hover:bg-red-50 transition-colors" data-testid="supra-logout">
+                  <LogOut className="w-4 h-4" aria-hidden="true" />Salir
+                </button>
+              </div>
+            ),
+          }}
+        />
+        <main className="flex-1 min-h-0 overflow-y-auto">
+          {view === "dashboard" ? (
+            <SupraDashboard
+              userName={userName}
+              canManageUsers={canManageUsers}
+              onNavigate={(next) => go(next === "admin" || next === "team" ? (canManageUsers ? next : "clinics") : next)}
+              onOpenClinic={openClinic}
+            />
+          ) : (
+          <>
+          <header className="bg-card border-b border-border px-4 py-5 sm:px-6 md:px-8 md:py-6">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight" data-testid="supra-title">{titles[view]}</h1>
+            {subtitles[view] && <p className="text-sm text-muted-foreground mt-1">{subtitles[view]}</p>}
+          </header>
+          <div className="px-4 sm:px-6 md:px-8 py-6 pb-12">
           <div className="max-w-7xl w-full mx-auto">
-            <header className="mb-7 border-b border-border pb-6">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[hsl(var(--cd-teal))]">Clinivista · Supra-control</p>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight" data-testid="supra-title">{titles[view]}</h1>
-              <p className="mt-2 text-sm text-muted-foreground">{view === "dashboard" ? "Actividad, soporte y estado de las clínicas en un solo lugar." : view === "clinics" ? "Gestiona el acceso, la identidad y la vigencia de cada clínica." : "Gestión y seguimiento de la plataforma."}</p>
-            </header>
-            {view === "dashboard" && <SupraDashboard onNavigate={(next) => go(next === "support" ? "support" : next === "admin" && canManageUsers ? "admin" : "clinics")} />}
             {view === "support" && <SupraInbox embedded openTicketId={openTicketId} />}
             {view === "team" && canManageUsers && <SupraTeam embedded />}
             {view === "admin" && canManageUsers && <SupraAdmin embedded />}
@@ -264,9 +334,17 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
         {creating ? (
           <CreateCenterForm onClose={() => setCreating(false)} />
         ) : (
-          <div className="flex justify-end mb-4">
-            <Button className="rounded-full h-10 font-semibold" onClick={() => setCreating(true)}>
-              <Plus className="w-4 h-4 mr-2" /> Crear clínica
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            {query ? (
+              <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground" data-testid="clinic-filter">
+                Filtrando por «<span className="font-semibold text-foreground">{search.trim()}</span>»: {shownCenters.length} de {centers.length}
+                <Button type="button" variant="ghost" className="h-11 rounded-xl px-3 gap-1 text-primary hover:bg-accent hover:text-primary font-semibold" onClick={() => setSearch("")}>
+                  <X className="w-4 h-4" />Quitar filtro
+                </Button>
+              </p>
+            ) : <span />}
+            <Button className="rounded-xl h-11 px-5 font-semibold gap-2 shadow-sm shadow-primary/25" onClick={() => setCreating(true)}>
+              <Plus className="w-4 h-4" /> Crear clínica
             </Button>
           </div>
         )}
@@ -281,22 +359,29 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
           </div>
         )}
         {!isLoading && !isError && centers.length === 0 && (
-          <div className="text-center text-muted-foreground font-medium py-10">
+          <div className={`${cardClass} px-6 py-14 text-center text-muted-foreground font-medium`}>
             Todavía no hay ninguna clínica con pacientes o personal registrado.
+          </div>
+        )}
+        {!isLoading && !isError && centers.length > 0 && shownCenters.length === 0 && (
+          <div className={`${cardClass} px-6 py-14 text-center flex flex-col items-center`} data-testid="clinic-filter-empty">
+            <SearchX className="w-8 h-8 text-primary/60 mb-3" aria-hidden="true" />
+            <p className="font-semibold text-foreground">Ninguna clínica coincide con «{search.trim()}».</p>
           </div>
         )}
 
         <div className="space-y-4">
-          {centers.map((center) => (
+          {shownCenters.map((center) => (
             <div
               key={center.id}
-              className="sd-card bg-white rounded-2xl shadow-sm border border-border p-5 sm:p-6 flex flex-col gap-5"
+              className={`${cardClass} p-5 sm:p-6 flex flex-col gap-5 transition-shadow ${highlightId === center.id ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
+              data-highlighted={highlightId === center.id ? "true" : undefined}
             >
               <div className="flex flex-col gap-5" data-testid={`center-card-${center.id}`}>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     {center.logoDataUrl && (
-                      <img src={center.logoDataUrl} alt="" className="h-8 w-8 shrink-0 rounded-lg object-contain bg-white border border-[#E8E4DE]" />
+                      <img src={center.logoDataUrl} alt="" className="h-8 w-8 shrink-0 rounded-lg object-contain bg-white border border-border" />
                     )}
                     <h2 className="text-lg font-bold text-foreground break-words min-w-0">{center.name}</h2>
                     <span
@@ -331,13 +416,13 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                 <div className="flex flex-wrap items-center gap-2 min-w-0">
                   <a
                     href={getGetDirectorCenterExportUrl(center.id)}
-                    className="inline-flex items-center gap-2 h-10 px-4 rounded-full border border-[#E8E4DE] text-sm font-semibold text-foreground hover:bg-[#F5F2EE] transition-colors"
+                    className="inline-flex items-center gap-2 h-11 px-4 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted transition-colors"
                   >
                     <Download className="w-4 h-4" /> Exportar datos
                   </a>
                   <Button
                     variant="outline"
-                    className="rounded-full h-10 font-semibold"
+                    className="rounded-xl h-11 font-semibold"
                     aria-expanded={identityOpenId === center.id}
                     onClick={() => setIdentityOpenId(identityOpenId === center.id ? null : center.id)}
                   >
@@ -346,7 +431,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                   {canManageUsers && (
                   <Button
                     variant="outline"
-                    className="rounded-full h-10 font-semibold"
+                    className="rounded-xl h-11 font-semibold"
                     aria-expanded={usersOpenId === center.id}
                     onClick={() => setUsersOpenId(usersOpenId === center.id ? null : center.id)}
                   >
@@ -356,7 +441,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                   )}
                   {canManageUsers && (
                   <Button
-                    className="rounded-full h-10 font-semibold"
+                    className="rounded-xl h-11 font-semibold"
                     data-testid={`enter-clinic-${center.id}`}
                     onClick={async () => {
                       const response = await fetch("/api/auth/enter-clinic", {
@@ -372,7 +457,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                   )}
                   <Button
                     variant={center.active ? "outline" : "default"}
-                    className="rounded-full h-10 font-semibold"
+                    className="rounded-xl h-11 font-semibold"
                     disabled={pendingId === center.id}
                     onClick={() => handleToggle(center.id, !center.active)}
                   >
@@ -388,7 +473,7 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-4 border-t border-[#E8E4DE]">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-4 border-t border-border">
                 <label htmlFor={`paid-until-${center.id}`} className="text-sm font-semibold text-muted-foreground shrink-0">
                   Registrar pago hasta:
                 </label>
@@ -396,13 +481,13 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
                   <Input
                     id={`paid-until-${center.id}`}
                     type="date"
-                    className="h-10 rounded-full flex-1 min-w-0 sm:max-w-[180px] sm:flex-none"
+                    className="h-11 rounded-xl flex-1 min-w-0 sm:max-w-[180px] sm:flex-none"
                     value={paymentDraft[center.id] ?? ""}
                     onChange={(event) => setPaymentDraft((prev) => ({ ...prev, [center.id]: event.target.value }))}
                   />
                   <Button
                     variant="outline"
-                    className="rounded-full h-10 font-semibold shrink-0"
+                    className="rounded-xl h-11 font-semibold shrink-0"
                     disabled={!paymentDraft[center.id] || pendingId === center.id}
                     onClick={() => handleRecordPayment(center.id)}
                   >
@@ -425,6 +510,9 @@ export function DirectorPanel({ onLogout, canManageUsers = true }: { onLogout: (
               </>
             )}
           </div>
+          </div>
+          </>
+          )}
         </main>
       </div>
     </div>

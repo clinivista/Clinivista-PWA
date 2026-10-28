@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import {
-  UserPlus, Users, ClipboardList, Layers, UserCog, Camera, CalendarPlus, Stethoscope, ChevronRight, ChevronDown,
-  AlertCircle, RotateCw, ArrowUpRight, ArrowDownRight, Ruler, BadgeCheck,
+  UserPlus, Users, ClipboardList, Layers, UserCog, Camera, CalendarPlus, Stethoscope, ChevronRight,
+  AlertCircle, RotateCw, Ruler, BadgeCheck,
 } from "lucide-react";
 import {
   useGetLeads, getGetLeadsQueryKey,
@@ -15,11 +15,12 @@ import { HOME_TEXT, timeAgo, percentChange, cumulative } from "@/lib/home-i18n";
 import { STAFF_FLOW_TEXT } from "@/lib/staff-flow-i18n";
 import { NAV_TEXT } from "@/lib/phases-i18n";
 import { CONSULT_TEXT } from "@/lib/consult-types-i18n";
-import { ActivityChart, Sparkline } from "@/components/home-charts";
+import { ActivityChart } from "@/components/home-charts";
 import { initialsOf } from "@/components/clinic-topbar";
-
-const cardShape = "rounded-2xl border shadow-[var(--cd-shadow)]";
-const cardClass = `bg-card border-[hsl(var(--card-border))] ${cardShape}`;
+import {
+  cardClass, Skeleton, StatCard, QuickCard, Welcome, RangeSelect, ChartLegend, quickGridClass, statGridClass,
+  type QuickItem, type StatItem,
+} from "@/components/dashboard/cards";
 const RECENT = 6;
 const SPARK_MONTHS = 6;
 const RANGES = [3, 6, 12] as const;
@@ -70,23 +71,6 @@ function PatientPhoto({ lead, className, initialsClass, size }: { lead: Pick<Lea
   );
 }
 
-function Skeleton({ className }: { className: string }) {
-  return <span aria-hidden="true" className={`block animate-pulse rounded-md bg-muted ${className}`} />;
-}
-
-function ChangeChip({ pct, lang, label }: { pct: number | null; lang: string; label: (p: string) => string }) {
-  if (pct === null) return null;
-  const formatted = new Intl.NumberFormat(lang, { style: "percent", signDisplay: "exceptZero", maximumFractionDigits: 0 }).format(pct / 100);
-  const tone = pct > 0 ? "bg-emerald-50 text-emerald-700 ring-emerald-600/15" : pct < 0 ? "bg-red-50 text-red-700 ring-red-600/15" : "bg-muted text-muted-foreground ring-border";
-  return (
-    <span className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums ring-1 ring-inset ${tone}`} data-testid="home-change">
-      {pct > 0 ? <ArrowUpRight className="h-3 w-3 rtl:-scale-x-100" aria-hidden="true" /> : pct < 0 ? <ArrowDownRight className="h-3 w-3 rtl:-scale-x-100" aria-hidden="true" /> : null}
-      <span aria-hidden="true"><bdi>{formatted}</bdi></span>
-      <span className="sr-only">{label(formatted)}</span>
-    </span>
-  );
-}
-
 const EVENT_STYLE: Record<ClinicActivityEvent["type"], { icon: ReactNode; tone: string }> = {
   photos: { icon: <Camera />, tone: "bg-blue-50 text-blue-700" },
   patient: { icon: <UserPlus />, tone: "bg-violet-50 text-violet-700" },
@@ -99,7 +83,6 @@ export function ClinicHome({ userName, canManageUsers, canEditPhases, specialty,
   const text = HOME_TEXT[lang];
   const consultText = CONSULT_TEXT[lang];
   const number = new Intl.NumberFormat(lang);
-  const today = new Intl.DateTimeFormat(lang, { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date());
   const [range, setRange] = useState<(typeof RANGES)[number]>(6);
 
   // Misma consulta (y caché) que la lista de pacientes sin filtros; las cifras salen de
@@ -121,7 +104,7 @@ export function ClinicHome({ userName, canManageUsers, canEditPhases, specialty,
   const newPerMonth = monthly.map((m) => m.patients);
   const at = (values: number[], fromEnd: number) => values[values.length - 1 - fromEnd];
 
-  const quick: Array<{ key: string; title: string; desc: string; icon: ReactNode; tone: string; onClick: () => void; testId: string }> = [
+  const quick: QuickItem[] = [
     { key: "new", title: STAFF_FLOW_TEXT[lang].addPatient, desc: text.newPatientDesc, icon: <UserPlus />, tone: "bg-[#2563EB]", onClick: onNewPatient, testId: "home-new-patient" },
     { key: "patients", title: text.patientsTitle, desc: text.patientsDesc, icon: <Users />, tone: "bg-[#7C3AED]", onClick: onOpenPatients, testId: "home-patients" },
     { key: "report", title: NAV_TEXT[lang].report, desc: text.reportDesc, icon: <ClipboardList />, tone: "bg-[#0D9488]", onClick: onOpenReport, testId: "home-report" },
@@ -129,7 +112,7 @@ export function ClinicHome({ userName, canManageUsers, canEditPhases, specialty,
     ...(canManageUsers ? [{ key: "users", title: t.adminUsers, desc: text.usersDesc, icon: <UserCog />, tone: "bg-[#4F46E5]", onClick: onOpenUsers, testId: "home-users" }] : []),
   ];
 
-  const indicators: Array<{ key: string; label: string; value: number | null | undefined; change: number | null; spark: number[] | null; sparkColor: string; icon: ReactNode; tone: string }> = [
+  const indicators: StatItem[] = [
     { key: "total", label: text.totalPatients, value: totals?.patients, change: totals ? percentChange(at(patientsCum, 0)!, at(patientsCum, 1)) : null, spark: last(patientsCum, SPARK_MONTHS), sparkColor: "#2563EB", icon: <Users />, tone: "bg-blue-50 text-blue-600" },
     { key: "photos", label: text.photos, value: totals?.photos, change: totals ? percentChange(at(photosCum, 0)!, at(photosCum, 1)) : null, spark: last(photosCum, SPARK_MONTHS), sparkColor: "#8B5CF6", icon: <Camera />, tone: "bg-violet-50 text-violet-600" },
     { key: "month", label: text.thisMonth, value: totals?.thisMonth, change: totals ? percentChange(totals.thisMonth, at(newPerMonth, 1)) : null, spark: last(newPerMonth, SPARK_MONTHS), sparkColor: "#0D9488", icon: <CalendarPlus />, tone: "bg-teal-50 text-teal-700" },
@@ -150,13 +133,7 @@ export function ClinicHome({ userName, canManageUsers, canEditPhases, specialty,
     <div className="flex-1 min-h-0 overflow-y-auto" dir={lang === "ar" ? "rtl" : "ltr"} data-testid="clinic-home">
       <div className="px-4 sm:px-6 md:px-8 py-6 md:py-7 space-y-5 md:space-y-6 pb-12">
         {/* Bienvenida */}
-        <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 sm:gap-6">
-          <div className="min-w-0">
-            <h1 className="text-[26px] sm:text-[32px] leading-tight font-extrabold text-foreground tracking-tight break-words">{userName ? text.welcome(userName) : text.welcomeNoName}</h1>
-            <p className="text-sm sm:text-[15px] text-muted-foreground mt-1">{text.subtitle}</p>
-          </div>
-          <time dateTime={new Date().toISOString().slice(0, 10)} className="shrink-0 text-sm font-medium text-muted-foreground first-letter:uppercase sm:pb-1" data-testid="home-date">{today}</time>
-        </header>
+        <Welcome title={userName ? text.welcome(userName) : text.welcomeNoName} subtitle={text.subtitle} lang={lang} />
 
         {failed && (
           <div role="alert" className="flex flex-wrap items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-800">
@@ -171,52 +148,17 @@ export function ClinicHome({ userName, canManageUsers, canEditPhases, specialty,
         {/* Accesos rápidos */}
         <section aria-labelledby="home-quick">
           <h2 id="home-quick" className="sr-only">{text.quickTitle}</h2>
-          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 ${quick.length === 5 ? "xl:grid-cols-5" : quick.length === 4 ? "xl:grid-cols-4" : "lg:grid-cols-3"}`}>
-            {quick.map((item) => {
-              // Con cinco accesos en una fila (escritorio) la tarjeta se compacta para que el título no se corte.
-              const five = quick.length === 5;
-              return (
-              <button
-                key={item.key}
-                type="button"
-                onClick={item.onClick}
-                data-testid={item.testId}
-                className={`group ${cardClass} min-h-[76px] p-3.5 md:p-4 ${five ? "xl:px-3 xl:gap-3" : ""} flex items-center gap-3.5 text-start transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-primary/30`}
-              >
-                <span aria-hidden="true" className={`flex h-12 w-12 ${five ? "xl:h-11 xl:w-11" : ""} shrink-0 items-center justify-center rounded-xl text-white shadow-sm [&_svg]:h-[22px] [&_svg]:w-[22px] ${item.tone}`}>
-                  {item.icon}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className={`block font-semibold text-[15px] ${five ? "xl:text-sm" : ""} leading-snug text-foreground`}>{item.title}</span>
-                  <span className="block text-xs text-muted-foreground mt-0.5 line-clamp-2">{item.desc}</span>
-                </span>
-                <ChevronRight className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5 ${five ? "xl:hidden 2xl:block" : ""}`} aria-hidden="true" />
-              </button>
-              );
-            })}
+          <div className={quickGridClass(quick.length)}>
+            {quick.map((item) => <QuickCard key={item.key} item={item} five={quick.length === 5} />)}
           </div>
         </section>
 
         {/* Indicadores */}
         <section aria-labelledby="home-stats">
           <h2 id="home-stats" className="sr-only">{text.statsTitle}</h2>
-          <dl className={`grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 ${indicators.length === 4 ? "xl:grid-cols-4" : "lg:grid-cols-3"}`}>
+          <dl className={statGridClass(indicators.length)}>
             {indicators.map((item) => (
-              <div key={item.key} className={`${cardClass} p-4 md:p-5 flex flex-col gap-3`} data-testid={`home-stat-${item.key}`}>
-                <div className="flex items-start gap-3.5">
-                  <span aria-hidden="true" className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl [&_svg]:h-[22px] [&_svg]:w-[22px] ${item.tone}`}>{item.icon}</span>
-                  <div className="min-w-0 flex-1 flex flex-col-reverse">
-                    <dt className="text-[13px] leading-snug text-muted-foreground mt-1">{item.label}</dt>
-                    <dd className="flex items-center justify-between gap-2">
-                      <span className="text-[28px] leading-none font-bold tabular-nums text-foreground">
-                        {overview.isLoading ? <Skeleton className="h-7 w-14" /> : item.value === undefined || item.value === null ? "—" : number.format(item.value)}
-                      </span>
-                      <ChangeChip pct={item.change} lang={lang} label={text.change} />
-                    </dd>
-                  </div>
-                </div>
-                {item.spark && (overview.isLoading ? <Skeleton className="h-8 w-full" /> : <Sparkline values={item.spark} color={item.sparkColor} testId={`home-spark-${item.key}`} />)}
-              </div>
+              <StatCard key={item.key} item={item} loading={overview.isLoading} lang={lang} changeLabel={text.change} testId={`home-stat-${item.key}`} sparkTestId={`home-spark-${item.key}`} />
             ))}
           </dl>
         </section>
@@ -226,23 +168,9 @@ export function ClinicHome({ userName, canManageUsers, canEditPhases, specialty,
           <section aria-labelledby="home-chart" className={`${cardClass} p-4 md:p-5 min-w-0 flex flex-col`}>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
               <h2 id="home-chart" className="font-bold text-foreground">{text.chartTitle}</h2>
-              <label className="relative">
-                <span className="sr-only">{text.chartRange}</span>
-                <select
-                  value={range}
-                  onChange={(event) => setRange(Number(event.target.value) as (typeof RANGES)[number])}
-                  className="appearance-none h-11 rounded-xl border border-border bg-card ps-3.5 pe-9 text-sm font-medium text-foreground hover:bg-muted transition-colors cursor-pointer"
-                  data-testid="home-range"
-                >
-                  {RANGES.map((n) => <option key={n} value={n}>{text.lastMonths(n)}</option>)}
-                </select>
-                <ChevronDown className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              </label>
+              <RangeSelect<(typeof RANGES)[number]> value={range} options={RANGES} onChange={setRange} label={text.chartRange} optionLabel={text.lastMonths} testId="home-range" />
             </div>
-            <ul className="flex flex-wrap items-center gap-x-5 gap-y-1 mb-2 text-xs font-medium text-muted-foreground" aria-hidden="true">
-              <li className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[#1D5FB8]" />{text.chartPatients}</li>
-              <li className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[#A78BFA]" />{text.chartPhotos}</li>
-            </ul>
+            <ChartLegend patients={text.chartPatients} photos={text.chartPhotos} />
             {overview.isLoading ? <Skeleton className="min-h-[240px] w-full rounded-xl flex-1" /> : <ActivityChart data={last(monthly, range)} lang={lang} text={text} />}
           </section>
 

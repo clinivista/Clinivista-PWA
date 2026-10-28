@@ -59,6 +59,9 @@ import type {
   GetDirectorTeam200,
   GetLeads200,
   GetLeadsParams,
+  GetSupraActivityParams,
+  GetSupraOverviewMonthlyParams,
+  GetSupraRecentClinicsParams,
   HealthStatus,
   InvitationInput,
   InvitationResult,
@@ -89,6 +92,9 @@ import type {
   SimpleOk,
   StaffForgotInput,
   StaffResetInput,
+  SupraActivity,
+  SupraOverviewMonthly,
+  SupraRecentClinics,
   UpdateClinicProtocolParams
 } from './api.schemas';
 
@@ -5403,6 +5409,258 @@ export function useGetClinicActivity<TData = Awaited<ReturnType<typeof getClinic
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetClinicActivityQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetSupraOverviewMonthlyUrl = (params?: GetSupraOverviewMonthlyParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/supra/overview/monthly?${stringifiedParams}` : `/api/supra/overview/monthly`
+}
+
+/**
+ * @summary Platform-wide new patients, photos and clinics per month (supra-control Home)
+ */
+export const getSupraOverviewMonthly = async (params?: GetSupraOverviewMonthlyParams, options?: Parameters<typeof customFetch>[1]): Promise<SupraOverviewMonthly> => {
+
+  return customFetch<SupraOverviewMonthly>(getGetSupraOverviewMonthlyUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSupraOverviewMonthlyQueryKey = (params?: GetSupraOverviewMonthlyParams,) => {
+    return [
+    `/api/supra/overview/monthly`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetSupraOverviewMonthlyQueryOptions = <TData = Awaited<ReturnType<typeof getSupraOverviewMonthly>>, TError = ErrorType<ErrorResponse>>(params?: GetSupraOverviewMonthlyParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSupraOverviewMonthly>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSupraOverviewMonthlyQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSupraOverviewMonthly>>> = ({ signal }) => getSupraOverviewMonthly(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSupraOverviewMonthly>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSupraOverviewMonthlyQueryResult = NonNullable<Awaited<ReturnType<typeof getSupraOverviewMonthly>>>
+export type GetSupraOverviewMonthlyQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Platform-wide new patients, photos and clinics per month (supra-control Home)
+ */
+
+export function useGetSupraOverviewMonthly<TData = Awaited<ReturnType<typeof getSupraOverviewMonthly>>, TError = ErrorType<ErrorResponse>>(
+ params?: GetSupraOverviewMonthlyParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSupraOverviewMonthly>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSupraOverviewMonthlyQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetSupraActivityUrl = (params?: GetSupraActivityParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/supra/activity?${stringifiedParams}` : `/api/supra/activity`
+}
+
+/**
+ * @summary Latest platform events (no patient data)
+ */
+export const getSupraActivity = async (params?: GetSupraActivityParams, options?: Parameters<typeof customFetch>[1]): Promise<SupraActivity> => {
+
+  return customFetch<SupraActivity>(getGetSupraActivityUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSupraActivityQueryKey = (params?: GetSupraActivityParams,) => {
+    return [
+    `/api/supra/activity`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetSupraActivityQueryOptions = <TData = Awaited<ReturnType<typeof getSupraActivity>>, TError = ErrorType<ErrorResponse>>(params?: GetSupraActivityParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSupraActivity>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSupraActivityQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSupraActivity>>> = ({ signal }) => getSupraActivity(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSupraActivity>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSupraActivityQueryResult = NonNullable<Awaited<ReturnType<typeof getSupraActivity>>>
+export type GetSupraActivityQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Latest platform events (no patient data)
+ */
+
+export function useGetSupraActivity<TData = Awaited<ReturnType<typeof getSupraActivity>>, TError = ErrorType<ErrorResponse>>(
+ params?: GetSupraActivityParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSupraActivity>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSupraActivityQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetSupraRecentClinicsUrl = (params?: GetSupraRecentClinicsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/supra/clinics/recent?${stringifiedParams}` : `/api/supra/clinics/recent`
+}
+
+/**
+ * @summary Newest clinics with their patient count
+ */
+export const getSupraRecentClinics = async (params?: GetSupraRecentClinicsParams, options?: Parameters<typeof customFetch>[1]): Promise<SupraRecentClinics> => {
+
+  return customFetch<SupraRecentClinics>(getGetSupraRecentClinicsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSupraRecentClinicsQueryKey = (params?: GetSupraRecentClinicsParams,) => {
+    return [
+    `/api/supra/clinics/recent`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetSupraRecentClinicsQueryOptions = <TData = Awaited<ReturnType<typeof getSupraRecentClinics>>, TError = ErrorType<ErrorResponse>>(params?: GetSupraRecentClinicsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSupraRecentClinics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSupraRecentClinicsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSupraRecentClinics>>> = ({ signal }) => getSupraRecentClinics(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSupraRecentClinics>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSupraRecentClinicsQueryResult = NonNullable<Awaited<ReturnType<typeof getSupraRecentClinics>>>
+export type GetSupraRecentClinicsQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Newest clinics with their patient count
+ */
+
+export function useGetSupraRecentClinics<TData = Awaited<ReturnType<typeof getSupraRecentClinics>>, TError = ErrorType<ErrorResponse>>(
+ params?: GetSupraRecentClinicsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSupraRecentClinics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSupraRecentClinicsQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
