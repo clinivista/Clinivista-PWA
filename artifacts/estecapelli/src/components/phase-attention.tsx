@@ -50,9 +50,9 @@ export function PhaseAttention({ leadId, phase, readOnly = false }: { leadId: st
     <div className="mt-3 rounded-2xl bg-[#F5F2EE] p-3" data-testid={`attention-${phase.id}`}>
       <p className="flex items-center gap-1.5 text-xs font-bold text-foreground"><CalendarCheck className="w-4 h-4 text-primary" />{a.title}</p>
       <div className="mt-2 flex flex-wrap items-end gap-2">
-        <div className="w-full min-w-0 sm:w-44">
+        <div className="w-full min-w-0 sm:w-48">
           <label htmlFor={`attention-date-${phase.id}`} className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">{a.dateLabel}</label>
-          <Input id={`attention-date-${phase.id}`} type="date" max={todayIso()} value={date} disabled={readOnly || busy} onChange={(event) => setDate(event.target.value)} className="h-10 w-full min-w-0 max-w-full rounded-full bg-white" />
+          <Input id={`attention-date-${phase.id}`} type="date" max={todayIso()} value={date} disabled={readOnly || busy} onChange={(event) => setDate(event.target.value)} className="h-10 w-full min-w-0 max-w-full rounded-full bg-white appearance-none [&::-webkit-date-and-time-value]:text-left [&::-webkit-date-and-time-value]:min-h-[1.5em] [&::-webkit-datetime-edit]:p-0" />
         </div>
         <div className="min-w-0 w-full sm:w-auto sm:min-w-[14rem] sm:flex-1">
           <label htmlFor={`attention-id-${phase.id}`} className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">{a.idLabel}</label>
