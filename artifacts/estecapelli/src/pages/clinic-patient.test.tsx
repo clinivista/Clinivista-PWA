@@ -45,10 +45,59 @@ describe("/c/:slug", () => {
     expect(screen.getAllByText("Estecapelli").length).toBeGreaterThan(0);
   });
 
-  it("tells the patient when the clinic does not exist", () => {
+  it("tells the patient when the clinic does not exist, with a link home and no other clinic's data", () => {
     state.clinic = { data: undefined, isLoading: false, isError: true, error: { status: 404 } };
     renderPage();
-    expect(screen.getByRole("alert")).toHaveTextContent("Esta clínica no existe");
+    expect(screen.getByRole("alert")).toHaveTextContent("No encontramos esta clínica");
+    expect(screen.getByTestId("clinic-not-found-home")).toHaveAttribute("href", "/");
+    expect(screen.queryByTestId("clinic-name")).toBeNull();
+    expect(screen.queryByTestId("clinic-start")).toBeNull();
+  });
+
+  it("welcome: the clinic's real logo and name lead, Clinivista is the secondary platform brand", () => {
+    state.clinic = { data: { name: "Clínica Uno", logoDataUrl: "data:image/png;base64,AAAA", specialty: "capilar" }, isLoading: false, isError: false, error: null };
+    renderPage();
+    expect(screen.getByTestId("clinic-logo")).toHaveAttribute("src", "data:image/png;base64,AAAA");
+    expect(screen.getByTestId("clinic-logo")).toHaveAttribute("alt", "Clínica Uno");
+    expect(screen.getByTestId("clinic-name")).toHaveTextContent("Clínica Uno");
+    expect(screen.getByText("Plataforma Clinivista")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Bienvenido a tupreevaluación");
+    expect(screen.getByText(/No reemplaza una consulta médica/)).toBeInTheDocument();
+    expect(screen.queryByText(/Democapilar|DC/)).toBeNull();
+  });
+
+  it("welcome without a logo shows the clinic's initials", () => {
+    state.clinic = { data: { name: "Capilar Demo", logoDataUrl: null, specialty: "capilar" }, isLoading: false, isError: false, error: null };
+    renderPage();
+    expect(screen.getByTestId("clinic-initials")).toHaveTextContent("CD");
+    expect(screen.queryByTestId("clinic-logo")).toBeNull();
+  });
+
+  it("if the clinic cannot be loaded (not a 404), shows an error with retry and no clinic data or form", () => {
+    state.clinic = { data: undefined, isLoading: false, isError: true, error: { status: 500 } };
+    renderPage();
+    expect(screen.getByRole("alert")).toHaveTextContent("No pudimos cargar esta clínica");
+    expect(screen.getByRole("button", { name: /Reintentar/ })).toBeInTheDocument();
+    expect(screen.queryByTestId("clinic-start")).toBeNull();
+  });
+
+  it("a saved pre-evaluation for this clinic skips the welcome (resume works as before)", () => {
+    localStorage.setItem("estecapelli.patient-token.estecapelli", "tok-mine");
+    renderPage();
+    expect(screen.queryByTestId("clinic-welcome")).toBeNull();
+  });
+
+  it("«Iniciar preevaluación» opens this clinic's form (clinic context kept) and «back» returns to its welcome", async () => {
+    state.options = { googleEnabled: true, profile: null };
+    renderPage();
+    screen.getByTestId("clinic-start").click();
+    // The data step keeps the clinic: Google returns to /c/estecapelli and the header shows its name.
+    expect(await screen.findByTestId("google-start")).toHaveAttribute("href", "/api/portal/google/start?next=%2Fc%2Festecapelli");
+    expect(screen.getAllByText("Estecapelli").length).toBeGreaterThan(0);
+    // «Volver» del paso de datos (primer botón del contenido) regresa a la bienvenida de la clínica.
+    (document.querySelector("main button") as HTMLButtonElement).click();
+    expect(await screen.findByTestId("clinic-welcome")).toBeInTheDocument();
+    expect(screen.getByTestId("clinic-name")).toHaveTextContent("Estecapelli");
   });
 
   it("keeps a separate resume token per clinic", () => {
@@ -84,10 +133,9 @@ describe("/c/:slug", () => {
     state.clinic = { data: { name: "Clínica Plástica", logoDataUrl: null, specialty: "plastica" }, isLoading: false, isError: false, error: null };
     localStorage.setItem("clinivista_lang", "en");
     renderPage();
-    expect(screen.getByText(/the area you are interested in/)).toBeInTheDocument();
+    expect(screen.getByTestId("clinic-name")).toHaveTextContent("Clínica Plástica");
     expect(screen.queryByText(/scalp/i)).not.toBeInTheDocument();
-    const start = screen.getAllByRole("button").find((b) => /begin|start/i.test(b.textContent ?? ""));
-    start?.click();
+    screen.getByRole("button", { name: /Start pre-evaluation/ }).click();
     const intake = await screen.findByTestId("plastic-intake");
     expect(intake).toHaveTextContent("Your interest in plastic surgery");
     expect(intake).toHaveTextContent("Which procedure are you interested in?");
@@ -99,10 +147,9 @@ describe("/c/:slug", () => {
     state.clinic = { data: { name: "Clínica Derma", logoDataUrl: null, specialty: "dermatologia" }, isLoading: false, isError: false, error: null };
     localStorage.setItem("clinivista_lang", "en");
     renderPage();
-    expect(screen.getByText(/area of skin that worries you/)).toBeInTheDocument();
+    expect(screen.getByTestId("clinic-name")).toHaveTextContent("Clínica Derma");
     expect(screen.queryByText(/scalp/i)).not.toBeInTheDocument();
-    const start = screen.getAllByRole("button").find((b) => /begin|start/i.test(b.textContent ?? ""));
-    start?.click();
+    screen.getByRole("button", { name: /Start pre-evaluation/ }).click();
     const intake = await screen.findByTestId("derm-intake");
     expect(intake).toHaveTextContent("Your dermatology consultation");
     expect(intake).toHaveTextContent("What is your concern?");

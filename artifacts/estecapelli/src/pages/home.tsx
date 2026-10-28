@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { Link } from "wouter";
-import { ArrowRight, Building2, ChevronDown, ChevronRight, Camera, FileSearch, FileText, Globe, Hospital, Info, UserRound } from "lucide-react";
+import { ArrowRight, Building2, ChevronRight, Camera, FileSearch, FileText, Hospital, Info, UserRound } from "lucide-react";
 import isotipo from "@workspace/brand/svg/clinivista-isotipo.svg";
-import { useLanguage, LANGS, type LangCode } from "@/lib/language";
+import { useLanguage } from "@/lib/language";
+import { PortalLanguageSelect } from "@/components/portal-language-select";
 import { BrandLogo } from "@/components/brand-logo";
 import { PORTAL_HOME_TEXT } from "@/lib/portal-home-i18n";
 
@@ -14,27 +15,6 @@ import { PORTAL_HOME_TEXT } from "@/lib/portal-home-i18n";
 const OUTFIT_HREF = "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap";
 const INK = "#0A1F4D";
 const card = "rounded-2xl bg-white shadow-[0_1px_2px_rgba(10,31,77,0.04),0_10px_30px_-14px_rgba(10,31,77,0.18)]";
-
-/** Selector de idioma compacto (globo + código) con un <select> nativo encima: accesible y sin librerías. */
-function LanguageSelect({ label }: { label: string }) {
-  const { lang, setLang } = useLanguage();
-  return (
-    <label className="relative inline-flex h-11 items-center gap-1.5 rounded-xl px-2.5 text-sm font-semibold hover:bg-[#EAF2FC] focus-within:ring-2 focus-within:ring-[#1D5FD8]" style={{ color: INK }}>
-      <Globe className="h-5 w-5" aria-hidden="true" />
-      <span aria-hidden="true">{lang.toUpperCase()}</span>
-      <ChevronDown className="h-4 w-4" aria-hidden="true" />
-      <select
-        value={lang}
-        onChange={(event) => setLang(event.target.value as LangCode)}
-        aria-label={label}
-        className="absolute inset-0 cursor-pointer opacity-0"
-        data-testid="home-language"
-      >
-        {LANGS.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
-      </select>
-    </label>
-  );
-}
 
 /** Isotipo grande con el «campo visual» de la cámara (decorativo; el logo no cambia). */
 function HeroMark() {
@@ -80,7 +60,7 @@ export default function Home() {
             <BrandLogo variant="logo" alt="Clinivista — Registro fotográfico clínico" className="h-9 min-[400px]:h-11 sm:h-16" />
           </Link>
           <div className="flex items-center gap-1 sm:gap-3">
-            <LanguageSelect label={h.language} />
+            <PortalLanguageSelect label={h.language} />
             <span className="hidden h-8 w-px bg-slate-200 sm:block" aria-hidden="true" />
             <Link
               href="/admin/login"

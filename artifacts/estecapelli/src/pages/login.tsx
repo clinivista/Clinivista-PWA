@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
-import { ArrowRight, Lock } from "lucide-react";
+import { ArrowLeft, ArrowRight, Lock, Mail } from "lucide-react";
+import isotipo from "@workspace/brand/svg/clinivista-isotipo.svg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
@@ -9,7 +10,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/lib/language";
 import { BrandLogo } from "@/components/brand-logo";
+import { PortalLanguageSelect } from "@/components/portal-language-select";
 import { STAFF_RESET_TEXT } from "@/lib/staff-reset-i18n";
+import { ACCESS_TEXT } from "@/lib/access-i18n";
+
+const field = "h-12 rounded-xl border-[#C9D6E8] bg-white ps-11 text-base text-[#0A1F4D] placeholder:text-[#7B8AA3] focus-visible:border-[#1D5FD8] focus-visible:ring-2 focus-visible:ring-[#1D5FD8]/25";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -20,6 +25,7 @@ export default function Login() {
   const { toast } = useToast();
   const { t, lang } = useLanguage();
   const reset = STAFF_RESET_TEXT[lang];
+  const a = ACCESS_TEXT[lang];
   const forgotMutation = useStaffForgot();
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
@@ -58,146 +64,123 @@ export default function Login() {
     });
   };
 
-  if (isLoading) return <div className="min-h-screen bg-[#F5F2EE]" />;
+  if (isLoading) return <div className="min-h-screen bg-[#F3F8FF]" />;
 
   return (
-    <div className="min-h-[100dvh] flex bg-[#F5F2EE] selection:bg-primary/30">
-      {/* Left side: Brand panel (hidden on small screens) */}
-      <div className="hidden lg:flex flex-1 relative items-center justify-center overflow-hidden bg-[#0B1F33] rounded-r-[3rem]">
-        <img
-          src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1200&q=80"
-          alt="Modern Clinic"
-          className="absolute inset-0 w-full h-full object-cover opacity-25"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0B1F33]/95 via-[#0B1F33]/70 to-[#0B1F33]/40" />
-        <div className="relative z-10 p-16 max-w-2xl w-full">
-          <Link href="/">
-            <div className="flex items-center mb-10 cursor-pointer group w-fit">
-              <BrandLogo variant="logo" tone="dark" className="h-24 group-hover:scale-[1.03] transition-transform" />
-            </div>
-          </Link>
+    <div
+      className="relative min-h-[100dvh] overflow-hidden bg-gradient-to-br from-[#EEF5FE] via-white to-[#E8F2FE] selection:bg-primary/30"
+      dir={lang === "ar" ? "rtl" : "ltr"}
+      data-testid="login-page"
+    >
+      {/* Arcos decorativos del fondo (como en la propuesta) */}
+      <span className="pointer-events-none absolute -end-40 top-24 h-[620px] w-[620px] rounded-full border-[40px] border-white/70" aria-hidden="true" />
+      <span className="pointer-events-none absolute -start-48 bottom-[-180px] h-[520px] w-[520px] rounded-full bg-[#DCEAFD]/50" aria-hidden="true" />
 
-          <h1 className="text-4xl font-bold text-white mb-6 leading-tight tracking-tight">
-            {t.loginBrandTitle}
-          </h1>
-          <p className="text-lg text-white/65 leading-relaxed font-light max-w-lg">
-            {t.loginBrandSub}
-          </p>
+      <header className="relative mx-auto flex h-[84px] max-w-[1240px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+        <Link href="/" aria-label="Clinivista" className="rounded-lg">
+          <BrandLogo variant="logo" alt="Clinivista — Registro fotográfico clínico" className="h-10 sm:h-14" />
+        </Link>
+        <PortalLanguageSelect label={a.language} testId="login-language" />
+      </header>
 
-          {/* Feature pills */}
-          <div className="mt-10 flex flex-col gap-3">
-            {[t.step1Title, t.step2Title, t.step3Title].map((label, i) => (
-              <div key={i} className="flex items-center gap-3 bg-white/8 border border-white/12 rounded-full px-5 py-3 w-fit">
-                <div className="w-6 h-6 rounded-full bg-primary/40 flex items-center justify-center">
-                  <span className="text-white text-xs font-black">{i + 1}</span>
-                </div>
-                <span className="text-white/80 text-sm font-medium">{label}</span>
-              </div>
-            ))}
+      <main className="relative flex justify-center px-4 pb-12 pt-2 sm:pt-6">
+        <div className="w-full max-w-[460px] rounded-2xl bg-white p-6 shadow-[0_1px_2px_rgba(10,31,77,0.05),0_18px_44px_-18px_rgba(10,31,77,0.25)] sm:p-9">
+          <div className="text-center">
+            <img src={isotipo} alt="" className="mx-auto h-20 w-auto sm:h-24" />
+            <h1 className="mt-4 text-[28px] font-bold tracking-[-0.02em] text-[#0A1F4D] sm:text-[32px]">{a.loginTitle}</h1>
+            <p className="mt-1.5 text-[17px] text-[#4A5F82]">{a.loginSub}</p>
           </div>
-        </div>
-      </div>
 
-      {/* Right side: Login Form */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
-        <div className="w-full max-w-md">
-          {/* Mobile logo */}
-          <Link href="/">
-            <div className="lg:hidden flex items-center justify-center mb-10 cursor-pointer group">
-              <BrandLogo variant="logo" className="h-20 max-w-full group-hover:scale-[1.03] transition-transform" />
-            </div>
-          </Link>
-
-          {/* Card */}
-          <div className="bg-white rounded-[2.5rem] shadow-lg border border-[#E8E4DE] p-8 md:p-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <div className="flex flex-col mb-10 text-center lg:text-left">
-              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-6 mx-auto lg:mx-0">
-                <Lock className="w-6 h-6 text-primary" />
+          {forgotMode ? (
+            <form
+              className="mt-7 space-y-5"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!email.includes("@")) return;
+                forgotMutation.mutate({ data: { email, language: lang } }, { onSuccess: () => setForgotSent(true) });
+              }}
+            >
+              <div>
+                <h2 className="text-lg font-bold text-[#0A1F4D]">{reset.forgotTitle}</h2>
+                <p className="mt-1 text-sm text-[#4A5F82]">{reset.forgotSub}</p>
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">{t.loginTitle}</h2>
-              <p className="text-muted-foreground mt-3 font-medium">{t.loginSub}</p>
-            </div>
-
-            {forgotMode ? (
-              <form
-                dir={lang === "ar" ? "rtl" : "ltr"}
-                className="space-y-6"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (!email.includes("@")) return;
-                  forgotMutation.mutate({ data: { email, language: lang } }, { onSuccess: () => setForgotSent(true) });
-                }}
-              >
-                <div>
-                  <h3 className="text-xl font-bold">{reset.forgotTitle}</h3>
-                  <p className="text-muted-foreground mt-2 text-sm">{reset.forgotSub}</p>
-                </div>
+              <div className="relative">
+                <Mail className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#7B8AA3]" aria-hidden="true" />
                 <Input
                   type="email"
                   aria-label={t.loginEmailLabel}
                   placeholder={t.loginEmailPlaceholder}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-14 bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-lg px-5 rounded-2xl"
-                />
-                {forgotSent && <p role="status" className="text-sm text-emerald-700">{reset.sent}</p>}
-                <Button type="submit" className="w-full h-14 text-base font-bold rounded-full" disabled={forgotMutation.isPending || !email.includes("@")}>
-                  {forgotMutation.isPending ? reset.sending : reset.send}
-                </Button>
-                <button type="button" className="text-sm text-primary underline" onClick={() => { setForgotMode(false); setForgotSent(false); }}>
-                  {reset.back}
-                </button>
-              </form>
-            ) : (
-              <>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-3">
-                <label className="text-xs font-bold text-foreground uppercase tracking-wider ml-1">{t.loginEmailLabel}</label>
-                <Input
-                  type="email"
-                  placeholder={t.loginEmailPlaceholder}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-14 bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-lg px-5 rounded-2xl transition-all shadow-sm focus:ring-2 focus:ring-primary/20"
-                  autoFocus
+                  className={field}
                 />
               </div>
+              {forgotSent && <p role="status" className="text-sm text-emerald-700">{reset.sent}</p>}
+              <Button type="submit" className="h-12 w-full rounded-xl bg-[#0B63E5] text-base font-semibold text-white hover:bg-[#0A55C4]" disabled={forgotMutation.isPending || !email.includes("@")}>
+                {forgotMutation.isPending ? reset.sending : reset.send}
+              </Button>
+              <button type="button" className="inline-flex min-h-11 items-center text-sm font-medium text-[#0B4FC4] underline underline-offset-4" onClick={() => { setForgotMode(false); setForgotSent(false); }}>
+                {reset.back}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="mt-7 space-y-5">
+              <div className="space-y-2">
+                <label htmlFor="login-email" className="block text-sm font-semibold text-[#0A1F4D]">{t.loginEmailLabel}</label>
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#7B8AA3]" aria-hidden="true" />
+                  <Input
+                    id="login-email"
+                    type="email"
+                    autoComplete="username"
+                    placeholder={t.loginEmailPlaceholder}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={field}
+                    autoFocus
+                  />
+                </div>
+              </div>
 
-              <div className="space-y-3">
-                <label className="text-xs font-bold text-foreground uppercase tracking-wider ml-1">{t.loginLabel}</label>
-                <PasswordInput
-                  placeholder={t.loginPlaceholder}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-14 bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-lg px-5 rounded-2xl transition-all shadow-sm focus:ring-2 focus:ring-primary/20"
-                />
+              <div className="space-y-2">
+                <label htmlFor="login-password" className="block text-sm font-semibold text-[#0A1F4D]">{t.loginLabel}</label>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute start-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-[#7B8AA3]" aria-hidden="true" />
+                  <PasswordInput
+                    id="login-password"
+                    autoComplete="current-password"
+                    placeholder={t.loginPlaceholder}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={field}
+                  />
+                </div>
+                <div className="flex justify-end">
+                  {/* Recuperación real: pide el correo aquí y envía el enlace a /admin/clave?token=… */}
+                  <button type="button" className="inline-flex min-h-11 items-center text-sm font-medium text-[#0B4FC4] underline underline-offset-4" onClick={() => setForgotMode(true)} data-testid="login-forgot">
+                    {reset.forgotLink}
+                  </button>
+                </div>
               </div>
 
               <Button
                 type="submit"
-                className="w-full h-14 text-base font-bold rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 group mt-4"
+                className="group h-12 w-full rounded-xl bg-[#0B63E5] text-base font-semibold text-white shadow-lg shadow-[#0B63E5]/25 hover:bg-[#0A55C4]"
                 disabled={loginMutation.isPending || !email || !password}
               >
-                {loginMutation.isPending ? t.loginVerifying : t.loginCTA}
-                {!loginMutation.isPending && <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />}
+                {loginMutation.isPending ? t.loginVerifying : a.loginCta}
+                {!loginMutation.isPending && <ArrowRight className="ms-2 h-5 w-5 transition-transform group-hover:translate-x-1 rtl:-scale-x-100" />}
               </Button>
             </form>
-                <button type="button" className="mt-4 text-sm text-primary underline" onClick={() => setForgotMode(true)}>
-                  {reset.forgotLink}
-                </button>
-              </>
-            )}
+          )}
 
-            <div className="mt-8 text-center">
-              <Link href="/">
-                <span className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
-                  ← {t.pGoHome}
-                </span>
-              </Link>
-            </div>
+          <div className="mt-6 border-t border-slate-200 pt-4 text-center">
+            <Link href="/" className="inline-flex min-h-11 items-center gap-2 text-[15px] font-medium text-[#0B4FC4] hover:underline" data-testid="login-back">
+              <ArrowLeft className="h-4 w-4 rtl:-scale-x-100" aria-hidden="true" />{a.back}
+            </Link>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

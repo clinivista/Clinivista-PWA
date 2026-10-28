@@ -523,6 +523,10 @@ const PATIENT_TOKEN_KEY = "estecapelli.patient-token";
 function tokenStorageKey(clinicSlug?: string): string {
   return clinicSlug ? `${PATIENT_TOKEN_KEY}.${clinicSlug}` : PATIENT_TOKEN_KEY;
 }
+/** Hay una preevaluación guardada en este dispositivo para esta clínica (se retoma sin pasar por la bienvenida). */
+export function hasStoredPatientToken(clinicSlug?: string): boolean {
+  return Boolean(readStoredPatientToken(clinicSlug));
+}
 function readStoredPatientToken(clinicSlug?: string): string | null {
   try { return localStorage.getItem(tokenStorageKey(clinicSlug)); } catch { return null; }
 }
@@ -534,7 +538,13 @@ function clearStoredPatientToken(clinicSlug?: string) {
 }
 
 // ---------- Main component ----------
-export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}) {
+export default function PatientFlow({ clinicSlug, startAtData = false, onBackToWelcome }: {
+  clinicSlug?: string;
+  /** Viene de la bienvenida de la clínica (/c/<slug>): empieza directo en «Tus datos». */
+  startAtData?: boolean;
+  /** «Volver» desde «Tus datos» regresa a esa bienvenida en vez de a la introducción. */
+  onBackToWelcome?: () => void;
+} = {}) {
   const basePath = clinicSlug ? `/c/${clinicSlug}` : "/patient";
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
@@ -558,7 +568,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
   const PHOTO_REQUIREMENTS = getConfiguredPhotoProtocol(t, protocolConfig?.views, lang);
   const photoTotal = PHOTO_REQUIREMENTS.length;
 
-  const [step, setStep] = useState<"intro" | "data" | "photos" | "success">("intro");
+  const [step, setStep] = useState<"intro" | "data" | "photos" | "success">(startAtData ? "data" : "intro");
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
   const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
@@ -1297,7 +1307,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
         {step === "data" && (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
             <div className="mb-6 flex items-center gap-3">
-              <button onClick={() => setStep("intro")} className="w-10 h-10 rounded-full bg-white border border-[#E8E4DE] flex items-center justify-center hover:bg-[#F5F2EE] transition-colors text-muted-foreground hover:text-foreground shadow-sm">
+              <button onClick={() => (onBackToWelcome ? onBackToWelcome() : setStep("intro"))} className="w-10 h-10 rounded-full bg-white border border-[#E8E4DE] flex items-center justify-center hover:bg-[#F5F2EE] transition-colors text-muted-foreground hover:text-foreground shadow-sm">
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
