@@ -1,0 +1,14 @@
+{
+  "name": "@workspace/brand",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Identidad visual de Clinivista («Clinical Premium»): logos e isotipo en SVG, iconos y plugin de Vite que los publica.",
+  "exports": {
+    "./svg/*": "./svg/*",
+    "./vite-plugin": "./vite-plugin.mjs"
+  },
+  "scripts": {
+    "generate": "node scripts/generate.mjs"
+  }
+}

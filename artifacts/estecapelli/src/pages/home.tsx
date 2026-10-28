@@ -18,7 +18,9 @@ export default function Home() {
           <Link href="/">
             <div className="flex items-center cursor-pointer group">
               <BrandLogo
-                className="h-12 w-12 rounded-xl group-hover:scale-105 transition-transform"
+                variant="logo-sin-lema"
+                tone="dark"
+                className="h-10 group-hover:scale-105 transition-transform"
                 alt="Clinivista"
               />
             </div>
@@ -231,7 +233,7 @@ export default function Home() {
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
               <Link href="/">
                 <div className="flex items-center cursor-pointer group">
-                  <BrandLogo className="h-24 w-24 rounded-2xl group-hover:scale-[1.03] transition-transform" />
+                  <BrandLogo variant="logo" className="h-16 me-4 group-hover:scale-[1.03] transition-transform" />
                   <div>
                     <div className="text-xs text-gray-400 font-medium">{t.footerProtocol}</div>
                   </div>

@@ -73,7 +73,7 @@ export default function Login() {
         <div className="relative z-10 p-16 max-w-2xl w-full">
           <Link href="/">
             <div className="flex items-center mb-10 cursor-pointer group w-fit">
-              <BrandLogo className="h-28 w-28 rounded-2xl group-hover:scale-[1.03] transition-transform" />
+              <BrandLogo variant="logo" tone="dark" className="h-24 group-hover:scale-[1.03] transition-transform" />
             </div>
           </Link>
 
@@ -104,7 +104,7 @@ export default function Login() {
           {/* Mobile logo */}
           <Link href="/">
             <div className="lg:hidden flex items-center justify-center mb-10 cursor-pointer group">
-              <BrandLogo className="h-24 w-24 rounded-2xl group-hover:scale-[1.03] transition-transform" />
+              <BrandLogo variant="logo" className="h-20 max-w-full group-hover:scale-[1.03] transition-transform" />
             </div>
           </Link>
 

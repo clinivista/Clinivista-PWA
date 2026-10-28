@@ -57,7 +57,7 @@ export function ClinicChooser({ clinics, onChosen, director = false }: { clinics
   return (
     <div className="min-h-[100dvh] bg-[#F5F2EE] flex items-center justify-center p-4" data-testid="clinic-chooser">
       <div className="w-full max-w-md bg-white rounded-[2rem] shadow-sm p-6 sm:p-8">
-        <BrandLogo className="h-14 w-14 rounded-xl mb-5" />
+        <BrandLogo variant="logo-sin-lema" className="h-11 mb-5" />
         <h1 className="text-xl font-extrabold text-foreground">{c.title}</h1>
         <p className="text-sm text-muted-foreground mt-1 mb-5">{director ? c.subtitleDirector : c.subtitle}</p>
         {director && (

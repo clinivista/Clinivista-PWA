@@ -1167,7 +1167,7 @@ export default function PatientFlow({ clinicSlug }: { clinicSlug?: string } = {}
         ) : (
           <Link href={clinicSlug ? basePath : "/"}>
             <div className="flex items-center cursor-pointer group">
-              <BrandLogo className="h-12 w-12 rounded-xl group-hover:scale-105 transition-transform" />
+              <BrandLogo variant="logo-sin-lema" className="h-10 group-hover:scale-105 transition-transform" />
             </div>
           </Link>
         )}

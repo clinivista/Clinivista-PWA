@@ -544,6 +544,9 @@ importers:
       '@workspace/api-client-react':
         specifier: workspace:*
         version: link:../../lib/api-client-react
+      '@workspace/brand':
+        specifier: workspace:*
+        version: link:../../lib/brand
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1
@@ -625,6 +628,9 @@ importers:
 
   artifacts/homepage:
     dependencies:
+      '@workspace/brand':
+        specifier: workspace:*
+        version: link:../../lib/brand
       lucide-react:
         specifier: 'catalog:'
         version: 0.545.0(react@19.1.0)
@@ -854,6 +860,8 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 3.25.76
+
+  lib/brand: {}
 
   lib/db:
     dependencies:

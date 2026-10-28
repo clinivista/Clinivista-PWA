@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@workspace/brand": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:",
     "lucide-react": "catalog:"

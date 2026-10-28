@@ -43,7 +43,7 @@ export default function StaffReset() {
     <div className="min-h-[100dvh] bg-[#F5F2EE] px-4 py-10 flex justify-center" dir={lang === "ar" ? "rtl" : "ltr"}>
       <div className="w-full max-w-md flex flex-col gap-5">
         <div className="flex items-center justify-between">
-          <BrandLogo className="h-16 w-16 rounded-2xl" />
+          <BrandLogo variant="logo-sin-lema" className="h-11" />
           <LanguagePicker label="Language" />
         </div>
         <h1 className="text-2xl font-bold">{text.resetTitle}</h1>
