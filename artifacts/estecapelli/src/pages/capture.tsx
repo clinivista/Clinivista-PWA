@@ -124,7 +124,7 @@ export default function Capture() {
   return shell(
     <>
       <div className="flex items-center gap-3">
-        <BrandLogo className="h-10 w-10 rounded-lg" />
+        <BrandLogo className="h-10 w-10" />
         <div className="min-w-0">
           <h1 className="text-lg font-extrabold break-words">{c.phoneTitle(phaseName(info.phase, lang))}</h1>
           <p className="text-xs text-muted-foreground break-words">{info.clinicName} · {c.progressPhone(taken, info.views.length)}</p>

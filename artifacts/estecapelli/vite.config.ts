@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
+import { brandAssets } from '../../lib/brand/vite-plugin.mjs';
 
 const rawPort = process.env.PORT;
 
@@ -35,6 +36,18 @@ export default defineConfig({
     react(),
     tailwindcss(),
     runtimeErrorOverlay(),
+    // Favicon, iconos de app/PWA, imagen para redes y manifest (lib/brand).
+    brandAssets({
+      siteUrl: 'https://app.clinivista.cl',
+      themeColor: '#0B1F33',
+      manifest: {
+        name: 'Clinivista',
+        shortName: 'Clinivista',
+        description: 'Registro fotográfico clínico',
+        backgroundColor: '#FFFFFF',
+        themeColor: '#0B1F33',
+      },
+    }),
     ...(process.env.NODE_ENV !== 'production' &&
     process.env.REPL_ID !== undefined
       ? [

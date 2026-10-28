@@ -24,12 +24,9 @@ export function SidebarOverlay({ open, onClose }: { open: boolean; onClose: () =
 export function SidebarBrand({ tagline, closeLabel, onClose }: { tagline: string; closeLabel: string; onClose: () => void }) {
   return (
     <div className="px-5 pt-6 pb-5 flex items-center justify-between gap-3">
-      <Link href="/" className="flex items-center gap-3 min-w-0 rounded-xl group">
-        <BrandLogo alt="" className="h-11 w-11 group-hover:scale-105 transition-transform" />
-        <span className="min-w-0">
-          <span className="block text-[22px] leading-none font-bold tracking-tight">Clinivista</span>
-          <span className="block text-[11px] text-white/70 mt-1 truncate">{tagline}</span>
-        </span>
+      <Link href="/" className="flex flex-col items-start gap-1.5 min-w-0 rounded-xl group">
+        <BrandLogo variant="logo-sin-lema" tone="dark" className="h-10 group-hover:scale-[1.02] transition-transform origin-left" />
+        <span className="block max-w-full text-[11px] text-white/70 truncate">{tagline}</span>
       </Link>
       <button
         type="button"
