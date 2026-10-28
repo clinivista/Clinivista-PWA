@@ -677,7 +677,7 @@ export default function Admin() {
                     {/* Status & Actions */}
                     <div className={`${cardClass} p-5 md:p-6 space-y-5`}>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
+                        <div className="min-w-0">
                           <label className={`${fieldLabelClass} mb-2`}>{t.adminStatusPatient}</label>
                           <Select value={fullLead.status} onValueChange={v => handlePatch(fullLead.id, { status: v })}>
                             <SelectTrigger className="h-11 rounded-xl text-base font-semibold border-input bg-card">
@@ -690,7 +690,7 @@ export default function Admin() {
                             </SelectContent>
                           </Select>
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <label className={`${fieldLabelClass} mb-2`}>{t.adminAppDate}</label>
                           <Input
                             type="datetime-local"
@@ -701,7 +701,7 @@ export default function Admin() {
                                 handlePatch(fullLead.id, { appointmentAt: new Date(val).toISOString() });
                               }
                             }}
-                            className="h-11 rounded-xl font-medium border-input text-base bg-card"
+                            className="h-11 w-full min-w-0 max-w-full rounded-xl font-medium border-input text-base bg-card"
                           />
                         </div>
                       </div>
