@@ -2082,6 +2082,46 @@ export const DiscardPatientPhotoResponse = zod.object({
 
 
 /**
+ * @summary Monthly patients and photos of the signed-in clinic (Home screen), with totals
+ */
+export const GetClinicOverviewQueryParams = zod.object({
+  "months": zod.union([zod.literal(3),zod.literal(6),zod.literal(12)]).optional().describe('How many calendar months to return, the current one included (3, 6 or 12; default 6)')
+})
+
+export const GetClinicOverviewResponse = zod.object({
+  "monthly": zod.array(zod.object({
+  "month": zod.string().describe('Calendar month in the clinic\'s time zone, YYYY-MM'),
+  "patients": zod.number().describe('Patients (main records) created that month'),
+  "photos": zod.number().describe('Clinical photos (draft or confirmed) taken that month')
+})).describe('Oldest first; the last item is the current month'),
+  "totals": zod.object({
+  "patients": zod.number(),
+  "photos": zod.number(),
+  "thisMonth": zod.number().describe('Patients created in the current month'),
+  "activeProfessionals": zod.number().nullable().describe('Active clinic accounts; null when the viewer cannot manage users')
+})
+})
+
+
+/**
+ * @summary Latest events of the signed-in clinic (photos, new patients, measurements, discharges)
+ */
+export const GetClinicActivityQueryParams = zod.object({
+  "limit": zod.coerce.number().optional().describe('Maximum number of events (1 to 20; default 8)')
+})
+
+export const GetClinicActivityResponse = zod.object({
+  "events": zod.array(zod.object({
+  "type": zod.enum(['photos', 'patient', 'measured', 'discharged']),
+  "leadId": zod.string().describe('The patient\'s main record (opens their file)'),
+  "leadName": zod.string(),
+  "at": zod.coerce.date(),
+  "count": zod.number().describe('Photos taken in that burst (1 for the other events)')
+}))
+})
+
+
+/**
  * @summary Patients pending diagnosis and the clinic's periodic report settings
  */
 export const GetClinicReportResponse = zod.object({

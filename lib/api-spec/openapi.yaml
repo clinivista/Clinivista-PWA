@@ -2391,6 +2391,69 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /clinic/overview:
+    get:
+      operationId: getClinicOverview
+      tags: [leads]
+      summary: Monthly patients and photos of the signed-in clinic (Home screen), with totals
+      parameters:
+        - name: months
+          in: query
+          description: How many calendar months to return, the current one included (3, 6 or 12; default 6)
+          schema:
+            type: number
+            enum: [3, 6, 12]
+      responses:
+        "200":
+          description: Real aggregates of the clinic, every month present (zeros included)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicOverview"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a clinic account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /clinic/activity:
+    get:
+      operationId: getClinicActivity
+      tags: [leads]
+      summary: Latest events of the signed-in clinic (photos, new patients, measurements, discharges)
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of events (1 to 20; default 8)
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Newest first
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClinicActivity"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a clinic account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /clinic/report:
     get:
       operationId: getClinicReport
@@ -2470,6 +2533,69 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
+    ClinicOverviewMonth:
+      type: object
+      required: [month, patients, photos]
+      properties:
+        month:
+          type: string
+          description: Calendar month in the clinic's time zone, YYYY-MM
+        patients:
+          type: number
+          description: Patients (main records) created that month
+        photos:
+          type: number
+          description: Clinical photos (draft or confirmed) taken that month
+    ClinicOverview:
+      type: object
+      required: [monthly, totals]
+      properties:
+        monthly:
+          type: array
+          description: Oldest first; the last item is the current month
+          items:
+            $ref: "#/components/schemas/ClinicOverviewMonth"
+        totals:
+          type: object
+          required: [patients, photos, thisMonth, activeProfessionals]
+          properties:
+            patients:
+              type: number
+            photos:
+              type: number
+            thisMonth:
+              type: number
+              description: Patients created in the current month
+            activeProfessionals:
+              type: number
+              nullable: true
+              description: Active clinic accounts; null when the viewer cannot manage users
+    ClinicActivityEvent:
+      type: object
+      required: [type, leadId, leadName, at, count]
+      properties:
+        type:
+          type: string
+          enum: [photos, patient, measured, discharged]
+        leadId:
+          type: string
+          description: The patient's main record (opens their file)
+        leadName:
+          type: string
+        at:
+          type: string
+          format: date-time
+        count:
+          type: number
+          description: Photos taken in that burst (1 for the other events)
+    ClinicActivity:
+      type: object
+      required: [events]
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClinicActivityEvent"
     HealthStatus:
       type: object
       required: [status]

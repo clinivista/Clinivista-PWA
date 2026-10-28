@@ -388,6 +388,31 @@
   },
   {
    "id": "1.7",
+   "key": "measure",
+   "title": "Lezyonunuzu bir madeni parayla ölçmek",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Kliniğiniz isterse bazı fotoğraflarda «Lezyonumu ölç» düğmesi görünür. Boyutu bilinen bir Şili madeni parasını referans alarak lezyonun ne kadar büyük olduğunu öğrenmenizi sağlar."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Fotoğrafı çekmeden önce temiz bir parayı lezyonun hemen yanına, üzerini kapatmadan koyun. $500, $100 (yeni veya eski), $50 ve $10 paraları uygundur; $500 ve $100 en kolay görülenlerdir.",
+      "Fotoğrafı karşıdan, telefon cilde paralel ve yaklaşık 15–20 cm uzaktan, iyi ışıkta ve doğrudan flaş kullanmadan çekin. Lezyon ve para tamamen görünmelidir.",
+      "«Lezyonumu ölç» düğmesine dokunun ve kullandığınız parayı seçin. Uygulama parayı kendisi bulur ve kenarlarını işaretler; doğru olduklarını kontrol edin veya sürükleyerek ayarlayın.",
+      "Lezyonu işaretleyin: «Lezyonu otomatik işaretle» düğmesine, sonra lezyonun içinde bir noktaya dokunun; ya da en uzun olduğu yönde iki ucuna kendiniz dokunun. Noktaları sürükleyebilirsiniz.",
+      "Ölçümü hata payıyla (±) göreceksiniz ve «Ölçümü kaydet» düğmesine dokunacaksınız. İstediğiniz zaman yeniden ölçebilir veya ölçümü kaldırabilirsiniz."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Para oval görünüyorsa fotoğraf eğiktir: daha doğru ölçüm için telefonu cilde paralel tutarak yeniden çekin. Ölçüm yaklaşıktır, doktorunuzun değerlendirmesinin yerini tutmaz ve ekibiniz onu inceleyecektir."
+    }
+   ]
+  },
+  {
+   "id": "1.7",
    "title": "Hastalar için sık sorulan sorular",
    "blocks": [
     {
@@ -625,11 +650,11 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Giriş yaptığında kliniğinin genel görünümü olan «Hasta Panosu» ekranına gelirsin. Solda menü (Hastalar, Kullanıcılar, Rapor ve yasal temsilci için Aşamalar), dil seçici ve oturum kapatma bulunur."
+     "text": "Giriş yaptığınızda kliniğinizin genel görünümü olan «Hasta Paneli»ne gelirsiniz. Solda menü (Ana sayfa, Hastalar, Kullanıcılar, Rapor, yasal temsilci için Aşamalar ve Yardım), “Kliniğim” kartı (ad ve uzmanlık alanı) ile kılavuzlara ve desteğe erişim bulunur. Üstte hasta arama kutusu, destek bildirimleri zili ve adınızın bulunduğu çubuk vardır: dili değiştirmek veya çıkış yapmak için adınıza dokunun."
     },
     {
      "t": "p",
-     "text": "Bir kliniğe girdiğinizde önce «Ana sayfa» açılır: bugünün tarihiyle bir karşılama, hızlı erişimler (Yeni hasta, Hastaları gör, Rapor ve yetkinize göre Aşamalar ile Kullanıcılar), kliniğin göstergeleri (toplam hasta, kayıtlı fotoğraflar, bu ayki kayıtlar ve kullanıcıları yönetiyorsanız aktif uzmanlar) ve en son altı hasta; dosyasını açmak için birine dokunun."
+     "text": "Bir kliniğe girdiğinizde önce “Ana sayfa”ya gelirsiniz: bugünün tarihiyle bir karşılama; hızlı erişimler (Yeni hasta, Hastaları gör, Rapor ve yetkinize göre Aşamalar ve Kullanıcılar); kliniğin göstergeleri (toplam hasta, kayıtlı fotoğraflar, bu ayki kayıtlar ve kullanıcıları yönetiyorsanız aktif uzmanlar), son altı aydaki seyirleri ve hesaplanabildiğinde geçen aya göre değişimleriyle; her ayın yeni hastalarını ve fotoğraflarını gösteren “Fotoğraf etkinliği” grafiği (3, 6 veya 12 ay seçin); “Son etkinlikler” (kaydedilen fotoğraflar, yeni hastalar, ölçümler ve taburcular) ve fotoğraflarıyla en son hastalar. Her şey kliniğinizin gerçek verilerinden gelir; henüz veri yoksa sıfırlar görürsünüz. Dosyasını açmak için bir hastaya veya etkinliğe dokunun. Aramaya yazmak sizi bu filtreyle Hastalar bölümüne götürür; zil Yardım → Destek'i açar."
     },
     {
      "t": "legend",

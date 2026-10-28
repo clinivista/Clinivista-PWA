@@ -388,6 +388,31 @@
   },
   {
    "id": "1.7",
+   "key": "measure",
+   "title": "Mesurer votre lésion avec une pièce",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Si votre clinique le demande, certaines photos affichent le bouton «Mesurer ma lésion». Il permet de connaître sa taille en utilisant comme référence une pièce chilienne de taille connue."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Avant de prendre la photo, posez une pièce propre juste à côté de la lésion, sans la recouvrir. Les pièces de $500, $100 (nouvelle ou ancienne), $50 et $10 conviennent; celles de $500 et $100 sont les plus faciles à voir.",
+      "Prenez la photo de face, téléphone parallèle à la peau et à environ 15–20 cm, avec une bonne lumière et sans flash direct. La lésion et la pièce doivent être entièrement visibles.",
+      "Touchez «Mesurer ma lésion» et choisissez la pièce utilisée. L'application cherche la pièce seule et marque ses bords; vérifiez-les ou faites-les glisser pour les ajuster.",
+      "Marquez la lésion : touchez «Marquer la lésion automatiquement» puis un point à l'intérieur, ou touchez vous-même ses deux extrémités, là où elle est la plus longue. Vous pouvez aussi faire glisser les points.",
+      "Vous verrez la mesure avec sa marge d'erreur (±) et touchez «Enregistrer la mesure». Vous pouvez mesurer à nouveau ou supprimer la mesure quand vous voulez."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Si la pièce paraît ovale, la photo est inclinée : reprenez-la avec le téléphone parallèle à la peau pour une mesure plus précise. La mesure est approximative, ne remplace pas l'évaluation de votre médecin et votre équipe la vérifiera."
+    }
+   ]
+  },
+  {
+   "id": "1.7",
    "title": "Questions fréquentes des patients",
    "blocks": [
     {
@@ -625,11 +650,11 @@
    "blocks": [
     {
      "t": "p",
-     "text": "En vous connectant, vous arrivez sur le «Tableau de bord Patients», la vue d'ensemble de votre clinique. À gauche se trouvent le menu (Patients, Utilisateurs, Rapport et, pour le représentant légal, Phases), le sélecteur de langue et la déconnexion."
+     "text": "En vous connectant, vous arrivez sur le «Tableau de bord Patients», la vue générale de votre clinique. À gauche se trouve le menu (Accueil, Patients, Utilisateurs, Rapport, Phases pour le représentant légal et Aide), avec la carte « Ma clinique » (nom et spécialité) et l'accès aux manuels et au support. En haut se trouve la barre avec la recherche de patients, la cloche des avis du support et votre nom : touchez-le pour changer de langue ou vous déconnecter."
     },
     {
      "t": "p",
-     "text": "En entrant dans une clinique, vous arrivez d'abord sur « Accueil » : un message de bienvenue avec la date du jour, des accès rapides (Nouveau patient, Voir les patients, Rapport et, selon vos droits, Phases et Utilisateurs), les indicateurs de la clinique (patients au total, photos enregistrées, inscriptions du mois et, si vous gérez les utilisateurs, professionnels actifs) et les six patients les plus récents ; touchez-en un pour ouvrir son dossier."
+     "text": "En entrant dans une clinique, vous arrivez d'abord sur « Accueil » : un message de bienvenue avec la date du jour ; des accès rapides (Nouveau patient, Voir les patients, Rapport et, selon vos droits, Phases et Utilisateurs) ; les indicateurs de la clinique (patients au total, photos enregistrées, inscriptions ce mois-ci et, si vous gérez les utilisateurs, professionnels actifs) avec leur évolution sur les six derniers mois et la variation par rapport au mois précédent quand elle peut être calculée ; le graphique « Activité photo » avec les nouveaux patients et les photos de chaque mois (choisissez 3, 6 ou 12 mois) ; l'« Activité récente » (photos enregistrées, nouveaux patients, mesures et sorties) et les patients les plus récents avec leur photo. Tout provient des données réelles de votre clinique ; s'il n'y a pas encore de données, vous verrez des zéros. Touchez un patient ou un événement pour ouvrir son dossier. Saisir une recherche vous mène à Patients avec ce filtre, et la cloche ouvre Aide → Support."
     },
     {
      "t": "legend",

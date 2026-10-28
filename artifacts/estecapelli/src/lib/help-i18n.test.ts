@@ -52,6 +52,20 @@ describe("manuales por especialidad", () => {
     expect(es).toContain("ID de la atención");
   });
 
+  it("el manual del paciente explica la medición con moneda en los nueve idiomas, traducida", async () => {
+    const es = (await loadRawManual("es")).patient.find((s) => s.key === "measure")!;
+    expect(es.blocks.map((b) => b.t)).toEqual(["p", "ul", "note"]);
+    for (const code of LANGS.slice(1)) for (const sp of MANUAL_SPECIALTIES) {
+      const raw = (await loadRawManual(code)).patient.find((s) => s.key === "measure")!;
+      expect(raw, code).toBeDefined();
+      expect(JSON.stringify(raw), code).not.toBe(JSON.stringify(es));
+      expect(raw.title, code).not.toBe(es.title);
+      const section = (await loadManual(code, sp)).patient.find((x) => x.key === "measure")!;
+      const list = section.blocks.find((b) => b.t === "ul");
+      expect(list && list.t === "ul" && list.items.length, `${code}/${sp}`).toBe(5);
+    }
+  });
+
   it("solo dermatología trae los tipos de consulta y solo capilar el Norwood", async () => {
     for (const code of LANGS) {
       const raw = await loadRawManual(code);

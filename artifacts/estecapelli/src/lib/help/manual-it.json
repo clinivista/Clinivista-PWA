@@ -388,6 +388,31 @@
   },
   {
    "id": "1.7",
+   "key": "measure",
+   "title": "Misurare la tua lesione con una moneta",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Se la tua clinica lo chiede, in alcune foto compare il pulsante «Misura la mia lesione». Serve a sapere quanto è grande, usando come riferimento una moneta cilena di dimensione nota."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Prima di scattare, appoggia una moneta pulita accanto alla lesione, senza coprirla. Vanno bene le monete da $500, $100 (nuova o vecchia), $50 e $10; quelle da $500 e $100 sono le più facili da vedere.",
+      "Scatta di fronte, con il telefono parallelo alla pelle a circa 15–20 cm, con buona luce e senza flash diretto. La lesione e la moneta devono essere visibili per intero.",
+      "Tocca «Misura la mia lesione» e scegli la moneta usata. L'app cerca da sola la moneta e ne segna i bordi; controlla che siano giusti o trascinali per correggerli.",
+      "Segna la lesione: tocca «Segna la lesione automaticamente» e poi un punto al suo interno, oppure tocca tu le due estremità lungo il lato più lungo. Puoi anche trascinare i punti.",
+      "Vedrai la misura con il suo margine di errore (±) e tocchi «Salva misura». Puoi misurare di nuovo o rimuovere la misura quando vuoi."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Se la moneta appare ovale, la foto è inclinata: rifalla con il telefono parallelo alla pelle per una misura più precisa. La misura è approssimativa, non sostituisce la valutazione del tuo medico e il tuo team la controllerà."
+    }
+   ]
+  },
+  {
+   "id": "1.7",
    "title": "Domande frequenti dei pazienti",
    "blocks": [
     {
@@ -625,11 +650,11 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Quando accedi arrivi alla «Dashboard Pazienti», la vista generale della tua clinica. A sinistra c'è il menu (Pazienti, Utenti, Report e, per il rappresentante legale, Fasi), il selettore della lingua e l'uscita dall'account."
+     "text": "Quando accedi arrivi alla «Dashboard Pazienti», la panoramica della tua clinica. A sinistra c'è il menu (Home, Pazienti, Utenti, Report, Fasi per il rappresentante legale e Aiuto), con la scheda «La mia clinica» (nome e specialità) e l'accesso a manuali e supporto. In alto c'è la barra con la ricerca dei pazienti, la campanella degli avvisi del supporto e il tuo nome: toccalo per cambiare lingua o uscire."
     },
     {
      "t": "p",
-     "text": "Entrando in una clinica arrivi prima alla «Home»: un saluto con la data di oggi, accessi rapidi (Nuovo paziente, Vedi pazienti, Report e, in base ai tuoi permessi, Fasi e Utenti), gli indicatori della clinica (pazienti totali, fotografie registrate, registrazioni del mese e, se gestisci gli utenti, professionisti attivi) e i sei pazienti più recenti; toccane uno per aprire la sua scheda."
+     "text": "Quando entri in una clinica arrivi prima alla «Home»: il benvenuto con la data di oggi; gli accessi rapidi (Nuovo paziente, Vedi pazienti, Report e, secondo i tuoi permessi, Fasi e Utenti); gli indicatori della clinica (pazienti totali, fotografie registrate, registrati questo mese e, se gestisci gli utenti, professionisti attivi) con l'andamento degli ultimi sei mesi e la variazione rispetto al mese precedente quando si può calcolare; il grafico «Attività fotografica» con i nuovi pazienti e le fotografie di ogni mese (scegli 3, 6 o 12 mesi); l'«Attività recente» (foto registrate, nuovi pazienti, misurazioni e dimissioni) e i pazienti più recenti con la loro foto. Tutto proviene dai dati reali della tua clinica; se non ci sono ancora dati vedrai degli zeri. Tocca un paziente o un evento per aprirne la scheda. Scrivendo nella ricerca passi a Pazienti con quel filtro, e la campanella apre Aiuto → Supporto."
     },
     {
      "t": "legend",

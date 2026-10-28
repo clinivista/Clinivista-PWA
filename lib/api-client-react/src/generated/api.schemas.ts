@@ -5,6 +5,54 @@
  * Estecapelli API — Preevaluación capilar
  * OpenAPI spec version: 0.1.0
  */
+export interface ClinicOverviewMonth {
+  /** Calendar month in the clinic's time zone, YYYY-MM */
+  month: string;
+  /** Patients (main records) created that month */
+  patients: number;
+  /** Clinical photos (draft or confirmed) taken that month */
+  photos: number;
+}
+
+export type ClinicOverviewTotals = {
+  patients: number;
+  photos: number;
+  /** Patients created in the current month */
+  thisMonth: number;
+  /** Active clinic accounts; null when the viewer cannot manage users */
+  activeProfessionals: number | null;
+};
+
+export interface ClinicOverview {
+  /** Oldest first; the last item is the current month */
+  monthly: ClinicOverviewMonth[];
+  totals: ClinicOverviewTotals;
+}
+
+export type ClinicActivityEventType = typeof ClinicActivityEventType[keyof typeof ClinicActivityEventType];
+
+
+export const ClinicActivityEventType = {
+  photos: 'photos',
+  patient: 'patient',
+  measured: 'measured',
+  discharged: 'discharged',
+} as const;
+
+export interface ClinicActivityEvent {
+  type: ClinicActivityEventType;
+  /** The patient's main record (opens their file) */
+  leadId: string;
+  leadName: string;
+  at: string;
+  /** Photos taken in that burst (1 for the other events) */
+  count: number;
+}
+
+export interface ClinicActivity {
+  events: ClinicActivityEvent[];
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -1247,5 +1295,28 @@ export type UpdateClinicProtocolParams = {
  * A consultation type of the clinic; omitted means the clinic's base process.
  */
 typeId?: string;
+};
+
+export type GetClinicOverviewParams = {
+/**
+ * How many calendar months to return, the current one included (3, 6 or 12; default 6)
+ */
+months?: GetClinicOverviewMonths;
+};
+
+export type GetClinicOverviewMonths = typeof GetClinicOverviewMonths[keyof typeof GetClinicOverviewMonths];
+
+
+export const GetClinicOverviewMonths = {
+  NUMBER_3: 3,
+  NUMBER_6: 6,
+  NUMBER_12: 12,
+} as const;
+
+export type GetClinicActivityParams = {
+/**
+ * Maximum number of events (1 to 20; default 8)
+ */
+limit?: number;
 };
 

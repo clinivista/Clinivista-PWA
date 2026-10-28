@@ -21,6 +21,8 @@ import type {
 
 import type {
   AuthStatus,
+  ClinicActivity,
+  ClinicOverview,
   ClinicProtocol,
   ClinicProtocolUpdate,
   ClinicReport,
@@ -49,6 +51,8 @@ import type {
   Evolution,
   EvolutionSendInput,
   EvolutionSent,
+  GetClinicActivityParams,
+  GetClinicOverviewParams,
   GetClinicProtocolParams,
   GetDirectorCenterUsers200,
   GetDirectorCenters200,
@@ -5242,6 +5246,174 @@ export const useDiscardPatientPhoto = <TError = ErrorType<ErrorResponse>,
       > => {
       return useMutation(getDiscardPatientPhotoMutationOptions(options));
     }
+
+export const getGetClinicOverviewUrl = (params?: GetClinicOverviewParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/clinic/overview?${stringifiedParams}` : `/api/clinic/overview`
+}
+
+/**
+ * @summary Monthly patients and photos of the signed-in clinic (Home screen), with totals
+ */
+export const getClinicOverview = async (params?: GetClinicOverviewParams, options?: Parameters<typeof customFetch>[1]): Promise<ClinicOverview> => {
+
+  return customFetch<ClinicOverview>(getGetClinicOverviewUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetClinicOverviewQueryKey = (params?: GetClinicOverviewParams,) => {
+    return [
+    `/api/clinic/overview`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetClinicOverviewQueryOptions = <TData = Awaited<ReturnType<typeof getClinicOverview>>, TError = ErrorType<ErrorResponse>>(params?: GetClinicOverviewParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClinicOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetClinicOverviewQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getClinicOverview>>> = ({ signal }) => getClinicOverview(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getClinicOverview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetClinicOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof getClinicOverview>>>
+export type GetClinicOverviewQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Monthly patients and photos of the signed-in clinic (Home screen), with totals
+ */
+
+export function useGetClinicOverview<TData = Awaited<ReturnType<typeof getClinicOverview>>, TError = ErrorType<ErrorResponse>>(
+ params?: GetClinicOverviewParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClinicOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetClinicOverviewQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetClinicActivityUrl = (params?: GetClinicActivityParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/clinic/activity?${stringifiedParams}` : `/api/clinic/activity`
+}
+
+/**
+ * @summary Latest events of the signed-in clinic (photos, new patients, measurements, discharges)
+ */
+export const getClinicActivity = async (params?: GetClinicActivityParams, options?: Parameters<typeof customFetch>[1]): Promise<ClinicActivity> => {
+
+  return customFetch<ClinicActivity>(getGetClinicActivityUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetClinicActivityQueryKey = (params?: GetClinicActivityParams,) => {
+    return [
+    `/api/clinic/activity`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetClinicActivityQueryOptions = <TData = Awaited<ReturnType<typeof getClinicActivity>>, TError = ErrorType<ErrorResponse>>(params?: GetClinicActivityParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClinicActivity>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetClinicActivityQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getClinicActivity>>> = ({ signal }) => getClinicActivity(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getClinicActivity>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetClinicActivityQueryResult = NonNullable<Awaited<ReturnType<typeof getClinicActivity>>>
+export type GetClinicActivityQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Latest events of the signed-in clinic (photos, new patients, measurements, discharges)
+ */
+
+export function useGetClinicActivity<TData = Awaited<ReturnType<typeof getClinicActivity>>, TError = ErrorType<ErrorResponse>>(
+ params?: GetClinicActivityParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getClinicActivity>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetClinicActivityQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetClinicReportUrl = () => {
 

@@ -388,6 +388,31 @@
   },
   {
    "id": "1.7",
+   "key": "measure",
+   "title": "Ihre Läsion mit einer Münze messen",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Wenn Ihre Klinik es verlangt, zeigen manche Fotos die Schaltfläche «Meine Läsion messen». Damit erfahren Sie die Größe, mit einer chilenischen Münze bekannter Größe als Referenz."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Legen Sie vor dem Foto eine saubere Münze direkt neben die Läsion, ohne sie zu verdecken. Geeignet sind $500, $100 (neu oder alt), $50 und $10; $500 und $100 sind am besten zu erkennen.",
+      "Fotografieren Sie von vorne, das Handy parallel zur Haut und etwa 15–20 cm entfernt, bei gutem Licht und ohne direkten Blitz. Läsion und Münze müssen vollständig sichtbar sein.",
+      "Tippen Sie auf «Meine Läsion messen» und wählen Sie die verwendete Münze. Die App sucht die Münze selbst und markiert ihre Ränder; prüfen Sie sie oder ziehen Sie sie zurecht.",
+      "Markieren Sie die Läsion: Tippen Sie auf «Läsion automatisch markieren» und dann auf einen Punkt in ihr, oder tippen Sie selbst auf ihre beiden Enden entlang der längsten Seite. Die Punkte lassen sich auch verschieben.",
+      "Sie sehen die Messung mit ihrer Fehlertoleranz (±) und tippen auf «Messung speichern». Sie können jederzeit erneut messen oder die Messung entfernen."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Wirkt die Münze oval, ist das Foto geneigt: Nehmen Sie es mit dem Handy parallel zur Haut neu auf, damit die Messung genauer wird. Die Messung ist ein Näherungswert, ersetzt nicht die Untersuchung durch Ihre Ärztin oder Ihren Arzt, und Ihr Team prüft sie."
+    }
+   ]
+  },
+  {
+   "id": "1.7",
    "title": "Häufige Fragen von Patienten",
    "blocks": [
     {
@@ -625,11 +650,11 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Nach der Anmeldung gelangen Sie zum «Patienten-Dashboard», der Gesamtansicht Ihrer Klinik. Links befindet sich das Menü (Patienten, Benutzer, Bericht und, für den gesetzlichen Vertreter, Phasen), die Sprachauswahl und die Abmeldung."
+     "text": "Nach der Anmeldung gelangen Sie zum «Patienten-Dashboard», der Übersicht Ihrer Klinik. Links befindet sich das Menü (Start, Patienten, Benutzer, Bericht, Phasen für den gesetzlichen Vertreter und Hilfe) mit der Karte „Meine Klinik“ (Name und Fachrichtung) und dem Zugang zu Handbüchern und Support. Oben ist die Leiste mit der Patientensuche, der Glocke für Support-Hinweise und Ihrem Namen: Tippen Sie darauf, um die Sprache zu wechseln oder sich abzumelden."
     },
     {
      "t": "p",
-     "text": "Beim Öffnen einer Klinik landen Sie zuerst auf „Start“: eine Begrüßung mit dem heutigen Datum, Schnellzugriffe (Neuer Patient, Patienten ansehen, Bericht und je nach Berechtigung Phasen und Benutzer), die Kennzahlen der Klinik (Patienten gesamt, erfasste Fotos, Neuzugänge dieses Monats und, wenn Sie Benutzer verwalten, aktive Fachkräfte) sowie die sechs neuesten Patienten; tippen Sie einen an, um seine Akte zu öffnen."
+     "text": "Wenn Sie eine Klinik betreten, landen Sie zuerst auf „Start“: eine Begrüßung mit dem heutigen Datum; Schnellzugriffe (Neuer Patient, Patienten ansehen, Bericht und je nach Berechtigung Phasen und Benutzer); die Kennzahlen der Klinik (Patienten gesamt, erfasste Fotos, neu in diesem Monat und, wenn Sie Benutzer verwalten, aktive Fachkräfte) mit ihrem Verlauf der letzten sechs Monate und der Veränderung gegenüber dem Vormonat, wenn sie sich berechnen lässt; das Diagramm „Fotoaktivität“ mit den neuen Patienten und Fotos jedes Monats (3, 6 oder 12 Monate wählbar); die „Letzte Aktivität“ (erfasste Fotos, neue Patienten, Messungen und Entlassungen) und die neuesten Patienten mit ihrem Foto. Alles stammt aus den echten Daten Ihrer Klinik; gibt es noch keine Daten, sehen Sie Nullen. Tippen Sie auf einen Patienten oder ein Ereignis, um die Akte zu öffnen. Eine Eingabe in der Suche führt zu Patienten mit diesem Filter, und die Glocke öffnet Hilfe → Support."
     },
     {
      "t": "legend",
