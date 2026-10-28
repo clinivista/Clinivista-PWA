@@ -4,15 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage, type LangCode } from "@/lib/language";
+import { USERS_TEXT, withEmail } from "@/lib/users-i18n";
 
 export type ManagedUser = { id: string; email: string; name: string; phone?: string; role: string; active: boolean; legalRepresentative?: boolean };
-
-const ROLE_LABEL: Record<string, string> = {
-  medico: "Médico",
-  administrativo: "Administrativo",
-  director: "Director",
-  supra_admin: "Administrativo supra-control",
-};
 
 type Props = {
   user: ManagedUser;
@@ -32,6 +27,8 @@ type Props = {
   updateProfile?: (changes: { name?: string; role?: "medico" | "administrativo"; password?: string; phone?: string }) => Promise<unknown>;
   /** Permite cambiar entre Médico y Administrativo (no aplica al equipo de supra-control). */
   roleEditable?: boolean;
+  /** Fuerza el idioma (supra-control es solo en español); por defecto el de la persona. */
+  locale?: LangCode;
 };
 
 type Pending = "reset" | "block" | "delete" | "legal" | null;
@@ -44,8 +41,11 @@ const serverReason = (error: unknown): string | undefined =>
 // Una fila de usuario con sus dos acciones sensibles. Ambas piden confirmación
 // antes de ejecutarse, y la contraseña temporal vive solo en el estado de este
 // componente: el servidor no la guarda ni la repite.
-export function UserRow({ user, manageable = true, setActive, resetPassword, onDelete, setLegalRepresentative, isSelf = false, updateProfile, roleEditable = false }: Props) {
+export function UserRow({ user, manageable = true, setActive, resetPassword, onDelete, setLegalRepresentative, isSelf = false, updateProfile, roleEditable = false, locale }: Props) {
   const { toast } = useToast();
+  const { lang } = useLanguage();
+  const x = USERS_TEXT[locale ?? lang];
+  const roleLabel: Record<string, string> = { medico: x.medico, administrativo: x.administrativo, director: x.roleDirector, supra_admin: x.roleSupra };
   const [confirming, setConfirming] = useState<Pending>(null);
   const [busy, setBusy] = useState(false);
   const [password, setPassword] = useState<string | null>(null);
@@ -61,7 +61,7 @@ export function UserRow({ user, manageable = true, setActive, resetPassword, onD
     const changes: { name?: string; role?: "medico" | "administrativo"; password?: string; phone?: string } = {};
     if (draftPassword) {
       if (draftPassword.length < 8) {
-        toast({ variant: "destructive", title: "Contraseña muy corta", description: "Debe tener al menos 8 caracteres." });
+        toast({ variant: "destructive", title: x.pwShortTitle, description: x.pwShortDesc });
         return;
       }
       changes.password = draftPassword;
@@ -74,13 +74,13 @@ export function UserRow({ user, manageable = true, setActive, resetPassword, onD
     try {
       await updateProfile?.(changes);
       toast({
-        title: "Datos actualizados",
-        description: (changes.role || (changes.password && !isSelf)) ? "Se cerró la sesión abierta de esta persona." : undefined,
+        title: x.updated,
+        description: (changes.role || (changes.password && !isSelf)) ? x.sessionClosed : undefined,
       });
       setDraftPassword("");
       setEditing(false);
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: serverReason(error) ?? "No pudimos guardar los cambios." });
+      toast({ variant: "destructive", title: x.errorTitle, description: serverReason(error) ?? x.saveFail });
     } finally {
       setBusy(false);
     }
@@ -91,7 +91,7 @@ export function UserRow({ user, manageable = true, setActive, resetPassword, onD
     try {
       await action();
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: serverReason(error) ?? errorMessage });
+      toast({ variant: "destructive", title: x.errorTitle, description: serverReason(error) ?? errorMessage });
     } finally {
       setBusy(false);
       setConfirming(null);
@@ -102,35 +102,35 @@ export function UserRow({ user, manageable = true, setActive, resetPassword, onD
     run(async () => {
       setCopied(false);
       setPassword(await resetPassword());
-    }, "No pudimos restablecer la contraseña.");
+    }, x.resetFail);
 
   const confirmToggle = () =>
     run(async () => {
       await setActive(!user.active);
       toast({
-        title: user.active ? "Acceso bloqueado" : "Acceso restablecido",
+        title: user.active ? x.blockedTitle : x.unblockedTitle,
         description: user.active
-          ? "Esta persona ya no puede entrar y su sesión abierta se cerró."
-          : "Esta persona puede volver a iniciar sesión.",
+          ? x.blockedDesc
+          : x.unblockedDesc,
       });
-    }, "No pudimos cambiar el acceso de este usuario.");
+    }, x.toggleFail);
 
   const confirmDelete = () =>
     run(async () => {
       await onDelete?.();
-      toast({ title: "Usuario eliminado", description: `${user.email} ya no existe en esta clínica.` });
-    }, "No pudimos eliminar a este usuario.");
+      toast({ title: x.deletedTitle, description: withEmail(x.deletedDesc, user.email) });
+    }, x.deleteFail);
 
   const confirmLegal = () =>
     run(async () => {
       await setLegalRepresentative?.(!user.legalRepresentative);
       toast({
-        title: user.legalRepresentative ? "Ya no es representante legal" : "Representante legal asignado",
+        title: user.legalRepresentative ? x.legalOffTitle : x.legalOnTitle,
         description: user.legalRepresentative
-          ? "Conserva su cuenta; solo pierde la gestión de usuarios si no es administrativo."
-          : "Puede gestionar los usuarios de esta clínica.",
+          ? x.legalOffDesc
+          : x.legalOnDesc,
       });
-    }, "No pudimos cambiar el representante legal.");
+    }, x.legalFail);
 
   const confirmActions: Record<Exclude<Pending, null>, () => Promise<void>> = {
     reset: confirmReset,
@@ -145,7 +145,7 @@ export function UserRow({ user, manageable = true, setActive, resetPassword, onD
       await navigator.clipboard.writeText(password);
       setCopied(true);
     } catch {
-      toast({ variant: "destructive", title: "No se pudo copiar", description: "Selecciona la contraseña y cópiala a mano." });
+      toast({ variant: "destructive", title: x.copyFailTitle, description: x.copyFailDesc });
     }
   };
 
@@ -155,29 +155,29 @@ export function UserRow({ user, manageable = true, setActive, resetPassword, onD
       <div className={`flex flex-col gap-3 ${onDelete || setLegalRepresentative ? "" : "sm:flex-row sm:items-center"}`}>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-foreground truncate">{user.name || "Sin nombre"}</span>
+            <span className="font-semibold text-foreground truncate">{user.name || x.noName}</span>
             <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-white text-slate-600">
-              {ROLE_LABEL[user.role] ?? user.role}
+              {roleLabel[user.role] ?? user.role}
             </span>
             {user.legalRepresentative && (
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700">Representante legal</span>
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700">{x.legalRep}</span>
             )}
             {isSelf && (
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary">Tú</span>
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary">{x.you}</span>
             )}
             {!user.active && (
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-700">Bloqueado</span>
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-700">{x.blocked}</span>
             )}
           </div>
           <p className="text-sm text-muted-foreground break-all">{user.email}</p>
-          {user.phone && <p className="text-sm text-muted-foreground break-all" data-testid="user-phone">Tel. {user.phone}</p>}
+          {user.phone && <p className="text-sm text-muted-foreground break-all" data-testid="user-phone">{x.tel} {user.phone}</p>}
         </div>
 
         {manageable && !isSelf && confirming === null && (
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             {canEdit && !editing && (
               <Button size="sm" variant="outline" className="rounded-full font-semibold" onClick={() => { setDraftName(user.name); setDraftPhone(user.phone ?? ""); setDraftRole(user.role === "administrativo" ? "administrativo" : "medico"); setDraftPassword(""); setEditing(true); }}>
-                <Pencil className="w-4 h-4 mr-2" /> Editar datos
+                <Pencil className="w-4 h-4 me-2" /> {x.editData}
               </Button>
             )}
             <Button
@@ -189,7 +189,7 @@ export function UserRow({ user, manageable = true, setActive, resetPassword, onD
                 setConfirming("reset");
               }}
             >
-              <KeyRound className="w-4 h-4 mr-2" /> Restablecer contraseña
+              <KeyRound className="w-4 h-4 me-2" /> {x.resetPw}
             </Button>
             <Button
               size="sm"
@@ -198,12 +198,12 @@ export function UserRow({ user, manageable = true, setActive, resetPassword, onD
               onClick={() => setConfirming("block")}
             >
               {user.active ? <ShieldOff className="w-4 h-4 mr-2" /> : <ShieldCheck className="w-4 h-4 mr-2" />}
-              {user.active ? "Bloquear acceso" : "Desbloquear acceso"}
+              {user.active ? x.block : x.unblock}
             </Button>
             {setLegalRepresentative && (
               <Button size="sm" variant="outline" className="rounded-full font-semibold" onClick={() => setConfirming("legal")}>
                 <Scale className="w-4 h-4 mr-2" />
-                {user.legalRepresentative ? "Quitar representante legal" : "Hacer representante legal"}
+                {user.legalRepresentative ? x.removeLegal : x.makeLegal}
               </Button>
             )}
             {onDelete && (
@@ -213,7 +213,7 @@ export function UserRow({ user, manageable = true, setActive, resetPassword, onD
                 className="rounded-full font-semibold text-red-700 border-red-200 hover:bg-red-50 hover:text-red-700"
                 onClick={() => setConfirming("delete")}
               >
-                <Trash2 className="w-4 h-4 mr-2" /> Eliminar
+                <Trash2 className="w-4 h-4 me-2" /> {x.remove}
               </Button>
             )}
           </div>
@@ -228,13 +228,13 @@ export function UserRow({ user, manageable = true, setActive, resetPassword, onD
               onClick={confirmActions[confirming]}
             >
               {busy && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              {confirming === "reset" ? "Sí, restablecer"
-                : confirming === "delete" ? "Sí, eliminar"
-                : confirming === "legal" ? "Sí, confirmar"
-                : user.active ? "Sí, bloquear" : "Sí, desbloquear"}
+              {confirming === "reset" ? x.yesReset
+                : confirming === "delete" ? x.yesDelete
+                : confirming === "legal" ? x.yesConfirm
+                : user.active ? x.yesBlock : x.yesUnblock}
             </Button>
             <Button size="sm" variant="outline" className="rounded-full font-semibold" disabled={busy} onClick={() => setConfirming(null)}>
-              Cancelar
+              {x.cancel}
             </Button>
           </div>
         )}
@@ -242,83 +242,83 @@ export function UserRow({ user, manageable = true, setActive, resetPassword, onD
 
       {isSelf && canEdit && !editing && (
         <Button size="sm" variant="outline" className="rounded-full font-semibold self-start" onClick={() => { setDraftName(user.name); setDraftPhone(user.phone ?? ""); setDraftPassword(""); setEditing(true); }}>
-          <Pencil className="w-4 h-4 mr-2" /> Editar mis datos
+          <Pencil className="w-4 h-4 me-2" /> {x.editMine}
         </Button>
       )}
 
       {editing && (
         <div className="rounded-xl bg-white p-3 flex flex-col gap-2" data-testid="user-edit-form">
-          <label className="text-xs font-bold text-slate-600" htmlFor={`edit-name-${user.id}`}>Nombre</label>
+          <label className="text-xs font-bold text-slate-600" htmlFor={`edit-name-${user.id}`}>{x.name}</label>
           <Input id={`edit-name-${user.id}`} value={draftName} maxLength={100} className="h-10 rounded-full" onChange={(event) => setDraftName(event.target.value)} />
-          <label className="text-xs font-bold text-slate-600" htmlFor={`edit-phone-${user.id}`}>Teléfono</label>
+          <label className="text-xs font-bold text-slate-600" htmlFor={`edit-phone-${user.id}`}>{x.phoneLabel}</label>
           <Input id={`edit-phone-${user.id}`} type="tel" value={draftPhone} maxLength={30} placeholder="+56 9 1234 5678" className="h-10 rounded-full" onChange={(event) => setDraftPhone(event.target.value)} />
-          <label className="text-xs font-bold text-slate-600" htmlFor={`edit-email-${user.id}`}>Correo</label>
+          <label className="text-xs font-bold text-slate-600" htmlFor={`edit-email-${user.id}`}>{x.emailLabel}</label>
           <Input id={`edit-email-${user.id}`} value={user.email} readOnly disabled className="h-10 rounded-full" />
-          <p className="text-xs text-muted-foreground">El correo identifica la cuenta y no se puede cambiar.</p>
-          <label className="text-xs font-bold text-slate-600" htmlFor={`edit-password-${user.id}`}>Nueva contraseña (opcional)</label>
-          <PasswordInput id={`edit-password-${user.id}`} autoComplete="new-password" minLength={8} placeholder="Déjala vacía para no cambiarla"
+          <p className="text-xs text-muted-foreground">{x.emailNote}</p>
+          <label className="text-xs font-bold text-slate-600" htmlFor={`edit-password-${user.id}`}>{x.newPassword}</label>
+          <PasswordInput id={`edit-password-${user.id}`} autoComplete="new-password" minLength={8} placeholder={x.passwordPlaceholder}
             className="h-10 rounded-full" value={draftPassword} onChange={(event) => setDraftPassword(event.target.value)} />
-          <p className="text-xs text-muted-foreground">Mínimo 8 caracteres. Avisa a la persona su nueva contraseña.</p>
+          <p className="text-xs text-muted-foreground">{x.passwordNote}</p>
           {roleEditable && (
             <>
-              <label className="text-xs font-bold text-slate-600" htmlFor={`edit-role-${user.id}`}>Rol</label>
+              <label className="text-xs font-bold text-slate-600" htmlFor={`edit-role-${user.id}`}>{x.role}</label>
               <select id={`edit-role-${user.id}`} disabled={isSelf} className="h-10 rounded-full border border-input bg-white px-4 text-sm disabled:opacity-60"
                 value={draftRole} onChange={(event) => setDraftRole(event.target.value as typeof draftRole)}>
-                <option value="medico">Médico</option>
-                <option value="administrativo">Administrativo</option>
+                <option value="medico">{x.medico}</option>
+                <option value="administrativo">{x.administrativo}</option>
               </select>
-              {isSelf && <p className="text-xs text-muted-foreground">No puedes cambiar tu propio rol.</p>}
+              {isSelf && <p className="text-xs text-muted-foreground">{x.ownRoleNote}</p>}
             </>
           )}
           <div className="flex gap-2">
             <Button size="sm" className="rounded-full font-semibold" disabled={busy} onClick={saveProfile}>
-              {busy && <Loader2 className="w-4 h-4 animate-spin mr-2" />}Guardar
+              {busy && <Loader2 className="w-4 h-4 animate-spin me-2" />}{x.save}
             </Button>
-            <Button size="sm" variant="outline" className="rounded-full font-semibold" disabled={busy} onClick={() => setEditing(false)}>Cancelar</Button>
+            <Button size="sm" variant="outline" className="rounded-full font-semibold" disabled={busy} onClick={() => setEditing(false)}>{x.cancel}</Button>
           </div>
         </div>
       )}
 
       {confirming === "reset" && (
         <p className="text-xs text-muted-foreground">
-          Se creará una contraseña temporal y se cerrará la sesión abierta de este usuario.
+          {x.resetNote}
         </p>
       )}
       {confirming === "delete" && (
         <p className="text-xs font-medium text-red-700">
-          Se eliminará la cuenta de {user.email} para siempre y se cerrará su sesión. No se puede deshacer; si solo quieres quitarle el acceso, usa Bloquear.
+          {withEmail(x.deleteNote, user.email)}
         </p>
       )}
       {confirming === "legal" && (
         <p className="text-xs text-muted-foreground">
           {user.legalRepresentative
-            ? "Dejará de ser representante legal. Si es médico, perderá el acceso a la gestión de usuarios."
-            : "El representante legal puede gestionar los usuarios de esta clínica, aunque sea médico."}
+            ? x.legalOffNote
+            : x.legalOnNote}
         </p>
       )}
       {confirming === "block" && (
         <p className="text-xs text-muted-foreground">
           {user.active
-            ? "Esta persona no podrá iniciar sesión y se cerrará su sesión abierta. Las demás cuentas no se ven afectadas."
-            : "Esta persona podrá volver a iniciar sesión con su contraseña actual."}
+            ? x.blockOnNote
+            : x.blockOffNote}
         </p>
       )}
 
       {password && (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 flex flex-col gap-2" role="status">
-          <p className="text-sm font-semibold text-emerald-800 break-all">Contraseña temporal para {user.email}</p>
+          <p className="text-sm font-semibold text-emerald-800 break-all">{withEmail(x.tempPw, user.email)}</p>
           <div className="flex items-center gap-2">
             <code className="flex-1 min-w-0 break-all rounded-lg bg-white px-3 py-2 text-base font-mono tracking-wide select-all">
               {password}
             </code>
             <Button size="sm" variant="outline" className="rounded-full shrink-0" onClick={handleCopy}>
-              {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-              {copied ? "Copiada" : "Copiar"}
+              {copied ? <Check className="w-4 h-4 me-2" /> : <Copy className="w-4 h-4 me-2" />}
+              {copied ? x.copied : x.copy}
             </Button>
           </div>
-          <p className="text-xs text-emerald-800">Cópiala ahora y entrégasela a la persona: no se puede volver a ver.</p>
+          <p className="text-xs text-emerald-800">{x.tempNote}</p>
           <Button size="sm" variant="ghost" className="rounded-full self-start" onClick={() => setPassword(null)}>
-            Ocultar
+            {x.hide}
           </Button>
         </div>
       )}

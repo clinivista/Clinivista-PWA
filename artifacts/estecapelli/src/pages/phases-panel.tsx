@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ConsultTypesBar } from "./consult-types-bar";
 import { useLanguage } from "@/lib/language";
 import { VIDEO_TEXT } from "@/lib/video-i18n";
+import { PHASES_PANEL_TEXT, fillText } from "@/lib/phases-panel-i18n";
 
 const MAX_PHASES = 12;
 const MAX_VIEWS = 12;
@@ -62,6 +63,7 @@ export function PhasesPanel() {
   const save = useUpdateClinicProtocol();
   const { lang } = useLanguage();
   const v = VIDEO_TEXT[lang];
+  const x = PHASES_PANEL_TEXT[lang];
   // El servidor decide: la casilla solo refleja si el plan de la clínica incluye video.
   const videoEnabled = data?.features?.includes("video") === true;
   const [draft, setDraft] = useState<DraftPhase[] | null>(null);
@@ -89,23 +91,23 @@ export function PhasesPanel() {
         onSuccess: (saved) => {
           queryClient.setQueryData(getGetClinicProtocolQueryKey(params), saved);
           setDraft(toDraft(saved));
-          toast({ title: "Fases guardadas", description: "Los pacientes nuevos ya verán estas fotografías." });
+          toast({ title: x.savedTitle, description: x.savedDesc });
         },
         onError: (error) => {
           const detail = (error as { data?: { error?: string } | null }).data?.error;
-          toast({ variant: "destructive", title: "No pudimos guardar las fases", description: detail ?? "Inténtalo de nuevo." });
+          toast({ variant: "destructive", title: x.saveFailTitle, description: detail ?? x.tryAgain });
         },
       },
     );
   };
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto">
+    <div className="flex-1 min-h-0 overflow-y-auto" dir={lang === "ar" ? "rtl" : "ltr"}>
       <header className="bg-white border-b border-[#E8E4DE] p-4 sm:p-6 md:px-10 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">Fases</h1>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">{x.title}</h1>
           <p className="text-sm text-muted-foreground font-medium mt-1">
-            Define las fases de registro y seguimiento de tu clínica y las fotografías de cada una.
+            {x.subtitle}
           </p>
         </div>
         {canEdit && (
@@ -116,10 +118,10 @@ export function PhasesPanel() {
               disabled={!dirty || save.isPending}
               onClick={() => data && setDraft(toDraft(data))}
             >
-              Descartar cambios
+              {x.discard}
             </Button>
             <Button className="rounded-full h-12 px-6 font-bold flex-1 md:flex-none" disabled={!dirty || save.isPending} onClick={handleSave}>
-              {save.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar fases"}
+              {save.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : x.saveBtn}
             </Button>
           </div>
         )}
@@ -127,19 +129,16 @@ export function PhasesPanel() {
 
       <div className="px-4 sm:px-6 md:px-10 py-4 sm:py-6 flex flex-col gap-4 max-w-4xl">
         <ConsultTypesBar typeId={typeId} onSelect={setTypeId} />
-        {isLoading && <p className="text-sm text-muted-foreground">Cargando…</p>}
-        {isError && <p className="text-sm text-destructive">No pudimos cargar las fases.</p>}
+        {isLoading && <p className="text-sm text-muted-foreground">{x.loading}</p>}
+        {isError && <p className="text-sm text-destructive">{x.loadError}</p>}
         {data && !canEdit && (
           <p className="text-sm rounded-2xl bg-amber-50 text-amber-900 p-4">
-            Solo el representante legal de la clínica puede cambiar las fases. Aquí puedes verlas.
+            {x.readOnly}
           </p>
         )}
         {canEdit && (
           <p className="text-sm text-muted-foreground">
-            Puedes cambiar la configuración cuando quieras: las fotografías que ya existen no se borran, solo dejan de pedirse.
-            La primera fase es la pre-evaluación que el paciente toma desde el enlace de la clínica; las demás las registra el personal, en orden.
-            Marca «Documento» en las fotografías que son papeles (fichas, consentimientos): bajo ellas el personal podrá transcribir el texto.
-            Marca «Medir» en las fotografías de lesiones: el paciente recibe un instructivo para fotografiar una moneda de referencia junto a la lesión, y luego él y el personal pueden medirla sobre la foto.
+            {x.intro}
             {" "}{v.phasesHint}
           </p>
         )}
@@ -148,13 +147,13 @@ export function PhasesPanel() {
         )}
 
         {draft?.map((phase, phaseIndex) => (
-          <section key={phase.uid} className="rounded-[1.5rem] bg-white shadow-sm p-4 sm:p-5 flex flex-col gap-3" aria-label={`Fase ${phaseIndex + 1}`}>
+          <section key={phase.uid} className="rounded-[1.5rem] bg-white shadow-sm p-4 sm:p-5 flex flex-col gap-3" aria-label={fillText(x.phaseAria, { n: phaseIndex + 1 })}>
             <div className="flex items-center gap-2">
               <span className="shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-extrabold flex items-center justify-center">
                 {phaseIndex + 1}
               </span>
               <Input
-                aria-label={`Nombre de la fase ${phaseIndex + 1}`}
+                aria-label={fillText(x.phaseNameAria, { n: phaseIndex + 1 })}
                 className="h-10 rounded-full bg-[#F5F2EE] font-bold min-w-0"
                 value={phase.name}
                 maxLength={60}
@@ -163,18 +162,18 @@ export function PhasesPanel() {
               />
               {canEdit && !phase.patientCaptured && (
                 <div className="flex shrink-0">
-                  <Button variant="ghost" size="icon" aria-label="Subir fase" disabled={phaseIndex <= 1}
+                  <Button variant="ghost" size="icon" aria-label={x.moveUpPhase} disabled={phaseIndex <= 1}
                     onClick={() => setDraft((prev) => (prev ? move(prev, phaseIndex, phaseIndex - 1) : prev))}>
                     <ArrowUp className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" aria-label="Bajar fase" disabled={phaseIndex >= draft.length - 1}
+                  <Button variant="ghost" size="icon" aria-label={x.moveDownPhase} disabled={phaseIndex >= draft.length - 1}
                     onClick={() => setDraft((prev) => (prev ? move(prev, phaseIndex, phaseIndex + 1) : prev))}>
                     <ArrowDown className="w-4 h-4" />
                   </Button>
-                  {!phase.diagnosis && <Button variant="ghost" size="icon" aria-label={`Eliminar fase ${phase.name || phaseIndex + 1}`} className="text-destructive"
+                  {!phase.diagnosis && <Button variant="ghost" size="icon" aria-label={fillText(x.deletePhase, { name: phase.name || phaseIndex + 1 })} className="text-destructive"
                     onClick={() => {
                       const withPhotos = phase.views.some((view) => view.hasPhotos);
-                      if (withPhotos && !window.confirm("Esta fase tiene fotografías guardadas. Se ocultará, pero las fotografías no se borran. ¿Continuar?")) return;
+                      if (withPhotos && !window.confirm(x.confirmDeletePhase)) return;
                       setDraft((prev) => (prev ? prev.filter((_, i) => i !== phaseIndex) : prev));
                     }}>
                     <Trash2 className="w-4 h-4" />
@@ -184,10 +183,10 @@ export function PhasesPanel() {
             </div>
             <p className="text-xs text-muted-foreground -mt-1">
               {phase.diagnosis
-                ? "El médico anota las fotografías del paciente y escribe la respuesta. No tiene fotografías propias ni se puede eliminar."
+                ? x.diagnosisNote
                 : <>
-                  {phase.patientCaptured ? "La toma el paciente desde el enlace de la clínica." : "La registra el personal de la clínica."}
-                  {" "}{phase.views.length} {phase.views.length === 1 ? "fotografía" : "fotografías"}.
+                  {phase.patientCaptured ? x.patientTakes : x.staffRecords}
+                  {" "}{phase.views.length} {phase.views.length === 1 ? x.photoOne : x.photoMany}.
                 </>}
             </p>
 
@@ -196,7 +195,7 @@ export function PhasesPanel() {
                 <li key={view.uid} className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span className="shrink-0 w-6 text-xs text-muted-foreground text-end">{viewIndex + 1}</span>
                   <Input
-                    aria-label={`Fotografía ${viewIndex + 1} de ${phase.name || `fase ${phaseIndex + 1}`}`}
+                    aria-label={fillText(x.photoAria, { i: viewIndex + 1, name: phase.name || fillText(x.phaseFallback, { n: phaseIndex + 1 }) })}
                     className="h-9 rounded-full bg-[#F5F2EE] min-w-0"
                     value={view.label}
                     maxLength={60}
@@ -206,11 +205,11 @@ export function PhasesPanel() {
                       views: p.views.map((v, i) => (i === viewIndex ? { ...v, label: event.target.value } : v)),
                     }))}
                   />
-                  <label className="shrink-0 flex items-center gap-1.5 text-xs font-medium text-muted-foreground" title="Marca esta fotografía como un documento (p. ej. una ficha escrita a mano) para poder transcribirla en la ficha del paciente.">
+                  <label className="shrink-0 flex items-center gap-1.5 text-xs font-medium text-muted-foreground" title={x.docTitle}>
                     <input
                       type="checkbox"
                       className="h-4 w-4 accent-[#2A9D8F]"
-                      aria-label={`Es un documento: ${view.label || `fotografía ${viewIndex + 1}`}`}
+                      aria-label={fillText(x.docAria, { label: view.label || fillText(x.photoFallback, { i: viewIndex + 1 }) })}
                       checked={view.document}
                       disabled={!canEdit}
                       onChange={(event) => updatePhase(phaseIndex, (p) => ({
@@ -218,13 +217,13 @@ export function PhasesPanel() {
                         views: p.views.map((v, i) => (i === viewIndex ? { ...v, document: event.target.checked, video: event.target.checked ? false : v.video } : v)),
                       }))}
                     />
-                    Documento
+                    {x.docLabel}
                   </label>
-                  <label className="shrink-0 flex items-center gap-1.5 text-xs font-medium text-muted-foreground" title="Marca esta fotografía para medir la lesión con una moneda de referencia: el paciente verá un instructivo de cómo ponerla junto a la lesión.">
+                  <label className="shrink-0 flex items-center gap-1.5 text-xs font-medium text-muted-foreground" title={x.measureTitle}>
                     <input
                       type="checkbox"
                       className="h-4 w-4 accent-[#2A9D8F]"
-                      aria-label={`Medir la lesión: ${view.label || `fotografía ${viewIndex + 1}`}`}
+                      aria-label={fillText(x.measureAria, { label: view.label || fillText(x.photoFallback, { i: viewIndex + 1 }) })}
                       checked={view.measure}
                       disabled={!canEdit}
                       onChange={(event) => updatePhase(phaseIndex, (p) => ({
@@ -232,7 +231,7 @@ export function PhasesPanel() {
                         views: p.views.map((v, i) => (i === viewIndex ? { ...v, measure: event.target.checked, video: event.target.checked ? false : v.video } : v)),
                       }))}
                     />
-                    Medir
+                    {x.measureLabel}
                   </label>
                   {(() => {
                     // Sin el plan solo se puede desmarcar una vista que ya era video, nunca marcar una nueva.
@@ -261,18 +260,18 @@ export function PhasesPanel() {
                   })()}
                   {canEdit && (
                     <div className="flex shrink-0">
-                      <Button variant="ghost" size="icon" aria-label="Subir fotografía" disabled={viewIndex === 0}
+                      <Button variant="ghost" size="icon" aria-label={x.moveUpPhoto} disabled={viewIndex === 0}
                         onClick={() => updatePhase(phaseIndex, (p) => ({ ...p, views: move(p.views, viewIndex, viewIndex - 1) }))}>
                         <ArrowUp className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" aria-label="Bajar fotografía" disabled={viewIndex === phase.views.length - 1}
+                      <Button variant="ghost" size="icon" aria-label={x.moveDownPhoto} disabled={viewIndex === phase.views.length - 1}
                         onClick={() => updatePhase(phaseIndex, (p) => ({ ...p, views: move(p.views, viewIndex, viewIndex + 1) }))}>
                         <ArrowDown className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" aria-label={`Quitar fotografía ${view.label || viewIndex + 1}`} className="text-destructive"
+                      <Button variant="ghost" size="icon" aria-label={fillText(x.removePhoto, { label: view.label || viewIndex + 1 })} className="text-destructive"
                         disabled={phase.views.length <= 1}
                         onClick={() => {
-                          if (view.hasPhotos && !window.confirm("Esta fotografía ya tiene imágenes guardadas. Dejará de pedirse, pero las imágenes no se borran. ¿Continuar?")) return;
+                          if (view.hasPhotos && !window.confirm(x.confirmRemovePhoto)) return;
                           updatePhase(phaseIndex, (p) => ({ ...p, views: p.views.filter((_, i) => i !== viewIndex) }));
                         }}>
                         <Trash2 className="w-4 h-4" />
@@ -285,7 +284,7 @@ export function PhasesPanel() {
             {canEdit && !phase.diagnosis && phase.views.length < MAX_VIEWS && (
               <Button variant="outline" size="sm" className="self-start rounded-full"
                 onClick={() => updatePhase(phaseIndex, (p) => ({ ...p, views: [...p.views, { uid: nextUid(), label: "", hasPhotos: false, document: false, measure: false, video: false }] }))}>
-                <Plus className="w-4 h-4 me-1.5" /> Agregar fotografía
+                <Plus className="w-4 h-4 me-1.5" /> {x.addPhoto}
               </Button>
             )}
           </section>
@@ -294,7 +293,7 @@ export function PhasesPanel() {
         {canEdit && draft && draft.length < MAX_PHASES && (
           <Button variant="outline" className="rounded-full h-12 font-bold self-start"
             onClick={() => setDraft((prev) => (prev ? [...prev, { uid: nextUid(), name: "", patientCaptured: false, views: [{ uid: nextUid(), label: "", hasPhotos: false, document: false, measure: false, video: false }] }] : prev))}>
-            <Plus className="w-4 h-4 me-2" /> Agregar fase
+            <Plus className="w-4 h-4 me-2" /> {x.addPhase}
           </Button>
         )}
       </div>
