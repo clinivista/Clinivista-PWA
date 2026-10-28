@@ -1,259 +1,190 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { Link } from "wouter";
-import { ChevronDown, ArrowRight, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowRight, Building2, ChevronDown, ChevronRight, Camera, FileSearch, FileText, Globe, Hospital, Info, UserRound } from "lucide-react";
+import isotipo from "@workspace/brand/svg/clinivista-isotipo.svg";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
 import { BrandLogo } from "@/components/brand-logo";
+import { PORTAL_HOME_TEXT } from "@/lib/portal-home-i18n";
+
+// Portada de app.clinivista.cl: portal compartido de pacientes y equipos de cada clínica.
+// Rutas (las mismas de antes): paciente → /patient, equipo → /admin/login, cuenta del paciente → /paciente.
+// Desde la raíz no hay contexto de clínica: /patient crea la preevaluación en la clínica principal
+// (DEFAULT_CENTER_ID en el servidor); por eso se pide usar el enlace que envía cada clínica.
+
+const OUTFIT_HREF = "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap";
+const INK = "#0A1F4D";
+const card = "rounded-2xl bg-white shadow-[0_1px_2px_rgba(10,31,77,0.04),0_10px_30px_-14px_rgba(10,31,77,0.18)]";
+
+/** Selector de idioma compacto (globo + código) con un <select> nativo encima: accesible y sin librerías. */
+function LanguageSelect({ label }: { label: string }) {
+  const { lang, setLang } = useLanguage();
+  return (
+    <label className="relative inline-flex h-11 items-center gap-1.5 rounded-xl px-2.5 text-sm font-semibold hover:bg-[#EAF2FC] focus-within:ring-2 focus-within:ring-[#1D5FD8]" style={{ color: INK }}>
+      <Globe className="h-5 w-5" aria-hidden="true" />
+      <span aria-hidden="true">{lang.toUpperCase()}</span>
+      <ChevronDown className="h-4 w-4" aria-hidden="true" />
+      <select
+        value={lang}
+        onChange={(event) => setLang(event.target.value as LangCode)}
+        aria-label={label}
+        className="absolute inset-0 cursor-pointer opacity-0"
+        data-testid="home-language"
+      >
+        {LANGS.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
+      </select>
+    </label>
+  );
+}
+
+/** Isotipo grande con el «campo visual» de la cámara (decorativo; el logo no cambia). */
+function HeroMark() {
+  return (
+    <div className="pointer-events-none relative mx-auto aspect-[4/3] w-full max-w-[460px]" aria-hidden="true" dir="ltr">
+      {/* Halo azul claro para que el haz blanco se distinga */}
+      <span className="absolute left-[8%] top-0 aspect-square h-full rounded-full bg-[radial-gradient(circle,#C9DFFB_0%,#DCEAFD_45%,transparent_71%)]" />
+      <span className="absolute left-[2%] top-[-6%] aspect-square h-[112%] rounded-full border border-white" />
+      {/* Haz de luz desde la lente hacia la derecha */}
+      <span
+        className="absolute left-[44%] top-[24%] h-[52%] w-[58%] bg-gradient-to-r from-white via-white/90 to-white/0"
+        style={{ clipPath: "polygon(0 42%, 100% 0, 100% 100%, 0 58%)" }}
+      />
+      <img src={isotipo} alt="" className="absolute left-[14%] top-[4%] h-[92%] w-auto drop-shadow-[0_24px_40px_rgba(10,109,254,0.25)]" />
+    </div>
+  );
+}
 
 export default function Home() {
-  const { lang, setLang, t } = useLanguage();
-  const [langOpen, setLangOpen] = useState(false);
-  const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
+  const { lang } = useLanguage();
+  const h = PORTAL_HOME_TEXT[lang];
+  const stepIcons = [FileText, Camera, FileSearch];
+
+  // Tipografía de la marca (Outfit) solo en esta pantalla.
+  useEffect(() => {
+    if (document.querySelector(`link[href="${OUTFIT_HREF}"]`)) return;
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = OUTFIT_HREF;
+    document.head.appendChild(link);
+  }, []);
 
   return (
-    <div className="min-h-screen font-sans bg-[#F5F2EE]" dir={lang === "ar" ? "rtl" : "ltr"}>
-      {/* ── Sticky Nav ─────────────────────────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0B1F33]/90 backdrop-blur-md border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-          <Link href="/">
-            <div className="flex items-center cursor-pointer group">
-              <BrandLogo
-                variant="logo-sin-lema"
-                tone="dark"
-                className="h-10 group-hover:scale-105 transition-transform"
-                alt="Clinivista"
-              />
-            </div>
+    <div
+      className="min-h-[100dvh] bg-gradient-to-b from-[#EAF3FE] via-[#F4F9FF] to-[#F7FAFE] motion-safe:scroll-smooth"
+      style={{ fontFamily: '"Outfit", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif', color: INK }}
+      dir={lang === "ar" ? "rtl" : "ltr"}
+      data-testid="portal-home"
+    >
+      <header className="border-b border-slate-200/70 bg-white">
+        <div className="mx-auto flex h-[76px] sm:h-[92px] max-w-[1360px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+          <Link href="/" aria-label="Clinivista" className="shrink-0 rounded-lg">
+            <BrandLogo variant="logo" alt="Clinivista — Registro fotográfico clínico" className="h-9 min-[400px]:h-11 sm:h-16" />
           </Link>
-
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <button
-                onClick={() => setLangOpen(v => !v)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-sm font-medium transition-colors"
-              >
-                <span>{currentLang.flag}</span>
-                <span className="hidden sm:inline">{currentLang.name}</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${langOpen ? "rotate-180" : ""}`} />
-              </button>
-              {langOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                  {LANGS.map(l => (
-                    <button
-                      key={l.code}
-                      onClick={() => { setLang(l.code as LangCode); setLangOpen(false); }}
-                      className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-gray-50 text-left transition-colors ${lang === l.code ? "text-primary font-semibold bg-primary/5" : "text-gray-700"}`}
-                    >
-                      <span className="text-base">{l.flag}</span>
-                      <span>{l.name}</span>
-                      {lang === l.code && <Check className="w-3.5 h-3.5 ml-auto text-primary" />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <Link href="/admin/login">
-              <Button size="sm" variant="outline" className="border-white/30 text-white hover:bg-white/10 hover:text-white bg-transparent text-xs px-4 h-8 rounded-full">
-                {t.teamAccess}
-              </Button>
+          <div className="flex items-center gap-1 sm:gap-3">
+            <LanguageSelect label={h.language} />
+            <span className="hidden h-8 w-px bg-slate-200 sm:block" aria-hidden="true" />
+            <Link
+              href="/admin/login"
+              className="inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-xl border border-[#1D5FD8] px-2.5 text-sm font-semibold text-[#0B4FC4] transition-colors hover:bg-[#EAF2FC] sm:px-5 sm:text-[15px]"
+              data-testid="home-team-access"
+            >
+              <Building2 className="h-5 w-5" aria-hidden="true" />{h.teamAccess}
             </Link>
           </div>
         </div>
       </header>
 
-      {/* ── Hero ───────────────────────────────────────────────────────── */}
-      <section className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden bg-[#0B1F33]">
-        <img
-          src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1600&q=80"
-          alt="Modern clinical setting"
-          className="absolute inset-0 w-full h-full object-cover opacity-20 select-none"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0B1F33]/60 via-[#0B1F33]/40 to-[#0B1F33]/80" />
-
-        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center pt-24 pb-16">
-          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 border border-white/20 text-white/80 text-xs font-semibold uppercase tracking-widest mb-8">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#00A9A5] animate-pulse" />
-            {t.tagline}
+      <main className="mx-auto max-w-[1360px] px-4 pb-10 sm:px-6 lg:px-8">
+        {/* Título */}
+        <section className="grid items-center gap-6 pt-8 md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] md:pt-8">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.32em] text-[#4A5F82] sm:text-[13px]">{h.eyebrow}</p>
+            <h1 className="mt-4 text-[40px] font-bold leading-[1.02] tracking-[-0.035em] sm:text-[56px] lg:text-[72px]">
+              <span className="block">{h.titleLead}</span>
+              <span className="block text-[#0B63E5]">{h.titleAccent}</span>
+            </h1>
+            <p className="mt-4 max-w-[680px] text-lg leading-snug text-[#4A5F82] sm:text-[22px] lg:text-[26px]">{h.subtitle}</p>
           </div>
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white tracking-tight leading-[1.05] mb-6">
-            {t.heroTitle}{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00A9A5] via-[#4F9CF9] to-[#A78BFA]">
-              {t.heroAccent}
+          <div className="hidden md:block"><HeroMark /></div>
+        </section>
+
+        {/* Accesos: paciente primero (también en el orden del DOM), equipo después */}
+        <section className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]" aria-label={`${h.patientTitle} · ${h.teamTitle}`}>
+          <article className={`${card} flex flex-col gap-5 border-2 border-[#BFD7F7] !bg-[#F6FAFF] p-6 sm:flex-row sm:items-start sm:p-8`} data-testid="home-patient-card">
+            <span className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-[#E6F1FD] text-[#0B4FC4] sm:h-32 sm:w-32" aria-hidden="true">
+              <UserRound className="h-12 w-12 sm:h-16 sm:w-16" strokeWidth={1.6} />
             </span>
-          </h1>
-          <p className="text-lg md:text-xl text-white/65 max-w-2xl mx-auto leading-relaxed font-light mb-10">
-            {t.heroSub}
-          </p>
-          <Link href="/patient">
-            <Button className="h-14 px-10 text-base font-bold bg-primary hover:bg-primary/90 text-white rounded-full shadow-xl shadow-primary/30 group">
-              {t.startCTA}
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </Link>
-        </div>
-
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce text-white/30">
-          <ChevronDown className="w-6 h-6" />
-        </div>
-      </section>
-
-      {/* ── How it works ──────────────────────────────────────────────── */}
-      <section className="bg-[#F5F2EE] py-24">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <span className="inline-block px-5 py-2 mb-5 rounded-full bg-[#00A9A5]/15 text-[#00A9A5] text-xs font-bold uppercase tracking-widest">
-              {t.processLabel}
-            </span>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-[#0B1F33] mb-4 tracking-tight">
-              {t.howTitle}
-            </h2>
-            <p className="text-gray-500 max-w-xl mx-auto leading-relaxed">{t.howSub}</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Step 1 */}
-            <div className="bg-white rounded-[2rem] shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group">
-              <div className="h-1.5 bg-gradient-to-r from-[#00A9A5] to-[#00A9A5]/30" />
-              <div className="p-8">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="w-12 h-12 rounded-full bg-[#00A9A5]/10 flex items-center justify-center group-hover:bg-[#00A9A5]/20 transition-colors">
-                    <span className="text-[#00A9A5] font-black text-lg">01</span>
-                  </div>
-                  <div className="w-9 h-9 rounded-full bg-[#F5F2EE] flex items-center justify-center">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-[#0B1F33] mb-3">{t.step1Title}</h3>
-                <p className="text-gray-500 leading-relaxed text-sm">{t.step1Desc}</p>
-              </div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="bg-white rounded-[2rem] shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group md:-translate-y-3">
-              <div className="h-1.5 bg-gradient-to-r from-[#4F9CF9] to-[#4F9CF9]/30" />
-              <div className="p-8">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="w-12 h-12 rounded-full bg-[#4F9CF9]/10 flex items-center justify-center group-hover:bg-[#4F9CF9]/20 transition-colors">
-                    <span className="text-[#4F9CF9] font-black text-lg">02</span>
-                  </div>
-                  <div className="w-9 h-9 rounded-full bg-[#F5F2EE] flex items-center justify-center">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-[#0B1F33] mb-3">{t.step2Title}</h3>
-                <p className="text-gray-500 leading-relaxed text-sm mb-4">{t.step2Desc}</p>
-                <div className="flex flex-wrap gap-2">
-                  {t.step2Tags.map(tag => (
-                    <span key={tag} className="text-xs px-3 py-1 rounded-full bg-[#4F9CF9]/10 text-[#4F9CF9] font-semibold">{tag}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="bg-white rounded-[2rem] shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group">
-              <div className="h-1.5 bg-gradient-to-r from-[#A78BFA] to-[#A78BFA]/30" />
-              <div className="p-8">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="w-12 h-12 rounded-full bg-[#A78BFA]/10 flex items-center justify-center group-hover:bg-[#A78BFA]/20 transition-colors">
-                    <span className="text-[#A78BFA] font-black text-lg">03</span>
-                  </div>
-                  <div className="w-9 h-9 rounded-full bg-[#F5F2EE] flex items-center justify-center">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-[#0B1F33] mb-3">{t.step3Title}</h3>
-                <p className="text-gray-500 leading-relaxed text-sm">{t.step3Desc}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Why standardize ───────────────────────────────────────────── */}
-      <section className="bg-[#F5F2EE] py-16 pb-24">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-[#0B1F33] mb-4 tracking-tight">{t.whyTitle}</h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-5 mb-10">
-            {[t.why1, t.why2, t.why3].map((text, i) => (
-              <div key={i} className="bg-white rounded-[1.75rem] p-7 shadow-sm hover:shadow-md transition-shadow flex items-start gap-4">
-                <div className="w-9 h-9 rounded-full bg-[#00A9A5]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Check className="w-4 h-4 text-[#00A9A5]" />
-                </div>
-                <p className="text-[#0B1F33] font-medium leading-relaxed">{text}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { value: "5", label: t.statPositions, color: "text-[#00A9A5]", ring: "ring-[#00A9A5]/20", bg: "bg-[#00A9A5]/8" },
-              { value: "4–6", label: t.statMinutes, color: "text-[#4F9CF9]", ring: "ring-[#4F9CF9]/20", bg: "bg-[#4F9CF9]/8" },
-              { value: "100%", label: t.statEncrypted, color: "text-[#A78BFA]", ring: "ring-[#A78BFA]/20", bg: "bg-[#A78BFA]/8" },
-              { value: "24h", label: t.statResponse, color: "text-[#F59E0B]", ring: "ring-[#F59E0B]/20", bg: "bg-[#F59E0B]/8" },
-            ].map(s => (
-              <div key={s.label} className={`bg-white rounded-[1.75rem] p-6 text-center shadow-sm ring-1 ${s.ring} hover:-translate-y-1 transition-transform`}>
-                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${s.bg} mb-3`}>
-                  <span className={`text-2xl font-black ${s.color}`}>{s.value}</span>
-                </div>
-                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA strip ─────────────────────────────────────────────────── */}
-      <section className="bg-[#0B1F33] py-20">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 border border-white/15 text-white/70 text-xs font-semibold uppercase tracking-widest mb-6">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#00A9A5] animate-pulse" />
-            {t.tagline}
-          </div>
-          <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-4">{t.howTitle}</h2>
-          <p className="text-white/60 mb-10 leading-relaxed">{t.howSub}</p>
-          <Link href="/patient">
-            <Button className="h-13 px-10 text-base font-bold bg-primary hover:bg-primary/90 text-white rounded-full shadow-lg shadow-primary/30 group">
-              {t.startCTA}
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-      {/* ── Footer ────────────────────────────────────────────────────── */}
-      <footer className="bg-[#F5F2EE] border-t border-[#E8E4DE] py-12">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="bg-white rounded-[2rem] p-8 shadow-sm mb-6">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
-              <Link href="/">
-                <div className="flex items-center cursor-pointer group">
-                  <BrandLogo variant="logo" className="h-16 me-4 group-hover:scale-[1.03] transition-transform" />
-                  <div>
-                    <div className="text-xs text-gray-400 font-medium">{t.footerProtocol}</div>
-                  </div>
-                </div>
+            <div className="min-w-0">
+              <h2 className="text-2xl font-bold tracking-[-0.02em] sm:text-[30px]">{h.patientTitle}</h2>
+              <p className="mt-1.5 text-[17px] leading-snug text-[#4A5F82]">{h.patientDesc}</p>
+              <Link
+                href="/patient"
+                className="mt-5 inline-flex min-h-[52px] items-center gap-2 rounded-xl bg-[#0B63E5] px-7 text-[17px] font-semibold text-white shadow-lg shadow-[#0B63E5]/25 transition-colors hover:bg-[#0A55C4]"
+                data-testid="home-start"
+              >
+                {h.patientCta}<ArrowRight className="h-5 w-5 rtl:-scale-x-100" aria-hidden="true" />
               </Link>
-
-              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-400 font-medium">
-                <span className="hover:text-gray-600 cursor-pointer transition-colors">{t.footerPrivacy}</span>
-                <span className="hover:text-gray-600 cursor-pointer transition-colors">{t.footerTerms}</span>
-                <Link href="/admin/login">
-                  <span className="hover:text-gray-600 cursor-pointer transition-colors">{t.teamAccess}</span>
-                </Link>
-              </div>
+              <p className="mt-3 flex items-start gap-2 text-sm text-[#4A5F82]"><Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{h.patientHint}</p>
+              <p className="mt-2 text-sm text-[#4A5F82]">
+                {h.resultsPrompt}{" "}
+                <Link href="/paciente" className="inline-flex min-h-11 items-center font-semibold text-[#0B4FC4] underline-offset-4 hover:underline" data-testid="home-results">{h.resultsLink}</Link>
+              </p>
             </div>
+          </article>
 
-            <div className="border-t border-[#F5F2EE] pt-6">
-              <p className="text-xs text-gray-400 leading-relaxed max-w-2xl mb-3">{t.footerLegal}</p>
-              <p className="text-xs text-gray-400">© {new Date().getFullYear()} Clinivista. {t.footerRights}</p>
+          <article className={`${card} flex flex-col gap-5 border border-slate-200/80 p-6 sm:flex-row sm:items-start sm:p-8`} data-testid="home-team-card">
+            <span className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-[#E6F1FD] text-[#0B4FC4] sm:h-32 sm:w-32" aria-hidden="true">
+              <Hospital className="h-12 w-12 sm:h-16 sm:w-16" strokeWidth={1.6} />
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-2xl font-bold tracking-[-0.02em] sm:text-[30px]">{h.teamTitle}</h2>
+              <p className="mt-1.5 text-[17px] leading-snug text-[#4A5F82]">{h.teamDesc}</p>
+              <Link
+                href="/admin/login"
+                className="mt-5 inline-flex min-h-[52px] items-center gap-2 rounded-xl border-2 border-[#0B63E5] bg-white px-7 text-[17px] font-semibold text-[#0B4FC4] transition-colors hover:bg-[#F2F8FF]"
+                data-testid="home-team-start"
+              >
+                {h.teamCta}<ArrowRight className="h-5 w-5 rtl:-scale-x-100" aria-hidden="true" />
+              </Link>
             </div>
-          </div>
+          </article>
+        </section>
+
+        {/* Así funciona */}
+        <section className="mt-10" aria-labelledby="home-how">
+          <h2 id="home-how" className="text-[28px] font-bold tracking-[-0.025em] sm:text-[34px]">{h.howTitle}</h2>
+          <ol className="mt-5 grid gap-4 lg:grid-cols-[1fr_auto_1fr_auto_1fr] lg:items-center">
+            {h.steps.map(([title, desc], i) => {
+              const Icon = stepIcons[i]!;
+              return [
+                <li key={title} className={`${card} flex items-start gap-4 p-5`}>
+                  <span className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#EAF3FE] text-[#0B4FC4]" aria-hidden="true">
+                    <Icon className="h-7 w-7" />
+                    <span className="absolute -end-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#1D7BF2] text-sm font-bold text-white ring-2 ring-white">{i + 1}</span>
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-bold leading-snug">{title}</h3>
+                    <p className="mt-1 text-[15px] leading-snug text-[#4A5F82]">{desc}</p>
+                  </div>
+                </li>,
+                i < 2 ? <li key={`${title}-sep`} className="hidden lg:block" aria-hidden="true"><ChevronRight className="h-6 w-6 text-slate-400 rtl:-scale-x-100" /></li> : null,
+              ];
+            })}
+          </ol>
+          <p className="mt-5 flex items-start justify-center gap-2 rounded-xl bg-[#EEF3FA] px-4 py-3 text-center text-sm text-[#2D4373]" data-testid="home-disclaimer">
+            <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{h.disclaimer}
+          </p>
+        </section>
+      </main>
+
+      <footer className="border-t border-slate-200/70 bg-white">
+        <div className="mx-auto flex max-w-[1360px] flex-col items-center justify-between gap-4 px-4 py-6 sm:flex-row sm:px-6 lg:px-8">
+          <BrandLogo variant="logo" alt="Clinivista — Registro fotográfico clínico" className="h-10" />
+          <nav className="flex items-center gap-1 text-[15px]" aria-label={`${h.privacy} · ${h.terms}`}>
+            <Link href="/privacidad" className="inline-flex min-h-11 items-center rounded-lg px-3 text-[#2D4373] hover:underline">{h.privacy}</Link>
+            <span className="h-5 w-px bg-slate-300" aria-hidden="true" />
+            <Link href="/terminos" className="inline-flex min-h-11 items-center rounded-lg px-3 text-[#2D4373] hover:underline">{h.terms}</Link>
+          </nav>
+          <p className="text-xs text-[#4A5F82]">© {new Date().getFullYear()} Clinivista. {h.rights}</p>
         </div>
       </footer>
     </div>
