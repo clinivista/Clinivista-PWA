@@ -5,10 +5,20 @@
     <!-- Favicon, apple-touch-icon, theme-color y og/twitter image: los agrega lib/brand/vite-plugin.mjs -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" />
+    <!-- Foto del hero: se pide de inmediato (es la imagen principal); el resto se carga diferido. -->
+    <link rel="preload" as="image" type="image/avif" fetchpriority="high"
+      imagesrcset="/images/hero-profesional-800.avif 800w, /images/hero-profesional-1200.avif 1200w, /images/hero-profesional-1774.avif 1774w"
+      imagesizes="(min-width: 1024px) 62vw, 100vw" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Clinivista — Registro fotográfico clínico para cada especialidad" />
+    <meta property="og:description" content="Plataforma web de registro fotográfico clínico para centros médicos: enlace único por clínica, consentimiento explícito, fotos guiadas y seguimiento de cada paciente." />
     <title>Clinivista — Registro fotográfico clínico para cada especialidad</title>
     <meta
       name="description"
-      content="Clinivista digitaliza la preevaluación fotográfica de pacientes para clínicas de múltiples especialidades: enlace seguro, consentimiento, fotos guiadas y revisión médica antes de agendar."
+      content="Clinivista es la plataforma web de registro fotográfico clínico para centros médicos: enlace único por clínica, consentimiento explícito, fotos guiadas, comparativas y seguimiento de cada paciente."
     />
   </head>
   <body>
