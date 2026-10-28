@@ -144,6 +144,7 @@ export function CenterUsers({ centerId }: { centerId: string }) {
       {users.map((user) => (
         <div key={user.id} className="flex flex-col gap-2">
         <UserRow
+          locale="es"
           user={user}
           setActive={async (active) => {
             await patchUser.mutateAsync({ id: centerId, userId: user.id, data: { active } });

@@ -156,6 +156,7 @@ function SupraTeamBody() {
 
       {users.map((member) => (
         <UserRow
+          locale="es"
           key={member.id}
           user={member}
           manageable={member.role === "supra_admin"}

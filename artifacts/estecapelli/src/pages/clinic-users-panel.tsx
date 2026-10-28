@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
 import { useToast } from "@/hooks/use-toast";
 import { UserRow } from "./user-row";
+import { useLanguage } from "@/lib/language";
+import { USERS_TEXT, withEmail } from "@/lib/users-i18n";
 
 import { loadErrorDetail } from "@/lib/load-error";
 
@@ -32,6 +34,8 @@ const EMPTY_DRAFT = {
 // esta misma clínica; el servidor lo vuelve a comprobar.
 export function ClinicUsersPanel() {
   const { toast } = useToast();
+  const { lang } = useLanguage();
+  const x = USERS_TEXT[lang];
   const queryClient = useQueryClient();
   const { data, isLoading, isError, error } = useGetClinicUsers();
   const createUser = useCreateClinicUser();
@@ -62,28 +66,28 @@ export function ClinicUsersPanel() {
           await refresh();
           setDraft(EMPTY_DRAFT);
           setAdding(false);
-          toast({ title: "Usuario creado", description: `${created.email} ya puede iniciar sesión.` });
+          toast({ title: x.createdTitle, description: withEmail(x.createdDesc, created.email) });
         },
         onError: (error) => {
           const detail = (error as { data?: { error?: string } | null }).data?.error;
-          toast({ variant: "destructive", title: "No pudimos crear el usuario", description: detail ?? "Inténtalo de nuevo." });
+          toast({ variant: "destructive", title: x.createErrorTitle, description: detail ?? x.tryAgain });
         },
       },
     );
   };
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto">
+    <div className="flex-1 min-h-0 overflow-y-auto" dir={lang === "ar" ? "rtl" : "ltr"}>
       <header className="bg-white border-b border-[#E8E4DE] p-4 sm:p-6 md:px-10 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">Usuarios</h1>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">{x.title}</h1>
           <p className="text-sm text-muted-foreground font-medium mt-1">
-            Crea, bloquea, restablece la contraseña o elimina a las personas de tu clínica.
+            {x.subtitle}
           </p>
         </div>
         {!adding && (
           <Button className="rounded-full h-12 px-6 font-bold w-full md:w-auto" onClick={() => setAdding(true)}>
-            <Plus className="w-4 h-4 me-2" /> Agregar usuario
+            <Plus className="w-4 h-4 me-2" /> {x.addUser}
           </Button>
         )}
       </header>
@@ -91,11 +95,11 @@ export function ClinicUsersPanel() {
       <div className="px-4 sm:px-6 md:px-10 py-4 sm:py-6 flex flex-col gap-3 max-w-4xl">
         {adding && (
           <form onSubmit={handleCreate} className="flex flex-col gap-3 rounded-[1.5rem] bg-white shadow-sm p-5">
-            <h2 className="text-lg font-bold text-foreground">Nuevo usuario</h2>
+            <h2 className="text-lg font-bold text-foreground">{x.newUser}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Input
-                placeholder="Nombre"
-                aria-label="Nombre"
+                placeholder={x.name}
+                aria-label={x.name}
                 className="h-10 rounded-full bg-[#F5F2EE]"
                 value={draft.name}
                 onChange={(event) => setDraft((prev) => ({ ...prev, name: event.target.value }))}
@@ -103,8 +107,8 @@ export function ClinicUsersPanel() {
               <Input
                 type="tel"
                 autoComplete="off"
-                placeholder="Teléfono (opcional)"
-                aria-label="Teléfono"
+                placeholder={x.phoneOptional}
+                aria-label={x.phone}
                 className="h-10 rounded-full bg-white"
                 value={draft.phone}
                 onChange={(event) => setDraft((prev) => ({ ...prev, phone: event.target.value }))}
@@ -113,8 +117,8 @@ export function ClinicUsersPanel() {
                 type="email"
                 required
                 autoComplete="off"
-                placeholder="Correo"
-                aria-label="Correo"
+                placeholder={x.email}
+                aria-label={x.email}
                 className="h-10 rounded-full bg-[#F5F2EE]"
                 value={draft.email}
                 onChange={(event) => setDraft((prev) => ({ ...prev, email: event.target.value }))}
@@ -123,20 +127,20 @@ export function ClinicUsersPanel() {
                 required
                 minLength={8}
                 autoComplete="new-password"
-                placeholder="Contraseña (mín. 8)"
-                aria-label="Contraseña"
+                placeholder={x.passwordMin}
+                aria-label={x.password}
                 className="h-10 rounded-full bg-[#F5F2EE]"
                 value={draft.password}
                 onChange={(event) => setDraft((prev) => ({ ...prev, password: event.target.value }))}
               />
               <select
-                aria-label="Rol"
+                aria-label={x.role}
                 className="h-10 rounded-full border border-input bg-[#F5F2EE] px-4 text-sm"
                 value={draft.role}
                 onChange={(event) => setDraft((prev) => ({ ...prev, role: event.target.value as typeof draft.role }))}
               >
-                <option value="medico">Médico</option>
-                <option value="administrativo">Administrativo</option>
+                <option value="medico">{x.medico}</option>
+                <option value="administrativo">{x.administrativo}</option>
               </select>
             </div>
             <div className="flex items-start gap-3">
@@ -147,19 +151,19 @@ export function ClinicUsersPanel() {
                 onCheckedChange={(checked) => setDraft((prev) => ({ ...prev, legalRepresentative: checked === true }))}
               />
               <label htmlFor="new-user-legal" className="text-sm text-foreground">
-                <span className="font-semibold">Representante legal</span>
+                <span className="font-semibold">{x.legalRep}</span>
                 <span className="block text-muted-foreground">
-                  Podrá gestionar los usuarios de la clínica, aunque sea médico.
+                  {x.legalRepDesc}
                 </span>
               </label>
             </div>
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
               <Button type="button" variant="outline" className="rounded-full h-10 font-semibold" onClick={() => setAdding(false)}>
-                Cancelar
+                {x.cancel}
               </Button>
               <Button type="submit" className="rounded-full h-10 font-semibold" disabled={createUser.isPending}>
                 {createUser.isPending && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-                Crear usuario
+                {x.createUser}
               </Button>
             </div>
           </form>
@@ -167,10 +171,10 @@ export function ClinicUsersPanel() {
 
         {isLoading && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="w-4 h-4 animate-spin" /> Cargando usuarios…
+            <Loader2 className="w-4 h-4 animate-spin" /> {x.loading}
           </div>
         )}
-        {isError && <p role="alert" className="text-sm font-medium text-red-600" data-testid="users-load-error">No pudimos cargar los usuarios.{loadErrorDetail(error) && <span className="block text-xs font-normal text-red-700/80">{loadErrorDetail(error)}</span>}</p>}
+        {isError && <p role="alert" className="text-sm font-medium text-red-600" data-testid="users-load-error">{x.loadError}{loadErrorDetail(error, x.code) && <span className="block text-xs font-normal text-red-700/80">{loadErrorDetail(error, x.code)}</span>}</p>}
 
         {users.map((user) => (
           <UserRow
