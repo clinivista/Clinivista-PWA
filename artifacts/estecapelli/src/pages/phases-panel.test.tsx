@@ -17,6 +17,7 @@ const toast = vi.hoisted(() => vi.fn());
 vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast }) }));
 
 import { PhasesPanel } from "./phases-panel";
+import { LanguageProvider } from "@/lib/language";
 
 const view = (id: string, label: string, hasPhotos = false, position = 0) => ({ id, key: id, label, position, hasPhotos, document: false, measure: false });
 const protocol = (canEdit: boolean) => ({
@@ -167,5 +168,30 @@ describe("PhasesPanel", () => {
       expect(boxes.find((box) => box.checked)).toBeEnabled();
       expect(boxes.filter((box) => !box.checked).every((box) => box.disabled)).toBe(true);
     });
+  });
+
+  it("shows default phase and photo names in the panel language and saves them unchanged", async () => {
+    localStorage.setItem("clinivista_lang", "en");
+    api.protocol = {
+      canEdit: true,
+      phases: [
+        { id: "p1", key: "preevaluacion", name: "Pre-evaluación", position: 0, patientCaptured: true, views: [{ ...view("frontal", "Vista frontal"), key: "frontal" }, { ...view("temporalRight", "Temporal derecha", false, 1), key: "temporalRight" }] },
+        { id: "p3", key: "postoperatorio", name: "Post-operatorio", position: 1, kind: "capture", patientCaptured: false, views: [view("v9", "Mi foto propia")] },
+      ],
+    };
+    const user = userEvent.setup();
+    render(<LanguageProvider><PhasesPanel /></LanguageProvider>);
+    expect(screen.getByLabelText("Name of phase 1")).toHaveValue("Pre-evaluation");
+    expect(screen.getByLabelText("Name of phase 2")).toHaveValue("Post-operative");
+    expect(screen.getByLabelText("Photo 1 of Pre-evaluation")).toHaveValue("Frontal view");
+    expect(screen.getByLabelText("Photo 1 of Post-operative")).toHaveValue("Mi foto propia");
+
+    await user.type(screen.getByLabelText("Photo 1 of Post-operative"), "!");
+    await user.click(screen.getByRole("button", { name: "Save phases" }));
+    const sent = api.save.mock.calls[0][0].data.phases;
+    expect(sent[0]).toMatchObject({ name: "Pre-evaluación", views: [{ label: "Vista frontal" }, { label: "Temporal derecha" }] });
+    expect(sent[1].name).toBe("Post-operatorio");
+    expect(sent[1].views[0].label).toBe("Mi foto propia!");
+    localStorage.removeItem("clinivista_lang");
   });
 });
