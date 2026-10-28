@@ -701,7 +701,7 @@ export default function Admin() {
                                 handlePatch(fullLead.id, { appointmentAt: new Date(val).toISOString() });
                               }
                             }}
-                            className="h-11 w-full min-w-0 max-w-full rounded-xl font-medium border-input text-base bg-card"
+                            className="h-11 w-full min-w-0 max-w-full rounded-xl font-medium border-input text-base bg-card appearance-none [&::-webkit-date-and-time-value]:text-left [&::-webkit-date-and-time-value]:min-h-[1.5em] [&::-webkit-datetime-edit]:p-0"
                           />
                         </div>
                       </div>
