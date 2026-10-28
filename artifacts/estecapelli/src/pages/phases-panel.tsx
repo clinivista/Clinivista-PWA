@@ -14,33 +14,39 @@ import { ConsultTypesBar } from "./consult-types-bar";
 import { useLanguage } from "@/lib/language";
 import { VIDEO_TEXT } from "@/lib/video-i18n";
 import { PHASES_PANEL_TEXT, fillText } from "@/lib/phases-panel-i18n";
+import { phaseName, viewLabel } from "@/lib/phases-i18n";
+import type { AppTranslations, LangCode } from "@/lib/language";
 
 const MAX_PHASES = 12;
 const MAX_VIEWS = 12;
 
-type DraftView = { uid: string; id?: string; label: string; hasPhotos: boolean; document: boolean; measure: boolean; video: boolean };
-type DraftPhase = { uid: string; id?: string; name: string; patientCaptured: boolean; diagnosis?: boolean; views: DraftView[] };
+// rawLabel/rawName son los nombres guardados; label/name lo que se ve (traducido si es el nombre por defecto).
+type DraftView = { uid: string; id?: string; rawLabel: string; shownLabel: string; label: string; hasPhotos: boolean; document: boolean; measure: boolean; video: boolean };
+type DraftPhase = { uid: string; id?: string; rawName: string; shownName: string; name: string; patientCaptured: boolean; diagnosis?: boolean; views: DraftView[] };
 
 let counter = 0;
 const nextUid = () => `n${++counter}`;
 
-function toDraft(protocol: ClinicProtocol): DraftPhase[] {
+function toDraft(protocol: ClinicProtocol, lang: LangCode, t: AppTranslations): DraftPhase[] {
   return protocol.phases.map((phase) => ({
     uid: phase.id,
     id: phase.id,
-    name: phase.name,
+    rawName: phase.name,
+    shownName: phaseName(phase, lang),
+    name: phaseName(phase, lang),
     patientCaptured: phase.patientCaptured,
     diagnosis: phase.kind === "diagnosis",
-    views: phase.views.map((view) => ({ uid: view.id, id: view.id, label: view.label, hasPhotos: view.hasPhotos, document: view.document, measure: view.measure, video: view.video === true })),
+    views: phase.views.map((view) => ({ uid: view.id, id: view.id, rawLabel: view.label, shownLabel: viewLabel(view, phase.key, lang, t), label: viewLabel(view, phase.key, lang, t), hasPhotos: view.hasPhotos, document: view.document, measure: view.measure, video: view.video === true })),
   }));
 }
 
 const payload = (phases: DraftPhase[]) =>
   phases.map((phase) => ({
     ...(phase.id ? { id: phase.id } : {}),
-    name: phase.name.trim(),
+    // Un nombre por defecto que no se tocó se guarda tal como estaba, sin la traducción.
+    name: (phase.name === phase.shownName ? phase.rawName : phase.name).trim(),
     // The diagnosis phase has no photo list: the doctor marks up the patient's photos.
-    views: phase.diagnosis ? [] : phase.views.map((view) => ({ ...(view.id ? { id: view.id } : {}), label: view.label.trim(), document: view.document, measure: view.measure, video: view.video })),
+    views: phase.diagnosis ? [] : phase.views.map((view) => ({ ...(view.id ? { id: view.id } : {}), label: (view.label === view.shownLabel ? view.rawLabel : view.label).trim(), document: view.document, measure: view.measure, video: view.video })),
   }));
 
 function move<T>(items: T[], from: number, to: number): T[] {
@@ -61,23 +67,23 @@ export function PhasesPanel() {
   const params = typeId ? { typeId } : undefined;
   const { data, isLoading, isError } = useGetClinicProtocol(params);
   const save = useUpdateClinicProtocol();
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const v = VIDEO_TEXT[lang];
   const x = PHASES_PANEL_TEXT[lang];
   // El servidor decide: la casilla solo refleja si el plan de la clínica incluye video.
   const videoEnabled = data?.features?.includes("video") === true;
   const [draft, setDraft] = useState<DraftPhase[] | null>(null);
 
-  useEffect(() => { setDraft(null); }, [typeId]);
+  useEffect(() => { setDraft(null); }, [typeId, lang]);
 
   useEffect(() => {
-    if (data && draft === null) setDraft(toDraft(data));
-  }, [data, draft]);
+    if (data && draft === null) setDraft(toDraft(data, lang, t));
+  }, [data, draft, lang, t]);
 
   const canEdit = data?.canEdit === true;
   const dirty = useMemo(
-    () => Boolean(data && draft && JSON.stringify(payload(draft)) !== JSON.stringify(payload(toDraft(data)))),
-    [data, draft],
+    () => Boolean(data && draft && JSON.stringify(payload(draft)) !== JSON.stringify(payload(toDraft(data, lang, t)))),
+    [data, draft, lang, t],
   );
 
   const updatePhase = (index: number, change: (phase: DraftPhase) => DraftPhase) =>
@@ -90,7 +96,7 @@ export function PhasesPanel() {
       {
         onSuccess: (saved) => {
           queryClient.setQueryData(getGetClinicProtocolQueryKey(params), saved);
-          setDraft(toDraft(saved));
+          setDraft(toDraft(saved, lang, t));
           toast({ title: x.savedTitle, description: x.savedDesc });
         },
         onError: (error) => {
@@ -116,7 +122,7 @@ export function PhasesPanel() {
               variant="outline"
               className="rounded-full h-12 px-5 font-bold flex-1 md:flex-none"
               disabled={!dirty || save.isPending}
-              onClick={() => data && setDraft(toDraft(data))}
+              onClick={() => data && setDraft(toDraft(data, lang, t))}
             >
               {x.discard}
             </Button>
@@ -283,7 +289,7 @@ export function PhasesPanel() {
             </ul>}
             {canEdit && !phase.diagnosis && phase.views.length < MAX_VIEWS && (
               <Button variant="outline" size="sm" className="self-start rounded-full"
-                onClick={() => updatePhase(phaseIndex, (p) => ({ ...p, views: [...p.views, { uid: nextUid(), label: "", hasPhotos: false, document: false, measure: false, video: false }] }))}>
+                onClick={() => updatePhase(phaseIndex, (p) => ({ ...p, views: [...p.views, { uid: nextUid(), rawLabel: "", shownLabel: "", label: "", hasPhotos: false, document: false, measure: false, video: false }] }))}>
                 <Plus className="w-4 h-4 me-1.5" /> {x.addPhoto}
               </Button>
             )}
@@ -292,7 +298,7 @@ export function PhasesPanel() {
 
         {canEdit && draft && draft.length < MAX_PHASES && (
           <Button variant="outline" className="rounded-full h-12 font-bold self-start"
-            onClick={() => setDraft((prev) => (prev ? [...prev, { uid: nextUid(), name: "", patientCaptured: false, views: [{ uid: nextUid(), label: "", hasPhotos: false, document: false, measure: false, video: false }] }] : prev))}>
+            onClick={() => setDraft((prev) => (prev ? [...prev, { uid: nextUid(), rawName: "", shownName: "", name: "", patientCaptured: false, views: [{ uid: nextUid(), rawLabel: "", shownLabel: "", label: "", hasPhotos: false, document: false, measure: false, video: false }] }] : prev))}>
             <Plus className="w-4 h-4 me-2" /> {x.addPhase}
           </Button>
         )}
