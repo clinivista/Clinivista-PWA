@@ -62,6 +62,7 @@ beforeAll(async () => {
       status text NOT NULL DEFAULT 'draft', closed_at timestamptz, closed_by_user_id text, closed_by_name text,
       created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
     );
+    CREATE TABLE IF NOT EXISTS clinical_result_deliveries (id text PRIMARY KEY, lead_id text NOT NULL, token text NOT NULL UNIQUE, object_path text NOT NULL, channel text NOT NULL, recipient text NOT NULL DEFAULT '', status text NOT NULL, error text, created_by_user_id text, created_by_name text, created_at timestamptz NOT NULL DEFAULT now(), expires_at timestamptz NOT NULL);
     CREATE TABLE IF NOT EXISTS clinic_report_settings (
       center_id text PRIMARY KEY, enabled boolean NOT NULL DEFAULT false, recipients text NOT NULL DEFAULT '',
       frequency text NOT NULL DEFAULT 'weekly', weekday integer NOT NULL DEFAULT 1, hour integer NOT NULL DEFAULT 8,
@@ -73,7 +74,7 @@ beforeAll(async () => {
 
 const sent: Array<{ to: string[]; subject: string; text: string }> = [];
 beforeEach(async () => {
-  await pglite.exec(`TRUNCATE clinical_centers, users, leads, clinical_evaluations, clinical_diagnoses, clinic_report_settings;`);
+  await pglite.exec(`TRUNCATE clinical_centers, users, leads, clinical_evaluations, clinical_diagnoses, clinical_result_deliveries, clinic_report_settings;`);
   await pglite.exec(`INSERT INTO clinical_centers (id, name, slug) VALUES ('clinic-a', 'Clínica A', 'clinic-a'), ('clinic-b', 'Clínica B', 'clinic-b');`);
   await pglite.exec(`INSERT INTO users (id, email, email_normalized, password_hash, role, center_id, legal_representative) VALUES
     ('rep', 'rep@x.cl', 'rep@x.cl', 'x', 'medico', 'clinic-a', true), ('adm', 'adm@x.cl', 'adm@x.cl', 'x', 'administrativo', 'clinic-a', false);`);

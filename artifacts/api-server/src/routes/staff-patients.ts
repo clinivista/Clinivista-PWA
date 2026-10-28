@@ -15,6 +15,8 @@ import { isCenterActive } from "../lib/centers";
 import { ensurePatientAccountForLead } from "../lib/patient-accounts";
 import { selectableTypeIds, listConsultTypes, CONSULT_SPECIALTY } from "../lib/consult-types";
 import { baseUrl } from "./results";
+import { DischargeError } from "../lib/discharge-pdf";
+import { buildDischargeForLead } from "../lib/discharge";
 import { EMAIL_REGEX, buildLead, specialtyAnswers } from "./patients";
 
 const router: IRouter = Router();
@@ -383,6 +385,32 @@ router.post("/leads/:id/discharge", async (req, res): Promise<void> => {
     updatedAt: new Date(),
   }).where(eq(leadsTable.id, lead.id));
   res.json({ ok: true, status: "alta" });
+});
+
+// Informe de alta médica (PDF): cualquier persona del equipo de la clínica puede verlo; solo existe con el
+// alta registrada. Generarlo o descargarlo no cambia nada del paciente.
+router.get("/leads/:id/discharge/pdf", async (req, res): Promise<void> => {
+  const staff = requireStaffAuth(req, res);
+  if (!staff) return;
+  const lead = await ownLead(staff.centerId, req.params.id);
+  if (!lead || lead.status !== "alta") {
+    res.status(404).json({ error: lead ? "El paciente no tiene alta médica." : "Caso no encontrado." });
+    return;
+  }
+  try {
+    const pdf = await buildDischargeForLead(lead);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", 'inline; filename="alta-medica.pdf"');
+    res.setHeader("Cache-Control", "private, no-store");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.send(pdf);
+  } catch (error) {
+    if (error instanceof DischargeError) {
+      res.status(error.status).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
 });
 
 router.delete("/leads/:id/discharge", async (req, res): Promise<void> => {

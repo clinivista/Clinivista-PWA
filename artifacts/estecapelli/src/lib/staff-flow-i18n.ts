@@ -40,6 +40,7 @@ export type StaffFlowText = {
   notePlaceholder: string;
   dischargeConfirm: string;
   reopenProcess: string;
+  dischargePdf: string;
   dischargedToast: string;
   reopenedToast: string;
   cantDischarge: string;
@@ -89,6 +90,7 @@ export const STAFF_FLOW_TEXT: Record<LangCode, StaffFlowText> = {
     notePlaceholder: "Por ejemplo: evolución favorable, control a los 12 meses.",
     dischargeConfirm: "Confirmar alta médica",
     reopenProcess: "Reabrir proceso",
+    dischargePdf: "Informe de alta (PDF)",
     dischargedToast: "Alta médica registrada",
     reopenedToast: "Proceso reabierto",
     cantDischarge: "No pudimos actualizar el alta médica",
@@ -136,6 +138,7 @@ export const STAFF_FLOW_TEXT: Record<LangCode, StaffFlowText> = {
     notePlaceholder: "For example: favourable progress, check-up at 12 months.",
     dischargeConfirm: "Confirm medical discharge",
     reopenProcess: "Reopen process",
+    dischargePdf: "Discharge report (PDF)",
     dischargedToast: "Medical discharge recorded",
     reopenedToast: "Process reopened",
     cantDischarge: "We could not update the medical discharge",
@@ -183,6 +186,7 @@ export const STAFF_FLOW_TEXT: Record<LangCode, StaffFlowText> = {
     notePlaceholder: "Por exemplo: evolução favorável, retorno em 12 meses.",
     dischargeConfirm: "Confirmar alta médica",
     reopenProcess: "Reabrir processo",
+    dischargePdf: "Relatório de alta (PDF)",
     dischargedToast: "Alta médica registrada",
     reopenedToast: "Processo reaberto",
     cantDischarge: "Não foi possível atualizar a alta médica",
@@ -230,6 +234,7 @@ export const STAFF_FLOW_TEXT: Record<LangCode, StaffFlowText> = {
     notePlaceholder: "Par exemple : évolution favorable, contrôle à 12 mois.",
     dischargeConfirm: "Confirmer la sortie médicale",
     reopenProcess: "Rouvrir le parcours",
+    dischargePdf: "Rapport de sortie (PDF)",
     dischargedToast: "Sortie médicale enregistrée",
     reopenedToast: "Parcours rouvert",
     cantDischarge: "Impossible de mettre à jour la sortie médicale",
@@ -277,6 +282,7 @@ export const STAFF_FLOW_TEXT: Record<LangCode, StaffFlowText> = {
     notePlaceholder: "Zum Beispiel: günstiger Verlauf, Kontrolle nach 12 Monaten.",
     dischargeConfirm: "Ärztliche Entlassung bestätigen",
     reopenProcess: "Ablauf wieder öffnen",
+    dischargePdf: "Entlassungsbericht (PDF)",
     dischargedToast: "Ärztliche Entlassung erfasst",
     reopenedToast: "Ablauf wieder geöffnet",
     cantDischarge: "Die ärztliche Entlassung konnte nicht aktualisiert werden",
@@ -324,6 +330,7 @@ export const STAFF_FLOW_TEXT: Record<LangCode, StaffFlowText> = {
     notePlaceholder: "Ad esempio: evoluzione favorevole, controllo a 12 mesi.",
     dischargeConfirm: "Conferma dimissione medica",
     reopenProcess: "Riapri percorso",
+    dischargePdf: "Referto di dimissione (PDF)",
     dischargedToast: "Dimissione medica registrata",
     reopenedToast: "Percorso riaperto",
     cantDischarge: "Non è stato possibile aggiornare la dimissione medica",
@@ -371,6 +378,7 @@ export const STAFF_FLOW_TEXT: Record<LangCode, StaffFlowText> = {
     notePlaceholder: "Örneğin: olumlu gelişme, 12. ayda kontrol.",
     dischargeConfirm: "Tıbbi taburcuyu onayla",
     reopenProcess: "Süreci yeniden aç",
+    dischargePdf: "Taburcu raporu (PDF)",
     dischargedToast: "Tıbbi taburcu kaydedildi",
     reopenedToast: "Süreç yeniden açıldı",
     cantDischarge: "Tıbbi taburcu güncellenemedi",
@@ -418,6 +426,7 @@ export const STAFF_FLOW_TEXT: Record<LangCode, StaffFlowText> = {
     notePlaceholder: "مثال: تطور إيجابي، فحص بعد 12 شهرًا.",
     dischargeConfirm: "تأكيد الخروج الطبي",
     reopenProcess: "إعادة فتح المسار",
+    dischargePdf: "تقرير الخروج (PDF)",
     dischargedToast: "تم تسجيل الخروج الطبي",
     reopenedToast: "أُعيد فتح المسار",
     cantDischarge: "تعذّر تحديث الخروج الطبي",
@@ -465,6 +474,7 @@ export const STAFF_FLOW_TEXT: Record<LangCode, StaffFlowText> = {
     notePlaceholder: "例如：恢复良好，12个月后复查。",
     dischargeConfirm: "确认医疗出院",
     reopenProcess: "重新开启流程",
+    dischargePdf: "出院报告（PDF）",
     dischargedToast: "已记录医疗出院",
     reopenedToast: "流程已重新开启",
     cantDischarge: "无法更新医疗出院",

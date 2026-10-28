@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { BadgeCheck, Loader2, RotateCcw, SkipForward } from "lucide-react";
+import { BadgeCheck, FileText, Loader2, RotateCcw, SkipForward } from "lucide-react";
 import type { LeadPhase } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -160,6 +160,11 @@ export function DischargeControl({ leadId, status, isDoctor, afterDiagnosis, dis
             : isDoctor ? s.dischargeIntro : s.doctorOnly}
         </p>
       </div>
+      {discharged && (
+        <Button asChild size="sm" variant="outline" className="rounded-full">
+          <a href={`/api/leads/${encodeURIComponent(leadId)}/discharge/pdf`} target="_blank" rel="noreferrer" data-testid="discharge-pdf"><FileText className="w-4 h-4 me-1.5" />{s.dischargePdf}</a>
+        </Button>
+      )}
       {isDoctor && (discharged ? (
         <Button type="button" size="sm" variant="outline" className="rounded-full" disabled={busy}
           onClick={() => run(() => call(`/api/leads/${encodeURIComponent(leadId)}/discharge`, "DELETE"), s.reopenedToast)}>

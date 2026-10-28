@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { CalendarClock, Loader2, Mail, Send, Stethoscope } from "lucide-react";
+import { CalendarClock, FileText, Loader2, Mail, Send, Stethoscope } from "lucide-react";
 import {
   getGetClinicReportQueryKey,
   useGetClinicReport,
@@ -79,11 +79,17 @@ export function ReportPanel({ onOpenLead }: { onOpenLead: (leadId: string) => vo
   return (
     <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 md:p-10">
       <div className="mx-auto max-w-3xl flex flex-col gap-6">
-        <header>
-          <h1 className="text-2xl font-extrabold tracking-tight">Informe de pendientes</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Pacientes con la pre-evaluación completa que todavía esperan el diagnóstico del médico.
-          </p>
+        <header className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-extrabold tracking-tight">Informe de pendientes</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Pacientes con la pre-evaluación completa que todavía esperan el diagnóstico del médico.
+            </p>
+          </div>
+          {/* El mismo listado en PDF (uso interno), con los resultados listos aún sin enviar aparte. No envía nada. */}
+          <Button asChild variant="outline" className="rounded-full">
+            <a href="/api/clinic/report/pdf" target="_blank" rel="noreferrer" data-testid="report-pdf"><FileText className="w-4 h-4 me-2" />Descargar PDF</a>
+          </Button>
         </header>
 
         <section className="rounded-[1.5rem] bg-white shadow-sm p-4 sm:p-5" aria-label="Pacientes pendientes de diagnóstico">
