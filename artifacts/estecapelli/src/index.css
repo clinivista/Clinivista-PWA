@@ -212,6 +212,45 @@
   --tw-ring-color: hsl(var(--border));
 }
 
+/*
+ * Portal del paciente (/patient y el formulario de /c/<slug>): paleta Clinivista
+ * (azul #0B63E5, tinta navy, superficies azuladas) sobre el flujo existente. Solo
+ * reasigna colores; la lógica y los textos no cambian. Se aplica al contenedor y a
+ * <body> (portales de Radix). :root, .dark y los paneles de la clínica no cambian.
+ */
+.patient-portal {
+  --background: 214 41% 97%;
+  --foreground: 222 77% 17%;
+  --border: 213 31% 87%;
+  --input: 214 18% 57%;
+  --ring: 217 91% 47%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 77% 17%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 77% 17%;
+  --primary: 217 91% 47%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 212 42% 94%;
+  --secondary-foreground: 222 77% 17%;
+  --muted: 212 42% 94%;
+  --muted-foreground: 214 22% 36%;
+  --accent: 212 42% 94%;
+  --accent-foreground: 217 91% 36%;
+  --radius: 0.75rem;
+}
+.patient-portal .bg-\[\#F5F2EE\],
+.patient-portal .hover\:bg-\[\#F5F2EE\]:hover {
+  background-color: hsl(var(--muted));
+}
+.patient-portal .border-\[\#E8E4DE\],
+.patient-portal .divide-\[\#E8E4DE\] > :not(:last-child) {
+  border-color: hsl(var(--border));
+}
+.patient-portal :is(a, button, input, select, textarea, summary, [role="button"], [role="combobox"], [role="tab"], [role="option"], [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :is(.clinic-dashboard, .supra-dashboard) *,
   :is(.clinic-dashboard, .supra-dashboard) *::before,
