@@ -5,7 +5,7 @@ import { UpdateClinicReportBody } from "@workspace/api-zod";
 import { requireStaffAuth } from "./auth";
 import { baseUrl } from "./results";
 import { MailSendError } from "../lib/mailer";
-import { ReportError, getReportConfig, pendingDiagnoses, saveReportConfig, sendReport } from "../lib/pending-report";
+import { ReportError, buildPendingPdfForClinic, getReportConfig, pendingDiagnoses, saveReportConfig, sendReport } from "../lib/pending-report";
 
 const router: IRouter = Router();
 
@@ -31,6 +31,18 @@ router.get("/clinic/report", async (req, res): Promise<void> => {
   const staff = requireStaffAuth(req, res);
   if (!staff) return;
   res.json(await state(staff.centerId, await isLegalRepresentative(staff), baseUrl(req)));
+});
+
+// The same list as the panel, as a PDF to download or print (whoever can see the panel can download it).
+router.get("/clinic/report/pdf", async (req, res): Promise<void> => {
+  const staff = requireStaffAuth(req, res);
+  if (!staff) return;
+  const pdf = await buildPendingPdfForClinic(staff.centerId);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", 'inline; filename="pendientes.pdf"');
+  res.setHeader("Cache-Control", "private, no-store");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.send(pdf);
 });
 
 router.put("/clinic/report", async (req, res): Promise<void> => {

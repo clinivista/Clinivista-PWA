@@ -38,7 +38,7 @@ async function readCell(lead: Lead, cell: EvolutionCell): Promise<Buffer | null>
 
 /** The comparison as a PDF in the patient's language. `zoneKeys` limits it to some zones; by default every zone that has photos from two or more phases. */
 export async function buildEvolutionForLead(lead: Lead, zoneKeys?: string[]): Promise<Buffer> {
-  const { zones } = await getEvolution(lead);
+  const { zones, phases } = await getEvolution(lead);
   const wanted = zoneKeys?.length ? zones.filter((zone) => zoneKeys.includes(zone.key)) : zones;
   const comparable = wanted.filter((zone) => zone.cells.length >= 2);
   if (!comparable.length) throw new EvolutionError("Aún no hay fotografías de la misma zona en dos fases para comparar.", 409);
@@ -48,6 +48,7 @@ export async function buildEvolutionForLead(lead: Lead, zoneKeys?: string[]): Pr
     const cells = [];
     for (const cell of zone.cells) {
       cells.push({
+        phaseKey: cell.phaseKey,
         phaseName: evolutionPhaseName({ key: cell.phaseKey, name: cell.phaseName }, lead.language),
         date: cell.createdAt,
         bytes: await readCell(lead, cell),
@@ -59,9 +60,11 @@ export async function buildEvolutionForLead(lead: Lead, zoneKeys?: string[]): Pr
   return buildEvolutionPdf({
     clinicName: identity.name,
     logoDataUrl: identity.logoDataUrl,
+    specialty: identity.specialty,
     patientName: lead.name,
     documentId: lead.documentId ?? "",
     generatedAt: new Date(),
+    phases: phases.map((phase) => ({ key: phase.key, name: evolutionPhaseName(phase, lead.language) })),
     zones: pdfZones,
     language: lead.language,
   });

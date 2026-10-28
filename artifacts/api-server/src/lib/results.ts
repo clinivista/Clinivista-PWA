@@ -2,10 +2,12 @@ import { desc, eq } from "drizzle-orm";
 import { db, resultDeliveriesTable, type Lead } from "@workspace/db";
 import { uid } from "./helpers";
 import { createObjectKey, privatePhotoStorage } from "./clinical-photo-storage";
-import { ensureEvaluationForLead, getPatientPhotoFile } from "./clinical-photos";
+import { ensureEvaluationForLead, getLeadPhases, getPatientPhotoFile } from "./clinical-photos";
 import { clinicIdentity } from "./clinic-identity";
 import { getDiagnosisState, readAnnotationFile } from "./diagnosis";
 import { buildResultPdf } from "./result-pdf";
+import { appointmentDate, intakeAnswers } from "./report-data";
+import { evolutionPhaseName, evolutionZoneName, zoneKeyOf } from "./evolution-i18n";
 import { MAIL_TEXT, toMailLanguage } from "./mail-i18n";
 import { MailNotConfiguredError, MailSendError, resultsMail, sendMail } from "./mailer";
 
@@ -25,6 +27,10 @@ export async function buildResultsForLead(lead: Lead): Promise<Buffer> {
     throw new ResultsError("Cierra el diagnóstico antes de generar los resultados.", 409);
   }
   const identity = await clinicIdentity(lead.centerId);
+  // The diagnosis photos are the pre-evaluation's: their stage and date come from that phase.
+  const preEvaluation = (await getLeadPhases(lead))[0];
+  const taken = new Map((preEvaluation?.views ?? []).filter((view) => view.photo).map((view) => [view.photo!.id, view.photo!.createdAt]));
+  const stage = preEvaluation ? evolutionPhaseName({ key: preEvaluation.key, name: preEvaluation.name }, lead.language) : null;
   const photos = [];
   for (const photo of state.photos) {
     let annotated = false;
@@ -40,11 +46,14 @@ export async function buildResultsForLead(lead: Lead): Promise<Buffer> {
       const located = await getPatientPhotoFile(lead, photo.photoId, "original");
       if (located) bytes = (await privatePhotoStorage.read(located.objectPath)).bytes;
     }
-    if (bytes) photos.push({ label: photo.label, bytes, annotated });
+    if (bytes) photos.push({ label: evolutionZoneName(zoneKeyOf(photo.viewKey, preEvaluation?.key ?? ""), photo.label, lead.language), bytes, annotated, stage, date: taken.get(photo.photoId) ?? null, note: photo.note });
   }
   return buildResultPdf({
     clinicName: identity.name,
     logoDataUrl: identity.logoDataUrl,
+    specialty: identity.specialty,
+    intake: intakeAnswers(lead, identity.specialty, lead.language),
+    appointmentAt: appointmentDate(lead.appointmentAt),
     patientName: lead.name,
     documentId: lead.documentId ?? "",
     closedAt: state.closedAt,

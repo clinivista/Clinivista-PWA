@@ -1,7 +1,9 @@
 import { and, eq, inArray, isNull, lt, or } from "drizzle-orm";
-import { db, diagnosesTable, evaluationsTable, leadsTable, reportSettingsTable, centersTable, type ReportSettings } from "@workspace/db";
+import { db, diagnosesTable, evaluationsTable, leadsTable, reportSettingsTable, centersTable, resultDeliveriesTable, type ReportSettings } from "@workspace/db";
 import { logger } from "./logger";
 import { MailNotConfiguredError, pendingReportMail, sendMail } from "./mailer";
+import { clinicIdentity } from "./clinic-identity";
+import { buildPendingPdf } from "./pending-pdf";
 
 export const TIME_ZONE = "America/Santiago";
 export const FREQUENCIES = ["daily", "weekly", "monthly"] as const;
@@ -111,29 +113,66 @@ export function isDue(config: ReportConfig, configuredAt: Date, now: Date): bool
 
 export type PendingPatient = { leadId: string; name: string; documentId: string; phone: string; waitingDays: number; link: string };
 
-const PENDING_STATUSES = ["listo", "contactar", "agendado"];
+/** Statuses of a patient whose pre-evaluation is complete and who has not moved past the diagnosis stage. */
+export const PENDING_STATUSES = ["listo", "contactar", "agendado"];
 
-/** Patients whose pre-evaluation is complete and whose diagnosis is not closed yet, oldest first. */
-export async function pendingDiagnoses(centerId: string, baseUrl: string, now = new Date()): Promise<PendingPatient[]> {
+export type PendingRow = { leadId: string; name: string; documentId: string; phone: string; status: string; createdAt: Date; updatedAt: Date; waitingDays: number; closedAt: Date | null };
+
+/**
+ * One query for the whole pending picture of a clinic: patients in a pending status (no demos), split into
+ * those whose diagnosis is not closed yet and those whose diagnosis is closed but have no recorded delivery
+ * (e-mail sent or WhatsApp link). Each patient falls in exactly one list; oldest first.
+ */
+export async function pendingWork(centerId: string, now = new Date()): Promise<{ evaluation: PendingRow[]; undelivered: PendingRow[] }> {
   const leads = await db.select().from(leadsTable).where(and(eq(leadsTable.centerId, centerId), inArray(leadsTable.status, PENDING_STATUSES), or(isNull(leadsTable.isDemo), eq(leadsTable.isDemo, false))));
-  if (leads.length === 0) return [];
+  if (leads.length === 0) return { evaluation: [], undelivered: [] };
   const closed = await db
-    .select({ leadId: evaluationsTable.leadId })
+    .select({ leadId: evaluationsTable.leadId, closedAt: diagnosesTable.closedAt })
     .from(evaluationsTable)
     .innerJoin(diagnosesTable, eq(diagnosesTable.evaluationId, evaluationsTable.id))
     .where(and(inArray(evaluationsTable.leadId, leads.map((l) => l.id)), eq(diagnosesTable.status, "closed")));
-  const closedIds = new Set(closed.map((row) => row.leadId));
-  return leads
-    .filter((lead) => !closedIds.has(lead.id))
+  const closedAt = new Map(closed.map((row) => [row.leadId, row.closedAt]));
+  const delivered = closedAt.size
+    ? new Set((await db.select({ leadId: resultDeliveriesTable.leadId }).from(resultDeliveriesTable)
+        .where(and(inArray(resultDeliveriesTable.leadId, [...closedAt.keys()]), inArray(resultDeliveriesTable.status, ["sent", "link"])))).map((row) => row.leadId))
+    : new Set<string>();
+  const rows = leads
     .sort((a, b) => a.updatedAt.getTime() - b.updatedAt.getTime())
-    .map((lead) => ({
+    .map((lead): PendingRow => ({
       leadId: lead.id,
       name: lead.name,
       documentId: lead.documentId ?? "",
       phone: lead.phone,
+      status: lead.status,
+      createdAt: lead.createdAt,
+      updatedAt: lead.updatedAt,
       waitingDays: Math.max(0, Math.floor((now.getTime() - lead.updatedAt.getTime()) / 86_400_000)),
-      link: patientLink(baseUrl, lead.id),
+      closedAt: closedAt.get(lead.id) ?? null,
     }));
+  return {
+    evaluation: rows.filter((row) => !closedAt.has(row.leadId)),
+    undelivered: rows.filter((row) => closedAt.has(row.leadId) && !delivered.has(row.leadId)),
+  };
+}
+
+/** Patients whose pre-evaluation is complete and whose diagnosis is not closed yet, oldest first. */
+export async function pendingDiagnoses(centerId: string, baseUrl: string, now = new Date()): Promise<PendingPatient[]> {
+  const { evaluation } = await pendingWork(centerId, now);
+  return evaluation.map((row) => ({
+    leadId: row.leadId,
+    name: row.name,
+    documentId: row.documentId,
+    phone: row.phone,
+    waitingDays: row.waitingDays,
+    link: patientLink(baseUrl, row.leadId),
+  }));
+}
+
+/** The clinic's pending report as of now. Read-only: it sends nothing and schedules nothing. */
+export async function buildPendingPdfForClinic(centerId: string, now = new Date()): Promise<Buffer> {
+  const identity = await clinicIdentity(centerId);
+  const work = await pendingWork(centerId, now);
+  return buildPendingPdf({ clinicName: identity.name, logoDataUrl: identity.logoDataUrl, specialty: identity.specialty, cutoff: now, ...work });
 }
 
 /** Opens the patient directly in the staff panel (asks to sign in first if needed). */

@@ -234,9 +234,18 @@ describe("LeadPhases", () => {
     expect(fetchSpy.mock.calls[0][0]).toBe("/api/leads/lead-1/discharge");
     expect(JSON.parse(String((fetchSpy.mock.calls[0][1] as RequestInit).body))).toEqual({ note: "Evolución favorable" });
 
+    expect(screen.queryByRole("link", { name: /Informe de alta/ })).not.toBeInTheDocument();
+
     rerender(<LeadPhases leadId="lead-1" onExpand={vi.fn()} process={{ status: "alta", isDoctor: true, dischargedByName: "Dra. Paz", dischargedAt: "2026-10-05T12:00:00.000Z" }} />);
     expect(screen.getByRole("button", { name: /Reabrir proceso/ })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Omitir etapa/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Informe de alta \(PDF\)/ })).toHaveAttribute("href", "/api/leads/lead-1/discharge/pdf");
+
+    // El informe de alta lo ve todo el equipo, no solo el médico; abrirlo no llama a la API de alta.
+    rerender(<LeadPhases leadId="lead-1" onExpand={vi.fn()} process={{ status: "alta", isDoctor: false, dischargedByName: "Dra. Paz", dischargedAt: "2026-10-05T12:00:00.000Z" }} />);
+    expect(screen.getByRole("link", { name: /Informe de alta \(PDF\)/ })).toHaveAttribute("target", "_blank");
+    expect(screen.queryByRole("button", { name: /Reabrir proceso/ })).not.toBeInTheDocument();
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
   });
 
   it("antes del diagnóstico no ofrece el alta médica", () => {

@@ -55,6 +55,16 @@ describe("ReportPanel", () => {
     expect(api.send).toHaveBeenCalled();
   });
 
+  it("offers the PDF of the same report to whoever can see the panel, without sending anything", async () => {
+    api.report = report(false);
+    render(<ReportPanel onOpenLead={vi.fn()} />);
+    const link = screen.getByRole("link", { name: "Descargar PDF" });
+    expect(link).toHaveAttribute("href", "/api/clinic/report/pdf");
+    expect(link).toHaveAttribute("target", "_blank");
+    await userEvent.click(link);
+    expect(api.send).not.toHaveBeenCalled();
+  });
+
   it("is read-only for everyone else, but still shows the pending list", () => {
     api.report = report(false);
     render(<ReportPanel onOpenLead={vi.fn()} />);
