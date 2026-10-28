@@ -2454,6 +2454,100 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /supra/overview/monthly:
+    get:
+      operationId: getSupraOverviewMonthly
+      tags: [supra]
+      summary: Platform-wide new patients, photos and clinics per month (supra-control Home)
+      parameters:
+        - name: months
+          in: query
+          description: 3, 6 or 12 calendar months, the current one included (default 6)
+          schema:
+            type: number
+            enum: [3, 6, 12]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupraOverviewMonthly"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a supra-control account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /supra/activity:
+    get:
+      operationId: getSupraActivity
+      tags: [supra]
+      summary: Latest platform events (no patient data)
+      parameters:
+        - name: limit
+          in: query
+          description: 1 to 20 (default 8)
+          schema:
+            type: number
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupraActivity"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a supra-control account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /supra/clinics/recent:
+    get:
+      operationId: getSupraRecentClinics
+      tags: [supra]
+      summary: Newest clinics with their patient count
+      parameters:
+        - name: limit
+          in: query
+          description: 1 to 20 (default 6)
+          schema:
+            type: number
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupraRecentClinics"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Not a supra-control account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /clinic/report:
     get:
       operationId: getClinicReport
@@ -2533,6 +2627,71 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
+    SupraOverviewMonth:
+      type: object
+      required: [month, patients, photos, clinics]
+      properties:
+        month: {type: string, description: "YYYY-MM in Chile time"}
+        patients: {type: number}
+        photos: {type: number}
+        clinics: {type: number}
+    SupraOverviewMonthly:
+      type: object
+      required: [monthly]
+      properties:
+        monthly:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupraOverviewMonth"
+    SupraActivityEvent:
+      type: object
+      required: [type, clinicName, serviceLabel, at]
+      properties:
+        type:
+          type: string
+          enum: [clinic_created, ticket_opened, ticket_resolved, service_alert]
+        clinicName:
+          type: string
+          nullable: true
+        serviceLabel:
+          type: string
+          nullable: true
+          description: Only for service_alert
+        at:
+          type: string
+          format: date-time
+    SupraActivity:
+      type: object
+      required: [events]
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupraActivityEvent"
+    SupraRecentClinic:
+      type: object
+      required: [id, name, specialty, patients, logo, createdAt, plan]
+      properties:
+        id: {type: string}
+        name: {type: string}
+        specialty: {type: string}
+        patients: {type: number}
+        logo:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        plan:
+          $ref: "#/components/schemas/ClinicPlan"
+    SupraRecentClinics:
+      type: object
+      required: [clinics]
+      properties:
+        clinics:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupraRecentClinic"
     ClinicOverviewMonth:
       type: object
       required: [month, patients, photos]

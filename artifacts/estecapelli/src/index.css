@@ -224,13 +224,11 @@
 }
 
 /* Supra-control shares the approved clinical palette, including body portals. */
-.supra-dashboard .sd-sidebar {
-  background: linear-gradient(175deg, #102f4c, #0b1f33 65%);
-}
 .supra-dashboard :is(.rounded-3xl, .rounded-\[1\.75rem\]) {
   border-radius: 1rem;
 }
-.supra-dashboard :is(button, a, input, select).rounded-full {
+/* La barra superior compartida conserva sus formas redondas, como en el dashboard de clínica. */
+.supra-dashboard :is(button, a, input, select).rounded-full:not([data-testid^="topbar-"]) {
   border-radius: 0.75rem;
 }
 .supra-dashboard :is(button, input, select, a.inline-flex) {
@@ -239,12 +237,24 @@
 .supra-dashboard button:is(.w-8, .w-9, .w-10) {
   min-width: 2.75rem;
 }
-.supra-dashboard .sd-tile {
+/*
+ * Paneles de supra-control escritos con la paleta anterior (Soporte, Equipo,
+ * Servicios y finanzas, Mi cuenta, Manual, formularios de clínica): solo estilo,
+ * para que sus tarjetas, acentos y focos sean los del Inicio. El dashboard de
+ * clínica no lleva .supra-dashboard, así que no cambia.
+ */
+.supra-dashboard .bg-white:is(.shadow-sm, .shadow) {
+  border-color: hsl(var(--card-border));
   box-shadow: var(--cd-shadow);
-  border-top: 3px solid hsl(var(--cd-teal));
 }
-.supra-dashboard .sd-card {
-  box-shadow: var(--cd-shadow);
+.supra-dashboard :is(.text-\[\#00A9A5\], .text-\[\#007f7c\]) {
+  color: hsl(var(--primary));
+}
+.supra-dashboard .bg-\[\#00A9A5\] {
+  background-color: hsl(var(--primary));
+}
+.supra-dashboard .focus\:ring-\[\#00A9A5\]\/40:focus {
+  --tw-ring-color: hsl(var(--ring) / 0.4);
 }
 .supra-dashboard .sd-nav-label {
   white-space: normal;

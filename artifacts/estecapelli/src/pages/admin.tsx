@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation, Link } from "wouter";
+import { useLocation } from "wouter";
 import { format, parseISO } from "date-fns";
 import { es as dateFnsEs } from "date-fns/locale";
 import {
   Users, UserCog, Layers,
   Search, ChevronRight, X, Phone, Camera, Mail, CreditCard, Trash2, Check, Copy,
-  ClipboardList, LifeBuoy, UserPlus, Building2, Home, CircleHelp,
+  ClipboardList, LifeBuoy, UserPlus, Building2, Home,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +49,9 @@ import { ClinicHome } from "@/components/clinic-home";
 import { VideoPlayer } from "@/components/video-player";
 import { HOME_TEXT } from "@/lib/home-i18n";
 import { ClinicTopbar } from "@/components/clinic-topbar";
+import {
+  navItemClass, sidebarClass, SidebarOverlay, SidebarBrand, SidebarSectionLabel, SidebarIdentityCard, SidebarBadge, SidebarHelpCard, NavCount,
+} from "@/components/dashboard/sidebar";
 import { VIDEO_TEXT } from "@/lib/video-i18n";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -64,11 +67,6 @@ const STATUS_COLORS: Record<string, string> = {
   cerrado: "bg-gray-100 text-gray-600"
 };
 
-// Botón de la barra lateral (azul marino): el activo va en azul (texto blanco 5.2:1).
-const navItemClass = (active: boolean) =>
-  `relative w-full justify-start gap-3 rounded-xl h-12 [&_svg]:size-5 px-4 font-medium text-[15px] transition-colors hover:text-white ${active
-    ? "bg-[#2563EB] text-white hover:bg-[#2563EB] shadow-[0_6px_16px_-6px_rgba(37,99,235,0.7)]"
-    : "bg-transparent text-white/75 hover:bg-white/10"}`;
 
 const cardClass = "bg-card rounded-2xl border border-[hsl(var(--card-border))] shadow-[var(--cd-shadow)]";
 const fieldTileClass = "bg-muted/70 rounded-xl p-4";
@@ -282,29 +280,11 @@ export default function Admin() {
     <DirectionProvider dir={dir}>
     <div dir={dir} className="clinic-dashboard h-[100dvh] bg-background text-foreground flex flex-col md:flex-row font-sans selection:bg-primary/20">
       {/* Mobile nav overlay */}
-      {mobileNavOpen && (
-        <div className="md:hidden fixed inset-0 bg-[hsl(var(--cd-nav)/0.6)] backdrop-blur-sm z-40" onClick={() => setMobileNavOpen(false)} />
-      )}
+      <SidebarOverlay open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
 
       {/* Sidebar */}
-      <aside className={`cd-nav fixed inset-y-0 start-0 w-72 max-w-[85vw] z-50 transition-transform duration-300 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full rtl:translate-x-full"} md:static md:translate-x-0 md:rtl:translate-x-0 md:max-w-none md:w-64 lg:w-[272px] md:z-30 bg-[hsl(var(--cd-nav))] bg-gradient-to-b from-[hsl(var(--cd-nav))] to-[hsl(212_70%_9%)] text-white flex-shrink-0 flex flex-col md:min-h-[100dvh] shadow-2xl md:shadow-none overflow-y-auto`}>
-        <div className="px-5 pt-6 pb-5 flex items-center justify-between gap-3">
-          <Link href="/" className="flex items-center gap-3 min-w-0 rounded-xl group">
-            <BrandLogo alt="" className="h-11 w-11 group-hover:scale-105 transition-transform" />
-            <span className="min-w-0">
-              <span className="block text-[22px] leading-none font-bold tracking-tight">Clinivista</span>
-              <span className="block text-[11px] text-white/70 mt-1 truncate">{homeText.brandTagline}</span>
-            </span>
-          </Link>
-          <button
-            type="button"
-            onClick={() => setMobileNavOpen(false)}
-            aria-label={t.adminMenuClose}
-            className="md:hidden w-11 h-11 shrink-0 rounded-xl hover:bg-white/10 flex items-center justify-center text-white/75 hover:text-white transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+      <aside className={sidebarClass(mobileNavOpen)}>
+        <SidebarBrand tagline={homeText.brandTagline} closeLabel={t.adminMenuClose} onClose={() => setMobileNavOpen(false)} />
 
         <div className="px-4 py-2 flex-1">
           <nav className="space-y-1" aria-label={t.adminSection}>
@@ -367,7 +347,7 @@ export default function Admin() {
             >
               <LifeBuoy className="w-5 h-5" />
               {HELP_TEXT[lang].nav}
-              {helpUnread > 0 && <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold text-white" data-testid="help-unread">{helpUnread}</span>}
+              <NavCount count={helpUnread} testId="help-unread" />
             </Button>
           </nav>
         </div>
@@ -375,23 +355,15 @@ export default function Admin() {
         <div className="px-4 pb-5 pt-4 space-y-4">
           {/* Mi clínica: nombre, especialidad y plan de la clínica. */}
           <div className="pt-4 border-t border-white/10">
-            <p className="px-1 text-[11px] font-semibold text-white/60 uppercase tracking-[0.14em] mb-2">{homeText.myClinic}</p>
-            <div className="flex items-center gap-3 rounded-2xl bg-white/[0.07] border border-white/10 p-3" data-testid="my-clinic">
-              {myClinic?.logoDataUrl ? (
-                <img src={myClinic.logoDataUrl} alt="" className="h-11 w-11 shrink-0 rounded-xl bg-white object-contain p-1" />
-              ) : (
-                <span aria-hidden="true" className="h-11 w-11 shrink-0 rounded-xl bg-white/15 flex items-center justify-center text-lg font-bold">{(clinicName || "C").trim().charAt(0).toUpperCase()}</span>
-              )}
-              <span className="min-w-0">
-                <span className="block text-sm font-semibold break-words leading-snug">{clinicName}</span>
-                {myClinic?.specialty && <span className="block text-xs text-white/70 mt-0.5">{homeText.specialty[myClinic.specialty]}</span>}
-                {clinicPlan && (
-                  <span className="mt-1.5 inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-white/90 ring-1 ring-inset ring-white/15" data-testid="my-clinic-plan">
-                    {VIDEO_TEXT[lang].planLabel} {VIDEO_TEXT[lang].planNames[clinicPlan]}
-                  </span>
-                )}
-              </span>
-            </div>
+            <SidebarSectionLabel>{homeText.myClinic}</SidebarSectionLabel>
+            <SidebarIdentityCard
+              testId="my-clinic"
+              image={myClinic?.logoDataUrl}
+              initial={(clinicName || "C").trim().charAt(0).toUpperCase()}
+              title={clinicName}
+              subtitle={myClinic?.specialty ? homeText.specialty[myClinic.specialty] : undefined}
+              badge={clinicPlan && <SidebarBadge testId="my-clinic-plan">{VIDEO_TEXT[lang].planLabel} {VIDEO_TEXT[lang].planNames[clinicPlan]}</SidebarBadge>}
+            />
             {(authStatus.user?.clinics?.length ?? 0) > 1 && (
               <Button
                 variant="ghost"
@@ -407,18 +379,7 @@ export default function Admin() {
               </Button>
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => go("help", "manual")}
-            className="w-full min-h-11 flex items-center gap-3 rounded-2xl bg-white/[0.07] hover:bg-white/[0.12] border border-white/10 p-3 text-start transition-colors"
-            data-testid="help-card"
-          >
-            <CircleHelp className="w-6 h-6 shrink-0 text-white/85" aria-hidden="true" />
-            <span className="min-w-0">
-              <span className="block text-sm font-semibold">{homeText.helpTitle}</span>
-              <span className="block text-xs text-white/70">{homeText.helpDesc}</span>
-            </span>
-          </button>
+          <SidebarHelpCard title={homeText.helpTitle} desc={homeText.helpDesc} onClick={() => go("help", "manual")} testId="help-card" />
         </div>
       </aside>
 

@@ -22,6 +22,7 @@ import portalRouter from "./portal";
 import supportRouter from "./support";
 import supraAdminRouter from "./supra-admin";
 import supraDashboardRouter from "./supra-dashboard";
+import supraHomeRouter from "./supra-home";
 
 const router: IRouter = Router();
 
@@ -48,5 +49,6 @@ router.use(portalRouter);
 router.use(supportRouter);
 router.use(supraAdminRouter);
 router.use(supraDashboardRouter);
+router.use(supraHomeRouter);
 
 export default router;

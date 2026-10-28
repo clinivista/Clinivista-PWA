@@ -1230,6 +1230,7 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
     });
   });
 
+  // Recorre todas las etapas de punta a punta: con todas las pruebas en paralelo roza el límite general de 20 s.
   it("los estados cambian solos con cada etapa: incompleto → listo → contactar → agendado → operado → completado", async () => {
     const lead = await patientWithPreEvaluation(false);
     expect(await statusOf(lead.id)).toBe("incompleto");
@@ -1266,7 +1267,7 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
     expect(await statusOf(lead.id)).toBe("operado");
     await completePhase(lead.id, 5);
     expect(await statusOf(lead.id)).toBe("completado");
-  });
+  }, 60_000);
 
   it("contactado si el administrativo contactó y no se agendó; reabrir el diagnóstico no pierde el contacto", async () => {
     const lead = await patientReadyForCapture();

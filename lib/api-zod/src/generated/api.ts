@@ -2122,6 +2122,60 @@ export const GetClinicActivityResponse = zod.object({
 
 
 /**
+ * @summary Platform-wide new patients, photos and clinics per month (supra-control Home)
+ */
+export const GetSupraOverviewMonthlyQueryParams = zod.object({
+  "months": zod.union([zod.literal(3),zod.literal(6),zod.literal(12)]).optional().describe('3, 6 or 12 calendar months, the current one included (default 6)')
+})
+
+export const GetSupraOverviewMonthlyResponse = zod.object({
+  "monthly": zod.array(zod.object({
+  "month": zod.string().describe('YYYY-MM in Chile time'),
+  "patients": zod.number(),
+  "photos": zod.number(),
+  "clinics": zod.number()
+}))
+})
+
+
+/**
+ * @summary Latest platform events (no patient data)
+ */
+export const GetSupraActivityQueryParams = zod.object({
+  "limit": zod.coerce.number().optional().describe('1 to 20 (default 8)')
+})
+
+export const GetSupraActivityResponse = zod.object({
+  "events": zod.array(zod.object({
+  "type": zod.enum(['clinic_created', 'ticket_opened', 'ticket_resolved', 'service_alert']),
+  "clinicName": zod.string().nullable(),
+  "serviceLabel": zod.string().nullable().describe('Only for service_alert'),
+  "at": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Newest clinics with their patient count
+ */
+export const GetSupraRecentClinicsQueryParams = zod.object({
+  "limit": zod.coerce.number().optional().describe('1 to 20 (default 6)')
+})
+
+export const GetSupraRecentClinicsResponse = zod.object({
+  "clinics": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "specialty": zod.string(),
+  "patients": zod.number(),
+  "logo": zod.string().nullable(),
+  "createdAt": zod.coerce.date(),
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.')
+}))
+})
+
+
+/**
  * @summary Patients pending diagnosis and the clinic's periodic report settings
  */
 export const GetClinicReportResponse = zod.object({
