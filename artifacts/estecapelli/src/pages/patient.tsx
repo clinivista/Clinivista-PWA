@@ -538,6 +538,14 @@ function clearStoredPatientToken(clinicSlug?: string) {
 }
 
 // ---------- Main component ----------
+/** Radix portals (selects, dialogs) render in <body>: they inherit the portal palette through this class. */
+function usePatientPortalClass() {
+  useEffect(() => {
+    document.body.classList.add("patient-portal");
+    return () => document.body.classList.remove("patient-portal");
+  }, []);
+}
+
 export default function PatientFlow({ clinicSlug, startAtData = false, onBackToWelcome }: {
   clinicSlug?: string;
   /** Viene de la bienvenida de la clínica (/c/<slug>): empieza directo en «Tus datos». */
@@ -545,6 +553,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
   /** «Volver» desde «Tus datos» regresa a esa bienvenida en vez de a la introducción. */
   onBackToWelcome?: () => void;
 } = {}) {
+  usePatientPortalClass();
   const basePath = clinicSlug ? `/c/${clinicSlug}` : "/patient";
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
@@ -1122,7 +1131,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
 
   if (isLoadingExisting) {
     return (
-      <div className="min-h-screen bg-[#F5F2EE] flex items-center justify-center">
+      <div className="patient-portal min-h-screen bg-gradient-to-br from-[#EEF5FE] via-white to-[#E8F2FE] flex items-center justify-center">
         <div className="text-muted-foreground font-medium flex items-center gap-3 bg-white px-6 py-4 rounded-full shadow-sm">
           <RefreshCw className="w-5 h-5 animate-spin text-primary" />
           {t.loading}
@@ -1134,7 +1143,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
   // Invalid / expired invitation token — show clear error instead of the default flow
   if (urlToken && isTokenError) {
     return (
-      <div className="min-h-[100dvh] bg-[#F5F2EE] flex items-center justify-center p-4 font-sans">
+      <div className="patient-portal min-h-[100dvh] bg-gradient-to-br from-[#EEF5FE] via-white to-[#E8F2FE] flex items-center justify-center p-4 font-sans">
         <div className="bg-white rounded-[2.5rem] shadow-sm max-w-md w-full overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500">
           <div className="h-1.5 bg-gradient-to-r from-red-400 to-amber-400" />
           <div className="p-8 md:p-10 text-center">
@@ -1164,9 +1173,9 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
   }
 
   return (
-    <div className="min-h-[100dvh] bg-[#F5F2EE] flex flex-col font-sans" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <div className="patient-portal min-h-[100dvh] bg-gradient-to-br from-[#EEF5FE] via-white to-[#E8F2FE] flex flex-col font-sans" dir={lang === "ar" ? "rtl" : "ltr"}>
       {/* Header */}
-      <header className="bg-white px-5 py-4 shadow-sm border-b border-[#E8E4DE] flex items-center justify-between sticky top-0 z-40">
+      <header className="bg-white/85 backdrop-blur px-4 sm:px-6 py-3 border-b border-slate-200 flex items-center justify-between sticky top-0 z-40">
         {token || clinicSlug ? (
           clinic?.name ? (
             <ClinicBadge name={clinic.name} logoDataUrl={clinic.logoDataUrl} />
@@ -1177,7 +1186,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
         ) : (
           <Link href={clinicSlug ? basePath : "/"}>
             <div className="flex items-center cursor-pointer group">
-              <BrandLogo variant="logo-sin-lema" className="h-10 group-hover:scale-105 transition-transform" />
+              <BrandLogo variant="logo-sin-lema" className="h-8 sm:h-9" />
             </div>
           </Link>
         )}
@@ -1186,13 +1195,13 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
         <div className="relative">
           <button
             onClick={() => setLangOpen(v => !v)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#E8E4DE] text-sm font-medium text-gray-600 hover:bg-[#F5F2EE] transition-colors"
+            className="flex items-center gap-1.5 min-h-10 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 hover:bg-muted transition-colors"
           >
             <span>{currentLang.flag}</span>
             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${langOpen ? "rotate-180" : ""}`} />
           </button>
           {langOpen && (
-            <div className="absolute right-0 mt-2 w-44 bg-white rounded-3xl shadow-xl border border-[#E8E4DE] overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-xl border border-[#E8E4DE] overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
               {LANGS.map(l => (
                 <button key={l.code} onClick={() => { setLang(l.code as LangCode); setLangOpen(false); }}
                   className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-[#F5F2EE] text-left transition-colors ${lang === l.code ? "text-primary font-semibold bg-primary/5" : "text-gray-700"}`}>
@@ -1218,7 +1227,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
               return (
                 <span key={s} className="flex items-center gap-2">
                   {i > 0 && <ChevronRight className="w-4 h-4 text-gray-300" />}
-                  <span className={`flex items-center gap-1.5 px-4 py-2 rounded-full transition-all ${isActive ? "bg-primary text-white shadow-sm shadow-primary/20" : isDone ? "bg-primary/10 text-primary" : "bg-white text-muted-foreground border border-[#E8E4DE]"}`}>
+                  <span className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all ${isActive ? "bg-primary text-white shadow-sm shadow-primary/20" : isDone ? "bg-primary/10 text-primary" : "bg-white text-muted-foreground border border-[#E8E4DE]"}`}>
                     {isDone && <Check className="w-3.5 h-3.5" />}
                     {labels[i]}
                   </span>
@@ -1259,8 +1268,8 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
 
         {/* ── STEP: INTRO ── */}
         {step === "intro" && (
-          <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-500">
-            <div className="h-1.5 bg-gradient-to-r from-primary via-[#4F9CF9] to-[#A78BFA]" />
+          <div className="bg-white rounded-3xl overflow-hidden shadow-[0_18px_44px_-18px_rgba(10,31,77,0.25)] ring-1 ring-slate-200/70 animate-in fade-in slide-in-from-bottom-8 duration-500">
+            <div className="h-1.5 bg-gradient-to-r from-[#0B63E5] to-[#2FB6E8]" />
             <div className="p-8 md:p-12 text-center">
               <div className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-primary/8 text-primary rounded-full text-sm font-bold mb-8 border border-primary/15">
                 <Timer className="w-4 h-4" />
@@ -1276,9 +1285,9 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
 
               <div className="space-y-3 mb-10 text-left">
                 {[
-                  { icon: "01", label: t.pStep1Label, detail: customSpecialty ? specialtyText.stepDetail : t.pStep1Detail, color: "#00A9A5", bg: "bg-[#00A9A5]/8" },
-                  { icon: "02", label: t.pStep2Label, detail: t.pStep2Detail, color: "#4F9CF9", bg: "bg-[#4F9CF9]/8" },
-                  { icon: "03", label: t.pStep3Label, detail: t.pStep3Detail, color: "#A78BFA", bg: "bg-[#A78BFA]/8" },
+                  { icon: "01", label: t.pStep1Label, detail: customSpecialty ? specialtyText.stepDetail : t.pStep1Detail, color: "#0B63E5", bg: "bg-[#0B63E5]/10" },
+                  { icon: "02", label: t.pStep2Label, detail: t.pStep2Detail, color: "#0B63E5", bg: "bg-[#0B63E5]/10" },
+                  { icon: "03", label: t.pStep3Label, detail: t.pStep3Detail, color: "#0B63E5", bg: "bg-[#0B63E5]/10" },
                 ].map(item => (
                   <div key={item.icon} className="flex items-center gap-4 p-4 bg-[#F5F2EE] rounded-2xl">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm shrink-0 ${item.bg}`} style={{ color: item.color }}>{item.icon}</div>
@@ -1290,12 +1299,12 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
                 ))}
               </div>
 
-              <p className="text-xs text-muted-foreground mb-8 leading-relaxed max-w-md mx-auto bg-amber-50/80 border border-amber-100 p-4 rounded-2xl text-left">
+              <p className="text-xs text-[#2D4373] mb-8 leading-relaxed max-w-md mx-auto bg-[#EEF3FA] p-4 rounded-xl text-left">
                 {t.pDisclaimer}
               </p>
 
               <Button onClick={() => { setStep("data"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                className="w-full h-14 text-base font-bold rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 group">
+                className="w-full h-14 text-base font-bold rounded-xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 group">
                 {t.pBeginCTA}
                 <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
