@@ -379,3 +379,17 @@ export const userProfilesTable = pgTable("user_profiles", {
   specialty: text("specialty").notNull().default(""),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Integraciones que una clínica pide al ver el catálogo «Integraciones disponibles» (redes, agendas, mensajería).
+// Una fila por clínica e integración; supra-control las ve en la ficha de la clínica.
+export const integrationRequestsTable = pgTable("integration_requests", {
+  id: text("id").primaryKey(),
+  centerId: text("center_id").notNull(),
+  integration: text("integration").notNull(),
+  requestedByUserId: text("requested_by_user_id").notNull(),
+  requestedByName: text("requested_by_name").notNull().default(""),
+  requestedByEmail: text("requested_by_email").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("integration_requests_center_integration_idx").on(table.centerId, table.integration),
+]);
