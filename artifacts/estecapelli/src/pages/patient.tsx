@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { PATIENT_EXTRA_TEXT, PHOTO_EDITOR_TEXT } from "@/lib/tools-i18n";
 import { useSearch, Link, useLocation } from "wouter";
 import {
   Camera, Check, CheckCircle2, ChevronRight, Info, ArrowLeft,
@@ -278,7 +279,8 @@ function ActivePhotoCard({
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [guideOpen, setGuideOpen] = useState(true);
   const [note, setNote] = useState(serverState?.note ?? "");
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const extra = PATIENT_EXTRA_TEXT[lang];
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -336,10 +338,10 @@ function ActivePhotoCard({
               <div className="space-y-2 text-xs text-muted-foreground leading-relaxed font-medium">
                 <p>{tip}</p>
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px]">
-                  <div><dt className="font-bold text-foreground">Orientación</dt><dd>{orientation} · {aspectRatio}</dd></div>
-                  <div><dt className="font-bold text-foreground">Luz</dt><dd>{light}</dd></div>
-                  <div><dt className="font-bold text-foreground">Distancia</dt><dd>{distance}</dd></div>
-                  <div><dt className="font-bold text-foreground">Fondo</dt><dd>{background}</dd></div>
+                  <div><dt className="font-bold text-foreground">{t.photoOrientation}</dt><dd>{orientation} · {aspectRatio}</dd></div>
+                  <div><dt className="font-bold text-foreground">{extra.light}</dt><dd>{light}</dd></div>
+                  <div><dt className="font-bold text-foreground">{extra.distance}</dt><dd>{distance}</dd></div>
+                  <div><dt className="font-bold text-foreground">{extra.background}</dt><dd>{background}</dd></div>
                 </dl>
               </div>
             </div>
@@ -562,6 +564,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
   const token = urlToken ?? storedToken;
   const [patientToken, setPatientToken] = useState<string | null>(token);
   const { t, lang, setLang } = useLanguage();
+  const extra = PATIENT_EXTRA_TEXT[lang];
   const [langOpen, setLangOpen] = useState(false);
   const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
 
@@ -1668,7 +1671,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
               {completedPhotos === photoTotal && (
                 <div className="mt-3 flex items-center gap-2 text-primary text-xs font-bold">
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>¡Todas las fotografías completadas!</span>
+                  <span>{extra.allDone}</span>
                 </div>
               )}
             </div>
@@ -1856,14 +1859,14 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
       <AlertDialog open={adjustedDiscardOpen} onOpenChange={setAdjustedDiscardOpen}>
         <AlertDialogContent className="rounded-3xl max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Descartar la versión ajustada?</AlertDialogTitle>
+            <AlertDialogTitle>{extra.discardTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              Se eliminará únicamente la copia ajustada y sus parámetros. El archivo original se conservará protegido y sin cambios.
+              {extra.discardDesc}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="mt-2 flex flex-col gap-2.5">
             <Button variant="destructive" disabled={editorSaving} onClick={discardTechnicalAdjustment} className="h-12 rounded-full font-semibold">
-              {editorSaving ? t.pProcessing : "Descartar versión ajustada"}
+              {editorSaving ? t.pProcessing : PHOTO_EDITOR_TEXT[lang].discard}
             </Button>
             <Button variant="outline" disabled={editorSaving} onClick={() => setAdjustedDiscardOpen(false)} className="h-12 rounded-full border-[#E8E4DE] bg-white font-semibold hover:bg-[#F5F2EE]">
               {t.cancel}
