@@ -158,3 +158,57 @@ export function pendingReportMail(input: {
       `<p style="color:#888;font-size:12px">Los enlaces piden iniciar sesión si no tienes la sesión abierta.</p></div>`,
   };
 }
+
+const BRAND = { navy: "#0A1F4D", blue: "#1D5FD8", mist: "#EAF2FC", ink: "#0B1F33", muted: "#4A5F82", line: "#D6E2F5" };
+const BRAND_FONT = `'Outfit','Segoe UI',Roboto,Helvetica,Arial,sans-serif`;
+
+/**
+ * Contrato de servicio para el representante legal de una clínica. Mismo estilo que el sitio
+ * (azul marino, azul Clinivista, Outfit). El correo trae el resumen del plan y el panel de
+ * aceptación; la casilla y el botón «Aceptar» están en la página segura a la que lleva el botón.
+ */
+export function contractMail(input: {
+  to: string; name?: string | null; clinicName: string; planLabel: string; version: string;
+  annex: { label: string; value: string }[]; link: string; expiresOn: string; logoUrl: string; siteUrl: string;
+}): Mail {
+  const greeting = input.name ? `Hola ${input.name},` : "Hola,";
+  const intro = `Te enviamos el contrato de servicio de ${input.clinicName} con Clinivista (plan ${input.planLabel}). Eres el representante legal registrado de la clínica, por eso te corresponde revisarlo y aceptarlo.`;
+  const note = `El enlace es personal y vence el ${input.expiresOn}. Si no esperabas este correo, ignóralo o escríbenos desde el panel de soporte.`;
+  const rows = input.annex.map((row) =>
+    `<tr><td style="padding:9px 14px;border-bottom:1px solid ${BRAND.line};color:${BRAND.muted};font-size:14px">${escapeHtml(row.label)}</td>` +
+    `<td style="padding:9px 14px;border-bottom:1px solid ${BRAND.line};color:${BRAND.ink};font-size:14px;font-weight:600;text-align:right">${escapeHtml(row.value)}</td></tr>`).join("");
+  const link = escapeHtml(input.link);
+  const text = `${greeting}\n\n${intro}\n\nResumen del plan ${input.planLabel}:\n` +
+    input.annex.map((row) => `- ${row.label}: ${row.value}`).join("\n") +
+    `\n\nPara leer el contrato completo y aceptarlo (casilla de aceptación y botón «Aceptar contrato»):\n${input.link}\n\n${note}\n\nClinivista · ${input.siteUrl}`;
+  const html =
+    `<div style="margin:0;padding:24px 12px;background:${BRAND.mist};font-family:${BRAND_FONT}">` +
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid ${BRAND.line}">` +
+    `<tr><td style="background:${BRAND.navy};padding:22px 28px">` +
+    `<table role="presentation" cellpadding="0" cellspacing="0"><tr>` +
+    `<td style="background:#ffffff;border-radius:12px;padding:6px;line-height:0"><img src="${escapeHtml(input.logoUrl)}" width="40" height="40" alt="Clinivista" style="display:block;border:0"></td>` +
+    `<td style="padding-left:12px;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:.2px;font-family:${BRAND_FONT}">Clinivista</td></tr></table>` +
+    `</td></tr>` +
+    `<tr><td style="padding:30px 28px 8px">` +
+    `<p style="margin:0 0 6px;color:${BRAND.blue};font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase">Contrato de servicio · versión ${escapeHtml(input.version)}</p>` +
+    `<h1 style="margin:0 0 14px;color:${BRAND.navy};font-size:24px;line-height:1.25">${escapeHtml(input.clinicName)}</h1>` +
+    `<p style="margin:0 0 12px;color:${BRAND.ink};font-size:15px;line-height:1.6">${escapeHtml(greeting)}</p>` +
+    `<p style="margin:0 0 20px;color:${BRAND.ink};font-size:15px;line-height:1.6">${escapeHtml(intro)}</p>` +
+    `<p style="margin:0 0 8px;color:${BRAND.navy};font-size:15px;font-weight:700">Resumen del plan ${escapeHtml(input.planLabel)}</p>` +
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${BRAND.line};border-radius:12px;border-collapse:separate;overflow:hidden">${rows}</table>` +
+    `</td></tr>` +
+    `<tr><td style="padding:22px 28px 6px">` +
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.mist};border:1px solid ${BRAND.line};border-radius:14px"><tr><td style="padding:18px 20px">` +
+    `<p style="margin:0 0 10px;color:${BRAND.navy};font-size:15px;font-weight:700">Aceptación del contrato</p>` +
+    `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 14px"><tr>` +
+    `<td valign="top" style="padding-right:10px"><span style="display:inline-block;width:18px;height:18px;border:2px solid ${BRAND.blue};border-radius:4px;background:#ffffff"></span></td>` +
+    `<td style="color:${BRAND.ink};font-size:14px;line-height:1.5">He leído el contrato de servicio y lo acepto en nombre de ${escapeHtml(input.clinicName)}.</td></tr></table>` +
+    `<a href="${link}" style="display:inline-block;background:${BRAND.blue};color:#ffffff;padding:13px 26px;border-radius:999px;text-decoration:none;font-size:15px;font-weight:700">Leer y aceptar contrato</a>` +
+    `<p style="margin:12px 0 0;color:${BRAND.muted};font-size:12px;line-height:1.5">Marcarás la casilla y pulsarás «Aceptar contrato» en la página segura. Queda registrado quién acepta, cuándo y qué versión.</p>` +
+    `</td></tr></table>` +
+    `</td></tr>` +
+    `<tr><td style="padding:16px 28px 26px"><p style="margin:0;color:${BRAND.muted};font-size:12px;line-height:1.6">${escapeHtml(note)}</p></td></tr>` +
+    `<tr><td style="background:${BRAND.navy};padding:16px 28px"><p style="margin:0;color:#9CC0F5;font-size:12px">Clinivista · seguimiento fotográfico clínico · <a href="${escapeHtml(input.siteUrl)}" style="color:#ffffff;text-decoration:underline">${escapeHtml(input.siteUrl.replace(/^https?:\/\//, ""))}</a></p></td></tr>` +
+    `</table></div>`;
+  return { to: input.to, subject: `Contrato de servicio Clinivista · ${input.clinicName}`, text, html };
+}

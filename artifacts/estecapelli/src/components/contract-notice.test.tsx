@@ -12,10 +12,12 @@ const contract = {
 };
 const view = (over: Record<string, unknown> = {}) => ({ enabled: true, plan: "basic", accepted: false, acceptance: null, canAccept: true, contract, ...over });
 
+const catalog = { canManage: true, current: "basic", plans: [{ id: "basic", limits: { patientsPerMonth: 30, storageGb: 50, transcriptionsPerMonth: 20, includedHours: 0 }, services: { buyHours: false, customWork: false } }] };
 let posted: unknown = null;
 function stub(payload: unknown, ok = true) {
   vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
     if (init?.method === "POST") { posted = JSON.parse(String(init.body)); return new Response("{}", { status: 201 }); }
+    if (String(url).includes("plan-catalog")) return new Response(JSON.stringify(catalog), { status: 200 });
     return ok ? new Response(JSON.stringify(payload), { status: 200 }) : new Response("{}", { status: 500 });
   }));
 }

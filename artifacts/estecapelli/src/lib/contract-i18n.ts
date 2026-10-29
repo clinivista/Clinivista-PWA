@@ -17,6 +17,11 @@ export type ContractText = {
   acceptedBy: string;
   error: string;
   changed: string;
+  linkInvalid: string;
+  thanks: string;
+  alreadyDone: string;
+  forClinic: string;
+  loading: string;
 };
 
 export const CONTRACT_TEXT: Record<LangCode, ContractText> = {
@@ -34,6 +39,11 @@ export const CONTRACT_TEXT: Record<LangCode, ContractText> = {
     acceptedBy: "Aceptado por {name} el {date}.",
     error: "No se pudo registrar la aceptación. Inténtalo de nuevo.",
     changed: "El contrato cambió mientras lo leías. Ciérralo y ábrelo de nuevo.",
+    linkInvalid: "El enlace no es válido o ya venció. Pide al equipo de Clinivista que te lo reenvíe.",
+    thanks: "Contrato aceptado. Gracias: ya quedó registrado.",
+    alreadyDone: "Este contrato ya fue aceptado el {date}.",
+    forClinic: "Clínica: {name}",
+    loading: "Cargando…",
   },
   en: {
     pending: "Your clinic has a service agreement waiting to be accepted.",
@@ -49,6 +59,11 @@ export const CONTRACT_TEXT: Record<LangCode, ContractText> = {
     acceptedBy: "Accepted by {name} on {date}.",
     error: "The acceptance could not be recorded. Please try again.",
     changed: "The agreement changed while you were reading it. Close it and open it again.",
+    linkInvalid: "The link is not valid or has expired. Ask the Clinivista team to resend it.",
+    thanks: "Agreement accepted. Thank you: it has been recorded.",
+    alreadyDone: "This agreement was already accepted on {date}.",
+    forClinic: "Clinic: {name}",
+    loading: "Loading…",
   },
   pt: {
     pending: "Sua clínica tem um contrato de serviço aguardando aceite.",
@@ -64,6 +79,11 @@ export const CONTRACT_TEXT: Record<LangCode, ContractText> = {
     acceptedBy: "Aceito por {name} em {date}.",
     error: "Não foi possível registrar o aceite. Tente novamente.",
     changed: "O contrato mudou enquanto você o lia. Feche-o e abra-o novamente.",
+    linkInvalid: "O link não é válido ou expirou. Peça à equipe da Clinivista que o reenvie.",
+    thanks: "Contrato aceito. Obrigado: o aceite foi registrado.",
+    alreadyDone: "Este contrato já foi aceito em {date}.",
+    forClinic: "Clínica: {name}",
+    loading: "Carregando…",
   },
   fr: {
     pending: "Votre clinique a un contrat de service en attente d'acceptation.",
@@ -79,6 +99,11 @@ export const CONTRACT_TEXT: Record<LangCode, ContractText> = {
     acceptedBy: "Accepté par {name} le {date}.",
     error: "L'acceptation n'a pas pu être enregistrée. Réessayez.",
     changed: "Le contrat a changé pendant votre lecture. Fermez-le et rouvrez-le.",
+    linkInvalid: "Le lien n'est pas valide ou a expiré. Demandez à l'équipe Clinivista de le renvoyer.",
+    thanks: "Contrat accepté. Merci : l'acceptation est enregistrée.",
+    alreadyDone: "Ce contrat a déjà été accepté le {date}.",
+    forClinic: "Clinique : {name}",
+    loading: "Chargement…",
   },
   de: {
     pending: "Für Ihre Klinik liegt ein Dienstleistungsvertrag zur Annahme bereit.",
@@ -94,6 +119,11 @@ export const CONTRACT_TEXT: Record<LangCode, ContractText> = {
     acceptedBy: "Angenommen von {name} am {date}.",
     error: "Die Annahme konnte nicht gespeichert werden. Bitte erneut versuchen.",
     changed: "Der Vertrag hat sich beim Lesen geändert. Schließen und erneut öffnen.",
+    linkInvalid: "Der Link ist ungültig oder abgelaufen. Bitten Sie das Clinivista-Team, ihn erneut zu senden.",
+    thanks: "Vertrag angenommen. Danke: Die Annahme wurde gespeichert.",
+    alreadyDone: "Dieser Vertrag wurde bereits am {date} angenommen.",
+    forClinic: "Klinik: {name}",
+    loading: "Wird geladen…",
   },
   it: {
     pending: "La tua clinica ha un contratto di servizio in attesa di accettazione.",
@@ -109,6 +139,11 @@ export const CONTRACT_TEXT: Record<LangCode, ContractText> = {
     acceptedBy: "Accettato da {name} il {date}.",
     error: "Non è stato possibile registrare l'accettazione. Riprova.",
     changed: "Il contratto è cambiato mentre lo leggevi. Chiudilo e riaprilo.",
+    linkInvalid: "Il link non è valido o è scaduto. Chiedi al team Clinivista di inviarlo di nuovo.",
+    thanks: "Contratto accettato. Grazie: l'accettazione è stata registrata.",
+    alreadyDone: "Questo contratto è già stato accettato il {date}.",
+    forClinic: "Clinica: {name}",
+    loading: "Caricamento…",
   },
   tr: {
     pending: "Kliniğinizin kabul bekleyen bir hizmet sözleşmesi var.",
@@ -124,6 +159,11 @@ export const CONTRACT_TEXT: Record<LangCode, ContractText> = {
     acceptedBy: "{date} tarihinde {name} tarafından kabul edildi.",
     error: "Kabul kaydedilemedi. Lütfen tekrar deneyin.",
     changed: "Siz okurken sözleşme değişti. Kapatıp yeniden açın.",
+    linkInvalid: "Bağlantı geçerli değil veya süresi doldu. Clinivista ekibinden yeniden göndermesini isteyin.",
+    thanks: "Sözleşme kabul edildi. Teşekkürler: kayıt altına alındı.",
+    alreadyDone: "Bu sözleşme {date} tarihinde zaten kabul edildi.",
+    forClinic: "Klinik: {name}",
+    loading: "Yükleniyor…",
   },
   ar: {
     pending: "لدى عيادتك عقد خدمة بانتظار الموافقة.",
@@ -139,6 +179,11 @@ export const CONTRACT_TEXT: Record<LangCode, ContractText> = {
     acceptedBy: "قبله {name} بتاريخ {date}.",
     error: "تعذّر تسجيل الموافقة. حاول مرة أخرى.",
     changed: "تغيّر العقد أثناء قراءتك. أغلقه وافتحه من جديد.",
+    linkInvalid: "الرابط غير صالح أو انتهت صلاحيته. اطلب من فريق Clinivista إعادة إرساله.",
+    thanks: "تم قبول العقد. شكرًا: تم تسجيل الموافقة.",
+    alreadyDone: "تم قبول هذا العقد مسبقًا بتاريخ {date}.",
+    forClinic: "العيادة: {name}",
+    loading: "جارٍ التحميل…",
   },
   zh: {
     pending: "您的诊所有一份服务合同等待接受。",
@@ -154,6 +199,11 @@ export const CONTRACT_TEXT: Record<LangCode, ContractText> = {
     acceptedBy: "{name} 于 {date} 接受。",
     error: "无法记录接受。请重试。",
     changed: "您阅读时合同已更改。请关闭后重新打开。",
+    linkInvalid: "链接无效或已过期。请联系 Clinivista 团队重新发送。",
+    thanks: "合同已接受。谢谢：已记录。",
+    alreadyDone: "此合同已于 {date} 接受。",
+    forClinic: "诊所：{name}",
+    loading: "加载中…",
   },
 };
 

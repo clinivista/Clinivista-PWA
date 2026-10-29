@@ -339,3 +339,19 @@ export const clinicContractAcceptancesTable = pgTable("clinic_contract_acceptanc
 }, (table) => [
   index("clinic_contract_acceptances_center_idx").on(table.centerId, table.acceptedAt),
 ]);
+
+// Enlaces únicos con que se envía el contrato por correo al representante legal (solo se guarda el hash del token).
+export const clinicContractInvitesTable = pgTable("clinic_contract_invites", {
+  id: text("id").primaryKey(),
+  centerId: text("center_id").notNull(),
+  userId: text("user_id").notNull(),
+  email: text("email").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  plan: text("plan").notNull(),
+  contractVersion: text("contract_version").notNull(),
+  sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+}, (table) => [
+  index("clinic_contract_invites_center_idx").on(table.centerId, table.sentAt),
+]);

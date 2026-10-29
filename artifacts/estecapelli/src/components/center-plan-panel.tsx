@@ -44,12 +44,20 @@ async function send(url: string, method: "PUT" | "POST", body: unknown): Promise
 type ContractHistory = {
   enabled: boolean; available: boolean; version: string; plan: PlanId; status: "aceptado" | "pendiente";
   history: Array<{ id: string; plan: PlanId; version: string; hash: string; byName: string; byEmail: string; byRole: string; ip: string | null; acceptedAt: string }>;
+  legalReps: Array<{ id: string; name: string; email: string }>;
+  mailAvailable: boolean;
+  invites: Array<{ id: string; userId: string; email: string; plan: PlanId; version: string; sentAt: string; expiresAt: string; usedAt: string | null }>;
 };
+type SendResult = { results: Array<{ userId: string; email: string; name: string; status: "enviado" | "sin_correo_configurado" | "error" }> };
 
 /** Supra-control: contrato de servicio de la clínica: estado frente a la versión vigente e historial de aceptaciones. */
 function ContractSection({ centerId }: { centerId: string }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [sending, setSending] = useState(false);
+  const contractKey = ["/api/director/centers", centerId, "contract"];
   const { data } = useQuery({
-    queryKey: ["/api/director/centers", centerId, "contract"],
+    queryKey: contractKey,
     queryFn: async () => {
       const response = await fetch(`/api/director/centers/${encodeURIComponent(centerId)}/contract`, { credentials: "include" });
       if (!response.ok) throw new Error();
@@ -58,6 +66,24 @@ function ContractSection({ centerId }: { centerId: string }) {
   });
   if (!data || !Array.isArray(data.history)) return null;
   const pending = data.status === "pendiente";
+  const reps = Array.isArray(data.legalReps) ? data.legalReps : [];
+  const invites = Array.isArray(data.invites) ? data.invites : [];
+  const sendContract = async () => {
+    setSending(true);
+    try {
+      const response = await fetch(`/api/director/centers/${encodeURIComponent(centerId)}/contract/send`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: "{}" });
+      const body = (await response.json().catch(() => null)) as (SendResult & { error?: string }) | null;
+      if (!response.ok || !body?.results) { toast({ title: body?.error ?? "No se pudo enviar el contrato.", variant: "destructive" }); return; }
+      const ok = body.results.filter((row) => row.status === "enviado").map((row) => row.email);
+      if (ok.length > 0) toast({ title: `Contrato enviado a ${ok.join(", ")}.` });
+      else toast({ title: body.results.some((row) => row.status === "sin_correo_configurado") ? "El servicio de correo no está configurado en el servidor." : "No se pudo enviar el correo. Inténtalo de nuevo.", variant: "destructive" });
+      await queryClient.invalidateQueries({ queryKey: contractKey });
+    } catch {
+      toast({ title: "No se pudo enviar el contrato.", variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  };
   return (
     <div className="flex flex-col gap-2" data-testid={`contract-section-${centerId}`}>
       <p className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground"><FileSignature className="w-4 h-4" /> Contrato de servicio</p>
@@ -67,6 +93,21 @@ function ContractSection({ centerId }: { centerId: string }) {
         {!data.enabled && " (La aceptación en línea aún no está activada: se enciende con CONTRACTS_ENABLED en Render.)"}
         {data.enabled && !data.available && " (El registro no está disponible: falta ejecutar sql0004 en Neon.)"}
       </p>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <Button size="sm" variant="outline" className="rounded-full" disabled={sending || !data.enabled || reps.length === 0} onClick={() => void sendContract()} data-testid="contract-send">
+          {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : invites.length > 0 ? "Reenviar contrato por correo" : "Enviar contrato por correo"}
+        </Button>
+        <span className="text-xs text-muted-foreground" data-testid="contract-recipients">
+          {reps.length === 0 ? "Sin representante legal activo: créalo o márcalo en Usuarios." : `Destinatario${reps.length > 1 ? "s" : ""}: ${reps.map((rep) => rep.email).join(", ")}`}
+        </span>
+      </div>
+      {invites.length > 0 && (
+        <ul className="flex flex-col gap-0.5 text-xs text-muted-foreground" data-testid="contract-invites">
+          {invites.slice(0, 4).map((row) => (
+            <li key={row.id}>Enviado {dateText(row.sentAt)} a {row.email} · {row.usedAt ? `aceptado ${dateText(row.usedAt)}` : `vence ${dateText(row.expiresAt)}`}</li>
+          ))}
+        </ul>
+      )}
       {data.history.length === 0 ? (
         <p className="text-xs text-muted-foreground">Sin aceptaciones registradas.</p>
       ) : (
