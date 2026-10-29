@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, X, RotateCcw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/lib/language";
+import { CAMERA_TEXT, fillTools } from "@/lib/tools-i18n";
 import { cropRectForVideo, frameFor, parseRatio, type Size } from "@/lib/camera-crop";
 
 interface CameraModalProps {
@@ -17,6 +19,13 @@ interface CameraModalProps {
 type PermissionState = "requesting" | "granted" | "denied" | "unsupported";
 
 export function CameraModal({ onCapture, onClose, onError, title, aspectRatio }: CameraModalProps) {
+  const { lang, t } = useLanguage();
+  const cam = CAMERA_TEXT[lang];
+  // El mensaje se arma con el idioma vigente sin reiniciar la cámara cuando cambia.
+  const textRef = useRef({ cam, t });
+  textRef.current = { cam, t };
+  const say = (key: "insecure" | "unsupported" | "denied" | "notFound" | "failed") =>
+    fillTools(textRef.current.cam[key], { upload: textRef.current.t.pUploadDevice });
   const videoRef = useRef<HTMLVideoElement>(null);
   const viewfinderRef = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState<Size>({ width: 0, height: 0 });
@@ -61,8 +70,8 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio }:
       if (activeTokenRef.current !== token) return;
       const insecure = typeof window !== "undefined" && !window.isSecureContext;
       const msg = insecure
-        ? "La cámara no está disponible porque la página no se cargó de forma segura (HTTPS). Usa la opción «Subir desde el dispositivo» para seleccionar una imagen de tu galería."
-        : "Tu navegador no soporta acceso a cámara. Por favor usa la opción «Subir desde el dispositivo» para seleccionar una imagen de tu galería.";
+        ? say("insecure")
+        : say("unsupported");
       setPermissionState("unsupported");
       setErrorMessage(msg);
       onError?.(msg);
@@ -110,10 +119,10 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio }:
       const isNotFound = errName === "NotFoundError" || errName === "DevicesNotFoundError";
 
       const msg = isDenied
-        ? "Acceso a la cámara denegado. Verifica los permisos en tu navegador y vuelve a intentar, o usa «Subir desde el dispositivo» para seleccionar una imagen de tu galería."
+        ? say("denied")
         : isNotFound
-          ? "No se encontró ninguna cámara en este dispositivo. Usa la opción «Subir desde el dispositivo» para seleccionar una imagen de tu galería."
-          : "No se pudo acceder a la cámara. Usa la opción «Subir desde el dispositivo» para seleccionar una imagen de tu galería.";
+          ? say("notFound")
+          : say("failed");
 
       setPermissionState("denied");
       setErrorMessage(msg);
@@ -202,7 +211,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio }:
         {permissionState === "requesting" && (
           <div className="flex flex-col items-center gap-4 text-white/70">
             <Camera className="w-12 h-12 animate-pulse" />
-            <p className="text-base font-medium">Solicitando acceso a la cámara…</p>
+            <p className="text-base font-medium">{cam.requesting}</p>
           </div>
         )}
 
@@ -213,7 +222,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio }:
             </div>
             <div>
               <p className="text-white font-semibold text-base mb-2">
-                {permissionState === "unsupported" ? "Cámara no disponible" : "Acceso denegado"}
+                {permissionState === "unsupported" ? cam.unavailableTitle : cam.deniedTitle}
               </p>
               <p className="text-white/70 text-sm leading-relaxed">{errorMessage}</p>
             </div>
@@ -221,7 +230,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio }:
               onClick={handleClose}
               className="bg-white text-black hover:bg-white/90 font-semibold rounded-xl px-6 py-3"
             >
-              Usar «Subir Foto»
+              {fillTools(cam.useUpload, { photo: t.pUploadPhoto })}
             </Button>
           </div>
         )}
