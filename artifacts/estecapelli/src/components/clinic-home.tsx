@@ -16,6 +16,7 @@ import { STAFF_FLOW_TEXT } from "@/lib/staff-flow-i18n";
 import { NAV_TEXT } from "@/lib/phases-i18n";
 import { CONSULT_TEXT } from "@/lib/consult-types-i18n";
 import { ActivityChart } from "@/components/home-charts";
+import { PlanCounterCard } from "@/components/plan-counter";
 import { initialsOf } from "@/components/clinic-topbar";
 import {
   cardClass, Skeleton, StatCard, QuickCard, Welcome, RangeSelect, ChartLegend, quickGridClass, statGridClass,
@@ -162,6 +163,9 @@ export function ClinicHome({ userName, canManageUsers, canEditPhases, specialty,
             ))}
           </dl>
         </section>
+
+        {/* Mi plan: contador de uso del mes, horas y suscripción */}
+        <PlanCounterCard />
 
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-4 md:gap-5">
           {/* Actividad fotográfica */}

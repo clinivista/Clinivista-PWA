@@ -6,6 +6,7 @@ import router from "./routes";
 import { getAuthContext } from "./routes/auth";
 import { logger } from "./lib/logger";
 import { createHttpLogger } from "./lib/http-logger";
+import { PlanLimitError } from "./lib/plan-limits";
 
 const app: Express = express();
 
@@ -24,6 +25,15 @@ app.use((req, res, next) => {
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 app.use("/api", router);
+
+// Un límite del plan (almacenamiento lleno, cobro vencido) llega como 403 con el motivo, no como un error 500.
+app.use("/api", (error: unknown, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (error instanceof PlanLimitError) {
+    res.status(error.status).json({ error: error.message, code: error.code });
+    return;
+  }
+  next(error);
+});
 
 // Serve the compiled PWA from the same origin, so the admin session cookie and relative /api calls just work.
 const pwaDir = path.resolve(import.meta.dirname, "../../estecapelli/dist/public");

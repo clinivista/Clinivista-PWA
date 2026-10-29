@@ -1,3 +1,4 @@
+import { assertCanStore } from "./plan-limits";
 import { MeasurementError, computeMeasurement, readMeasurement, type PhotoMeasurement } from "./measurement";
 import crypto from "crypto";
 import sharp from "sharp";
@@ -411,6 +412,7 @@ export async function createClinicalPhoto(input: {
   captureMetadata?: Record<string, unknown>;
 }): Promise<PhotoStatus> {
   const evaluation = await ensureEvaluationForLead(input.lead);
+  await assertCanStore(evaluation.centerId);
   // A patient token only captures the pre-evaluación; later phases are the staff's.
   const { views: patientViews } = await getPatientPhaseViews(evaluation.protocolId);
   const view = patientViews.find((candidate) => candidate.key === input.key);
@@ -874,6 +876,7 @@ export async function createStaffPhasePhoto(input: {
   height: number;
 }): Promise<PhotoStatus> {
   const evaluation = await ensureEvaluationForLead(input.lead);
+  await assertCanStore(evaluation.centerId);
   const phases = await getLeadPhases(input.lead);
   const phase = phases.find((candidate) => candidate.views.some((view) => view.id === input.viewId));
   const view = phase?.views.find((candidate) => candidate.id === input.viewId);
@@ -1054,6 +1057,7 @@ async function storeVideo(input: {
 /** El paciente graba el video de una vista de su pre-evaluación (queda en borrador hasta que lo confirma, como una foto). */
 export async function createClinicalVideo(input: { lead: Lead; key: string; source: "camera" | "upload"; video: ParsedVideo }): Promise<PhotoStatus> {
   const evaluation = await ensureEvaluationForLead(input.lead);
+  await assertCanStore(evaluation.centerId);
   const { views } = await getPatientPhaseViews(evaluation.protocolId);
   const view = views.find((candidate) => candidate.key === input.key);
   if (!view) throw new PhaseCaptureError("Esa vista no existe en tu pre-evaluación.", 404);
@@ -1066,6 +1070,7 @@ export async function createClinicalVideo(input: { lead: Lead; key: string; sour
 /** El personal (tablet o «Continuar en el celular») graba el video de una vista; mismas reglas de orden que las fotos. */
 export async function createStaffPhaseVideo(input: { lead: Lead; viewId: string; staffUserId: string; source: "camera" | "upload"; video: ParsedVideo }): Promise<PhotoStatus> {
   const evaluation = await ensureEvaluationForLead(input.lead);
+  await assertCanStore(evaluation.centerId);
   const phases = await getLeadPhases(input.lead);
   const phase = phases.find((candidate) => candidate.views.some((view) => view.id === input.viewId));
   const view = phase?.views.find((candidate) => candidate.id === input.viewId);
