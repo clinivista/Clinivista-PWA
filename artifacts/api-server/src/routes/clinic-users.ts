@@ -16,6 +16,7 @@ import { clean, uid } from "../lib/helpers";
 import { PHONE_ERROR, parseUserPhone } from "../lib/user-phone";
 import { destroySessionsForUser } from "../lib/sessions";
 import { resetToTemporaryPassword } from "../lib/user-management";
+import { clinicProfileOf, hasProfileKeys, parseUserProfile, saveUserProfile, withUserProfiles } from "../lib/profiles";
 
 const router: IRouter = Router();
 
@@ -45,6 +46,8 @@ async function requireClinicUserManager(req: Request, res: Response): Promise<Cl
   const staff = requireStaffAuth(req, res);
   if (!staff) return undefined;
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, staff.userId));
+  // A director looking at the clinic as its legal representative or as an administrativo manages its people too.
+  if (user?.role === "director" && (staff.legal === true || staff.role === "administrativo")) return { userId: staff.userId, centerId: staff.centerId };
   if (!user || user.centerId !== staff.centerId || !canManageClinicUsers(user)) {
     res.status(403).json({ error: "Solo el personal administrativo o el representante legal puede gestionar usuarios." });
     return undefined;
@@ -86,7 +89,7 @@ router.get("/clinic/users", async (req, res): Promise<void> => {
     inArray(usersTable.role, [...CLINIC_ROLES]),
   ));
   users.sort((a, b) => a.name.localeCompare(b.name) || a.email.localeCompare(b.email));
-  res.json({ users: users.map((user) => ({ ...user, isSelf: user.id === manager.userId })) });
+  res.json({ country: (await clinicProfileOf(manager.centerId)).country, users: (await withUserProfiles(users)).map((user) => ({ ...user, isSelf: user.id === manager.userId })) });
 });
 
 router.post("/clinic/users", async (req, res): Promise<void> => {
@@ -113,6 +116,11 @@ router.post("/clinic/users", async (req, res): Promise<void> => {
     res.status(400).json({ error: PHONE_ERROR });
     return;
   }
+  const profile = parseUserProfile(req.body, { role: body.data.role, require: true, requireAddress: body.data.legalRepresentative === true, country: (await clinicProfileOf(manager.centerId)).country });
+  if ("error" in profile) {
+    res.status(400).json({ error: profile.error });
+    return;
+  }
   const id = uid(9);
   await db.insert(usersTable).values({
     id,
@@ -125,9 +133,10 @@ router.post("/clinic/users", async (req, res): Promise<void> => {
     centerId: manager.centerId,
     legalRepresentative: body.data.legalRepresentative === true,
   });
+  await saveUserProfile(id, profile.value);
   if (body.data.legalRepresentative === true) void sendContractToNewRepresentative(manager.centerId, id, baseUrl(req));
   const [created] = await db.select(COLUMNS).from(usersTable).where(eq(usersTable.id, id));
-  res.status(201).json({ ...created, isSelf: false });
+  res.status(201).json({ ...(await withUserProfiles([created!]))[0], isSelf: false });
 });
 
 router.patch("/clinic/users/:userId", async (req, res): Promise<void> => {
@@ -135,7 +144,7 @@ router.patch("/clinic/users/:userId", async (req, res): Promise<void> => {
   if (!manager) return;
   const params = PatchClinicUserParams.safeParse(req.params);
   const body = PatchClinicUserBody.safeParse(req.body);
-  const nothingToChange = body.success && ["active", "legalRepresentative", "name", "phone", "role", "password"].every((key) => body.data[key as keyof typeof body.data] === undefined);
+  const nothingToChange = body.success && !hasProfileKeys(req.body) && ["active", "legalRepresentative", "name", "phone", "role", "password"].every((key) => body.data[key as keyof typeof body.data] === undefined);
   if (!params.success || !body.success || nothingToChange) {
     res.status(400).json({ error: "Datos inválidos." });
     return;
@@ -148,6 +157,11 @@ router.patch("/clinic/users/:userId", async (req, res): Promise<void> => {
   const phone = body.data.phone === undefined ? undefined : parseUserPhone(body.data.phone);
   if (phone === null) {
     res.status(400).json({ error: PHONE_ERROR });
+    return;
+  }
+  const profile = parseUserProfile(req.body, { role: body.data.role ?? user.role, require: false, country: (await clinicProfileOf(manager.centerId)).country });
+  if ("error" in profile) {
+    res.status(400).json({ error: profile.error });
     return;
   }
   const isSelf = user.id === manager.userId;
@@ -178,12 +192,13 @@ router.patch("/clinic/users/:userId", async (req, res): Promise<void> => {
     ...(body.data.password !== undefined ? { passwordHash: hashPassword(body.data.password) } : {}),
     updatedAt: new Date(),
   }).where(eq(usersTable.id, user.id));
+  await saveUserProfile(user.id, profile.value);
   // Someone else's new password closes their open sessions (your own stays open).
   if (body.data.password !== undefined && !isSelf) destroySessionsForUser(user.id);
   // A new role must not keep working with the old one in an open session.
   if (body.data.active === false || (body.data.role !== undefined && body.data.role !== user.role)) destroySessionsForUser(user.id);
   const [updated] = await db.select(COLUMNS).from(usersTable).where(eq(usersTable.id, user.id));
-  res.json({ ...updated, isSelf });
+  res.json({ ...(await withUserProfiles([updated!]))[0], isSelf });
 });
 
 router.post("/clinic/users/:userId/reset-password", async (req, res): Promise<void> => {

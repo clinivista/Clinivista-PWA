@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UserRow } from "./user-row";
 import { useLanguage } from "@/lib/language";
 import { USERS_TEXT, withEmail } from "@/lib/users-i18n";
+import { ProfileFields, EMPTY_PROFILE, profileProblem, profileProblemText, withProfile, type ProfileDraft } from "@/components/profile-fields";
 
 import { loadErrorDetail } from "@/lib/load-error";
 
@@ -44,27 +45,35 @@ export function ClinicUsersPanel() {
   const deleteUser = useDeleteClinicUser();
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState(EMPTY_DRAFT);
+  const [profile, setProfile] = useState<ProfileDraft>(EMPTY_PROFILE);
   const users = data?.users ?? [];
+  const country = (data as { country?: string } | undefined)?.country;
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: getGetClinicUsersQueryKey() });
 
   const handleCreate = (event: React.FormEvent) => {
     event.preventDefault();
+    const problem = profileProblem(profile, { role: draft.role, country, legalRepresentative: draft.legalRepresentative });
+    if (problem) {
+      toast({ variant: "destructive", title: x.createErrorTitle, description: profileProblemText(problem, profile, country, lang) ?? x.tryAgain });
+      return;
+    }
     createUser.mutate(
       {
-        data: {
+        data: withProfile({
           email: draft.email.trim(),
           name: draft.name.trim() || undefined,
           phone: draft.phone.trim() || undefined,
           password: draft.password,
           role: draft.role,
           legalRepresentative: draft.legalRepresentative,
-        },
+        }, { rut: profile.rut.trim(), address: profile.address.trim(), prefix: profile.prefix, ...(draft.role === "medico" ? { specialty: profile.specialty } : {}) }),
       },
       {
         onSuccess: async (created) => {
           await refresh();
           setDraft(EMPTY_DRAFT);
+          setProfile(EMPTY_PROFILE);
           setAdding(false);
           toast({ title: x.createdTitle, description: withEmail(x.createdDesc, created.email) });
         },
@@ -143,6 +152,7 @@ export function ClinicUsersPanel() {
                 <option value="administrativo">{x.administrativo}</option>
               </select>
             </div>
+            <ProfileFields idPrefix="new-user" value={profile} onChange={setProfile} role={draft.role} country={country} legalRepresentative={draft.legalRepresentative} />
             <div className="flex items-start gap-3">
               <Checkbox
                 id="new-user-legal"
@@ -181,6 +191,7 @@ export function ClinicUsersPanel() {
             key={user.id}
             user={user}
             isSelf={user.isSelf}
+            country={country}
             setActive={async (active) => {
               await patchUser.mutateAsync({ userId: user.id, data: { active } });
               await refresh();

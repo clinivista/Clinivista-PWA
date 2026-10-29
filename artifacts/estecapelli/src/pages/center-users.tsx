@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
 import { useToast } from "@/hooks/use-toast";
 import { UserRow } from "./user-row";
+import { ProfileFields, EMPTY_PROFILE, profileProblem, profileProblemText, withProfile, type ProfileDraft } from "@/components/profile-fields";
 
 import { loadErrorDetail } from "@/lib/load-error";
 
@@ -29,20 +30,28 @@ export function CenterUsers({ centerId }: { centerId: string }) {
   const createUser = useCreateDirectorCenterUser();
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState(EMPTY_DRAFT);
+  const [profile, setProfile] = useState<ProfileDraft>(EMPTY_PROFILE);
   const patchUser = usePatchDirectorCenterUser();
   const resetPassword = useResetDirectorCenterUserPassword();
   const users = data?.users ?? [];
+  const country = (data as { country?: string } | undefined)?.country;
 
   const handleCreate = (event: React.FormEvent) => {
     event.preventDefault();
+    const problem = profileProblem(profile, { role: draft.role, country, legalRepresentative: draft.legalRepresentative });
+    if (problem) {
+      toast({ variant: "destructive", title: "No pudimos crear el usuario", description: profileProblemText(problem, profile, country, "es") ?? "Revisa los datos." });
+      return;
+    }
     createUser.mutate(
-      { id: centerId, data: { email: draft.email.trim(), name: draft.name.trim() || undefined, phone: draft.phone.trim() || undefined, password: draft.password, role: draft.role, legalRepresentative: draft.legalRepresentative } },
+      { id: centerId, data: withProfile({ email: draft.email.trim(), name: draft.name.trim() || undefined, phone: draft.phone.trim() || undefined, password: draft.password, role: draft.role, legalRepresentative: draft.legalRepresentative }, { rut: profile.rut.trim(), address: profile.address.trim(), prefix: profile.prefix, ...(draft.role === "medico" ? { specialty: profile.specialty } : {}) }) },
       {
         onSuccess: async (created) => {
           await queryClient.invalidateQueries({ queryKey: getGetDirectorCenterUsersQueryKey(centerId) });
           // El contador "N personal" de la tarjeta vive en la lista de clínicas.
           await queryClient.invalidateQueries({ queryKey: getGetDirectorCentersQueryKey() });
           setDraft(EMPTY_DRAFT);
+          setProfile(EMPTY_PROFILE);
           setAdding(false);
           toast({ title: "Usuario creado", description: `${created.email} ya puede iniciar sesión en esta clínica.` });
         },
@@ -109,6 +118,7 @@ export function CenterUsers({ centerId }: { centerId: string }) {
               <option value="administrativo">Administrativo</option>
             </select>
           </div>
+          <ProfileFields idPrefix={`new-${centerId}`} value={profile} onChange={setProfile} role={draft.role} country={country} legalRepresentative={draft.legalRepresentative} locale="es" />
           <div className="flex items-center gap-2">
             <Checkbox
               id={`new-legal-${centerId}`}
@@ -145,6 +155,7 @@ export function CenterUsers({ centerId }: { centerId: string }) {
         <div key={user.id} className="flex flex-col gap-2">
         <UserRow
           locale="es"
+          country={country}
           user={user}
           setActive={async (active) => {
             await patchUser.mutateAsync({ id: centerId, userId: user.id, data: { active } });

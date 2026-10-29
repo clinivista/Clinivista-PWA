@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { UserRow } from "./user-row";
 
-const user = { id: "u1", email: "ana@x.cl", name: "Ana", phone: "+56 9 1111 2222", role: "medico", active: true };
+const user = { id: "u1", email: "ana@x.cl", name: "Ana", phone: "+56 9 1111 2222", role: "medico", active: true, rut: "00000000-0", specialty: "dermatologo" };
 const base = { user, setActive: vi.fn(), resetPassword: vi.fn() };
 
 describe("UserRow: editar datos", () => {

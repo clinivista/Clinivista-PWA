@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { PLAN_DEFAULT_LIMITS, PLAN_SERVICES, type Plan } from "./plans";
+import { COUNTRIES as COUNTRY_NAMES } from "./profiles";
 
 /**
  * Contrato de servicio. Sube CONTRACT_VERSION cada vez que cambie el texto: todas las clínicas
@@ -7,12 +8,16 @@ import { PLAN_DEFAULT_LIMITS, PLAN_SERVICES, type Plan } from "./plans";
  * «Contratos de servicio Clinivista»; los [PRECIO A DEFINIR] y similares deben cerrarse y
  * pasar por revisión legal antes de activar CONTRACTS_ENABLED=true en Render.
  */
-export const CONTRACT_VERSION = "2026-10-borrador-1";
+export const CONTRACT_VERSION = "2026-10-borrador-2";
 
 export const contractsEnabled = (): boolean => process.env.CONTRACTS_ENABLED === "true";
 
 export type ContractClause = { title: string; body: string };
-export type ContractText = { title: string; version: string; clauses: ContractClause[]; annexTitle: string; annex: { label: string; value: string }[]; hash: string };
+export type ContractParty = {
+  clinic: { name: string; country?: string; rut: string; address: string; phone: string };
+  representative: { prefix: string; name: string; rut: string; address: string } | null;
+};
+export type ContractText = { title: string; version: string; clauses: ContractClause[]; annexTitle: string; annex: { label: string; value: string }[]; hash: string; missing: string[] };
 
 const PLAN_LABEL: Record<Plan, string> = { basic: "Basic", unlimited: "Unlimited", titanium: "Titanium" };
 
@@ -54,10 +59,49 @@ function annexOf(plan: Plan): { label: string; value: string }[] {
   ];
 }
 
-export function contractFor(plan: Plan): ContractText {
+const blank = (value: string | undefined | null, placeholder: string): string => (value && value.trim() ? value.trim() : placeholder);
+
+/** Datos que faltan para que el contrato pueda aceptarse (aparecen como [PENDIENTE] en el texto). */
+const isChile = (party?: ContractParty) => (party?.clinic.country ?? "CL") === "CL";
+
+export function missingPartyData(party?: ContractParty): string[] {
+  const missing: string[] = [];
+  const doc = isChile(party) ? "RUT" : "pasaporte";
+  if (!party?.clinic.rut.trim()) missing.push(`${doc} de la clínica`);
+  if (!party?.clinic.address.trim()) missing.push("dirección de la clínica");
+  if (!party?.clinic.phone.trim()) missing.push("teléfono de la clínica");
+  if (!party?.representative) missing.push("representante legal");
+  else {
+    if (!party.representative.name.trim()) missing.push("nombre del representante legal");
+    if (!party.representative.rut.trim()) missing.push(`${doc} del representante legal`);
+    if (!party.representative.address.trim()) missing.push("dirección del representante legal");
+  }
+  return missing;
+}
+
+/** Cláusula de comparecencia con los datos de la clínica y de su representante legal. */
+function appearance(party?: ContractParty): ContractClause {
+  const clinic = party?.clinic;
+  const rep = party?.representative;
+  const chile = isChile(party);
+  const docOf = (value: string | undefined, pending: string) => (chile ? `RUT ${blank(value, pending)}` : `pasaporte N° ${blank(value, pending)}`);
+  const person = rep ? [rep.prefix, blank(rep.name, "[NOMBRE DEL REPRESENTANTE LEGAL PENDIENTE]")].filter(Boolean).join(" ") : "[REPRESENTANTE LEGAL PENDIENTE]";
+  return {
+    title: "Comparecencia",
+    body:
+      `Entre Clinivista, [RAZÓN SOCIAL, RUT Y DOMICILIO DEL PROVEEDOR] (el «Proveedor»), y ${blank(clinic?.name, "[NOMBRE DE LA CLÍNICA]")}, ` +
+      `${docOf(clinic?.rut, chile ? "[RUT DE LA CLÍNICA PENDIENTE]" : "[PASAPORTE DE LA CLÍNICA PENDIENTE]")}, con domicilio en ${blank(clinic?.address, "[DIRECCIÓN DE LA CLÍNICA PENDIENTE]")}${chile ? "" : `, ${COUNTRY_NAMES[clinic?.country ?? ""] ?? ""}`}, ` +
+      `teléfono ${blank(clinic?.phone, "[TELÉFONO PENDIENTE]")} (la «Clínica»), representada por ${person}, ` +
+      `${chile ? "cédula de identidad " : ""}${docOf(rep?.rut, chile ? "[RUT DEL REPRESENTANTE PENDIENTE]" : "[PASAPORTE DEL REPRESENTANTE PENDIENTE]").replace(/^RUT /, "")}, con domicilio en ${blank(rep?.address, "[DIRECCIÓN DEL REPRESENTANTE PENDIENTE]")}, ` +
+      `en su calidad de representante legal, se acuerda el presente contrato de servicio.`,
+  };
+}
+
+export function contractFor(plan: Plan, party?: ContractParty): ContractText {
   const title = "Contrato de servicio Clinivista";
   const annexTitle = `Anexo: Plan ${PLAN_LABEL[plan]}`;
   const annex = annexOf(plan);
-  const canonical = JSON.stringify({ version: CONTRACT_VERSION, plan, title, clauses: CLAUSES, annexTitle, annex });
-  return { title, version: CONTRACT_VERSION, clauses: CLAUSES, annexTitle, annex, hash: createHash("sha256").update(canonical).digest("hex") };
+  const clauses = [appearance(party), ...CLAUSES];
+  const canonical = JSON.stringify({ version: CONTRACT_VERSION, plan, title, clauses, annexTitle, annex });
+  return { title, version: CONTRACT_VERSION, clauses, annexTitle, annex, hash: createHash("sha256").update(canonical).digest("hex"), missing: missingPartyData(party) };
 }

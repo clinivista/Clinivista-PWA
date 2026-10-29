@@ -6,8 +6,13 @@ import { PasswordInput } from "@/components/password-input";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage, type LangCode } from "@/lib/language";
 import { USERS_TEXT, withEmail } from "@/lib/users-i18n";
+import { USER_PROFILE_TEXT } from "@/lib/user-profile-i18n";
+import { PREFIX_LABEL, documentKind } from "@/lib/profile-fields";
+import { ProfileFields, profileProblem, profileProblemText, type ProfileDraft } from "@/components/profile-fields";
 
-export type ManagedUser = { id: string; email: string; name: string; phone?: string; role: string; active: boolean; legalRepresentative?: boolean };
+export type ManagedUser = { id: string; email: string; name: string; phone?: string; role: string; active: boolean; legalRepresentative?: boolean; rut?: string; address?: string; prefix?: string; specialty?: string };
+
+export type ProfileChanges = { name?: string; role?: "medico" | "administrativo"; password?: string; phone?: string; rut?: string; address?: string; prefix?: string; specialty?: string };
 
 type Props = {
   user: ManagedUser;
@@ -24,7 +29,9 @@ type Props = {
   /** La fila de quien está usando el panel: se muestra "Tú" y sin acciones. */
   isSelf?: boolean;
   /** Si se entrega, aparece "Editar": nombre y (si roleEditable) rol. El correo es el identificador y no se cambia. */
-  updateProfile?: (changes: { name?: string; role?: "medico" | "administrativo"; password?: string; phone?: string }) => Promise<unknown>;
+  updateProfile?: (changes: ProfileChanges) => Promise<unknown>;
+  /** País de la clínica: define si el documento es RUT (Chile) o pasaporte. */
+  country?: string;
   /** Permite cambiar entre Médico y Administrativo (no aplica al equipo de supra-control). */
   roleEditable?: boolean;
   /** Fuerza el idioma (supra-control es solo en español); por defecto el de la persona. */
@@ -41,10 +48,13 @@ const serverReason = (error: unknown): string | undefined =>
 // Una fila de usuario con sus dos acciones sensibles. Ambas piden confirmación
 // antes de ejecutarse, y la contraseña temporal vive solo en el estado de este
 // componente: el servidor no la guarda ni la repite.
-export function UserRow({ user, manageable = true, setActive, resetPassword, onDelete, setLegalRepresentative, isSelf = false, updateProfile, roleEditable = false, locale }: Props) {
+export function UserRow({ user, manageable = true, setActive, resetPassword, onDelete, setLegalRepresentative, isSelf = false, updateProfile, roleEditable = false, locale, country }: Props) {
   const { toast } = useToast();
   const { lang } = useLanguage();
   const x = USERS_TEXT[locale ?? lang];
+  const profileText = USER_PROFILE_TEXT[locale ?? lang];
+  const docLabel = documentKind(country) === "pasaporte" ? profileText.passport : profileText.rut;
+  const profileOf = (): ProfileDraft => ({ rut: user.rut ?? "", address: user.address ?? "", prefix: user.prefix ?? "", specialty: user.specialty ?? "" });
   const roleLabel: Record<string, string> = { medico: x.medico, administrativo: x.administrativo, director: x.roleDirector, supra_admin: x.roleSupra };
   const [confirming, setConfirming] = useState<Pending>(null);
   const [busy, setBusy] = useState(false);
@@ -54,11 +64,23 @@ export function UserRow({ user, manageable = true, setActive, resetPassword, onD
   const [draftPassword, setDraftPassword] = useState("");
   const [draftPhone, setDraftPhone] = useState(user.phone ?? "");
   const [draftName, setDraftName] = useState(user.name);
+  const [draftProfile, setDraftProfile] = useState<ProfileDraft>(profileOf());
   const [draftRole, setDraftRole] = useState<"medico" | "administrativo">(user.role === "administrativo" ? "administrativo" : "medico");
   const canEdit = Boolean(updateProfile) && (manageable || isSelf);
 
   const saveProfile = async () => {
-    const changes: { name?: string; role?: "medico" | "administrativo"; password?: string; phone?: string } = {};
+    const changes: ProfileChanges = {};
+    const nextRole = roleEditable && !isSelf ? draftRole : (user.role === "administrativo" ? "administrativo" : "medico");
+    const problem = profileProblem(draftProfile, { role: nextRole, country, legalRepresentative: user.legalRepresentative });
+    if (problem) {
+      toast({ variant: "destructive", title: x.errorTitle, description: profileProblemText(problem, draftProfile, country, locale ?? lang) ?? x.saveFail });
+      return;
+    }
+    const before = profileOf();
+    if (draftProfile.rut.trim() !== before.rut) changes.rut = draftProfile.rut.trim();
+    if (draftProfile.address.trim() !== before.address) changes.address = draftProfile.address.trim();
+    if (draftProfile.prefix !== before.prefix) changes.prefix = draftProfile.prefix;
+    if (nextRole === "medico" && draftProfile.specialty !== before.specialty) changes.specialty = draftProfile.specialty;
     if (draftPassword) {
       if (draftPassword.length < 8) {
         toast({ variant: "destructive", title: x.pwShortTitle, description: x.pwShortDesc });
@@ -155,7 +177,7 @@ export function UserRow({ user, manageable = true, setActive, resetPassword, onD
       <div className={`flex flex-col gap-3 ${onDelete || setLegalRepresentative ? "" : "sm:flex-row sm:items-center"}`}>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-foreground truncate">{user.name || x.noName}</span>
+            <span className="font-semibold text-foreground truncate">{user.prefix && user.prefix in PREFIX_LABEL ? `${PREFIX_LABEL[user.prefix as keyof typeof PREFIX_LABEL]} ` : ""}{user.name || x.noName}</span>
             <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-white text-slate-600">
               {roleLabel[user.role] ?? user.role}
             </span>
@@ -168,15 +190,21 @@ export function UserRow({ user, manageable = true, setActive, resetPassword, onD
             {!user.active && (
               <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-700">{x.blocked}</span>
             )}
+            {user.rut !== undefined && !user.rut && (
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800" data-testid="user-missing-data">{profileText.missingData}</span>
+            )}
           </div>
           <p className="text-sm text-muted-foreground break-all">{user.email}</p>
           {user.phone && <p className="text-sm text-muted-foreground break-all" data-testid="user-phone">{x.tel} {user.phone}</p>}
+          {user.rut && <p className="text-sm text-muted-foreground break-all" data-testid="user-rut">{docLabel}: {user.rut}</p>}
+          {user.specialty && user.specialty in profileText.specialties && <p className="text-sm text-muted-foreground" data-testid="user-specialty">{profileText.specialties[user.specialty as keyof typeof profileText.specialties]}</p>}
+          {user.address && <p className="text-sm text-muted-foreground break-words" data-testid="user-address">{user.address}</p>}
         </div>
 
         {manageable && !isSelf && confirming === null && (
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             {canEdit && !editing && (
-              <Button size="sm" variant="outline" className="rounded-full font-semibold" onClick={() => { setDraftName(user.name); setDraftPhone(user.phone ?? ""); setDraftRole(user.role === "administrativo" ? "administrativo" : "medico"); setDraftPassword(""); setEditing(true); }}>
+              <Button size="sm" variant="outline" className="rounded-full font-semibold" onClick={() => { setDraftName(user.name); setDraftPhone(user.phone ?? ""); setDraftRole(user.role === "administrativo" ? "administrativo" : "medico"); setDraftPassword(""); setDraftProfile(profileOf()); setEditing(true); }}>
                 <Pencil className="w-4 h-4 me-2" /> {x.editData}
               </Button>
             )}
@@ -241,7 +269,7 @@ export function UserRow({ user, manageable = true, setActive, resetPassword, onD
       </div>
 
       {isSelf && canEdit && !editing && (
-        <Button size="sm" variant="outline" className="rounded-full font-semibold self-start" onClick={() => { setDraftName(user.name); setDraftPhone(user.phone ?? ""); setDraftPassword(""); setEditing(true); }}>
+        <Button size="sm" variant="outline" className="rounded-full font-semibold self-start" onClick={() => { setDraftName(user.name); setDraftPhone(user.phone ?? ""); setDraftPassword(""); setDraftProfile(profileOf()); setEditing(true); }}>
           <Pencil className="w-4 h-4 me-2" /> {x.editMine}
         </Button>
       )}
@@ -252,6 +280,7 @@ export function UserRow({ user, manageable = true, setActive, resetPassword, onD
           <Input id={`edit-name-${user.id}`} value={draftName} maxLength={100} className="h-10 rounded-full" onChange={(event) => setDraftName(event.target.value)} />
           <label className="text-xs font-bold text-slate-600" htmlFor={`edit-phone-${user.id}`}>{x.phoneLabel}</label>
           <Input id={`edit-phone-${user.id}`} type="tel" value={draftPhone} maxLength={30} placeholder="+56 9 1234 5678" className="h-10 rounded-full" onChange={(event) => setDraftPhone(event.target.value)} />
+          <ProfileFields idPrefix={`edit-${user.id}`} value={draftProfile} onChange={setDraftProfile} role={roleEditable && !isSelf ? draftRole : user.role} country={country} legalRepresentative={user.legalRepresentative} locale={locale ?? lang} />
           <label className="text-xs font-bold text-slate-600" htmlFor={`edit-email-${user.id}`}>{x.emailLabel}</label>
           <Input id={`edit-email-${user.id}`} value={user.email} readOnly disabled className="h-10 rounded-full" />
           <p className="text-xs text-muted-foreground">{x.emailNote}</p>

@@ -1,7 +1,8 @@
 import crypto from "node:crypto";
 import { and, desc, eq, gt, isNull } from "drizzle-orm";
 import { db, centersTable, usersTable, clinicContractAcceptancesTable, clinicContractInvitesTable } from "@workspace/db";
-import { CONTRACT_VERSION, contractFor, contractsEnabled } from "./contract";
+import { CONTRACT_VERSION, contractsEnabled } from "./contract";
+import { contractForCenter } from "./contract-party";
 import { centerPlan, type Plan } from "./plans";
 import { MailNotConfiguredError, contractMail, sendMail } from "./mailer";
 import { uid } from "./helpers";
@@ -24,7 +25,7 @@ export async function legalRepresentatives(centerId: string) {
 async function sendOne(centerId: string, centerName: string, plan: Plan, rep: { id: string; name: string; email: string }, baseUrl: string): Promise<SendOutcome> {
   const base = baseUrl.replace(/\/+$/, "");
   const token = crypto.randomBytes(32).toString("base64url");
-  const contract = contractFor(plan);
+  const contract = await contractForCenter(centerId, plan);
   const expiresAt = new Date(Date.now() + INVITE_TTL_MS);
   await db.delete(clinicContractInvitesTable).where(and(eq(clinicContractInvitesTable.userId, rep.id), isNull(clinicContractInvitesTable.usedAt)));
   const inviteId = uid();
@@ -63,6 +64,11 @@ export async function sendContract(centerId: string, baseUrl: string, userId?: s
 export async function sendContractToNewRepresentative(centerId: string, userId: string, baseUrl: string): Promise<void> {
   if (!contractsEnabled()) return;
   try {
+    const plan = await centerPlan(centerId);
+    if ((await contractForCenter(centerId, plan)).missing.length > 0) {
+      logger.info({ centerId }, "Contract email not sent: the clinic or representative data is incomplete");
+      return;
+    }
     await sendContract(centerId, baseUrl, userId);
   } catch (error) {
     logger.warn({ err: error, centerId }, "Automatic contract email failed");
@@ -89,7 +95,7 @@ export async function inviteInfo(token: unknown) {
     const [center] = await db.select({ name: centersTable.name, active: centersTable.active }).from(centersTable).where(eq(centersTable.id, invite.centerId));
     if (!user || !user.active || !user.legalRepresentative || user.centerId !== invite.centerId || !center) return null;
     const plan = await centerPlan(invite.centerId);
-    const contract = contractFor(plan);
+    const contract = await contractForCenter(invite.centerId, plan);
     const done = await db.select({ id: clinicContractAcceptancesTable.id, at: clinicContractAcceptancesTable.acceptedAt, by: clinicContractAcceptancesTable.acceptedByName })
       .from(clinicContractAcceptancesTable)
       .where(and(eq(clinicContractAcceptancesTable.centerId, invite.centerId), eq(clinicContractAcceptancesTable.plan, plan), eq(clinicContractAcceptancesTable.contractVersion, contract.version)));
@@ -109,6 +115,7 @@ export async function acceptViaInvite(token: unknown, version: unknown, hash: un
   const info = await inviteInfo(token);
   if (!info) throw new InviteAcceptError("El enlace no es válido o ya venció.", 404);
   if (info.accepted) return { already: true as const, acceptedAt: info.accepted.at };
+  if (info.contract.missing.length > 0) throw new InviteAcceptError(`Faltan datos para el contrato: ${info.contract.missing.join(", ")}. Pídele a Clinivista que los complete.`, 409);
   if (version !== info.contract.version || hash !== info.contract.hash) {
     throw new InviteAcceptError("El contrato cambió mientras lo leías. Recarga la página y revisa la versión actual.", 409);
   }

@@ -3,7 +3,8 @@ import { desc, eq } from "drizzle-orm";
 import { db, centersTable, usersTable, clinicContractAcceptancesTable } from "@workspace/db";
 import { requireStaffAuth, requireSupraAuth } from "./auth";
 import { PLANS, PLAN_DEFAULT_LIMITS, PLAN_SERVICES, centerPlan } from "../lib/plans";
-import { CONTRACT_VERSION, contractFor, contractsEnabled } from "../lib/contract";
+import { CONTRACT_VERSION, contractsEnabled } from "../lib/contract";
+import { contractForCenter } from "../lib/contract-party";
 import { uid } from "../lib/helpers";
 import { logger } from "../lib/logger";
 import { InviteAcceptError, acceptViaInvite, invitesOf, inviteInfo, legalRepresentatives, sendContract } from "../lib/contract-invite";
@@ -65,7 +66,7 @@ router.get("/clinic/contract", async (req, res): Promise<void> => {
   res.json({
     enabled: true,
     plan,
-    contract: contractFor(plan),
+    contract: await contractForCenter(staff.centerId, plan),
     accepted,
     acceptance: accepted ? publicRow(rows.find((row) => row.contractVersion === CONTRACT_VERSION && row.plan === plan)!) : null,
     canAccept: staff.role === "administrativo" || user?.legal === true || staff.legal === true,
@@ -83,7 +84,11 @@ router.post("/clinic/contract/accept", async (req, res): Promise<void> => {
     return;
   }
   const plan = await centerPlan(staff.centerId);
-  const contract = contractFor(plan);
+  const contract = await contractForCenter(staff.centerId, plan);
+  if (contract.missing.length > 0) {
+    res.status(422).json({ error: `Antes de aceptar faltan datos para el contrato: ${contract.missing.join(", ")}. Complétalos en la ficha de la clínica y en Usuarios.`, missing: contract.missing });
+    return;
+  }
   const body = (req.body ?? {}) as { version?: unknown; hash?: unknown };
   if (body.version !== contract.version || body.hash !== contract.hash) {
     res.status(409).json({ error: "El contrato cambió mientras lo leías. Vuelve a abrirlo y revisa la versión actual." });
@@ -125,6 +130,7 @@ router.get("/director/centers/:id/contract", async (req, res): Promise<void> => 
     status: current ? "aceptado" : "pendiente",
     history: (rows ?? []).map(publicRow),
     legalReps: reps,
+    missing: (await contractForCenter(id, plan)).missing,
     mailAvailable: invites !== null,
     invites: (invites ?? []).map((row) => ({ id: row.id, userId: row.userId, email: row.email, plan: row.plan, version: row.contractVersion, sentAt: row.sentAt.toISOString(), expiresAt: row.expiresAt.toISOString(), usedAt: row.usedAt?.toISOString() ?? null })),
   });
@@ -137,6 +143,8 @@ router.post("/director/centers/:id/contract/send", async (req, res): Promise<voi
   if (!ID.test(id)) { res.status(404).json({ error: "Clínica no encontrada." }); return; }
   if (!contractsEnabled()) { res.status(409).json({ error: "El contrato aún no está activado (CONTRACTS_ENABLED en Render)." }); return; }
   if ((await invitesOf(id)) === null) { res.status(503).json({ error: "El envío no está disponible: falta ejecutar sql0005 en Neon." }); return; }
+  const preview = await contractForCenter(id, await centerPlan(id));
+  if (preview.missing.length > 0) { res.status(422).json({ error: `Faltan datos para armar el contrato: ${preview.missing.join(", ")}. Complétalos en la ficha de la clínica y en Usuarios.`, missing: preview.missing }); return; }
   const userId = typeof (req.body as { userId?: unknown } | undefined)?.userId === "string" ? (req.body as { userId: string }).userId : undefined;
   const results = await sendContract(id, baseUrl(req), userId);
   if (results === null) { res.status(404).json({ error: "Clínica no encontrada." }); return; }
