@@ -13,6 +13,20 @@ const KEY = ["/api/clinic/integrations"];
 
 // «Integraciones disponibles» del panel de la clínica: catálogo de redes sociales, sistemas de agenda y mensajería.
 // Todavía no se conecta ninguna; la clínica pide las que le interesan y supra-control ve la lista en su ficha.
+// Logos oficiales aportados por el equipo; las marcas sin archivo muestran su inicial.
+const INTEGRATION_LOGOS: Record<string, string> = {
+  reservo: `${import.meta.env.BASE_URL}integrations/reservo.png`,
+  medilink: `${import.meta.env.BASE_URL}integrations/medilink.png`,
+  facebook: `${import.meta.env.BASE_URL}integrations/facebook.png`,
+  instagram: `${import.meta.env.BASE_URL}integrations/instagram.png`,
+  linkedin: `${import.meta.env.BASE_URL}integrations/linkedin.png`,
+  agendapro: `${import.meta.env.BASE_URL}integrations/agendapro.png`,
+  google_calendar: `${import.meta.env.BASE_URL}integrations/google_calendar.png`,
+  tiktok: `${import.meta.env.BASE_URL}integrations/tiktok.png`,
+  youtube: `${import.meta.env.BASE_URL}integrations/youtube.png`,
+  whatsapp: `${import.meta.env.BASE_URL}integrations/whatsapp.png`,
+};
+
 export function IntegrationsPanel() {
   const { lang } = useLanguage();
   const x = INTEGRATIONS_TEXT[lang];
@@ -74,7 +88,13 @@ export function IntegrationsPanel() {
                   return (
                     <li key={item.id} data-testid={`integration-${item.id}`} className="flex flex-col gap-3 rounded-[1.5rem] bg-white shadow-sm p-5">
                       <div className="flex items-center gap-3">
-                        <span aria-hidden="true" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F5F2EE] text-base font-extrabold text-foreground">{name.charAt(0)}</span>
+                        {INTEGRATION_LOGOS[item.id] ? (
+                          <span aria-hidden="true" className="flex h-12 w-24 shrink-0 items-center justify-start">
+                            <img src={INTEGRATION_LOGOS[item.id]} alt="" data-testid={`integration-${item.id}-logo`} className="max-h-full max-w-full object-contain" />
+                          </span>
+                        ) : (
+                          <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F5F2EE] text-base font-extrabold text-foreground">{name.charAt(0)}</span>
+                        )}
                         <div className="min-w-0 flex-1">
                           <p className="font-bold text-foreground truncate">{name}</p>
                           <p className="text-xs font-semibold text-muted-foreground">{x.comingSoon}</p>

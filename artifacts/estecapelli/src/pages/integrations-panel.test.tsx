@@ -97,3 +97,14 @@ describe("Integraciones disponibles", () => {
     expect(await screen.findByTestId("integrations-panel")).toHaveAttribute("dir", "rtl");
   });
 });
+
+describe("Integraciones disponibles — logos", () => {
+  it("muestra el logo de cada marca del catálogo dentro de un recuadro de tamaño uniforme", async () => {
+    renderPanel();
+    for (const { id } of CATALOG) {
+      const logo = await screen.findByTestId(`integration-${id}-logo`);
+      expect(logo).toBeInTheDocument();
+      expect(logo.parentElement).toHaveClass("h-12", "w-24");
+    }
+  });
+});
