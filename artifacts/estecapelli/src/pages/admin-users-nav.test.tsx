@@ -36,6 +36,7 @@ beforeEach(() => {
     if (url.includes("/api/leads/stats")) return jsonResponse({ total: 0, counts: {} });
     if (url.includes("/api/leads")) return jsonResponse({ leads: [] });
     if (url.endsWith("/api/clinic/me")) return jsonResponse({ name: "Clínica Ejemplo", slug: "clinica", logoDataUrl: null, specialty: "dermatologia" });
+    if (url.endsWith("/api/clinic/integrations")) return jsonResponse({ catalog: [{ id: "medilink", category: "agenda" }, { id: "instagram", category: "redes" }], requested: [] });
     if (url.endsWith("/api/clinic/users")) {
       return jsonResponse({
         users: [{ id: "u1", email: "ana@x.cl", name: "Ana Pérez", role: "medico", active: true, legalRepresentative: false, isSelf: false, createdAt: "2026-01-01T00:00:00Z" }],
@@ -220,5 +221,22 @@ describe("Admin — barra superior y menú lateral", () => {
     await user.click(screen.getByTestId("help-card"));
     expect(screen.getByTestId("nav-help")).toHaveAttribute("aria-current", "page");
     expect((await screen.findByTestId("help-tab-manual")).className).toContain("bg-[#00A9A5]");
+  });
+});
+
+describe("Admin — Integraciones disponibles", () => {
+  it("lo ven médicos y administrativos (no depende de gestionar usuarios) y abre el catálogo", async () => {
+    me = signedIn("medico", false);
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    renderAdmin();
+    await screen.findByTestId("clinic-home");
+    const nav = screen.getByRole("navigation");
+    const labels = Array.from(nav.querySelectorAll("button")).map((b) => b.textContent?.trim());
+    expect(labels).toContain("Integraciones disponibles");
+    expect(labels.indexOf("Integraciones disponibles")).toBeLessThan(labels.indexOf("Ayuda"));
+    await user.click(screen.getByTestId("nav-integrations"));
+    expect(await screen.findByTestId("integrations-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("nav-integrations")).toHaveAttribute("aria-current", "page");
+    expect(await screen.findByTestId("integration-medilink")).toBeInTheDocument();
   });
 });

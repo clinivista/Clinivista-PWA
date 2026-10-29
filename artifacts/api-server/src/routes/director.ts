@@ -34,6 +34,7 @@ import { PHONE_ERROR, parseUserPhone } from "../lib/user-phone";
 import { destroySessionsForUser } from "../lib/sessions";
 import { resetToTemporaryPassword } from "../lib/user-management";
 import { toPlan } from "../lib/plans";
+import { integrationRequestsOf } from "../lib/integrations";
 import { clinicProfileOf, clinicProfilesOf, hasProfileKeys, parseClinicProfile, parseUserProfile, saveClinicProfile, saveUserProfile, withUserProfiles } from "../lib/profiles";
 import { logger } from "../lib/logger";
 
@@ -434,6 +435,17 @@ router.get("/director/centers/:id/profile", async (req, res): Promise<void> => {
     return;
   }
   res.json(await clinicProfileOf(id));
+});
+
+// Integraciones que la clínica pidió desde su catálogo «Integraciones disponibles».
+router.get("/director/centers/:id/integrations", async (req, res): Promise<void> => {
+  if (!requireSupraAuth(req, res)) return;
+  const id = String(req.params.id);
+  if (!(await centerSummaries()).some((center) => center.id === id)) {
+    res.status(404).json({ error: "Clínica no encontrada." });
+    return;
+  }
+  res.json({ requests: await integrationRequestsOf(id) });
 });
 
 router.put("/director/centers/:id/profile", async (req, res): Promise<void> => {
