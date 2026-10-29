@@ -360,9 +360,13 @@ describe("vistas marcadas como video (plan Titanium)", () => {
 describe("cuota de transcripciones por clínica (supra-control)", () => {
   const supra = () => `clinivista_session=${createSession({ userId: "dir", centerId: null, role: "director" })}`;
 
-  it("sin configuración usa 100 al mes y el reintento avanzado apagado", async () => {
+  it("sin configuración usa la cuota del plan (Basic 20, Unlimited 100, Titanium 300) y el reintento avanzado apagado", async () => {
     const res = await request(app).get("/api/director/centers/clinic-a/transcription").set("Cookie", supra()).expect(200);
-    expect(res.body).toMatchObject({ monthlyQuota: 100, used: 0, remaining: 100, advancedEnabled: false });
+    expect(res.body).toMatchObject({ monthlyQuota: 20, used: 0, remaining: 20, advancedEnabled: false });
+    await pglite.exec(`UPDATE clinical_centers SET plan = 'titanium' WHERE id = 'clinic-a';`);
+    const titanium = await request(app).get("/api/director/centers/clinic-a/transcription").set("Cookie", supra()).expect(200);
+    expect(titanium.body).toMatchObject({ monthlyQuota: 300, remaining: 300 });
+    await pglite.exec(`UPDATE clinical_centers SET plan = 'basic' WHERE id = 'clinic-a';`);
   });
 
   it("el director fija la cuota y habilita el avanzado; los datos inválidos se rechazan", async () => {
@@ -384,6 +388,6 @@ describe("cuota de transcripciones por clínica (supra-control)", () => {
     await request(app).put("/api/director/centers/clinic-a/transcription").send({ monthlyQuota: 5 }).expect(401);
     await request(app).put("/api/director/centers/clinic-b/transcription").set("Cookie", supra()).send({ monthlyQuota: 7 }).expect(200);
     const own = await request(app).get("/api/clinic/transcription").set("Cookie", staffCookie).expect(200);
-    expect(own.body.monthlyQuota).toBe(100);
+    expect(own.body.monthlyQuota).toBe(20);
   });
 });

@@ -2,6 +2,7 @@ import sharp from "sharp";
 import { and, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import { db, centersTable, clinicalPhotosTable, evaluationsTable, photoTranscriptionsTable, transcriptionSettingsTable, transcriptionUsageTable } from "@workspace/db";
 import { uid } from "./helpers";
+import { PLAN_DEFAULT_LIMITS, centerPlan } from "./plans";
 
 /** Básica = modelo económico (1 unidad de la cuota). Avanzada = reintento con un modelo más potente (2 unidades). */
 export type TranscriptionTier = "basic" | "advanced";
@@ -100,9 +101,15 @@ export function defaultQuota(): number {
 
 export type TranscriptionSettings = { monthlyQuota: number; advancedEnabled: boolean };
 
+/** Sin fila propia, la cuota es la del plan de la clínica (TRANSCRIPTION_DEFAULT_QUOTA, si existe, manda sobre todos). */
+async function planQuota(centerId: string): Promise<number> {
+  if (Number.isInteger(Number(process.env.TRANSCRIPTION_DEFAULT_QUOTA)) && process.env.TRANSCRIPTION_DEFAULT_QUOTA?.trim()) return defaultQuota();
+  return PLAN_DEFAULT_LIMITS[await centerPlan(centerId)].transcriptionsPerMonth;
+}
+
 export async function getTranscriptionSettings(centerId: string): Promise<TranscriptionSettings> {
   const [row] = await db.select().from(transcriptionSettingsTable).where(eq(transcriptionSettingsTable.centerId, centerId));
-  return row ? { monthlyQuota: row.monthlyQuota, advancedEnabled: row.advancedEnabled } : { monthlyQuota: defaultQuota(), advancedEnabled: false };
+  return row ? { monthlyQuota: row.monthlyQuota, advancedEnabled: row.advancedEnabled } : { monthlyQuota: await planQuota(centerId), advancedEnabled: false };
 }
 
 export async function saveTranscriptionSettings(centerId: string, input: { monthlyQuota?: number; advancedEnabled?: boolean }): Promise<TranscriptionSettings> {

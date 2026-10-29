@@ -23,6 +23,7 @@ import supportRouter from "./support";
 import supraAdminRouter from "./supra-admin";
 import supraDashboardRouter from "./supra-dashboard";
 import supraHomeRouter from "./supra-home";
+import clinicPlanRouter from "./clinic-plan";
 
 const router: IRouter = Router();
 
@@ -50,5 +51,6 @@ router.use(supportRouter);
 router.use(supraAdminRouter);
 router.use(supraDashboardRouter);
 router.use(supraHomeRouter);
+router.use(clinicPlanRouter);
 
 export default router;

@@ -46,6 +46,7 @@ import { STAFF_FLOW_TEXT } from "@/lib/staff-flow-i18n";
 import { LeadEvolution } from "@/components/lead-evolution";
 import { NAV_TEXT } from "@/lib/phases-i18n";
 import { ClinicHome } from "@/components/clinic-home";
+import { PlanNotice } from "@/components/plan-counter";
 import { VideoPlayer } from "@/components/video-player";
 import { HOME_TEXT } from "@/lib/home-i18n";
 import { ClinicTopbar } from "@/components/clinic-topbar";
@@ -430,6 +431,7 @@ export default function Admin() {
           onOpenMenu={() => setMobileNavOpen(true)}
           menuOpen={mobileNavOpen}
         />
+        <PlanNotice onContact={() => go("help", "support")} />
         <AddPatientDialog open={addPatientOpen} onOpenChange={setAddPatientOpen} onCreated={(id) => { setStatusFilter("all"); setSearch(""); setView("patients"); setSelectedLeadId(id); }} />
         {view === "home" ? (
           <ClinicHome

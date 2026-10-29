@@ -276,6 +276,36 @@ export const transcriptionUsageTable = pgTable("clinic_transcription_usage", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Parámetros de plan propios de cada clínica (los fija supra-control). Sin fila,
+// o con un campo en NULL, vale lo que define el plan (PLAN_DEFAULT_LIMITS en
+// artifacts/api-server/src/lib/plans.ts). Un 0 significa «sin límite».
+// Migración: lib/db/sql/sql0003-limites-horas-y-cobro.sql.
+export const clinicPlanSettingsTable = pgTable("clinic_plan_settings", {
+  centerId: text("center_id").primaryKey(),
+  patientsPerMonth: integer("patients_per_month"),
+  storageGb: integer("storage_gb"),
+  // Bajada de plan programada: se aplica sola cuando llega la fecha.
+  pendingPlan: text("pending_plan"),
+  pendingPlanFrom: timestamp("pending_plan_from", { withTimezone: true }),
+  // Suspensión automática por falta de pago. Apagada por defecto: ninguna clínica se bloquea sin que supra-control lo active.
+  billingAuto: boolean("billing_auto").notNull().default(false),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Horas de inducción, personalización y atención: cada movimiento es una fila.
+// Saldo = incluidas + compradas + ajustes − usadas (en minutos, para no usar decimales).
+export const clinicHoursTable = pgTable("clinic_hours_ledger", {
+  id: text("id").primaryKey(),
+  centerId: text("center_id").notNull(),
+  kind: text("kind").notNull(),
+  minutes: integer("minutes").notNull(),
+  note: text("note").notNull().default(""),
+  createdBy: text("created_by"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  check("clinic_hours_kind_check", sql`${table.kind} in ('incluidas', 'compradas', 'usadas', 'ajuste')`),
+]);
+
 // «Continuar en el celular»: el personal abre una sesión corta para UNA fase de UN paciente y el
 // celular sube las fotos con el token de un solo enlace (solo se guarda el hash del token).
 export const captureSessionsTable = pgTable("capture_sessions", {

@@ -12,6 +12,7 @@ import {
 } from "../lib/clinical-photos";
 import { syncLeadStatus } from "../lib/lead-status";
 import { isCenterActive } from "../lib/centers";
+import { assertCanAddPatient, sendIfPlanLimit } from "../lib/plan-limits";
 import { ensurePatientAccountForLead } from "../lib/patient-accounts";
 import { selectableTypeIds, listConsultTypes, CONSULT_SPECIALTY } from "../lib/consult-types";
 import { baseUrl } from "./results";
@@ -48,6 +49,12 @@ router.post("/leads", async (req, res): Promise<void> => {
   if (!(await isCenterActive(staff.centerId))) {
     res.status(403).json({ error: "Esta clínica no está aceptando nuevos pacientes en este momento." });
     return;
+  }
+  try {
+    await assertCanAddPatient(staff.centerId);
+  } catch (error) {
+    if (sendIfPlanLimit(error, res)) return;
+    throw error;
   }
   const body = (req.body ?? {}) as Record<string, unknown>;
   if (body.consentConfirmed !== true) {

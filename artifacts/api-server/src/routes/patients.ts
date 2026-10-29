@@ -43,6 +43,7 @@ import { toMailLanguage } from "../lib/mail-i18n";
 import { ensurePatientAccountForLead } from "../lib/patient-accounts";
 import { baseUrl } from "./results";
 import { isCenterActive } from "../lib/centers";
+import { assertCanAddPatient, sendIfPlanLimit } from "../lib/plan-limits";
 import { clinicIdentity, findCenterBySlug } from "../lib/clinic-identity";
 import { cleanIntake, getSpecialty } from "../lib/specialties";
 import { ALLOWED_IMAGE_TYPES, MAX_PHOTO_BYTES, parseImageRequest, parseOptionalPixelDimension } from "../lib/image-upload";
@@ -226,6 +227,12 @@ async function createPatientInCenter(req: express.Request, res: express.Response
   if (!(await isCenterActive(centerId))) {
     res.status(403).json({ error: "Esta clínica no está aceptando nuevas evaluaciones en este momento." });
     return;
+  }
+  try {
+    await assertCanAddPatient(centerId);
+  } catch (error) {
+    if (sendIfPlanLimit(error, res)) return;
+    throw error;
   }
   const parsed = CreatePatientBody.safeParse(req.body);
   if (!parsed.success) {

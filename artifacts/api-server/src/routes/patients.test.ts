@@ -2228,7 +2228,8 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
       claudeReplies();
       const { lead, photo, viewId } = await documentPhoto();
       const before = await status();
-      expect(before).toMatchObject({ available: true, monthlyQuota: 100, used: 0, advancedEnabled: false });
+      // Sin fila propia vale la cuota del plan de la clínica (Basic: 20 al mes).
+      expect(before).toMatchObject({ available: true, monthlyQuota: 20, used: 0, advancedEnabled: false });
       const res = await transcribe(lead.id, photo.id);
       expect(res.status).toBe(200);
       expect(res.body).toMatchObject({ text: expect.stringContaining("[ilegible]"), tier: "basic" });
