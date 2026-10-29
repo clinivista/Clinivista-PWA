@@ -135,7 +135,7 @@ router.get("/auth/me", async (req, res): Promise<void> => {
     if (session.viewingCenterId) {
       const [center] = await db.select({ id: centersTable.id, name: centersTable.name }).from(centersTable).where(eq(centersTable.id, session.viewingCenterId));
       if (center) {
-        res.json({ authenticated: true, user: await withPlan({ ...authUser(user, { centerId: center.id, role: session.viewingRole ?? "medico" }), canManageUsers: false, viewingAsDirector: true, viewingClinic: center, viewingProfile: session.viewingLegal ? "representante_legal" : session.viewingRole ?? "medico" }) });
+        res.json({ authenticated: true, user: await withPlan({ ...authUser(user, { centerId: center.id, role: session.viewingRole ?? "medico" }), canManageUsers: session.viewingLegal === true || (session.viewingRole ?? "medico") === "administrativo", viewingAsDirector: true, viewingClinic: center, viewingProfile: session.viewingLegal ? "representante_legal" : session.viewingRole ?? "medico" }) });
         return;
       }
       setSessionDirectorChoice(token);

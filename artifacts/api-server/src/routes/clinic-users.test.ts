@@ -18,6 +18,10 @@ import authRouter from "./auth";
 import clinicUsersRouter from "./clinic-users";
 import { createSession, getSession } from "../lib/sessions";
 
+const PROFILE = { rut: "00000000-0", address: "Av. Demo 123, Santiago", specialty: "dermatologo" };
+const CLINIC = { country: "CL", rut: "00000000-0", address: "Av. Demo 123, Santiago", phone: "+56 2 2345 6789" };
+
+
 const pglite = (mockedDb as unknown as { __pglite: { exec(sql: string): Promise<unknown> } }).__pglite;
 
 const app = express();
@@ -27,6 +31,8 @@ app.use("/api", clinicUsersRouter);
 
 beforeAll(async () => {
   await pglite.exec(`
+    CREATE TABLE IF NOT EXISTS clinic_profiles (center_id text PRIMARY KEY, country text NOT NULL DEFAULT 'CL', rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE IF NOT EXISTS user_profiles (user_id text PRIMARY KEY, rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', prefix text NOT NULL DEFAULT '', specialty text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE IF NOT EXISTS clinical_centers (
       id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
       active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', plan text NOT NULL DEFAULT 'basic' CHECK (plan IN ('basic', 'unlimited', 'titanium')),
@@ -44,7 +50,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await pglite.exec(`TRUNCATE clinical_centers, users;`);
+  await pglite.exec(`TRUNCATE clinical_centers, users, clinic_profiles, user_profiles;`);
   await pglite.exec(`
     INSERT INTO clinical_centers (id, name, slug) VALUES ('clinic-a', 'Clínica A', 'clinic-a'), ('clinic-b', 'Clínica B', 'clinic-b');
   `);
@@ -109,7 +115,7 @@ describe("listar y crear", () => {
     await seedUser("adm", "administrativo", "clinic-a");
     const cookie = as("adm", "administrativo", "clinic-a");
     const created = await request(app).post("/api/clinic/users").set("Cookie", cookie)
-      .send({ email: "Nuevo@Clinica.cl", name: "Nuevo Médico", password: "password123", role: "medico", legalRepresentative: true }).expect(201);
+      .send({ email: "Nuevo@Clinica.cl", name: "Nuevo Médico", password: "password123", role: "medico", ...PROFILE, legalRepresentative: true }).expect(201);
     expect(created.body).toMatchObject({ role: "medico", legalRepresentative: true, active: true, name: "Nuevo Médico" });
     const login = await request(app).post("/api/auth/login").send({ email: "nuevo@clinica.cl", password: "password123" }).expect(200);
     expect(login.body.user).toMatchObject({ centerId: "clinic-a", canManageUsers: true });
@@ -122,11 +128,11 @@ describe("listar y crear", () => {
     const post = (body: object) => request(app).post("/api/clinic/users").set("Cookie", cookie).send(body);
     await post({ email: "a@b.cl", password: "password123", role: "director" }).expect(400);
     await post({ email: "a@b.cl", password: "password123", role: "supra_admin" }).expect(400);
-    await post({ email: "a@b.cl", password: "corta", role: "medico" }).expect(400);
-    await post({ email: "no-es-correo", password: "password123", role: "medico" }).expect(400);
-    await post({ email: "ADM@x.cl", password: "password123", role: "medico" }).expect(409); // ya existe en esta clínica
+    await post({ email: "a@b.cl", password: "corta", role: "medico", ...PROFILE }).expect(400);
+    await post({ email: "no-es-correo", password: "password123", role: "medico", ...PROFILE }).expect(400);
+    await post({ email: "ADM@x.cl", password: "password123", role: "medico", ...PROFILE }).expect(409); // ya existe en esta clínica
     // El mismo correo en otra clínica sí se puede: cada clínica tiene su propia cuenta y clave.
-    await post({ email: "OTHER@x.cl", password: "password123", role: "medico" }).expect(201);
+    await post({ email: "OTHER@x.cl", password: "password123", role: "medico", ...PROFILE }).expect(201);
   });
 });
 
@@ -259,10 +265,10 @@ describe("teléfono y contraseña del usuario", () => {
     await seedUser("adm", "administrativo", "clinic-a");
     const cookie = as("adm", "administrativo", "clinic-a");
     const created = await request(app).post("/api/clinic/users").set("Cookie", cookie)
-      .send({ email: "nuevo@x.cl", password: "password123", role: "medico", phone: "+56 9 1234 5678" }).expect(201);
+      .send({ email: "nuevo@x.cl", password: "password123", role: "medico", ...PROFILE, phone: "+56 9 1234 5678" }).expect(201);
     expect(created.body.phone).toBe("+56 9 1234 5678");
     await request(app).post("/api/clinic/users").set("Cookie", cookie)
-      .send({ email: "malo@x.cl", password: "password123", role: "medico", phone: "abc" }).expect(400);
+      .send({ email: "malo@x.cl", password: "password123", role: "medico", ...PROFILE, phone: "abc" }).expect(400);
     const id = created.body.id;
     expect((await patch(cookie, id, { phone: "(2) 2345-6789" }).expect(200)).body.phone).toBe("(2) 2345-6789");
     expect((await patch(cookie, id, { phone: "" }).expect(200)).body.phone).toBe("");
@@ -284,5 +290,89 @@ describe("teléfono y contraseña del usuario", () => {
     await patch(cookie, "adm", { password: "mi-clave-nueva-1" }).expect(200);
     expect((await request(app).get("/api/auth/me").set("Cookie", cookie)).body.authenticated).toBe(true);
     await request(app).post("/api/auth/login").send({ email: "adm@x.cl", password: "mi-clave-nueva-1" }).expect(200);
+  });
+});
+
+describe("datos personales de los usuarios (RUT, dirección, prefijo, especialidad)", () => {
+  const body = (over: object = {}) => ({ email: "nuevo@x.cl", name: "Nuevo", password: "password123", role: "medico", ...PROFILE, ...over });
+  const create = (cookie: string, over: object = {}) => request(app).post("/api/clinic/users").set("Cookie", cookie).send(body(over));
+  const adminCookie = () => as("adm", "administrativo", "clinic-a");
+  const patch = (cookie: string, id: string, data: object) => request(app).patch(`/api/clinic/users/${id}`).set("Cookie", cookie).send(data);
+
+  it("el RUT es obligatorio y debe ser válido; el 00000000-0 se acepta para demostraciones", async () => {
+    await seedUser("adm", "administrativo", "clinic-a");
+    const cookie = adminCookie();
+    const missing = await create(cookie, { rut: undefined }).expect(400);
+    expect(missing.body.error).toMatch(/RUT/);
+    await create(cookie, { rut: "" }).expect(400);
+    await create(cookie, { rut: "12.345.678-9" }).expect(400);
+    await create(cookie, { rut: "123" }).expect(400);
+    const demo = await create(cookie, { rut: "00000000-0" }).expect(201);
+    expect(demo.body.rut).toBe("00.000.000-0");
+    const real = await create(cookie, { email: "real@x.cl", rut: "12345678-5" }).expect(201);
+    expect(real.body.rut).toBe("12.345.678-5");
+    const k = await create(cookie, { email: "k@x.cl", rut: "10.000.013-k" });
+    expect([201, 400]).toContain(k.status);
+  });
+
+  it("guarda dirección, prefijo y especialidad, y los muestra en la lista", async () => {
+    await seedUser("adm", "administrativo", "clinic-a");
+    const cookie = adminCookie();
+    const created = await create(cookie, { address: "  Av. Siempre   Viva 742 ", prefix: "Dra", specialty: "cirujano_plastico" }).expect(201);
+    expect(created.body).toMatchObject({ address: "Av. Siempre Viva 742", prefix: "Dra", specialty: "cirujano_plastico" });
+    const users = (await list(cookie).expect(200)).body.users as Array<{ email: string; rut: string; prefix: string; specialty: string }>;
+    expect(users.find((user) => user.email === "nuevo@x.cl")).toMatchObject({ rut: "00.000.000-0", prefix: "Dra", specialty: "cirujano_plastico" });
+    expect(users.find((user) => user.email === "adm@x.cl")).toMatchObject({ rut: "", address: "", prefix: "", specialty: "" });
+  });
+
+  it("el médico debe elegir una especialidad de la lista; el administrativo no la lleva", async () => {
+    await seedUser("adm", "administrativo", "clinic-a");
+    const cookie = adminCookie();
+    await create(cookie, { specialty: undefined }).expect(400);
+    await create(cookie, { specialty: "astrologo" }).expect(400);
+    await create(cookie, { prefix: "Excelentísimo" }).expect(400);
+    const admin = await create(cookie, { email: "otro-adm@x.cl", role: "administrativo", specialty: "dermatologo" }).expect(201);
+    expect(admin.body.specialty).toBe("");
+  });
+
+  it("un representante legal necesita dirección: va en el contrato", async () => {
+    await seedUser("adm", "administrativo", "clinic-a");
+    const cookie = adminCookie();
+    await create(cookie, { legalRepresentative: true, address: undefined }).expect(400);
+    await create(cookie, { legalRepresentative: true }).expect(201);
+  });
+
+  it("se pueden actualizar los datos de usuarios existentes (sin RUT todavía)", async () => {
+    await seedUser("adm", "administrativo", "clinic-a");
+    await seedUser("doc", "medico", "clinic-a");
+    const cookie = adminCookie();
+    await patch(cookie, "doc", { rut: "" }).expect(400);
+    await patch(cookie, "doc", { rut: "11.111.111-1" }).expect(200);
+    const updated = await patch(cookie, "doc", { rut: "00000000-0", address: "Calle 1", prefix: "Dr", specialty: "oftalmologo" }).expect(200);
+    expect(updated.body).toMatchObject({ rut: "00.000.000-0", address: "Calle 1", prefix: "Dr", specialty: "oftalmologo" });
+    await patch(cookie, "doc", { specialty: "nada" }).expect(400);
+    // bloquear a alguien no pide datos personales
+    await patch(cookie, "doc", { active: false }).expect(200);
+  });
+
+  it("no mezcla clínicas: no se editan datos de usuarios de otra", async () => {
+    await seedUser("adm", "administrativo", "clinic-a");
+    await seedUser("ajeno", "medico", "clinic-b");
+    await patch(adminCookie(), "ajeno", { rut: "00000000-0" }).expect(404);
+  });
+
+  it("un director que entra como administrativo o representante legal gestiona los usuarios de la clínica", async () => {
+    await seedUser("doc", "medico", "clinic-a");
+    const viewing = (role: "medico" | "administrativo", legal: boolean) =>
+      `clinivista_session=${createSession({ userId: "dir-1", centerId: null, role: "director", viewingCenterId: "clinic-a", viewingRole: role, viewingLegal: legal })}`;
+    await pglite.exec(`INSERT INTO users (id, email, email_normalized, password_hash, name, role, center_id) VALUES ('dir-1', 'd@x.cl', 'd@x.cl', 'x', 'Dir', 'director', NULL);`);
+    const asLegal = viewing("medico", true);
+    expect((await request(app).get("/api/auth/me").set("Cookie", asLegal)).body.user.canManageUsers).toBe(true);
+    expect((await list(asLegal).expect(200)).body.users).toHaveLength(1);
+    await create(asLegal).expect(201);
+    expect((await request(app).get("/api/auth/me").set("Cookie", viewing("administrativo", false))).body.user.canManageUsers).toBe(true);
+    const asDoctor = viewing("medico", false);
+    expect((await request(app).get("/api/auth/me").set("Cookie", asDoctor)).body.user.canManageUsers).toBe(false);
+    await list(asDoctor).expect(403);
   });
 });

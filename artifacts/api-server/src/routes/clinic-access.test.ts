@@ -23,6 +23,10 @@ import staffPatientsRouter from "./staff-patients";
 import { createSession } from "../lib/sessions";
 import { hashPassword } from "@workspace/db";
 
+const PROFILE = { rut: "00000000-0", address: "Av. Demo 123, Santiago", specialty: "dermatologo" };
+const CLINIC = { country: "CL", rut: "00000000-0", address: "Av. Demo 123, Santiago", phone: "+56 2 2345 6789" };
+
+
 const pglite = (mockedDb as unknown as { __pglite: { exec(sql: string): Promise<unknown> } }).__pglite;
 
 const app = express();
@@ -34,6 +38,8 @@ app.use("/api", staffPatientsRouter);
 
 beforeAll(async () => {
   await pglite.exec(`
+    CREATE TABLE IF NOT EXISTS clinic_profiles (center_id text PRIMARY KEY, country text NOT NULL DEFAULT 'CL', rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE IF NOT EXISTS user_profiles (user_id text PRIMARY KEY, rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', prefix text NOT NULL DEFAULT '', specialty text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE IF NOT EXISTS clinical_centers (
       id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
       active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', plan text NOT NULL DEFAULT 'basic' CHECK (plan IN ('basic', 'unlimited', 'titanium')),
@@ -112,7 +118,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await pglite.exec(`
-    TRUNCATE clinical_centers, clinical_protocols, clinical_protocol_views, clinical_protocol_phases, leads, users;
+    TRUNCATE clinical_centers, clinical_protocols, clinical_protocol_views, clinical_protocol_phases, leads, users, clinic_profiles, user_profiles;
   `);
 });
 
@@ -221,7 +227,7 @@ describe("una persona en varias clínicas (una cuenta por clínica)", () => {
   });
 
   it("cada clínica crea su cuenta con el mismo correo sin saber de la otra; dentro de una misma clínica no se repite", async () => {
-    const body = { name: "Ana", email: "ana@x.cl", password: "password123", role: "medico" };
+    const body = { name: "Ana", email: "ana@x.cl", password: "password123", role: "medico", ...PROFILE };
     await request(app).post("/api/director/centers/c/users").set("Cookie", director()).send(body).expect(201);
     await request(app).post("/api/director/centers/c/users").set("Cookie", director()).send(body).expect(409);
     expect((await login("ana@x.cl").expect(200)).body.user.clinics).toHaveLength(3);
@@ -230,7 +236,7 @@ describe("una persona en varias clínicas (una cuenta por clínica)", () => {
   it("el correo de un director no se puede usar en una clínica", async () => {
     await pglite.exec(`INSERT INTO users (id, email, email_normalized, password_hash, name, role, center_id) VALUES ('dir', 'dir@x.cl', 'dir@x.cl', '${hashPassword("password123")}', 'Dir', 'director', NULL);`);
     await request(app).post("/api/director/centers/c/users").set("Cookie", director())
-      .send({ name: "X", email: "dir@x.cl", password: "password123", role: "medico" }).expect(409);
+      .send({ name: "X", email: "dir@x.cl", password: "password123", role: "medico", ...PROFILE }).expect(409);
   });
 
   it("el personal de una clínica no puede entrar a otra por la vía de los directores", async () => {

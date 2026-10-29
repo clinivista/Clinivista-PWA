@@ -15,7 +15,8 @@ vi.mock("@workspace/db", async () => {
 import * as mockedDb from "@workspace/db";
 import clinicContractRouter from "./clinic-contract";
 import { createSession } from "../lib/sessions";
-import { CONTRACT_VERSION, contractFor } from "../lib/contract";
+import { CONTRACT_VERSION } from "../lib/contract";
+import { contractForCenter } from "../lib/contract-party";
 import { sendContractToNewRepresentative } from "../lib/contract-invite";
 
 const pglite = (mockedDb as unknown as { __pglite: { exec(sql: string): Promise<unknown> } }).__pglite;
@@ -41,6 +42,8 @@ beforeAll(async () => {
       accepted_by_user_id text NOT NULL, accepted_by_name text NOT NULL DEFAULT '', accepted_by_email text NOT NULL DEFAULT '',
       accepted_by_role text NOT NULL DEFAULT '', ip text, user_agent text, accepted_at timestamptz NOT NULL DEFAULT now()
     );
+    CREATE TABLE clinic_profiles (center_id text PRIMARY KEY, country text NOT NULL DEFAULT 'CL', rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE user_profiles (user_id text PRIMARY KEY, rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', prefix text NOT NULL DEFAULT '', specialty text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE clinic_contract_invites (
       id text PRIMARY KEY, center_id text NOT NULL, user_id text NOT NULL, email text NOT NULL, token_hash text NOT NULL UNIQUE,
       plan text NOT NULL, contract_version text NOT NULL, sent_at timestamptz NOT NULL DEFAULT now(), expires_at timestamptz NOT NULL, used_at timestamptz
@@ -50,7 +53,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   process.env.CONTRACTS_ENABLED = "true";
-  await pglite.exec(`TRUNCATE clinical_centers, users, clinic_plan_settings, clinic_contract_acceptances, clinic_contract_invites;`);
+  await pglite.exec(`TRUNCATE clinical_centers, users, clinic_plan_settings, clinic_contract_acceptances, clinic_contract_invites, clinic_profiles, user_profiles;`);
   await pglite.exec(`
     INSERT INTO clinical_centers (id, name, slug, plan) VALUES ('clinic-a', 'Clínica A', 'clinic-a', 'basic'), ('clinic-b', 'Clínica B', 'clinic-b', 'basic');
     INSERT INTO users (id, email, email_normalized, password_hash, name, role, center_id) VALUES
@@ -58,6 +61,8 @@ beforeEach(async () => {
       ('med-1', 'beto@x.cl', 'beto@x.cl', 'x', 'Beto Médico', 'medico', 'clinic-a'),
       ('med-legal', 'lia@x.cl', 'lia@x.cl', 'x', 'Lia Legal', 'medico', 'clinic-a');
     UPDATE users SET legal_representative = true WHERE id = 'med-legal';
+    INSERT INTO clinic_profiles (center_id, rut, address, phone) VALUES ('clinic-a', '00.000.000-0', 'Av. Demo 123, Santiago', '+56 2 2345 6789');
+    INSERT INTO user_profiles (user_id, rut, address, prefix) VALUES ('med-legal', '00.000.000-0', 'Calle Uno 45, Providencia', 'Dra');
   `);
 });
 
@@ -79,13 +84,13 @@ describe("contrato de servicio", () => {
     const view = await request(app).get("/api/clinic/contract").set("Cookie", cookie("admin-1", "administrativo"));
     expect(view.status).toBe(200);
     expect(view.body).toMatchObject({ enabled: true, plan: "basic", accepted: false, canAccept: true });
-    expect(view.body.contract.clauses).toHaveLength(18);
+    expect(view.body.contract.clauses).toHaveLength(19);
     expect(view.body.contract.annexTitle).toBe("Anexo: Plan Basic");
-    expect(view.body.contract.hash).toBe(contractFor("basic").hash);
+    expect(view.body.contract.hash).toBe((await contractForCenter("clinic-a", "basic")).hash);
   });
 
   it("el administrativo acepta; queda quién, cuándo, versión, plan y huella", async () => {
-    const contract = contractFor("basic");
+    const contract = await contractForCenter("clinic-a", "basic");
     const accept = await request(app).post("/api/clinic/contract/accept").set("Cookie", cookie("admin-1", "administrativo")).set("X-Forwarded-For", "203.0.113.9, 10.0.0.1").set("User-Agent", "vitest")
       .send({ version: contract.version, hash: contract.hash });
     expect(accept.status).toBe(201);
@@ -100,7 +105,7 @@ describe("contrato de servicio", () => {
   });
 
   it("un médico sin representación legal no puede aceptar; el representante legal sí", async () => {
-    const contract = contractFor("basic");
+    const contract = await contractForCenter("clinic-a", "basic");
     const body = { version: contract.version, hash: contract.hash };
     const denied = await request(app).post("/api/clinic/contract/accept").set("Cookie", cookie("med-1", "medico")).send(body);
     expect(denied.status).toBe(403);
@@ -115,7 +120,7 @@ describe("contrato de servicio", () => {
   });
 
   it("al cambiar de plan vuelve a quedar pendiente (otro anexo)", async () => {
-    const basic = contractFor("basic");
+    const basic = await contractForCenter("clinic-a", "basic");
     await request(app).post("/api/clinic/contract/accept").set("Cookie", cookie("admin-1", "administrativo")).send({ version: basic.version, hash: basic.hash });
     await pglite.exec(`UPDATE clinical_centers SET plan = 'titanium' WHERE id = 'clinic-a'`);
     const view = await request(app).get("/api/clinic/contract").set("Cookie", cookie("admin-1", "administrativo"));
@@ -127,7 +132,7 @@ describe("contrato de servicio", () => {
   });
 
   it("aísla clínicas: la aceptación de una no cuenta para otra", async () => {
-    const contract = contractFor("basic");
+    const contract = await contractForCenter("clinic-a", "basic");
     await request(app).post("/api/clinic/contract/accept").set("Cookie", cookie("admin-1", "administrativo")).send({ version: contract.version, hash: contract.hash });
     const other = await request(app).get("/api/director/centers/clinic-b/contract").set("Cookie", director());
     expect(other.body).toMatchObject({ status: "pendiente", history: [] });
@@ -154,6 +159,43 @@ describe("contrato de servicio", () => {
   });
 });
 
+describe("datos de la clínica y del representante en el contrato", () => {
+  it("la comparecencia lleva la clínica y su representante legal", async () => {
+    const view = await request(app).get("/api/clinic/contract").set("Cookie", cookie("admin-1", "administrativo"));
+    const first = view.body.contract.clauses[0];
+    expect(first.title).toBe("Comparecencia");
+    expect(first.body).toContain("Clínica A");
+    expect(first.body).toContain("00.000.000-0");
+    expect(first.body).toContain("Av. Demo 123, Santiago");
+    expect(first.body).toContain("Dra. Lia Legal");
+    expect(first.body).toContain("Calle Uno 45, Providencia");
+    expect(view.body.contract.missing).toEqual([]);
+  });
+
+  it("fuera de Chile el contrato usa pasaporte y nombra el país", async () => {
+    await pglite.exec(`UPDATE clinic_profiles SET country = 'AR', rut = 'AA1234567'; UPDATE user_profiles SET rut = 'BB7654321'`);
+    const body = (await request(app).get("/api/clinic/contract").set("Cookie", cookie("admin-1", "administrativo"))).body.contract.clauses[0].body as string;
+    expect(body).toContain("pasaporte N° AA1234567");
+    expect(body).toContain("pasaporte N° BB7654321");
+    expect(body).toContain("Argentina");
+    expect(body).not.toContain("RUT AA");
+    expect(body).not.toContain("cédula");
+  });
+
+  it("si faltan datos no se puede aceptar ni enviar, y se dice cuáles", async () => {
+    await pglite.exec(`DELETE FROM clinic_profiles; UPDATE user_profiles SET address = ''`);
+    const view = await request(app).get("/api/clinic/contract").set("Cookie", cookie("admin-1", "administrativo"));
+    expect(view.body.contract.missing).toEqual(["RUT de la clínica", "dirección de la clínica", "teléfono de la clínica", "dirección del representante legal"]);
+    expect(view.body.contract.clauses[0].body).toContain("[RUT DE LA CLÍNICA PENDIENTE]");
+    const contract = view.body.contract;
+    const accept = await request(app).post("/api/clinic/contract/accept").set("Cookie", cookie("admin-1", "administrativo")).send({ version: contract.version, hash: contract.hash });
+    expect(accept.status).toBe(422);
+    expect(accept.body.error).toContain("RUT de la clínica");
+    const send = await request(app).post("/api/director/centers/clinic-a/contract/send").set("Cookie", director()).send({});
+    expect(send.status).toBe(422);
+  });
+});
+
 describe("plan contratado, comparativa y aceptación definitiva", () => {
   it("el administrativo y el representante legal ven el catálogo; el médico solo sabe que no puede gestionarlo", async () => {
     const admin = await request(app).get("/api/clinic/plan-catalog").set("Cookie", cookie("admin-1", "administrativo"));
@@ -167,7 +209,7 @@ describe("plan contratado, comparativa y aceptación definitiva", () => {
   });
 
   it("una aceptación no se puede revertir: no hay forma de editarla ni borrarla", async () => {
-    const contract = contractFor("basic");
+    const contract = await contractForCenter("clinic-a", "basic");
     const accepted = await request(app).post("/api/clinic/contract/accept").set("Cookie", cookie("admin-1", "administrativo")).send({ version: contract.version, hash: contract.hash });
     const id = accepted.body.acceptance.id;
     for (const method of ["delete", "put", "patch"] as const) {

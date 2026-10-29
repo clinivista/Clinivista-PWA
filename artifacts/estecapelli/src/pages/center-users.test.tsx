@@ -42,6 +42,9 @@ describe("CenterUsers (supra-control)", () => {
     await u.type(screen.getByLabelText("Correo"), "nuevo@x.cl");
     await u.type(screen.getByLabelText("Contraseña"), "password123");
     await u.click(screen.getByLabelText(/Representante legal/));
+    await u.type(screen.getByLabelText(/^RUT/), "00000000-0");
+    await u.type(screen.getByLabelText(/^Dirección/), "Av. Siempre Viva 123");
+    await u.selectOptions(screen.getByLabelText(/^Especialidad/), "dermatologo");
     await u.click(screen.getByRole("button", { name: "Crear usuario" }));
     expect(api.createUser).toHaveBeenCalledWith(
       { id: "clinic-a", data: expect.objectContaining({ legalRepresentative: true }) },

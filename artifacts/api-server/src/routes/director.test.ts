@@ -23,6 +23,10 @@ import patientsRouter from "./patients";
 import { createSession } from "../lib/sessions";
 import { hashPassword } from "@workspace/db";
 
+const PROFILE = { rut: "00000000-0", address: "Av. Demo 123, Santiago", specialty: "dermatologo" };
+const CLINIC = { country: "CL", rut: "00000000-0", address: "Av. Demo 123, Santiago", phone: "+56 2 2345 6789" };
+
+
 const pglite = (mockedDb as unknown as { __pglite: { exec(sql: string): Promise<unknown> } }).__pglite;
 
 const app = express();
@@ -35,6 +39,8 @@ app.use("/api", patientsRouter);
 
 beforeAll(async () => {
   await pglite.exec(`
+    CREATE TABLE IF NOT EXISTS clinic_profiles (center_id text PRIMARY KEY, country text NOT NULL DEFAULT 'CL', rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE IF NOT EXISTS user_profiles (user_id text PRIMARY KEY, rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', prefix text NOT NULL DEFAULT '', specialty text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE IF NOT EXISTS clinical_centers (
       id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
       active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', plan text NOT NULL DEFAULT 'basic' CHECK (plan IN ('basic', 'unlimited', 'titanium')),
@@ -109,7 +115,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await pglite.exec(`
-    TRUNCATE clinical_centers, clinical_protocols, clinical_protocol_views, clinical_protocol_phases, leads, users;
+    TRUNCATE clinical_centers, clinical_protocols, clinical_protocol_views, clinical_protocol_phases, leads, users, clinic_profiles, user_profiles;
   `);
 });
 
@@ -335,10 +341,11 @@ describe("POST /api/director/centers (crear clínica)", () => {
   const director = () => `clinivista_session=${directorSession()}`;
   const demoBody = {
     name: "Clínica Demo Capilar",
+    ...CLINIC,
     withSamplePatients: true,
     users: [
-      { email: "Medico@Demo.cl", name: "Dra. Demo", password: "password-medico", role: "medico" },
-      { email: "admin@demo.cl", name: "Admin Demo", password: "password-admin", role: "administrativo" },
+      { email: "Medico@Demo.cl", name: "Dra. Demo", password: "password-medico", role: "medico", ...PROFILE },
+      { email: "admin@demo.cl", name: "Admin Demo", password: "password-admin", role: "administrativo", ...PROFILE },
     ],
   };
 
@@ -395,7 +402,7 @@ describe("POST /api/director/centers (crear clínica)", () => {
   });
 
   it("creates an empty clinic when no accounts or sample patients are requested", async () => {
-    const res = await request(app).post("/api/director/centers").set("Cookie", director()).send({ name: "Clínica Vacía" }).expect(201);
+    const res = await request(app).post("/api/director/centers").set("Cookie", director()).send({ name: "Clínica Vacía", ...CLINIC }).expect(201);
     expect(res.body).toMatchObject({ id: "clinica-vacia", patientCount: 0, staffCount: 0 });
   });
 
@@ -404,7 +411,7 @@ describe("POST /api/director/centers (crear clínica)", () => {
     await request(app).post("/api/director/centers").set("Cookie", director()).send(demoBody).expect(409);
 
     await pglite.exec(`INSERT INTO leads (id, token, name, center_id) VALUES ('l1', 't1', 'X', 'implicit-clinic');`);
-    await request(app).post("/api/director/centers").set("Cookie", director()).send({ name: "Otra", slug: "implicit-clinic" }).expect(409);
+    await request(app).post("/api/director/centers").set("Cookie", director()).send({ name: "Otra", slug: "implicit-clinic", ...CLINIC }).expect(409);
   });
 
   it("allows an email that has an account in another clinic (one account per clinic)", async () => {
@@ -412,7 +419,7 @@ describe("POST /api/director/centers (crear clínica)", () => {
     await request(app)
       .post("/api/director/centers")
       .set("Cookie", director())
-      .send({ name: "Clínica Nueva", users: [{ email: "STAFF0@clinic-a.cl", password: "password-123", role: "medico" }] })
+      .send({ name: "Clínica Nueva", ...CLINIC, users: [{ email: "STAFF0@clinic-a.cl", password: "password-123", role: "medico", ...PROFILE }] })
       .expect(201);
   });
 
@@ -422,24 +429,24 @@ describe("POST /api/director/centers (crear clínica)", () => {
     await request(app)
       .post("/api/director/centers")
       .set("Cookie", director())
-      .send({ name: "Clínica Nueva", users: [{ email: "JEFE@clinivista.cl", password: "password-123", role: "medico" }] })
+      .send({ name: "Clínica Nueva", ...CLINIC, users: [{ email: "JEFE@clinivista.cl", password: "password-123", role: "medico", ...PROFILE }] })
       .expect(409);
     const list = await request(app).get("/api/director/centers").set("Cookie", director()).expect(200);
     expect(list.body.centers.map((c: { id: string }) => c.id)).toEqual(["clinic-a"]);
   });
 
   it("validates name, slug, emails and passwords", async () => {
-    const post = (body: unknown) => request(app).post("/api/director/centers").set("Cookie", director()).send(body);
+    const post = (body: unknown) => request(app).post("/api/director/centers").set("Cookie", director()).send({ ...CLINIC, ...(body as object) });
     await post({ name: "ab" }).expect(400);
     await post({ name: "Clínica Buena", slug: "Mal Slug!" }).expect(400);
-    await post({ name: "Clínica Buena", users: [{ email: "no-es-correo", password: "password-123", role: "medico" }] }).expect(400);
-    await post({ name: "Clínica Buena", users: [{ email: "a@b.cl", password: "corta", role: "medico" }] }).expect(400);
+    await post({ name: "Clínica Buena", users: [{ email: "no-es-correo", password: "password-123", role: "medico", ...PROFILE }] }).expect(400);
+    await post({ name: "Clínica Buena", users: [{ email: "a@b.cl", password: "corta", role: "medico", ...PROFILE }] }).expect(400);
     await post({ name: "Clínica Buena", users: [{ email: "a@b.cl", password: "password-123", role: "director" }] }).expect(400);
     await post({
       name: "Clínica Buena",
       users: [
-        { email: "a@b.cl", password: "password-123", role: "medico" },
-        { email: "A@B.cl", password: "password-123", role: "administrativo" },
+        { email: "a@b.cl", password: "password-123", role: "medico", ...PROFILE },
+        { email: "A@B.cl", password: "password-123", role: "administrativo", ...PROFILE },
       ],
     }).expect(400);
   });
@@ -693,7 +700,7 @@ describe("operating the panel as a supra_admin", () => {
     await request(app).post("/api/director/centers/clinic-a/payments").set("Cookie", admin())
       .send({ paidUntil: new Date(Date.now() + 86_400_000).toISOString() }).expect(200);
     await request(app).get("/api/director/centers/clinic-a/export").set("Cookie", admin()).expect(200);
-    await request(app).post("/api/director/centers").set("Cookie", admin()).send({ name: "Clínica Nueva" }).expect(201);
+    await request(app).post("/api/director/centers").set("Cookie", admin()).send({ name: "Clínica Nueva", ...CLINIC }).expect(201);
   });
 
   it("cannot see users, block them, or reset passwords", async () => {
@@ -712,7 +719,7 @@ describe("operating the panel as a supra_admin", () => {
 
 describe("crear usuarios de una clínica existente", () => {
   const director = () => `clinivista_session=${directorSession()}`;
-  const body = { email: "Nueva@Clinica.cl", name: "Dra. Nueva", password: "password-nueva", role: "medico" };
+  const body = { email: "Nueva@Clinica.cl", name: "Dra. Nueva", password: "password-nueva", role: "medico", ...PROFILE };
 
   it("is director-only", async () => {
     await seedClinic("clinic-a");
@@ -861,10 +868,10 @@ describe("representante legal en usuarios de clínica (supra-control)", () => {
     await seedClinic("clinic-a");
     const cookie = `clinivista_session=${directorSession()}`;
     const created = await request(app).post("/api/director/centers/clinic-a/users").set("Cookie", cookie)
-      .send({ email: "rep@clinic-a.cl", name: "Rep", password: "password123", role: "medico", legalRepresentative: true }).expect(201);
+      .send({ email: "rep@clinic-a.cl", name: "Rep", password: "password123", role: "medico", ...PROFILE, legalRepresentative: true }).expect(201);
     expect(created.body.legalRepresentative).toBe(true);
     await request(app).post("/api/director/centers/clinic-a/users").set("Cookie", cookie)
-      .send({ email: "doc@clinic-a.cl", password: "password123", role: "medico" }).expect(201);
+      .send({ email: "doc@clinic-a.cl", password: "password123", role: "medico", ...PROFILE }).expect(201);
     const list = await request(app).get("/api/director/centers/clinic-a/users").set("Cookie", cookie).expect(200);
     const flags = Object.fromEntries(list.body.users.map((u: { email: string; legalRepresentative: boolean }) => [u.email, u.legalRepresentative]));
     expect(flags).toEqual({ "rep@clinic-a.cl": true, "doc@clinic-a.cl": false });
@@ -891,5 +898,97 @@ describe("marcar representante legal desde supra-control", () => {
     const admin = `clinivista_session=${createSession({ userId: "sa", centerId: null, role: "supra_admin" })}`;
     await request(app).patch("/api/director/centers/clinic-a/users/clinic-a-staff-0").set("Cookie", admin).send({ legalRepresentative: true }).expect(403);
     await request(app).patch("/api/director/centers/clinic-b/users/clinic-a-staff-0").set("Cookie", `clinivista_session=${directorSession()}`).send({ legalRepresentative: true }).expect(404);
+  });
+});
+
+describe("datos de la clínica (RUT, dirección y teléfono)", () => {
+  const director = () => `clinivista_session=${directorSession()}`;
+  const create = (body: object) => request(app).post("/api/director/centers").set("Cookie", director()).send(body);
+
+  it("al crear una clínica el RUT, la dirección y el teléfono son obligatorios", async () => {
+    await create({ name: "Clínica Sin Datos" }).expect(400);
+    await create({ name: "Clínica Sin Datos", ...CLINIC, rut: "" }).expect(400);
+    await create({ name: "Clínica Sin Datos", ...CLINIC, rut: "12.345.678-9" }).expect(400);
+    await create({ name: "Clínica Sin Datos", ...CLINIC, address: "" }).expect(400);
+    await create({ name: "Clínica Sin Datos", ...CLINIC, phone: "" }).expect(400);
+    await create({ name: "Clínica Sin Datos", ...CLINIC, phone: "abc" }).expect(400);
+    const demo = await create({ name: "Clínica Demostración", ...CLINIC, rut: "00000000-0" }).expect(201);
+    expect(demo.body.profile).toEqual({ country: "CL", rut: "00.000.000-0", address: "Av. Demo 123, Santiago", phone: "+56 2 2345 6789" });
+    const real = await create({ name: "Clínica Real", ...CLINIC, rut: "76.543.210-3" });
+    expect([201, 400]).toContain(real.status);
+  });
+
+  it("las cuentas iniciales también piden RUT (y especialidad si son médicos)", async () => {
+    const account = { email: "uno@x.cl", password: "password-123", role: "medico" };
+    await create({ name: "Clínica Cuentas", ...CLINIC, users: [account] }).expect(400);
+    await create({ name: "Clínica Cuentas", ...CLINIC, users: [{ ...account, rut: "00000000-0" }] }).expect(400);
+    const ok = await create({ name: "Clínica Cuentas", ...CLINIC, users: [{ ...account, ...PROFILE }] }).expect(201);
+    expect(ok.body.staffCount).toBe(1);
+  });
+
+  it("las clínicas existentes (sin datos) se pueden completar y corregir; supra-control las ve en la lista", async () => {
+    await seedClinic("clinic-a");
+    const before = await request(app).get("/api/director/centers/clinic-a/profile").set("Cookie", director()).expect(200);
+    expect(before.body).toEqual({ country: "CL", rut: "", address: "", phone: "" });
+    await request(app).put("/api/director/centers/clinic-a/profile").set("Cookie", director()).send({ ...CLINIC, rut: "11.111.111-2" }).expect(400);
+    const saved = await request(app).put("/api/director/centers/clinic-a/profile").set("Cookie", director()).send({ ...CLINIC, rut: "00000000-0" }).expect(200);
+    expect(saved.body.rut).toBe("00.000.000-0");
+    const again = await request(app).put("/api/director/centers/clinic-a/profile").set("Cookie", director()).send({ ...CLINIC, address: "Otra dirección 55" }).expect(200);
+    expect(again.body.address).toBe("Otra dirección 55");
+    const list = await request(app).get("/api/director/centers").set("Cookie", director()).expect(200);
+    expect(list.body.centers.find((c: { id: string }) => c.id === "clinic-a").profile.address).toBe("Otra dirección 55");
+    await request(app).put("/api/director/centers/nope/profile").set("Cookie", director()).send(CLINIC).expect(404);
+    await request(app).put("/api/director/centers/clinic-a/profile").send(CLINIC).expect(401);
+  });
+
+  it("supra-control edita los datos personales de los usuarios de una clínica", async () => {
+    await seedClinic("clinic-a", { staff: 1 });
+    const users = (await request(app).get("/api/director/centers/clinic-a/users").set("Cookie", director()).expect(200)).body.users;
+    expect(users[0]).toMatchObject({ rut: "", address: "", prefix: "", specialty: "" });
+    const id = users[0].id;
+    await request(app).patch(`/api/director/centers/clinic-a/users/${id}`).set("Cookie", director()).send({ rut: "bad" }).expect(400);
+    const done = await request(app).patch(`/api/director/centers/clinic-a/users/${id}`).set("Cookie", director()).send({ rut: "00000000-0", prefix: "Sr", specialty: "dermatologo" }).expect(200);
+    expect(done.body).toMatchObject({ rut: "00.000.000-0", prefix: "Sr" });
+  });
+});
+
+describe("país de la clínica: RUT en Chile, pasaporte en los demás países", () => {
+  const director = () => `clinivista_session=${directorSession()}`;
+  const create = (body: object) => request(app).post("/api/director/centers").set("Cookie", director()).send(body);
+  const passport = { ...CLINIC, country: "AR", rut: "aa 123456-7" };
+
+  it("hay que elegir el país, y debe ser uno de la lista", async () => {
+    await create({ name: "Clínica Sin País", ...CLINIC, country: undefined }).expect(400);
+    await create({ name: "Clínica País Raro", ...CLINIC, country: "XX" }).expect(400);
+  });
+
+  it("fuera de Chile se pide pasaporte (5 a 20 letras o números) en vez de RUT", async () => {
+    await create({ name: "Clínica Buenos Aires", ...passport, rut: "12" }).expect(400);
+    await create({ name: "Clínica Buenos Aires", ...passport, rut: "AB#12345" }).expect(400);
+    const ok = await create({ name: "Clínica Buenos Aires", ...passport }).expect(201);
+    expect(ok.body.profile).toMatchObject({ country: "AR", rut: "AA1234567" });
+  });
+
+  it("en Chile un pasaporte no vale como RUT, y fuera de Chile el RUT no se valida", async () => {
+    await create({ name: "Clínica Santiago", ...CLINIC, rut: "AA1234567" }).expect(400);
+    await create({ name: "Clínica Lima", ...CLINIC, country: "PE", rut: "12.345.678-9" }).expect(201);
+  });
+
+  it("los usuarios de la clínica usan el documento de su país", async () => {
+    await create({ name: "Clínica Buenos Aires", ...passport }).expect(201);
+    const post = (data: object) => request(app).post("/api/director/centers/clinica-buenos-aires/users").set("Cookie", director()).send(data);
+    const user = { email: "med@ba.ar", name: "Médico", password: "password123", role: "medico", ...PROFILE };
+    await post({ ...user, rut: "00000000-0" }).expect(201);
+    await post({ ...user, email: "otro@ba.ar", rut: "X" }).expect(400);
+    const done = await post({ ...user, email: "pas@ba.ar", rut: "p-9988776" }).expect(201);
+    expect(done.body.rut).toBe("P9988776");
+  });
+
+  it("se puede cambiar el país de una clínica existente y volver a guardar sus datos", async () => {
+    await seedClinic("clinic-a");
+    const put = (data: object) => request(app).put("/api/director/centers/clinic-a/profile").set("Cookie", director()).send(data);
+    await put({ ...CLINIC, country: "BR", rut: "00000000-0" }).expect(200);
+    expect((await request(app).get("/api/director/centers/clinic-a/profile").set("Cookie", director())).body.country).toBe("BR");
+    await put({ ...CLINIC, country: "BR", rut: "cd12" }).expect(400);
   });
 });

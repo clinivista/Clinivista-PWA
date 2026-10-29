@@ -355,3 +355,27 @@ export const clinicContractInvitesTable = pgTable("clinic_contract_invites", {
 }, (table) => [
   index("clinic_contract_invites_center_idx").on(table.centerId, table.sentAt),
 ]);
+
+// Datos de la clínica para el contrato: RUT, domicilio y teléfono (supra-control los pide al crearla).
+// Tabla aparte para no tocar clinical_centers; las filas existentes quedan «sin datos» hasta completarlas.
+export const clinicProfilesTable = pgTable("clinic_profiles", {
+  centerId: text("center_id").primaryKey(),
+  // País de la clínica: define el documento de identidad (RUT en Chile, pasaporte en los demás países).
+  country: text("country").notNull().default("CL"),
+  // Documento de identidad de la clínica (se llama «rut» por historia, pero en otros países guarda el pasaporte).
+  rut: text("rut").notNull().default(""),
+  address: text("address").notNull().default(""),
+  phone: text("phone").notNull().default(""),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Datos personales del usuario de una clínica: RUT, domicilio, prefijo (Dr, Sra…) y especialidad (médicos).
+// El del representante legal rellena el contrato.
+export const userProfilesTable = pgTable("user_profiles", {
+  userId: text("user_id").primaryKey(),
+  rut: text("rut").notNull().default(""),
+  address: text("address").notNull().default(""),
+  prefix: text("prefix").notNull().default(""),
+  specialty: text("specialty").notNull().default(""),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});

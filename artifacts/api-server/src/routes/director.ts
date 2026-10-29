@@ -4,7 +4,7 @@ import { sendContractToNewRepresentative } from "../lib/contract-invite";
 import { Router, type IRouter } from "express";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { toSpecialtyId } from "../lib/specialties";
-import { db, centersTable, leadsTable, usersTable, hashPassword, normalizeEmail } from "@workspace/db";
+import { db, centersTable, clinicProfilesTable, leadsTable, userProfilesTable, usersTable, hashPassword, normalizeEmail } from "@workspace/db";
 import {
   CreateDirectorCenterBody,
   CreateDirectorCenterUserBody,
@@ -34,6 +34,7 @@ import { PHONE_ERROR, parseUserPhone } from "../lib/user-phone";
 import { destroySessionsForUser } from "../lib/sessions";
 import { resetToTemporaryPassword } from "../lib/user-management";
 import { toPlan } from "../lib/plans";
+import { clinicProfileOf, clinicProfilesOf, hasProfileKeys, parseClinicProfile, parseUserProfile, saveClinicProfile, saveUserProfile, withUserProfiles } from "../lib/profiles";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
@@ -60,6 +61,7 @@ async function centerSummaries() {
   for (const row of userCenterIds) if (row.centerId) knownIds.add(row.centerId);
 
   const centerById = new Map(centers.map((center) => [center.id, center]));
+  const profiles = await clinicProfilesOf([...knownIds]);
   const results = await Promise.all(
     [...knownIds].map(async (id) => {
       const center = centerById.get(id);
@@ -82,6 +84,7 @@ async function centerSummaries() {
         logoDataUrl: center?.logoDataUrl ?? null,
         specialty: toSpecialtyId(center?.specialty),
         plan: toPlan(center?.plan),
+        profile: profiles.get(id) ?? { country: "CL", rut: "", address: "", phone: "" },
       };
     }),
   );
@@ -130,7 +133,22 @@ router.post("/director/centers", async (req, res): Promise<void> => {
     return;
   }
 
+  const clinicProfile = parseClinicProfile(req.body, { require: true });
+  if ("error" in clinicProfile) {
+    res.status(400).json({ error: clinicProfile.error });
+    return;
+  }
+  const userProfiles: Array<{ value: Partial<import("../lib/profiles").UserProfile> }> = [];
+  for (const [index, user] of users.entries()) {
+    const parsed = parseUserProfile((req.body as { users?: Array<Record<string, unknown>> }).users?.[index], { role: user.role, require: true, requireAddress: user.legalRepresentative === true, country: clinicProfile.value.country });
+    if ("error" in parsed) {
+      res.status(400).json({ error: `Cuenta ${index + 1}: ${parsed.error}` });
+      return;
+    }
+    userProfiles.push(parsed);
+  }
   const accounts = users.map((user) => ({
+    legalRepresentative: user.legalRepresentative === true,
     email: user.email.trim(),
     emailNormalized: normalizeEmail(user.email),
     name: clean(user.name ?? "", 100),
@@ -161,11 +179,17 @@ router.post("/director/centers", async (req, res): Promise<void> => {
     }
   }
 
+  const accountIds: string[] = [];
   await db.transaction(async (tx) => {
     await tx.insert(centersTable).values({ id: slug, name, slug, specialty: toSpecialtyId(body.data.specialty) });
-    for (const account of accounts) {
+    await tx.insert(clinicProfilesTable).values({ centerId: slug, ...clinicProfile.value });
+    for (const [index, account] of accounts.entries()) {
+      const userId = uid(9);
+      accountIds.push(userId);
+      await tx.insert(userProfilesTable).values({ userId, ...userProfiles[index]!.value });
       await tx.insert(usersTable).values({
-        id: uid(9),
+        id: userId,
+        legalRepresentative: account.legalRepresentative,
         email: account.email,
         emailNormalized: account.emailNormalized,
         passwordHash: hashPassword(account.password),
@@ -176,6 +200,7 @@ router.post("/director/centers", async (req, res): Promise<void> => {
     }
   });
   if (body.data.withSamplePatients) await seedSamplePatients(slug);
+  for (const [index, account] of accounts.entries()) if (account.legalRepresentative) void sendContractToNewRepresentative(slug, accountIds[index]!, baseUrl(req));
 
   const created = (await centerSummaries()).find((center) => center.id === slug);
   res.status(201).json(created);
@@ -261,7 +286,7 @@ router.get("/director/centers/:id/users", async (req, res): Promise<void> => {
     createdAt: usersTable.createdAt,
   }).from(usersTable).where(eq(usersTable.centerId, params.data.id));
   users.sort((a, b) => a.name.localeCompare(b.name) || a.email.localeCompare(b.email));
-  res.json({ users });
+  res.json({ country: (await clinicProfileOf(params.data.id)).country, users: await withUserProfiles(users) });
 });
 
 router.post("/director/centers/:id/users", async (req, res): Promise<void> => {
@@ -295,6 +320,11 @@ router.post("/director/centers/:id/users", async (req, res): Promise<void> => {
     res.status(400).json({ error: PHONE_ERROR });
     return;
   }
+  const profile = parseUserProfile(req.body, { role: body.data.role, require: true, requireAddress: body.data.legalRepresentative === true, country: (await clinicProfileOf(params.data.id)).country });
+  if ("error" in profile) {
+    res.status(400).json({ error: profile.error });
+    return;
+  }
   const id = uid(9);
   await db.insert(usersTable).values({
     id,
@@ -308,8 +338,9 @@ router.post("/director/centers/:id/users", async (req, res): Promise<void> => {
     legalRepresentative: body.data.legalRepresentative === true,
   });
   if (body.data.legalRepresentative === true) void sendContractToNewRepresentative(params.data.id, id, baseUrl(req));
+  await saveUserProfile(id, profile.value);
   const [created] = await db.select(TEAM_MEMBER_COLUMNS).from(usersTable).where(eq(usersTable.id, id));
-  res.status(201).json(created);
+  res.status(201).json((await withUserProfiles([created!]))[0]);
 });
 
 router.post("/director/centers/:id/users/:userId/reset-password", async (req, res): Promise<void> => {
@@ -344,7 +375,7 @@ router.patch("/director/centers/:id/users/:userId", async (req, res): Promise<vo
 
   const params = PatchDirectorCenterUserParams.safeParse(req.params);
   const body = PatchDirectorCenterUserBody.safeParse(req.body);
-  const nothingToChange = body.success && ["active", "legalRepresentative", "name", "phone", "role", "password"].every((key) => body.data[key as keyof typeof body.data] === undefined);
+  const nothingToChange = body.success && !hasProfileKeys(req.body) && ["active", "legalRepresentative", "name", "phone", "role", "password"].every((key) => body.data[key as keyof typeof body.data] === undefined);
   if (!params.success || !body.success || nothingToChange) {
     res.status(400).json({ error: "Datos inválidos." });
     return;
@@ -365,6 +396,12 @@ router.patch("/director/centers/:id/users/:userId", async (req, res): Promise<vo
     res.status(400).json({ error: PHONE_ERROR });
     return;
   }
+  const profile = parseUserProfile(req.body, { role: body.data.role ?? user.role, require: false, country: (await clinicProfileOf(params.data.id)).country });
+  if ("error" in profile) {
+    res.status(400).json({ error: profile.error });
+    return;
+  }
+  await saveUserProfile(user.id, profile.value);
   if (body.data.legalRepresentative !== undefined || body.data.name !== undefined || phone !== undefined || body.data.role !== undefined || body.data.password !== undefined) {
     await db.update(usersTable)
       .set({
@@ -385,7 +422,34 @@ router.patch("/director/centers/:id/users/:userId", async (req, res): Promise<vo
     return;
   }
   const [updated] = await db.select(TEAM_MEMBER_COLUMNS).from(usersTable).where(eq(usersTable.id, user.id));
-  res.json(updated);
+  res.json((await withUserProfiles([updated!]))[0]);
+});
+
+// Datos de la clínica para el contrato (RUT, domicilio, teléfono). Se pueden completar o corregir en cualquier momento.
+router.get("/director/centers/:id/profile", async (req, res): Promise<void> => {
+  if (!requireSupraAuth(req, res)) return;
+  const id = String(req.params.id);
+  if (!(await centerSummaries()).some((center) => center.id === id)) {
+    res.status(404).json({ error: "Clínica no encontrada." });
+    return;
+  }
+  res.json(await clinicProfileOf(id));
+});
+
+router.put("/director/centers/:id/profile", async (req, res): Promise<void> => {
+  if (!requireSupraAuth(req, res)) return;
+  const id = String(req.params.id);
+  if (!(await centerSummaries()).some((center) => center.id === id)) {
+    res.status(404).json({ error: "Clínica no encontrada." });
+    return;
+  }
+  const profile = parseClinicProfile(req.body, { require: true });
+  if ("error" in profile) {
+    res.status(400).json({ error: profile.error });
+    return;
+  }
+  await saveClinicProfile(id, profile.value);
+  res.json(await clinicProfileOf(id));
 });
 
 // ── Equipo del panel de supra-control ────────────────────────────────────
