@@ -47,6 +47,7 @@ import { LeadEvolution } from "@/components/lead-evolution";
 import { NAV_TEXT } from "@/lib/phases-i18n";
 import { ClinicHome } from "@/components/clinic-home";
 import { PlanNotice } from "@/components/plan-counter";
+import { ContractNotice } from "@/components/contract-notice";
 import { VideoPlayer } from "@/components/video-player";
 import { HOME_TEXT } from "@/lib/home-i18n";
 import { ClinicTopbar } from "@/components/clinic-topbar";
@@ -432,6 +433,7 @@ export default function Admin() {
           menuOpen={mobileNavOpen}
         />
         <PlanNotice onContact={() => go("help", "support")} />
+        <ContractNotice />
         <AddPatientDialog open={addPatientOpen} onOpenChange={setAddPatientOpen} onCreated={(id) => { setStatusFilter("all"); setSearch(""); setView("patients"); setSelectedLeadId(id); }} />
         {view === "home" ? (
           <ClinicHome
