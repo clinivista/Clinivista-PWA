@@ -97,3 +97,12 @@ describe("Integraciones disponibles", () => {
     expect(await screen.findByTestId("integrations-panel")).toHaveAttribute("dir", "rtl");
   });
 });
+
+describe("Integraciones disponibles — logos", () => {
+  it("muestra el logo de Reservo y la inicial en las marcas sin logo", async () => {
+    renderPanel();
+    expect(await screen.findByTestId("integration-reservo-logo")).toBeInTheDocument();
+    expect(await screen.findByTestId("integration-medilink-logo")).toBeInTheDocument();
+    expect(screen.queryByTestId("integration-facebook-logo")).not.toBeInTheDocument();
+  });
+});

@@ -13,6 +13,12 @@ const KEY = ["/api/clinic/integrations"];
 
 // «Integraciones disponibles» del panel de la clínica: catálogo de redes sociales, sistemas de agenda y mensajería.
 // Todavía no se conecta ninguna; la clínica pide las que le interesan y supra-control ve la lista en su ficha.
+// Logos oficiales aportados por el equipo; las marcas sin archivo muestran su inicial.
+const INTEGRATION_LOGOS: Record<string, string> = {
+  reservo: `${import.meta.env.BASE_URL}integrations/reservo.png`,
+  medilink: `${import.meta.env.BASE_URL}integrations/medilink.png`,
+};
+
 export function IntegrationsPanel() {
   const { lang } = useLanguage();
   const x = INTEGRATIONS_TEXT[lang];
@@ -74,7 +80,11 @@ export function IntegrationsPanel() {
                   return (
                     <li key={item.id} data-testid={`integration-${item.id}`} className="flex flex-col gap-3 rounded-[1.5rem] bg-white shadow-sm p-5">
                       <div className="flex items-center gap-3">
-                        <span aria-hidden="true" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F5F2EE] text-base font-extrabold text-foreground">{name.charAt(0)}</span>
+                        {INTEGRATION_LOGOS[item.id] ? (
+                          <img src={INTEGRATION_LOGOS[item.id]} alt="" aria-hidden="true" data-testid={`integration-${item.id}-logo`} className="h-10 w-auto max-w-[7rem] rounded-xl object-contain" />
+                        ) : (
+                          <span aria-hidden="true" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F5F2EE] text-base font-extrabold text-foreground">{name.charAt(0)}</span>
+                        )}
                         <div className="min-w-0 flex-1">
                           <p className="font-bold text-foreground truncate">{name}</p>
                           <p className="text-xs font-semibold text-muted-foreground">{x.comingSoon}</p>
