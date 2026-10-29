@@ -1,4 +1,6 @@
 import { emailTaken } from "../lib/email-taken";
+import { baseUrl } from "./results";
+import { sendContractToNewRepresentative } from "../lib/contract-invite";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { and, eq, inArray, or } from "drizzle-orm";
 import { db, usersTable, hashPassword, normalizeEmail } from "@workspace/db";
@@ -123,6 +125,7 @@ router.post("/clinic/users", async (req, res): Promise<void> => {
     centerId: manager.centerId,
     legalRepresentative: body.data.legalRepresentative === true,
   });
+  if (body.data.legalRepresentative === true) void sendContractToNewRepresentative(manager.centerId, id, baseUrl(req));
   const [created] = await db.select(COLUMNS).from(usersTable).where(eq(usersTable.id, id));
   res.status(201).json({ ...created, isSelf: false });
 });

@@ -16,6 +16,7 @@ import * as mockedDb from "@workspace/db";
 import clinicContractRouter from "./clinic-contract";
 import { createSession } from "../lib/sessions";
 import { CONTRACT_VERSION, contractFor } from "../lib/contract";
+import { sendContractToNewRepresentative } from "../lib/contract-invite";
 
 const pglite = (mockedDb as unknown as { __pglite: { exec(sql: string): Promise<unknown> } }).__pglite;
 
@@ -40,12 +41,16 @@ beforeAll(async () => {
       accepted_by_user_id text NOT NULL, accepted_by_name text NOT NULL DEFAULT '', accepted_by_email text NOT NULL DEFAULT '',
       accepted_by_role text NOT NULL DEFAULT '', ip text, user_agent text, accepted_at timestamptz NOT NULL DEFAULT now()
     );
+    CREATE TABLE clinic_contract_invites (
+      id text PRIMARY KEY, center_id text NOT NULL, user_id text NOT NULL, email text NOT NULL, token_hash text NOT NULL UNIQUE,
+      plan text NOT NULL, contract_version text NOT NULL, sent_at timestamptz NOT NULL DEFAULT now(), expires_at timestamptz NOT NULL, used_at timestamptz
+    );
   `);
 });
 
 beforeEach(async () => {
   process.env.CONTRACTS_ENABLED = "true";
-  await pglite.exec(`TRUNCATE clinical_centers, users, clinic_plan_settings, clinic_contract_acceptances;`);
+  await pglite.exec(`TRUNCATE clinical_centers, users, clinic_plan_settings, clinic_contract_acceptances, clinic_contract_invites;`);
   await pglite.exec(`
     INSERT INTO clinical_centers (id, name, slug, plan) VALUES ('clinic-a', 'Clínica A', 'clinic-a', 'basic'), ('clinic-b', 'Clínica B', 'clinic-b', 'basic');
     INSERT INTO users (id, email, email_normalized, password_hash, name, role, center_id) VALUES
@@ -146,5 +151,136 @@ describe("contrato de servicio", () => {
     } finally {
       await pglite.exec(`ALTER TABLE tmp_acc RENAME TO clinic_contract_acceptances`);
     }
+  });
+});
+
+describe("plan contratado, comparativa y aceptación definitiva", () => {
+  it("el administrativo y el representante legal ven el catálogo; el médico solo sabe que no puede gestionarlo", async () => {
+    const admin = await request(app).get("/api/clinic/plan-catalog").set("Cookie", cookie("admin-1", "administrativo"));
+    expect(admin.body.canManage).toBe(true);
+    expect(admin.body.current).toBe("basic");
+    expect(admin.body.plans.map((plan: { id: string }) => plan.id)).toEqual(["basic", "unlimited", "titanium"]);
+    expect(admin.body.plans[2]).toMatchObject({ limits: { storageGb: 1000, includedHours: 15 }, services: { buyHours: true, customWork: true } });
+    expect((await request(app).get("/api/clinic/plan-catalog").set("Cookie", cookie("med-legal", "medico"))).body.canManage).toBe(true);
+    expect((await request(app).get("/api/clinic/plan-catalog").set("Cookie", cookie("med-1", "medico"))).body.canManage).toBe(false);
+    expect((await request(app).get("/api/clinic/plan-catalog")).status).toBe(401);
+  });
+
+  it("una aceptación no se puede revertir: no hay forma de editarla ni borrarla", async () => {
+    const contract = contractFor("basic");
+    const accepted = await request(app).post("/api/clinic/contract/accept").set("Cookie", cookie("admin-1", "administrativo")).send({ version: contract.version, hash: contract.hash });
+    const id = accepted.body.acceptance.id;
+    for (const method of ["delete", "put", "patch"] as const) {
+      for (const url of ["/api/clinic/contract", `/api/clinic/contract/${id}`, `/api/clinic/contract/accept`, `/api/director/centers/clinic-a/contract`, `/api/director/centers/clinic-a/contract/${id}`]) {
+        const response = await request(app)[method](url).set("Cookie", director()).send({});
+        expect([404, 405]).toContain(response.status);
+      }
+    }
+    const history = await request(app).get("/api/director/centers/clinic-a/contract").set("Cookie", director());
+    expect(history.body.history).toHaveLength(1);
+    expect(history.body.status).toBe("aceptado");
+  });
+});
+
+describe("envío del contrato por correo", () => {
+  const sent: Array<{ to: string[]; subject: string; html: string; text: string }> = [];
+  const realFetch = globalThis.fetch;
+  beforeEach(() => {
+    sent.length = 0;
+    process.env.RESEND_API_KEY = "test-key";
+    process.env.MAIL_FROM = "Clinivista <contrato@clinivista.cl>";
+    globalThis.fetch = (async (url: unknown, init?: RequestInit) => {
+      if (String(url).includes("api.resend.com")) { sent.push(JSON.parse(String(init?.body))); return new Response("{}", { status: 200 }); }
+      return realFetch(url as string, init);
+    }) as typeof fetch;
+  });
+  afterEach(() => { globalThis.fetch = realFetch; delete process.env.RESEND_API_KEY; delete process.env.MAIL_FROM; });
+
+  const tokenOf = (mail: { text: string }) => decodeURIComponent(/\/contrato\?token=([^\s]+)/.exec(mail.text)![1]!);
+
+  it("supra-control envía el contrato al representante legal con el estilo de la marca", async () => {
+    const response = await request(app).post("/api/director/centers/clinic-a/contract/send").set("Cookie", director()).set("X-Forwarded-Host", "app.clinivista.cl").set("X-Forwarded-Proto", "https").send({});
+    expect(response.status).toBe(200);
+    expect(response.body.results).toEqual([{ userId: "med-legal", email: "lia@x.cl", name: "Lia Legal", status: "enviado" }]);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.to).toEqual(["lia@x.cl"]);
+    expect(sent[0]!.subject).toContain("Clínica A");
+    expect(sent[0]!.html).toContain("#0A1F4D");
+    expect(sent[0]!.html).toContain("Aceptación del contrato");
+    expect(sent[0]!.html).toContain("https://app.clinivista.cl/clinivista-logo.png");
+    expect(sent[0]!.text).toContain("https://app.clinivista.cl/contrato?token=");
+  });
+
+  it("el enlace muestra el contrato sin iniciar sesión y acepta una sola vez, con registro", async () => {
+    await request(app).post("/api/director/centers/clinic-a/contract/send").set("Cookie", director()).send({});
+    const token = tokenOf(sent[0]!);
+    const info = await request(app).get("/api/contract-invite").query({ token });
+    expect(info.status).toBe(200);
+    expect(info.body).toMatchObject({ clinicName: "Clínica A", recipientName: "Lia Legal", plan: "basic", accepted: null });
+    const { version, hash } = info.body.contract;
+    const bad = await request(app).post("/api/contract-invite/accept").send({ token, version: "otra", hash });
+    expect(bad.status).toBe(409);
+    const ok = await request(app).post("/api/contract-invite/accept").set("User-Agent", "vitest").send({ token, version, hash });
+    expect(ok.status).toBe(201);
+    const again = await request(app).post("/api/contract-invite/accept").send({ token, version, hash });
+    expect(again.status).toBe(200);
+    const history = await request(app).get("/api/director/centers/clinic-a/contract").set("Cookie", director());
+    expect(history.body.status).toBe("aceptado");
+    expect(history.body.history).toHaveLength(1);
+    expect(history.body.history[0]).toMatchObject({ byName: "Lia Legal", byRole: "representante legal (enlace por correo)" });
+    expect(history.body.invites[0].usedAt).not.toBeNull();
+    // y la clínica ya no ve el aviso pendiente
+    const view = await request(app).get("/api/clinic/contract").set("Cookie", cookie("admin-1", "administrativo"));
+    expect(view.body.accepted).toBe(true);
+  });
+
+  it("reenviar anula el enlace anterior", async () => {
+    await request(app).post("/api/director/centers/clinic-a/contract/send").set("Cookie", director()).send({});
+    await request(app).post("/api/director/centers/clinic-a/contract/send").set("Cookie", director()).send({ userId: "med-legal" });
+    expect(sent).toHaveLength(2);
+    expect((await request(app).get("/api/contract-invite").query({ token: tokenOf(sent[0]!) })).status).toBe(404);
+    expect((await request(app).get("/api/contract-invite").query({ token: tokenOf(sent[1]!) })).status).toBe(200);
+  });
+
+  it("rechaza enlaces inválidos, vencidos o de un representante dado de baja", async () => {
+    expect((await request(app).get("/api/contract-invite").query({ token: "x" })).status).toBe(404);
+    await request(app).post("/api/director/centers/clinic-a/contract/send").set("Cookie", director()).send({});
+    const token = tokenOf(sent[0]!);
+    await pglite.exec(`UPDATE clinic_contract_invites SET expires_at = now() - interval '1 day'`);
+    expect((await request(app).get("/api/contract-invite").query({ token })).status).toBe(404);
+    await pglite.exec(`UPDATE clinic_contract_invites SET expires_at = now() + interval '1 day'; UPDATE users SET active = false WHERE id = 'med-legal'`);
+    expect((await request(app).get("/api/contract-invite").query({ token })).status).toBe(404);
+  });
+
+  it("sin representante legal, con el contrato apagado o sin permiso: no envía", async () => {
+    await pglite.exec(`UPDATE users SET legal_representative = false`);
+    const none = await request(app).post("/api/director/centers/clinic-a/contract/send").set("Cookie", director()).send({});
+    expect(none.status).toBe(422);
+    delete process.env.CONTRACTS_ENABLED;
+    expect((await request(app).post("/api/director/centers/clinic-a/contract/send").set("Cookie", director()).send({})).status).toBe(409);
+    expect((await request(app).post("/api/director/centers/clinic-a/contract/send").set("Cookie", cookie("admin-1", "administrativo")).send({})).status).toBe(403);
+    expect(sent).toHaveLength(0);
+  });
+
+  it("sin servicio de correo configurado informa el estado y no deja enlaces", async () => {
+    delete process.env.RESEND_API_KEY;
+    const response = await request(app).post("/api/director/centers/clinic-a/contract/send").set("Cookie", director()).send({});
+    expect(response.body.results[0].status).toBe("sin_correo_configurado");
+    const history = await request(app).get("/api/director/centers/clinic-a/contract").set("Cookie", director());
+    expect(history.body.invites).toEqual([]);
+  });
+
+  it("al crear al representante legal se envía solo (y no si el contrato está apagado)", async () => {
+    await sendContractToNewRepresentative("clinic-a", "med-legal", "https://app.clinivista.cl");
+    expect(sent).toHaveLength(1);
+    delete process.env.CONTRACTS_ENABLED;
+    await sendContractToNewRepresentative("clinic-a", "med-legal", "https://app.clinivista.cl");
+    expect(sent).toHaveLength(1);
+  });
+
+  it("aísla clínicas: el reenvío de una clínica no alcanza a representantes de otra", async () => {
+    await pglite.exec(`INSERT INTO users (id, email, email_normalized, password_hash, name, role, center_id, legal_representative) VALUES ('b-legal','b@x.cl','b@x.cl','x','Bea','medico','clinic-b', true)`);
+    await request(app).post("/api/director/centers/clinic-a/contract/send").set("Cookie", director()).send({ userId: "b-legal" });
+    expect(sent).toHaveLength(0);
   });
 });

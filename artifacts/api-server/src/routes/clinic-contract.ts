@@ -2,10 +2,13 @@ import { Router, type IRouter, type Request } from "express";
 import { desc, eq } from "drizzle-orm";
 import { db, centersTable, usersTable, clinicContractAcceptancesTable } from "@workspace/db";
 import { requireStaffAuth, requireSupraAuth } from "./auth";
-import { centerPlan } from "../lib/plans";
+import { PLANS, PLAN_DEFAULT_LIMITS, PLAN_SERVICES, centerPlan } from "../lib/plans";
 import { CONTRACT_VERSION, contractFor, contractsEnabled } from "../lib/contract";
 import { uid } from "../lib/helpers";
 import { logger } from "../lib/logger";
+import { InviteAcceptError, acceptViaInvite, invitesOf, inviteInfo, legalRepresentatives, sendContract } from "../lib/contract-invite";
+import { throttled } from "../lib/patient-accounts";
+import { baseUrl } from "./results";
 
 const router: IRouter = Router();
 const ID = /^[\w.-]{1,200}$/;
@@ -34,6 +37,20 @@ function clientIp(req: Request): string {
   const first = (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(",")[0]?.trim();
   return (first || req.ip || "").slice(0, 64);
 }
+
+// Plan contratado y comparativa con los demás planes (sin precios: aún por definir). Solo el administrativo o el
+// representante legal ve el apartado; el resto recibe canManage=false y la pantalla no lo ofrece.
+router.get("/clinic/plan-catalog", async (req, res): Promise<void> => {
+  const staff = requireStaffAuth(req, res);
+  if (!staff) return;
+  const [user] = await db.select({ legal: usersTable.legalRepresentative }).from(usersTable).where(eq(usersTable.id, staff.userId));
+  const canManage = staff.role === "administrativo" || user?.legal === true || staff.legal === true;
+  res.json({
+    canManage,
+    current: await centerPlan(staff.centerId),
+    plans: PLANS.map((id) => ({ id, limits: PLAN_DEFAULT_LIMITS[id], services: PLAN_SERVICES[id] })),
+  });
+});
 
 // La clínica ve su contrato y si falta aceptarlo (versión y plan vigentes).
 router.get("/clinic/contract", async (req, res): Promise<void> => {
@@ -96,6 +113,8 @@ router.get("/director/centers/:id/contract", async (req, res): Promise<void> => 
   const [center] = await db.select({ id: centersTable.id }).from(centersTable).where(eq(centersTable.id, id));
   if (!center) { res.status(404).json({ error: "Clínica no encontrada." }); return; }
   const rows = await acceptancesOf(id);
+  const invites = await invitesOf(id);
+  const reps = await legalRepresentatives(id);
   const plan = await centerPlan(id);
   const current = rows?.find((row) => row.contractVersion === CONTRACT_VERSION && row.plan === plan) ?? null;
   res.json({
@@ -105,7 +124,45 @@ router.get("/director/centers/:id/contract", async (req, res): Promise<void> => 
     plan,
     status: current ? "aceptado" : "pendiente",
     history: (rows ?? []).map(publicRow),
+    legalReps: reps,
+    mailAvailable: invites !== null,
+    invites: (invites ?? []).map((row) => ({ id: row.id, userId: row.userId, email: row.email, plan: row.plan, version: row.contractVersion, sentAt: row.sentAt.toISOString(), expiresAt: row.expiresAt.toISOString(), usedAt: row.usedAt?.toISOString() ?? null })),
   });
+});
+
+// Supra-control: enviar o reenviar el contrato por correo al representante legal (a todos los activos, o a uno).
+router.post("/director/centers/:id/contract/send", async (req, res): Promise<void> => {
+  if (!requireSupraAuth(req, res)) return;
+  const id = String(req.params.id);
+  if (!ID.test(id)) { res.status(404).json({ error: "Clínica no encontrada." }); return; }
+  if (!contractsEnabled()) { res.status(409).json({ error: "El contrato aún no está activado (CONTRACTS_ENABLED en Render)." }); return; }
+  if ((await invitesOf(id)) === null) { res.status(503).json({ error: "El envío no está disponible: falta ejecutar sql0005 en Neon." }); return; }
+  const userId = typeof (req.body as { userId?: unknown } | undefined)?.userId === "string" ? (req.body as { userId: string }).userId : undefined;
+  const results = await sendContract(id, baseUrl(req), userId);
+  if (results === null) { res.status(404).json({ error: "Clínica no encontrada." }); return; }
+  if (results.length === 0) { res.status(422).json({ error: "La clínica no tiene un representante legal activo. Créalo o márcalo en Usuarios." }); return; }
+  res.json({ results });
+});
+
+// Página pública del correo: el enlace único identifica al representante legal (sin iniciar sesión).
+router.get("/contract-invite", async (req, res): Promise<void> => {
+  if (throttled(`contract-invite-ip:${clientIp(req)}`, 60, 15 * 60_000)) { res.status(429).json({ error: "Demasiados intentos. Espera unos minutos." }); return; }
+  const info = await inviteInfo(req.query.token);
+  res.setHeader("Cache-Control", "no-store");
+  if (!info) { res.status(404).json({ error: "El enlace no es válido o ya venció." }); return; }
+  res.json({ clinicName: info.clinicName, recipientName: info.user.name, plan: info.plan, contract: info.contract, accepted: info.accepted });
+});
+
+router.post("/contract-invite/accept", async (req, res): Promise<void> => {
+  if (throttled(`contract-invite-ip:${clientIp(req)}`, 60, 15 * 60_000)) { res.status(429).json({ error: "Demasiados intentos. Espera unos minutos." }); return; }
+  const body = (req.body ?? {}) as { token?: unknown; version?: unknown; hash?: unknown };
+  try {
+    const result = await acceptViaInvite(body.token, body.version, body.hash, clientIp(req), String(req.headers["user-agent"] ?? ""));
+    res.status(result.already ? 200 : 201).json({ accepted: true, acceptedAt: result.acceptedAt });
+  } catch (error) {
+    if (error instanceof InviteAcceptError) { res.status(error.status).json({ error: error.message }); return; }
+    throw error;
+  }
 });
 
 export default router;

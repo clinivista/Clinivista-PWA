@@ -6,6 +6,7 @@ import { VIDEO_TEXT } from "@/lib/video-i18n";
 import { PLAN_COUNTER_TEXT, fillPlan, type PlanCounterText } from "@/lib/plan-counter-i18n";
 import { meters, planAlerts, usePlanStatus, type Meter, type MeterKey, type PlanAlert, type PlanStatus } from "@/lib/plan-status";
 import { cardClass } from "@/components/dashboard/cards";
+import { PlanContractLauncher } from "@/components/plan-contract-dialog";
 
 const TIME_ZONE = "America/Santiago";
 
@@ -73,7 +74,10 @@ export function PlanCounterCard() {
     <section aria-labelledby="home-plan" className={`${cardClass} p-4 md:p-5 min-w-0`} data-testid="plan-counter">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h2 id="home-plan" className="flex items-center gap-2 font-bold text-foreground"><Gauge className="h-4 w-4 text-primary" aria-hidden="true" />{text.title}</h2>
-        <span className="rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground" data-testid="plan-counter-plan">{fillPlan(text.planOf, { plan: planName })}</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground" data-testid="plan-counter-plan">{fillPlan(text.planOf, { plan: planName })}</span>
+          <PlanContractLauncher />
+        </div>
       </div>
       <ul className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {meters(data).map((meter) => <MeterRow key={meter.key} meter={meter} text={text} lang={lang} />)}
