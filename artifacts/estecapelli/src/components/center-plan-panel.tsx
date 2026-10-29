@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getGetDirectorCentersQueryKey } from "@workspace/api-client-react";
-import { CalendarClock, Clock3, Gauge, Loader2 } from "lucide-react";
+import { CalendarClock, Clock3, FileSignature, Gauge, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -39,6 +39,47 @@ async function send(url: string, method: "PUT" | "POST", body: unknown): Promise
     throw new Error(detail?.error ?? "");
   }
   return (await response.json()) as View;
+}
+
+type ContractHistory = {
+  enabled: boolean; available: boolean; version: string; plan: PlanId; status: "aceptado" | "pendiente";
+  history: Array<{ id: string; plan: PlanId; version: string; hash: string; byName: string; byEmail: string; byRole: string; ip: string | null; acceptedAt: string }>;
+};
+
+/** Supra-control: contrato de servicio de la clínica: estado frente a la versión vigente e historial de aceptaciones. */
+function ContractSection({ centerId }: { centerId: string }) {
+  const { data } = useQuery({
+    queryKey: ["/api/director/centers", centerId, "contract"],
+    queryFn: async () => {
+      const response = await fetch(`/api/director/centers/${encodeURIComponent(centerId)}/contract`, { credentials: "include" });
+      if (!response.ok) throw new Error();
+      return (await response.json()) as ContractHistory;
+    },
+  });
+  if (!data || !Array.isArray(data.history)) return null;
+  const pending = data.status === "pendiente";
+  return (
+    <div className="flex flex-col gap-2" data-testid={`contract-section-${centerId}`}>
+      <p className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground"><FileSignature className="w-4 h-4" /> Contrato de servicio</p>
+      <p className="text-sm">
+        Versión vigente <strong>{data.version}</strong>, plan {PLAN_NAMES[data.plan]}:{" "}
+        <strong className={pending ? "text-amber-700" : "text-emerald-700"}>{pending ? "pendiente de aceptación" : "aceptado"}</strong>.
+        {!data.enabled && " (La aceptación en línea aún no está activada: se enciende con CONTRACTS_ENABLED en Render.)"}
+        {data.enabled && !data.available && " (El registro no está disponible: falta ejecutar sql0004 en Neon.)"}
+      </p>
+      {data.history.length === 0 ? (
+        <p className="text-xs text-muted-foreground">Sin aceptaciones registradas.</p>
+      ) : (
+        <ul className="flex flex-col gap-1 text-xs text-muted-foreground" data-testid="contract-history">
+          {data.history.map((row) => (
+            <li key={row.id}>
+              {dateText(row.acceptedAt)} · Plan {PLAN_NAMES[row.plan]} · versión {row.version} · {row.byName || row.byEmail} ({row.byRole}){row.ip ? ` · IP ${row.ip}` : ""} · huella {row.hash.slice(0, 12)}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 /** Supra-control: plan, límites propios, cobro automático y horas de una clínica. Solo español. */
@@ -208,6 +249,7 @@ export function CenterPlanPanel({ centerId, centerName }: { centerId: string; ce
           </ul>
         )}
       </div>
+      <ContractSection centerId={centerId} />
     </div>
   );
 }

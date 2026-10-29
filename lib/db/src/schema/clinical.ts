@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, check, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -320,3 +320,22 @@ export const captureSessionsTable = pgTable("capture_sessions", {
 });
 
 export type PhotoTranscription = typeof photoTranscriptionsTable.$inferSelect;
+
+// Aceptación en línea del contrato de servicio: una fila por aceptación (nunca se edita ni se borra).
+// Guarda quién, cuándo, qué plan, qué versión del contrato y la huella (hash) del texto exacto que vio.
+export const clinicContractAcceptancesTable = pgTable("clinic_contract_acceptances", {
+  id: text("id").primaryKey(),
+  centerId: text("center_id").notNull(),
+  plan: text("plan").notNull(),
+  contractVersion: text("contract_version").notNull(),
+  contractHash: text("contract_hash").notNull(),
+  acceptedByUserId: text("accepted_by_user_id").notNull(),
+  acceptedByName: text("accepted_by_name").notNull().default(""),
+  acceptedByEmail: text("accepted_by_email").notNull().default(""),
+  acceptedByRole: text("accepted_by_role").notNull().default(""),
+  ip: text("ip"),
+  userAgent: text("user_agent"),
+  acceptedAt: timestamp("accepted_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index("clinic_contract_acceptances_center_idx").on(table.centerId, table.acceptedAt),
+]);
