@@ -555,6 +555,16 @@
        "✔"
       ],
       [
+       "Kliniğin hizmet sözleşmesini kabul etme",
+       "Yasal temsilciyse",
+       "✔"
+      ],
+      [
+       "«Planım» (kullanım, plan ve sözleşme) bölümünü ve «Kullanılabilir entegrasyonlar» sayfasını görüntüleme",
+       "✔",
+       "✔"
+      ],
+      [
        "Destek bileti açma ve değerlendirme",
        "✔",
        "✔"
@@ -1316,6 +1326,10 @@
      "text": "Her kişinin satırındaki «Düzenle» ile ad, telefon ve rolü değiştirir, gerekirse yeni bir şifre atarsın (en az 8 karakter). E-posta değiştirilemez. Kişinin başka kliniklerde hesapları varsa ad ve telefon değişiklikleri yalnızca bu kliniği etkiler."
     },
     {
+     "t": "p",
+     "text": "Bir kişiyi oluştururken veya düzenlerken kişisel bilgileri de istenir: klinik Şili'deyse «RUT», diğer ülkelerde «Pasaport» (kliniğin ülkesini süpra kontrol belirler), ön ek (isteğe bağlı) ve hekimler için uzmanlık alanı. «Adres» yasal temsilci için zorunludur, çünkü bilgileri hizmet sözleşmesinde yer alır. Zorunlu bir bilgi eksikse form bunu bildirir ve kaydetmez."
+    },
+    {
      "t": "legend",
      "items": [
       "«Agregar usuario»: rolüyle (doktor veya idari) yeni bir kişi oluşturur.",
@@ -1335,6 +1349,38 @@
   },
   {
    "id": "2.16",
+   "key": "plan",
+   "title": "Planım, sınırlar ve sözleşme",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "«Ana sayfa» sayfasında «Planım» kartı kliniğin planını ve ne kadarının kullanıldığını gösterir: «Bu ayki yeni hastalar», «Depolama», «Bu ayki transkripsiyonlar» ve «Destek saatleri». Bir sınıra yaklaştığında uyarı çıkar; sınıra ulaşıldığında artırmak için Clinivista ile iletişime geçmen gerekir."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Uyarı: «Aboneliğiniz … tarihinde sona eriyor», bitiş tarihinden birkaç gün önce.",
+      "Ek süre: abonelik sona erdi; kısıtlamaları önlemek için ödemeyi tamamla.",
+      "Salt okunur: tüm bilgileri görebilirsin ama hasta veya fotoğraf ekleyemezsin.",
+      "Veriler her zaman saklanır ve ödeme kaydedildiğinde her şey normale döner."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "«Planı ve sözleşmeyi gör» düğmesi, üç sekmeli «Planım ve sözleşmem» penceresini açar: «Planım» (planın özellikleri), «Planları karşılaştır» ve «Sözleşme». Plan değiştirmek için «Yardım» bölümünden Clinivista'ya yaz; fiyatlar ayrıca bildirilir."
+    },
+    {
+     "t": "p",
+     "text": "Bekleyen bir hizmet sözleşmesi olduğunda üstte «Kliniğinizin kabul bekleyen bir hizmet sözleşmesi var» uyarısı ve «Sözleşmeyi incele» düğmesi görünür. Yasal temsilciye ayrıca okuyup kabul etmesi için e-postayla bir bağlantı gönderilir. Sözleşmeyi yalnızca idari personel veya yasal temsilci kabul edebilir: metni oku, «Sözleşmeyi okudum ve klinik adına kabul ediyorum» kutusunu işaretle ve «Sözleşmeyi kabul et» düğmesine bas."
+    },
+    {
+     "t": "note",
+     "text": "Sözleşmenin resmi metni İspanyolcadır. Kabul kaydedilir (kim, ne zaman ve hangi sürüm) ve kesindir: geri alınamaz. Sen okurken sözleşme değişirse kapat ve yeniden aç. Sözleşme kliniğin ve yasal temsilcinin bilgilerini kullanır, bu yüzden eksiksiz olmaları gerekir."
+    }
+   ]
+  },
+  {
+   "id": "2.17",
    "title": "Aşamalar: protokolü yapılandırma (yasal temsilci)",
    "blocks": [
     {
@@ -1380,7 +1426,7 @@
    "key": "phasesconfig"
   },
   {
-   "id": "2.17",
+   "id": "2.18",
    "key": "video",
    "title": "Fotoğraf başına video (Titanium paketi)",
    "blocks": [
@@ -1399,7 +1445,30 @@
    ]
   },
   {
-   "id": "2.18",
+   "id": "2.19",
+   "key": "integrations",
+   "title": "Kullanılabilir entegrasyonlar",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Yan menüdeki «Kullanılabilir entegrasyonlar» sayfası, Clinivista'nın bağlanmayı planladığı sistemleri üç grupta gösterir: «Sosyal ağlar» (Facebook, Instagram, LinkedIn, TikTok ve YouTube), «Randevu sistemleri» (Medilink, AgendaPro, Reservo ve Google Calendar) ve «Mesajlaşma» (WhatsApp). Kliniğin tüm çalışanları görebilir."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Hepsi «Yakında» olarak görünür: şimdilik hiçbiri bağlı değil.",
+      "«Entegrasyon talep et», Clinivista'ya kliniğinin bunu istediğini bildirir; kart «Talep edildi» durumuna geçer.",
+      "«Talebi kaldır» isteği istediğin zaman geri alır."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Bir entegrasyon istemek yalnızca kliniğinin ilgisini kaydeder; kendi başına hiçbir şeyi bağlamaz. Clinivista bu istekleri hangilerini önce bağlayacağına karar vermek için kullanır."
+    }
+   ]
+  },
+  {
+   "id": "2.20",
    "title": "Telefondan kullanım",
    "blocks": [
     {
@@ -1434,7 +1503,7 @@
    "key": "phone"
   },
   {
-   "id": "2.19",
+   "id": "2.21",
    "key": "support",
    "title": "Destek biletleri",
    "blocks": [
@@ -1458,7 +1527,7 @@
    ]
   },
   {
-   "id": "2.20",
+   "id": "2.22",
    "title": "İpuçları ve sorun giderme",
    "blocks": [
     {

@@ -555,6 +555,16 @@
        "✔"
       ],
       [
+       "Accepter le contrat de service de la clinique",
+       "S'il est représentant légal",
+       "✔"
+      ],
+      [
+       "Voir «Mon forfait» (consommation, plan et contrat) et les «Intégrations disponibles»",
+       "✔",
+       "✔"
+      ],
+      [
        "Ouvrir des tickets d'assistance et les évaluer",
        "✔",
        "✔"
@@ -1316,6 +1326,10 @@
      "text": "Avec «Modifier» (sur la ligne de chaque personne), vous changez son nom, son téléphone et son rôle et, si besoin, vous lui attribuez un nouveau mot de passe (8 caractères minimum). L'e-mail ne peut pas être modifié. Si la personne a des comptes dans d'autres cliniques, les changements de nom et de téléphone ne concernent que cette clinique."
     },
     {
+     "t": "p",
+     "text": "Lorsque vous créez ou modifiez une personne, ses données personnelles sont aussi demandées : «RUT» si la clinique est au Chili ou «Passeport» dans les autres pays (le pays de la clinique est défini par la supra-administration), préfixe (facultatif) et, pour les médecins, la spécialité. Le champ «Adresse» est obligatoire pour le représentant légal, car ses données figurent dans le contrat de service. S'il manque une donnée obligatoire, le formulaire vous le signale et n'enregistre pas."
+    },
+    {
      "t": "legend",
      "items": [
       "Ajouter un utilisateur : crée une nouvelle personne avec son rôle (médecin ou administratif).",
@@ -1335,6 +1349,38 @@
   },
   {
    "id": "2.16",
+   "key": "plan",
+   "title": "Mon forfait, limites et contrat",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Dans «Accueil», la carte «Mon forfait» montre le plan de la clinique et ce qui a été utilisé : «Nouveaux patients ce mois-ci», «Stockage», «Transcriptions ce mois-ci» et «Heures d’accompagnement». À l'approche d'une limite, un avis s'affiche ; une fois atteinte, il faut contacter Clinivista pour l'étendre."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Avis : «Votre abonnement expire le …», quelques jours avant l'échéance.",
+      "Délai de grâce : l'abonnement a expiré ; il faut régulariser le paiement pour éviter des restrictions.",
+      "Lecture seule : vous pouvez consulter toutes les informations, mais pas ajouter de patients ni de photos.",
+      "Les données sont toujours conservées et tout revient à la normale dès l'enregistrement du paiement."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "«Voir le plan et le contrat» ouvre «Mon plan et mon contrat», avec trois onglets : «Mon plan» (caractéristiques du plan), «Comparer les plans» et «Contrat». Pour changer de plan, écrivez à Clinivista depuis «Aide» ; les prix sont communiqués séparément."
+    },
+    {
+     "t": "p",
+     "text": "Lorsqu'un contrat de service est en attente, l'avis «Votre clinique a un contrat de service en attente d'acceptation» s'affiche en haut avec le bouton «Consulter le contrat». Le représentant légal reçoit aussi par e-mail un lien pour le lire et l'accepter. Seul l'administratif ou le représentant légal peut l'accepter : lisez le texte, cochez «J'ai lu le contrat et je l'accepte au nom de la clinique» et appuyez sur «Accepter le contrat»."
+    },
+    {
+     "t": "note",
+     "text": "Le texte officiel du contrat est en espagnol. L'acceptation est enregistrée (qui, quand et quelle version) et est définitive : elle ne peut pas être annulée. Si le contrat change pendant votre lecture, fermez-le et rouvrez-le. Le contrat utilise les données de la clinique et du représentant légal ; elles doivent donc être complètes."
+    }
+   ]
+  },
+  {
+   "id": "2.17",
    "title": "Phases : configurer le protocole (représentant légal)",
    "blocks": [
     {
@@ -1380,7 +1426,7 @@
    "key": "phasesconfig"
   },
   {
-   "id": "2.17",
+   "id": "2.18",
    "key": "video",
    "title": "Vidéo par photo (forfait Titanium)",
    "blocks": [
@@ -1399,7 +1445,30 @@
    ]
   },
   {
-   "id": "2.18",
+   "id": "2.19",
+   "key": "integrations",
+   "title": "Intégrations disponibles",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Dans le menu latéral, «Intégrations disponibles» présente les systèmes auxquels Clinivista prévoit de se connecter, en trois groupes : «Réseaux sociaux» (Facebook, Instagram, LinkedIn, TikTok et YouTube), «Systèmes de rendez-vous» (Medilink, AgendaPro, Reservo et Google Calendar) et «Messagerie» (WhatsApp). Tout le personnel de la clinique peut la voir."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Toutes sont indiquées «Bientôt disponible» : aucune n'est encore connectée.",
+      "«Demander l'intégration» informe Clinivista que votre clinique la souhaite ; la carte passe à «Demandée».",
+      "«Retirer la demande» annule la demande à tout moment."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Demander une intégration enregistre seulement l'intérêt de votre clinique ; cela ne connecte rien en soi. Clinivista s'appuie sur ces demandes pour décider lesquelles connecter en premier."
+    }
+   ]
+  },
+  {
+   "id": "2.20",
    "title": "Utilisation depuis le téléphone",
    "blocks": [
     {
@@ -1434,7 +1503,7 @@
    "key": "phone"
   },
   {
-   "id": "2.19",
+   "id": "2.21",
    "key": "support",
    "title": "Tickets d'assistance",
    "blocks": [
@@ -1458,7 +1527,7 @@
    ]
   },
   {
-   "id": "2.20",
+   "id": "2.22",
    "title": "Conseils et dépannage",
    "blocks": [
     {

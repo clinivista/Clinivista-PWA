@@ -555,6 +555,16 @@
        "✔"
       ],
       [
+       "Accept the clinic's service agreement",
+       "If legal representative",
+       "✔"
+      ],
+      [
+       "View «My plan» (usage, plan and agreement) and the «Available integrations»",
+       "✔",
+       "✔"
+      ],
+      [
        "Open support tickets and rate them",
        "✔",
        "✔"
@@ -1316,6 +1326,10 @@
      "text": "With «Edit» (on each person's row) you change their name, phone and role and, if needed, assign a new password (at least 8 characters). The email cannot be changed. If the person has accounts in other clinics, name and phone changes affect only this clinic."
     },
     {
+     "t": "p",
+     "text": "When you create or edit a person, their personal details are also requested: «ID number (RUT)» if the clinic is in Chile or «Passport» in other countries (the clinic's country is set by supra-control), a prefix (optional) and, for doctors, their specialty. The «Address» is mandatory for the legal representative, because their details appear in the service agreement. If a required field is missing, the form tells you and does not save."
+    },
+    {
      "t": "legend",
      "items": [
       "Add user: creates a new person with their role (doctor or administrative).",
@@ -1335,6 +1349,38 @@
   },
   {
    "id": "2.16",
+   "key": "plan",
+   "title": "My plan, limits and agreement",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "In «Home», the «My plan» card shows the clinic's plan and how much has been used: «New patients this month», «Storage», «Transcriptions this month» and «Support hours». As you approach a limit a notice appears; once you reach it, contact Clinivista to extend it."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Notice: «Your subscription expires on …», a few days before it expires.",
+      "Grace period: the subscription has expired; settle the payment to avoid restrictions.",
+      "Read-only: you can view all the information, but you cannot add patients or photos.",
+      "Data is always kept, and everything returns to normal once the payment is registered."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "«View plan and agreement» opens «My plan and agreement», with three tabs: «My plan» (plan features), «Compare plans» and «Agreement». To change plan, write to Clinivista from «Help»; prices are provided separately."
+    },
+    {
+     "t": "p",
+     "text": "When a service agreement is pending, the notice «Your clinic has a service agreement waiting to be accepted» appears at the top with the «Review agreement» button. The legal representative also receives an email with a link to read and accept it. Only the administrative user or the legal representative can accept it: read the text, tick «I have read the agreement and accept it on behalf of the clinic» and press «Accept agreement»."
+    },
+    {
+     "t": "note",
+     "text": "The official agreement text is in Spanish. The acceptance is recorded (who, when and which version) and is final: it cannot be reversed. If the agreement changes while you are reading it, close it and open it again. The agreement uses the clinic's and the legal representative's details, so they must be complete."
+    }
+   ]
+  },
+  {
+   "id": "2.17",
    "title": "Phases: configuring the protocol (legal representative)",
    "blocks": [
     {
@@ -1380,7 +1426,7 @@
    "key": "phasesconfig"
   },
   {
-   "id": "2.17",
+   "id": "2.18",
    "key": "video",
    "title": "Video per photo (Titanium plan)",
    "blocks": [
@@ -1399,7 +1445,30 @@
    ]
   },
   {
-   "id": "2.18",
+   "id": "2.19",
+   "key": "integrations",
+   "title": "Available integrations",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "In the side menu, «Available integrations» shows the systems Clinivista plans to connect with, in three groups: «Social networks» (Facebook, Instagram, LinkedIn, TikTok and YouTube), «Scheduling systems» (Medilink, AgendaPro, Reservo and Google Calendar) and «Messaging» (WhatsApp). All clinic staff can see it."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "All of them are marked «Coming soon»: none is connected yet.",
+      "«Request integration» tells Clinivista your clinic wants it; the card changes to «Requested».",
+      "«Remove request» undoes the request at any time."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Requesting an integration only records your clinic's interest; it does not connect anything by itself. Clinivista uses these requests to decide which ones to connect first."
+    }
+   ]
+  },
+  {
+   "id": "2.20",
    "title": "Using it from the phone",
    "blocks": [
     {
@@ -1434,7 +1503,7 @@
    "key": "phone"
   },
   {
-   "id": "2.19",
+   "id": "2.21",
    "key": "support",
    "title": "Support tickets",
    "blocks": [
@@ -1458,7 +1527,7 @@
    ]
   },
   {
-   "id": "2.20",
+   "id": "2.22",
    "title": "Tips and troubleshooting",
    "blocks": [
     {
