@@ -555,6 +555,16 @@
        "✔"
       ],
       [
+       "Den Dienstleistungsvertrag der Klinik annehmen",
+       "Wenn gesetzlicher Vertreter",
+       "✔"
+      ],
+      [
+       "«Mein Tarif» (Nutzung, Tarif und Vertrag) und die «Verfügbare Integrationen» ansehen",
+       "✔",
+       "✔"
+      ],
+      [
        "Support-Tickets öffnen und bewerten",
        "✔",
        "✔"
@@ -1316,6 +1326,10 @@
      "text": "Mit «Bearbeiten» (in der Zeile jeder Person) ändern Sie Name, Telefon und Rolle und vergeben bei Bedarf ein neues Passwort (mindestens 8 Zeichen). Die E-Mail-Adresse lässt sich nicht ändern. Hat die Person Konten in anderen Kliniken, gelten Änderungen von Name und Telefon nur für diese Klinik."
     },
     {
+     "t": "p",
+     "text": "Beim Anlegen oder Bearbeiten einer Person werden auch ihre persönlichen Daten abgefragt: «RUT», wenn die Klinik in Chile ist, oder «Reisepass» in anderen Ländern (das Land der Klinik legt die Supra-Kontrolle fest), ein Präfix (optional) und bei Ärzten die Fachrichtung. Die «Adresse» ist für den gesetzlichen Vertreter Pflicht, da seine Daten im Dienstleistungsvertrag stehen. Fehlt eine Pflichtangabe, weist das Formular darauf hin und speichert nicht."
+    },
+    {
      "t": "legend",
      "items": [
       "Benutzer hinzufügen: legt eine neue Person mit ihrer Rolle an (Arzt oder Verwaltung).",
@@ -1335,6 +1349,38 @@
   },
   {
    "id": "2.16",
+   "key": "plan",
+   "title": "Mein Tarif, Limits und Vertrag",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Unter «Start» zeigt die Karte «Mein Tarif» den Tarif der Klinik und den bisherigen Verbrauch: «Neue Patienten in diesem Monat», «Speicher», «Transkriptionen in diesem Monat» und «Betreuungsstunden». Nähern Sie sich einem Limit, erscheint ein Hinweis; ist es erreicht, wenden Sie sich zur Erweiterung an Clinivista."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Hinweis: «Ihr Abonnement läuft am … ab», einige Tage vor Ablauf.",
+      "Nachfrist: Das Abonnement ist abgelaufen; begleichen Sie die Zahlung, um Einschränkungen zu vermeiden.",
+      "Nur Lesen: Sie können alle Informationen ansehen, aber keine Patienten oder Fotos hinzufügen.",
+      "Die Daten bleiben immer erhalten, und nach der Zahlungserfassung ist alles wieder normal."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Mit «Plan und Vertrag ansehen» öffnen Sie «Mein Plan und Vertrag» mit drei Tabs: «Mein Plan» (Leistungen des Tarifs), «Pläne vergleichen» und «Vertrag». Für einen Tarifwechsel schreiben Sie Clinivista über «Hilfe»; Preise werden separat mitgeteilt."
+    },
+    {
+     "t": "p",
+     "text": "Liegt ein Dienstleistungsvertrag zur Annahme vor, erscheint oben der Hinweis «Für Ihre Klinik liegt ein Dienstleistungsvertrag zur Annahme bereit» mit der Schaltfläche «Vertrag ansehen». Der gesetzliche Vertreter erhält außerdem per E-Mail einen Link zum Lesen und Annehmen. Nur die Verwaltung oder der gesetzliche Vertreter kann ihn annehmen: Lesen Sie den Text, setzen Sie den Haken bei «Ich habe den Vertrag gelesen und nehme ihn im Namen der Klinik an» und klicken Sie auf «Vertrag annehmen»."
+    },
+    {
+     "t": "note",
+     "text": "Der offizielle Vertragstext ist auf Spanisch. Die Annahme wird protokolliert (wer, wann und welche Version) und ist endgültig: Sie kann nicht rückgängig gemacht werden. Ändert sich der Vertrag während des Lesens, schließen Sie ihn und öffnen Sie ihn erneut. Der Vertrag verwendet die Daten der Klinik und des gesetzlichen Vertreters, daher müssen sie vollständig sein."
+    }
+   ]
+  },
+  {
+   "id": "2.17",
    "title": "Phasen: das Protokoll konfigurieren (gesetzlicher Vertreter)",
    "blocks": [
     {
@@ -1380,7 +1426,7 @@
    "key": "phasesconfig"
   },
   {
-   "id": "2.17",
+   "id": "2.18",
    "key": "video",
    "title": "Video pro Foto (Titanium-Tarif)",
    "blocks": [
@@ -1399,7 +1445,30 @@
    ]
   },
   {
-   "id": "2.18",
+   "id": "2.19",
+   "key": "integrations",
+   "title": "Verfügbare Integrationen",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Im Seitenmenü zeigt «Verfügbare Integrationen» die Systeme, mit denen sich Clinivista verbinden möchte, in drei Gruppen: «Soziale Netzwerke» (Facebook, Instagram, LinkedIn, TikTok und YouTube), «Terminsysteme» (Medilink, AgendaPro, Reservo und Google Calendar) und «Nachrichten» (WhatsApp). Das gesamte Klinikpersonal sieht sie."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Alle sind mit «Demnächst» gekennzeichnet: Derzeit ist keine verbunden.",
+      "«Integration anfordern» teilt Clinivista mit, dass Ihre Klinik sie möchte; die Karte wechselt zu «Angefordert».",
+      "«Anfrage zurückziehen» macht die Anfrage jederzeit rückgängig."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Eine Integration anzufragen, hält nur das Interesse Ihrer Klinik fest; es verbindet nichts von selbst. Clinivista nutzt diese Anfragen, um zu entscheiden, welche zuerst angebunden werden."
+    }
+   ]
+  },
+  {
+   "id": "2.20",
    "title": "Nutzung auf dem Smartphone",
    "blocks": [
     {
@@ -1434,7 +1503,7 @@
    "key": "phone"
   },
   {
-   "id": "2.19",
+   "id": "2.21",
    "key": "support",
    "title": "Support-Tickets",
    "blocks": [
@@ -1458,7 +1527,7 @@
    ]
   },
   {
-   "id": "2.20",
+   "id": "2.22",
    "title": "Tipps und Fehlerbehebung",
    "blocks": [
     {

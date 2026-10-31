@@ -555,6 +555,16 @@
        "✔"
       ],
       [
+       "Accettare il contratto di servizio della clinica",
+       "Se è rappresentante legale",
+       "✔"
+      ],
+      [
+       "Vedere «Il mio piano» (consumo, piano e contratto) e le «Integrazioni disponibili»",
+       "✔",
+       "✔"
+      ],
+      [
        "Aprire ticket di supporto e valutarli",
        "✔",
        "✔"
@@ -1316,6 +1326,10 @@
      "text": "Con «Modifica» (sulla riga di ogni persona) cambi nome, telefono e ruolo e, se serve, assegni una nuova password (minimo 8 caratteri). L'e-mail non si può cambiare. Se la persona ha account in altre cliniche, le modifiche di nome e telefono riguardano solo questa clinica."
     },
     {
+     "t": "p",
+     "text": "Quando crei o modifichi una persona vengono richiesti anche i suoi dati personali: «RUT» se la clinica è in Cile oppure «Passaporto» negli altri paesi (il paese della clinica lo definisce la supra-gestione), prefisso (facoltativo) e, per i medici, la specialità. Il campo «Indirizzo» è obbligatorio per il rappresentante legale, perché i suoi dati compaiono nel contratto di servizio. Se manca un dato obbligatorio, il modulo lo segnala e non salva."
+    },
+    {
      "t": "legend",
      "items": [
       "Aggiungi utente: crea una nuova persona con il suo ruolo (medico o amministrativo).",
@@ -1335,6 +1349,38 @@
   },
   {
    "id": "2.16",
+   "key": "plan",
+   "title": "Il mio piano, limiti e contratto",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "In «Home», la scheda «Il mio piano» mostra il piano della clinica e quanto è stato usato: «Nuovi pazienti questo mese», «Spazio di archiviazione», «Trascrizioni questo mese» e «Ore di assistenza». Avvicinandoti a un limite compare un avviso; una volta raggiunto, devi contattare Clinivista per ampliarlo."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Avviso: «Il tuo abbonamento scade il …», alcuni giorni prima della scadenza.",
+      "Tolleranza: l'abbonamento è scaduto; regolarizza il pagamento per evitare restrizioni.",
+      "Sola lettura: puoi vedere tutte le informazioni, ma non aggiungere pazienti né foto.",
+      "I dati vengono sempre conservati e tutto torna alla normalità quando il pagamento viene registrato."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Con «Vedi piano e contratto» si apre «Il mio piano e contratto», con tre schede: «Il mio piano» (caratteristiche del piano), «Confronta i piani» e «Contratto». Per cambiare piano, scrivi a Clinivista da «Aiuto»; i prezzi sono comunicati separatamente."
+    },
+    {
+     "t": "p",
+     "text": "Quando c'è un contratto di servizio in sospeso, in alto compare l'avviso «La tua clinica ha un contratto di servizio in attesa di accettazione» con il pulsante «Rivedi il contratto». Il rappresentante legale riceve anche per e-mail un link per leggerlo e accettarlo. Solo l'amministrativo o il rappresentante legale può accettarlo: leggi il testo, spunta «Ho letto il contratto e lo accetto a nome della clinica» e premi «Accetta il contratto»."
+    },
+    {
+     "t": "note",
+     "text": "Il testo ufficiale del contratto è in spagnolo. L'accettazione viene registrata (chi, quando e quale versione) ed è definitiva: non può essere annullata. Se il contratto cambia mentre lo leggi, chiudilo e riaprilo. Il contratto usa i dati della clinica e del rappresentante legale, quindi devono essere completi."
+    }
+   ]
+  },
+  {
+   "id": "2.17",
    "title": "Fasi: configurare il protocollo (rappresentante legale)",
    "blocks": [
     {
@@ -1380,7 +1426,7 @@
    "key": "phasesconfig"
   },
   {
-   "id": "2.17",
+   "id": "2.18",
    "key": "video",
    "title": "Video per foto (piano Titanium)",
    "blocks": [
@@ -1399,7 +1445,30 @@
    ]
   },
   {
-   "id": "2.18",
+   "id": "2.19",
+   "key": "integrations",
+   "title": "Integrazioni disponibili",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Nel menu laterale, «Integrazioni disponibili» mostra i sistemi con cui Clinivista prevede di collegarsi, in tre gruppi: «Social network» (Facebook, Instagram, LinkedIn, TikTok e YouTube), «Sistemi di agenda» (Medilink, AgendaPro, Reservo e Google Calendar) e «Messaggistica» (WhatsApp). Lo vede tutto il personale della clinica."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Tutte risultano «Prossimamente»: per ora nessuna è collegata.",
+      "«Richiedi integrazione» avvisa Clinivista che la tua clinica la desidera; la scheda passa a «Richiesta».",
+      "«Rimuovi richiesta» annulla la richiesta in qualsiasi momento."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Richiedere un'integrazione registra soltanto l'interesse della tua clinica; non collega nulla da sola. Clinivista usa queste richieste per decidere quali collegare per prime."
+    }
+   ]
+  },
+  {
+   "id": "2.20",
    "title": "Uso da telefono",
    "blocks": [
     {
@@ -1434,7 +1503,7 @@
    "key": "phone"
   },
   {
-   "id": "2.19",
+   "id": "2.21",
    "key": "support",
    "title": "Ticket di supporto",
    "blocks": [
@@ -1458,7 +1527,7 @@
    ]
   },
   {
-   "id": "2.20",
+   "id": "2.22",
    "title": "Consigli e risoluzione dei problemi",
    "blocks": [
     {

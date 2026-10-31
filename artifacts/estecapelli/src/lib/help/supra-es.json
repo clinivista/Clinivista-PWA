@@ -175,7 +175,7 @@
     },
     {
      "t": "p",
-     "text": "Pulsa «Crear clínica» y completa: nombre de la clínica, identificador del enlace (se genera solo desde el nombre y puedes ajustarlo), especialidad (Capilar, Cirugía plástica o Dermatología) y los datos de la primera persona usuaria (nombre, correo y contraseña de al menos 8 caracteres). Con «Cargar pacientes de ejemplo» la clínica nace con pacientes ficticios, útil para demostraciones."
+     "text": "Pulsa «Crear clínica» y completa: nombre de la clínica, identificador del enlace (se genera solo desde el nombre y puedes ajustarlo), especialidad (Capilar, Cirugía plástica o Dermatología) y los datos de contrato de la clínica: país, RUT (en Chile; para demostraciones sirve 00000000-0) o pasaporte (otros países), dirección y teléfono. Luego los datos de la primera persona usuaria (nombre, correo y contraseña de al menos 8 caracteres, con su RUT o pasaporte). Con «Cargar pacientes de ejemplo» la clínica nace con pacientes ficticios, útil para demostraciones."
     },
     {
      "t": "note",
@@ -220,8 +220,24 @@
     },
     {
      "t": "p",
-     "text": "«Usuarios» despliega el personal de esa clínica: puedes agregar a una persona (nombre, correo, teléfono opcional, rol médico o administrativo y contraseña de al menos 8 caracteres), editar sus datos, restablecer su contraseña, bloquear o desbloquear su acceso y definir al representante legal. El mismo correo puede existir en varias clínicas: cada una es una cuenta distinta.",
+     "text": "«Usuarios» despliega el personal de esa clínica: puedes agregar a una persona (nombre, correo, teléfono opcional, rol médico o administrativo y contraseña de al menos 8 caracteres), editar sus datos, restablecer su contraseña, bloquear o desbloquear su acceso y definir al representante legal. Cada persona lleva además RUT (o pasaporte si la clínica está fuera de Chile), prefijo opcional y, si es médico, su especialidad; la dirección es obligatoria para el representante legal porque sus datos van en el contrato. El mismo correo puede existir en varias clínicas: cada una es una cuenta distinta.",
      "directorOnly": true
+    },
+    {
+     "t": "h3",
+     "text": "Datos de la clínica"
+    },
+    {
+     "t": "p",
+     "text": "En «Datos de la clínica» defines el país, el RUT (o el pasaporte, fuera de Chile), la dirección y el teléfono de la clínica. Van en el contrato de servicio y se pueden completar y corregir cuando haga falta. Mientras falte alguno, la tarjeta muestra «Faltan datos» y el contrato no se puede enviar ni aceptar."
+    },
+    {
+     "t": "h3",
+     "text": "Integraciones solicitadas"
+    },
+    {
+     "t": "p",
+     "text": "En cada clínica, «Integraciones solicitadas» lista lo que su personal pidió desde «Integraciones disponibles» (redes sociales, sistemas de agenda y WhatsApp): cuál, quién la pidió y cuándo, con un contador. Si la clínica no ha pedido ninguna, lo indica. Sirve para decidir qué integración construir primero; pedirla no conecta nada."
     },
     {
      "t": "h3",
@@ -260,6 +276,61 @@
   },
   {
    "id": "4",
+   "key": "planes",
+   "title": "Plan, límites, horas y contrato",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "En cada clínica, el recuadro «Plan, límites y horas» reúne lo que define su servicio. Lo que ve la clínica en su «Mi plan» sale de aquí."
+    },
+    {
+     "t": "h3",
+     "text": "Plan y cambio de plan"
+    },
+    {
+     "t": "p",
+     "text": "Con «Plan:» eliges el plan de la clínica y pulsas «Aplicar cambio». Subir de plan se aplica al instante. Bajar queda programado para cuando vence lo pagado («Bajará a … el …»), salvo que marques «Bajar de inmediato, sin esperar a que venza lo pagado» o no haya pago registrado; «Anular» cancela un cambio programado. No se borra nada."
+    },
+    {
+     "t": "h3",
+     "text": "Límites propios"
+    },
+    {
+     "t": "p",
+     "text": "Con «Guardar límites» puedes fijar para una clínica «Pacientes nuevos al mes» y «Almacenamiento (GB)» distintos de los del plan (el valor del plan se ve como referencia). Vacío = el valor del plan; 0 = sin límite. Los pacientes y archivos ya guardados nunca se borran: al llegar al tope solo se impide agregar más. La clínica ve su consumo y recibe avisos al acercarse o alcanzar el límite."
+    },
+    {
+     "t": "h3",
+     "text": "Cobro automático"
+    },
+    {
+     "t": "p",
+     "text": "Si activas el cobro automático, la clínica pasa por estados según lo pagado: aviso 7 días antes de vencer, 5 días de gracia, solo lectura hasta el día 20 y suspensión desde el día 21. Los datos se conservan y todo vuelve al registrar el pago."
+    },
+    {
+     "t": "h3",
+     "text": "Horas de servicio"
+    },
+    {
+     "t": "p",
+     "text": "Cada plan incluye horas de acompañamiento. Con «Registrar horas» anotas un movimiento (Incluidas en el contrato, Compradas, Usadas o Ajuste), las horas y un detalle de lo hecho o contratado. El plan define si la clínica puede comprar horas adicionales y si admite mejoras a medida."
+    },
+    {
+     "t": "h3",
+     "text": "Contrato de servicio"
+    },
+    {
+     "t": "p",
+     "text": "En «Contrato de servicio» ves si la clínica tiene el contrato vigente «aceptado» o «pendiente de aceptación», y el historial de aceptaciones (fecha, plan, versión, quién aceptó, IP y huella del documento). «Enviar contrato por correo» (o «Reenviar contrato por correo» si ya hubo un envío) manda al representante legal un enlace para leerlo y aceptarlo; el listado muestra a quién se envió y cuándo vence el enlace. También se puede aceptar dentro del panel de la clínica: solo el administrativo o el representante legal."
+    },
+    {
+     "t": "warn",
+     "text": "El envío exige que la clínica tenga un representante legal activo (créalo o márcalo en Usuarios) y que los datos de la clínica y del representante estén completos. Si el botón no está disponible, revisa eso y que el contrato esté habilitado en el servidor. Los contratos son borradores sujetos a revisión legal."
+    }
+   ]
+  },
+  {
+   "id": "5",
    "key": "soporte",
    "title": "Soporte: tickets de las clínicas",
    "blocks": [
@@ -298,7 +369,7 @@
    ]
   },
   {
-   "id": "5",
+   "id": "6",
    "key": "equipo",
    "title": "Equipo de supra-control",
    "blocks": [
@@ -314,7 +385,7 @@
    "directorOnly": true
   },
   {
-   "id": "6",
+   "id": "7",
    "key": "servicios",
    "title": "Servicios y finanzas",
    "blocks": [
@@ -370,7 +441,7 @@
    "directorOnly": true
   },
   {
-   "id": "7",
+   "id": "8",
    "key": "especialidades",
    "title": "Especialidades: qué ve cada clínica",
    "blocks": [
@@ -432,7 +503,7 @@
    ]
   },
   {
-   "id": "8",
+   "id": "9",
    "key": "solucion",
    "title": "Consejos y solución de problemas",
    "blocks": [

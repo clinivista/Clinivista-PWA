@@ -555,6 +555,16 @@
        "✔"
       ],
       [
+       "Aceitar o contrato de serviço da clínica",
+       "Se for representante legal",
+       "✔"
+      ],
+      [
+       "Ver «Meu plano» (consumo, plano e contrato) e as «Integrações disponíveis»",
+       "✔",
+       "✔"
+      ],
+      [
        "Abrir tickets de suporte e avaliá-los",
        "✔",
        "✔"
@@ -1316,6 +1326,10 @@
      "text": "Com «Editar» (na linha de cada pessoa) você altera nome, telefone e papel e, se preciso, define uma nova senha (mínimo de 8 caracteres). O e-mail não pode ser alterado. Se a pessoa tiver contas em outras clínicas, as mudanças de nome e telefone afetam só esta clínica."
     },
     {
+     "t": "p",
+     "text": "Ao criar ou editar uma pessoa, também são pedidos seus dados pessoais: «RUT» se a clínica estiver no Chile ou «Passaporte» em outros países (o país da clínica é definido pelo supra-controle), prefixo (opcional) e, no caso de médicos, a especialidade. O campo «Endereço» é obrigatório para o representante legal, porque seus dados constam do contrato de serviço. Se faltar um dado obrigatório, o formulário avisa e não salva."
+    },
+    {
      "t": "legend",
      "items": [
       "Adicionar usuário: cria uma nova pessoa com seu perfil (médico ou administrativo).",
@@ -1335,6 +1349,38 @@
   },
   {
    "id": "2.16",
+   "key": "plan",
+   "title": "Meu plano, limites e contrato",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Em «Início», o cartão «Meu plano» mostra o plano da clínica e quanto foi usado: «Novos pacientes neste mês», «Armazenamento», «Transcrições neste mês» e «Horas de acompanhamento». Ao se aproximar de um limite aparece um aviso; ao atingi-lo, é preciso falar com a Clinivista para ampliá-lo."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Aviso: «Sua assinatura vence em …», alguns dias antes do vencimento.",
+      "Carência: a assinatura venceu; é preciso regularizar o pagamento para evitar restrições.",
+      "Somente leitura: você pode ver todas as informações, mas não adicionar pacientes nem fotos.",
+      "Os dados são sempre mantidos e tudo volta ao normal quando o pagamento é registrado."
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Com «Ver plano e contrato» abre-se «Meu plano e contrato», com três abas: «Meu plano» (características do plano), «Comparar planos» e «Contrato». Para mudar de plano, escreva para a Clinivista em «Ajuda»; os preços são informados separadamente."
+    },
+    {
+     "t": "p",
+     "text": "Quando há um contrato de serviço pendente, aparece no alto o aviso «Sua clínica tem um contrato de serviço aguardando aceite» com o botão «Revisar contrato». O representante legal também recebe por e-mail um link para lê-lo e aceitá-lo. Somente o administrativo ou o representante legal pode aceitá-lo: leia o texto, marque «Li o contrato e o aceito em nome da clínica» e clique em «Aceitar contrato»."
+    },
+    {
+     "t": "note",
+     "text": "O texto oficial do contrato está em espanhol. O aceite fica registrado (quem, quando e qual versão) e é definitivo: não pode ser revertido. Se o contrato mudar enquanto você o lê, feche-o e abra-o novamente. O contrato usa os dados da clínica e do representante legal, por isso eles devem estar completos."
+    }
+   ]
+  },
+  {
+   "id": "2.17",
    "title": "Fases: configurar o protocolo (representante legal)",
    "blocks": [
     {
@@ -1380,7 +1426,7 @@
    "key": "phasesconfig"
   },
   {
-   "id": "2.17",
+   "id": "2.18",
    "key": "video",
    "title": "Vídeo por fotografia (plano Titanium)",
    "blocks": [
@@ -1399,7 +1445,30 @@
    ]
   },
   {
-   "id": "2.18",
+   "id": "2.19",
+   "key": "integrations",
+   "title": "Integrações disponíveis",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "No menu lateral, «Integrações disponíveis» mostra os sistemas com os quais a Clinivista pretende se conectar, em três grupos: «Redes sociais» (Facebook, Instagram, LinkedIn, TikTok e YouTube), «Sistemas de agenda» (Medilink, AgendaPro, Reservo e Google Calendar) e «Mensagens» (WhatsApp). Toda a equipe da clínica pode vê-lo."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Todas aparecem como «Em breve»: por enquanto nenhuma está conectada.",
+      "«Solicitar integração» avisa a Clinivista que sua clínica a quer; o cartão passa a «Solicitada».",
+      "«Remover solicitação» desfaz a solicitação a qualquer momento."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Pedir uma integração apenas registra o interesse da sua clínica; não conecta nada por si só. A Clinivista usa esses pedidos para decidir quais conectar primeiro."
+    }
+   ]
+  },
+  {
+   "id": "2.20",
    "title": "Uso pelo celular",
    "blocks": [
     {
@@ -1434,7 +1503,7 @@
    "key": "phone"
   },
   {
-   "id": "2.19",
+   "id": "2.21",
    "key": "support",
    "title": "Tickets de suporte",
    "blocks": [
@@ -1458,7 +1527,7 @@
    ]
   },
   {
-   "id": "2.20",
+   "id": "2.22",
    "title": "Dicas e solução de problemas",
    "blocks": [
     {

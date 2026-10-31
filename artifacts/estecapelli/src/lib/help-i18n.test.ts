@@ -34,7 +34,7 @@ describe("manuales por especialidad", () => {
     for (const code of LANGS) for (const sp of MANUAL_SPECIALTIES) {
       const m = await loadManual(code, sp);
       const keysNow = (await loadRawManual(code)).staff.filter((s) => !s.only || s.only.includes(sp)).map((s) => s.key);
-      for (const k of ["clinics", "addpatient", "skipdischarge", "support", "users"]) expect(keysNow, `${code}/${sp}/${k}`).toContain(k);
+      for (const k of ["clinics", "addpatient", "skipdischarge", "support", "users", "plan", "integrations"]) expect(keysNow, `${code}/${sp}/${k}`).toContain(k);
       expect(m.staff.length, `${code}/${sp}`).toBe(keysNow.length);
     }
   });
@@ -121,5 +121,21 @@ describe("manuales por especialidad", () => {
     const der = manualFor(raw, "dermatologia");
     expect(der.staff.map((s) => [s.id, s.title])).toEqual([["2.1", "A derm"], ["2.2", "B"]]);
     expect(der.staff[0].blocks[0]).toMatchObject({ text: "todos 3 2.2" });
+  });
+
+  it("el manual de la clínica explica plan, contrato e integraciones, con sus nombres reales de pantalla, en los nueve idiomas", async () => {
+    for (const code of LANGS) for (const sp of MANUAL_SPECIALTIES) {
+      const staff = (await loadManual(code, sp)).staff;
+      const plan = staff.find((s) => s.key === "plan")!;
+      const integ = staff.find((s) => s.key === "integrations")!;
+      expect(plan.blocks.map((b) => b.t), code).toEqual(["p", "ul", "p", "p", "note"]);
+      expect(integ.blocks.map((b) => b.t), code).toEqual(["p", "ul", "note"]);
+      const text = JSON.stringify([plan, integ]);
+      for (const brand of ["Facebook", "Instagram", "LinkedIn", "TikTok", "YouTube", "Medilink", "AgendaPro", "Reservo", "Google Calendar", "WhatsApp"]) expect(text, `${code}/${brand}`).toContain(brand);
+    }
+    const es = JSON.stringify((await loadManual("es", "capilar")).staff.find((s) => s.key === "plan"));
+    for (const label of ["Mi plan", "Ver plan y contrato", "Mi plan y contrato", "Comparar planes", "Revisar contrato", "Aceptar contrato"]) expect(es).toContain(label);
+    const users = JSON.stringify((await loadManual("es", "capilar")).staff.find((s) => s.key === "users"));
+    for (const label of ["RUT", "Pasaporte", "Dirección", "especialidad"]) expect(users).toContain(label);
   });
 });

@@ -8,14 +8,14 @@ describe("Manual de supra-control", () => {
   it("cubre todas las secciones del panel y marca lo que es solo del director", async () => {
     const sections = await loadSupraManual();
     const keys = sections.map((s) => s.key);
-    for (const k of ["acceso", "inicio", "clinicas", "soporte", "equipo", "servicios", "especialidades", "solucion"]) expect(keys).toContain(k);
+    for (const k of ["acceso", "inicio", "clinicas", "planes", "soporte", "equipo", "servicios", "especialidades", "solucion"]) expect(keys).toContain(k);
     expect(sections.filter((s) => s.directorOnly).map((s) => s.key)).toEqual(["equipo", "servicios"]);
     sections.forEach((s, i) => expect(s.id).toBe(String(i + 1)));
   });
 
   it("menciona cada función del panel de supra-control", async () => {
     const text = JSON.stringify(await loadSupraManual());
-    for (const word of ["Crear clínica", "Registrar pago hasta", "Suspender", "Identidad", "Exportar datos", "Entrar a la clínica", "Marcar como resuelto", "Historial", "Revisar ahora", "Registrar movimiento", "Dermatología", "Cirugía plástica", "Capilar"]) expect(text).toContain(word);
+    for (const word of ["Crear clínica", "Registrar pago hasta", "Suspender", "Identidad", "Exportar datos", "Entrar a la clínica", "Marcar como resuelto", "Historial", "Revisar ahora", "Registrar movimiento", "Dermatología", "Cirugía plástica", "Capilar", "Datos de la clínica", "Integraciones solicitadas", "Aplicar cambio", "Guardar límites", "Registrar horas", "Enviar contrato por correo", "Reenviar contrato por correo"]) expect(text).toContain(word);
   });
 
   it("se puede leer, buscar y navegar; lo solo-director lleva su marca", async () => {
