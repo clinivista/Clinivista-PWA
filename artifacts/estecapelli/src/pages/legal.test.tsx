@@ -16,7 +16,7 @@ describe("Páginas legales", () => {
     render(<Privacy />);
     expect(screen.getByRole("heading", { level: 1, name: "Política de privacidad" })).toBeInTheDocument();
     expect(screen.getByText(/solo tu nombre y tu correo verificado/)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Tus derechos" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Tus derechos y cómo ejercerlos" })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: LEGAL_CONTACT_EMAIL })[0]).toHaveAttribute("href", `mailto:${LEGAL_CONTACT_EMAIL}`);
   });
 
@@ -49,5 +49,16 @@ describe("Páginas legales", () => {
       return [privacy, terms].map((doc) => doc.sections.map((section) => [section.p?.length ?? 0, section.ul?.length ?? 0, section.after?.length ?? 0, JSON.stringify(section.p?.concat(section.ul ?? [], section.after ?? []).join("").match(/\{(email|privacy)\}/g) ?? [])]));
     };
     for (const { code } of LANGS) expect(shape(code)).toEqual(shape("es"));
+  });
+});
+
+describe("Política de privacidad actualizada (Ley 21.719)", () => {
+  it.each(LANGS.map((language) => language.code))("en %s: base legal, transferencia a terceros países, proveedor de IA, plazo de 30 días y las dos leyes", (code) => {
+    const text = JSON.stringify(LEGAL_TEXT[code].privacy.sections);
+    expect(text).toContain("Anthropic");
+    expect(text).toContain("30");
+    expect(text).toContain("21.719");
+    expect(text).toContain("19.628");
+    expect(LEGAL_TEXT[code].privacy.sections).toHaveLength(10);
   });
 });

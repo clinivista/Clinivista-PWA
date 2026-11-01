@@ -1,4 +1,5 @@
 import type { LangCode } from "./language";
+import { PRIVACY_UPDATE } from "./privacy-update-i18n";
 
 // Política de privacidad y términos de servicio en los nueve idiomas de la aplicación.
 // "{email}" se muestra como enlace al correo de contacto y "{privacy}" como enlace a la política de privacidad.
@@ -13,7 +14,7 @@ export type LegalText = {
   terms: LegalDoc;
 };
 
-export const LEGAL_TEXT: Record<LangCode, LegalText> = {
+const BASE_LEGAL_TEXT: Record<LangCode, LegalText> = {
   es: {
     company: "Clinivista", updated: "Última actualización", privacyLinkText: "política de privacidad", docsNav: "Documentos legales",
     privacy: {
@@ -429,3 +430,17 @@ export const LEGAL_TEXT: Record<LangCode, LegalText> = {
     },
   },
 };
+
+// Política de privacidad vigente: la base de arriba con las secciones de la Ley 21.719 (privacy-update-i18n.ts).
+// Posiciones de la base: 0 responsable, 1 datos, 2 para qué, 3 con quién, 4 protección, 5 conservación, 6 derechos, 7 cambios.
+function withPrivacyUpdate(lang: LangCode, text: LegalText): LegalText {
+  const update = PRIVACY_UPDATE[lang];
+  const base = text.privacy.sections;
+  const shared = { ...base[3], p: [...(base[3].p ?? []), update.transfer] };
+  const sections = [base[0], base[1], base[2], update.basis, shared, base[4], update.retention, update.rights, update.breach, base[7]];
+  return { ...text, privacy: { ...text.privacy, sections } };
+}
+
+export const LEGAL_TEXT: Record<LangCode, LegalText> = Object.fromEntries(
+  (Object.keys(BASE_LEGAL_TEXT) as LangCode[]).map((lang) => [lang, withPrivacyUpdate(lang, BASE_LEGAL_TEXT[lang])]),
+) as Record<LangCode, LegalText>;
