@@ -1469,6 +1469,29 @@
   },
   {
    "id": "2.20",
+   "title": "Patientendaten und Anfragen",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Im Seitenmenü bündelt «Datenanfragen» die Anfragen der Patienten zu ihren Daten (Auskunft, Berichtigung, Löschung, Widerspruch, Übertragbarkeit und Sperrung) mit der gesetzlichen Frist von 30 Kalendertagen. Patienten erstellen sie mit der Schaltfläche «Meine Daten und Rechte» am Ende ihrer Auswertung."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "«Daten herunterladen (JSON)» lädt die Daten des Patienten als JSON-Datei herunter.",
+      "«Wer diese Akte geöffnet hat» zeigt, wer diese Akte wann geöffnet hat.",
+      "«Als erledigt markieren» und «Ablehnen» schließen die Anfrage mit einer Notiz ab; wer und wann wird gespeichert."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Was gesetzlich aufbewahrt werden muss, etwa die Patientenakte, wird auch auf Wunsch des Patienten nicht gelöscht: antworten Sie mit der Begründung. Mehr dazu in der Datenschutzerklärung."
+    }
+   ],
+   "key": "privacy"
+  },
+  {
+   "id": "2.21",
    "title": "Nutzung auf dem Smartphone",
    "blocks": [
     {
@@ -1503,7 +1526,7 @@
    "key": "phone"
   },
   {
-   "id": "2.21",
+   "id": "2.22",
    "key": "support",
    "title": "Support-Tickets",
    "blocks": [
@@ -1527,7 +1550,7 @@
    ]
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "title": "Tipps und Fehlerbehebung",
    "blocks": [
     {

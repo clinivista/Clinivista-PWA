@@ -14,6 +14,7 @@ import ClinicPatient from '@/pages/clinic-patient';
 import Admin from '@/pages/admin';
 import Portal, { PortalSetPassword } from '@/pages/portal';
 import { Privacy, Terms } from '@/pages/legal';
+import { Compliance } from '@/pages/compliance';
 import Login from '@/pages/login';
 import StaffReset from '@/pages/staff-reset';
 import ContractAccept from '@/pages/contract-accept';
@@ -46,6 +47,7 @@ function Router() {
         <Route path="/paciente/clave" component={PortalSetPassword} />
         <Route path="/privacidad" component={Privacy} />
         <Route path="/terminos" component={Terms} />
+        <Route path="/cumplimiento">{() => <Compliance />}</Route>
         <Route path="/admin" component={Admin} />
         <Route path="/admin/login" component={Login} />
         <Route path="/admin/clave" component={StaffReset} />

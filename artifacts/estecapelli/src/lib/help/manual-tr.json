@@ -1469,6 +1469,29 @@
   },
   {
    "id": "2.20",
+   "title": "Hasta verileri ve talepler",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Yan menüde «Veri talepleri», hastaların verileri hakkındaki taleplerini (erişim, düzeltme, silme, itiraz, taşınabilirlik ve engelleme) 30 takvim günlük yasal süreyle bir araya getirir. Hasta bunları değerlendirmesinin sonundaki «Verilerim ve haklarım» düğmesiyle oluşturur."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "«Verileri indir (JSON)» hastanın verilerini JSON dosyası olarak indirir.",
+      "«Bu dosyayı kimler açtı» bu dosyayı kimin ne zaman açtığını gösterir.",
+      "«Çözüldü olarak işaretle» ve «Reddet» talebi bir notla kapatır; kimin ve ne zaman yaptığı kaydedilir."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Klinik dosya gibi kanunun saklanmasını zorunlu kıldığı veriler, hasta istese bile silinmez: nedenini açıklayarak yanıt verin. Ayrıntılar gizlilik politikasında."
+    }
+   ],
+   "key": "privacy"
+  },
+  {
+   "id": "2.21",
    "title": "Telefondan kullanım",
    "blocks": [
     {
@@ -1503,7 +1526,7 @@
    "key": "phone"
   },
   {
-   "id": "2.21",
+   "id": "2.22",
    "key": "support",
    "title": "Destek biletleri",
    "blocks": [
@@ -1527,7 +1550,7 @@
    ]
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "title": "İpuçları ve sorun giderme",
    "blocks": [
     {

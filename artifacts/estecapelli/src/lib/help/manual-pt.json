@@ -1469,6 +1469,29 @@
   },
   {
    "id": "2.20",
+   "title": "Dados de pacientes e pedidos",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "No menu lateral, «Pedidos de dados» reúne os pedidos que os pacientes fazem sobre seus dados (acesso, retificação, eliminação, oposição, portabilidade e bloqueio), com o prazo legal de 30 dias corridos. O paciente os cria com o botão «Meus dados e direitos» no fim da avaliação."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "«Baixar dados (JSON)» baixa os dados do paciente em um arquivo JSON.",
+      "«Quem abriu esta ficha» mostra quem abriu essa ficha e quando.",
+      "«Marcar como resolvido» e «Recusar» encerram o pedido com uma nota; fica registrado quem e quando."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "O que a lei obriga a conservar, como a ficha clínica, não é eliminado mesmo que o paciente peça: responda explicando o motivo. Mais detalhes na política de privacidade."
+    }
+   ],
+   "key": "privacy"
+  },
+  {
+   "id": "2.21",
    "title": "Uso pelo celular",
    "blocks": [
     {
@@ -1503,7 +1526,7 @@
    "key": "phone"
   },
   {
-   "id": "2.21",
+   "id": "2.22",
    "key": "support",
    "title": "Tickets de suporte",
    "blocks": [
@@ -1527,7 +1550,7 @@
    ]
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "title": "Dicas e solução de problemas",
    "blocks": [
     {

@@ -8,7 +8,7 @@ import { directorEntryProfile } from "../lib/director-profile";
 import { accessesForAccounts, allClinicsForDirector, type ClinicAccess } from "../lib/clinic-access";
 import { getSessionToken } from "../lib/helpers";
 import { requestStaffPasswordReset, resetStaffPassword, staffResetClinics, StaffResetError } from "../lib/staff-password-reset";
-import { throttled } from "../lib/patient-accounts";
+import { throttled, isBlocked, recordFailure, clearThrottle } from "../lib/patient-accounts";
 import { baseUrl } from "./results";
 
 const router: IRouter = Router();
@@ -178,6 +178,13 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   }
 
   const emailNormalized = normalizeEmail(parsed.data.email);
+  // Límite de intentos fallidos por correo y por IP: frena los intentos de adivinar claves del personal.
+  const emailKey = `staff-login:${emailNormalized}`;
+  const ipKey = `staff-login-ip:${req.ip}`;
+  if (isBlocked(emailKey, 8) || isBlocked(ipKey, 60)) {
+    res.status(429).json({ error: "Demasiados intentos. Espera unos minutos." });
+    return;
+  }
   const rows = await db.select().from(usersTable).where(eq(usersTable.emailNormalized, emailNormalized));
   // One person may have an account in several clinics, each with its own password
   // (they can be the same or different). Only the accounts whose password matches count.
@@ -186,9 +193,12 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   // Same "invalid credentials" response whether the email doesn't exist, the
   // account is deactivated, or the password is wrong — never reveal which.
   if (matches.length === 0) {
+    recordFailure(emailKey, 15 * 60_000);
+    recordFailure(ipKey, 15 * 60_000);
     res.status(401).json({ error: "Correo o contraseña incorrectos." });
     return;
   }
+  clearThrottle(emailKey);
   const account = matches.find((candidate) => !isClinicStaff(candidate));
   let sessionContext: { userId: string; centerId: string | null; role: UserRole; linkedUserIds?: string[] };
   let body: ReturnType<typeof authUser>;

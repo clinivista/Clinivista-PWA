@@ -393,3 +393,35 @@ export const integrationRequestsTable = pgTable("integration_requests", {
 }, (table) => [
   uniqueIndex("integration_requests_center_integration_idx").on(table.centerId, table.integration),
 ]);
+
+// Solicitudes de los titulares (Ley 21.719, derechos de acceso, rectificación, supresión,
+// oposición, portabilidad y bloqueo). El responsable tiene 30 días corridos para responder.
+export const DATA_REQUEST_TYPES = ["access", "rectification", "erasure", "opposition", "portability", "blocking"] as const;
+export type DataRequestType = (typeof DATA_REQUEST_TYPES)[number];
+export const DATA_REQUEST_STATUSES = ["pending", "in_progress", "resolved", "rejected"] as const;
+export type DataRequestStatus = (typeof DATA_REQUEST_STATUSES)[number];
+
+export const dataRequestsTable = pgTable("data_requests", {
+  id: text("id").primaryKey(),
+  centerId: text("center_id").notNull(),
+  leadId: text("lead_id").notNull(),
+  type: text("type").notNull(),
+  message: text("message").notNull().default(""),
+  status: text("status").notNull().default("pending"),
+  dueAt: timestamp("due_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  resolvedByName: text("resolved_by_name").notNull().default(""),
+  resolutionNote: text("resolution_note").notNull().default(""),
+}, (table) => [index("data_requests_center_idx").on(table.centerId, table.status)]);
+export type DataRequest = typeof dataRequestsTable.$inferSelect;
+
+// Quién abrió la ficha de un paciente y cuándo (trazabilidad de acceso del personal).
+export const staffAccessEventsTable = pgTable("staff_access_events", {
+  id: text("id").primaryKey(),
+  centerId: text("center_id").notNull(),
+  leadId: text("lead_id").notNull(),
+  userId: text("user_id").notNull(),
+  action: text("action").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [index("staff_access_events_lead_idx").on(table.leadId, table.createdAt)]);

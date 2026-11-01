@@ -1469,6 +1469,29 @@
   },
   {
    "id": "2.20",
+   "title": "Données des patients et demandes",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Dans le menu latéral, «Demandes de données» regroupe les demandes des patients sur leurs données (accès, rectification, suppression, opposition, portabilité et blocage), avec le délai légal de 30 jours calendaires. Le patient les crée avec le bouton «Mes données et droits» à la fin de son évaluation."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "«Télécharger les données (JSON)» télécharge les données du patient dans un fichier JSON.",
+      "«Qui a ouvert ce dossier» indique qui a ouvert ce dossier et quand.",
+      "«Marquer comme résolue» et «Refuser» clôturent la demande avec une note ; qui et quand sont enregistrés."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Ce que la loi oblige à conserver, comme le dossier clinique, n'est pas supprimé même si le patient le demande : répondez en expliquant pourquoi. Plus de détails dans la politique de confidentialité."
+    }
+   ],
+   "key": "privacy"
+  },
+  {
+   "id": "2.21",
    "title": "Utilisation depuis le téléphone",
    "blocks": [
     {
@@ -1503,7 +1526,7 @@
    "key": "phone"
   },
   {
-   "id": "2.21",
+   "id": "2.22",
    "key": "support",
    "title": "Tickets d'assistance",
    "blocks": [
@@ -1527,7 +1550,7 @@
    ]
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "title": "Conseils et dépannage",
    "blocks": [
     {

@@ -11,6 +11,15 @@ import { PlanLimitError } from "./lib/plan-limits";
 const app: Express = express();
 
 app.use(createHttpLogger(logger));
+// Cabeceras de seguridad. La cámara se permite solo a este mismo origen (captura de fotos del paciente).
+app.use((_req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("Permissions-Policy", "camera=(self), microphone=(), geolocation=()");
+  if (process.env.NODE_ENV === "production") res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  next();
+});
 app.use(cors());
 // Clinical image bytes use explicit binary routes and private storage, never JSON.
 // The doctor's annotation arrives as JSON (vector strokes + the composed image

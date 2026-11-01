@@ -54,6 +54,24 @@ export function throttled(key: string, limit: number, windowMs: number): boolean
   return entry.count > limit;
 }
 
+/** True when the key already used its allowance, without counting this call (para contar solo los intentos fallidos). */
+export function isBlocked(key: string, limit: number): boolean {
+  const entry = attempts.get(key);
+  return Boolean(entry && entry.resetAt > Date.now() && entry.count >= limit);
+}
+
+/** Cuenta un intento fallido contra la clave. */
+export function recordFailure(key: string, windowMs: number): void {
+  const now = Date.now();
+  const entry = attempts.get(key);
+  if (!entry || entry.resetAt <= now) attempts.set(key, { count: 1, resetAt: now + windowMs });
+  else entry.count += 1;
+}
+
+export function clearThrottle(key: string): void {
+  attempts.delete(key);
+}
+
 export function resetThrottleForTests() {
   attempts.clear();
 }

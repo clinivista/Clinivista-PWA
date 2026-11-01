@@ -1469,6 +1469,29 @@
   },
   {
    "id": "2.20",
+   "title": "Patient data and requests",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "In the side menu, «Data requests» gathers the requests patients make about their data (access, correction, deletion, objection, portability and blocking), with the legal deadline of 30 calendar days. Patients create them with the «My data and rights» button at the end of their evaluation."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "«Download data (JSON)» downloads the patient's data as a JSON file.",
+      "«Who opened this file» shows who opened that file and when.",
+      "«Mark resolved» and «Reject» close the request with a note; who and when is recorded."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "What the law requires you to keep, such as the clinical record, is not deleted even if the patient asks: reply explaining why. More detail in the privacy policy."
+    }
+   ],
+   "key": "privacy"
+  },
+  {
+   "id": "2.21",
    "title": "Using it from the phone",
    "blocks": [
     {
@@ -1503,7 +1526,7 @@
    "key": "phone"
   },
   {
-   "id": "2.21",
+   "id": "2.22",
    "key": "support",
    "title": "Support tickets",
    "blocks": [
@@ -1527,7 +1550,7 @@
    ]
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "title": "Tips and troubleshooting",
    "blocks": [
     {

@@ -6,11 +6,12 @@ import { useLanguage } from "@/lib/language";
 import { LEGAL_TEXT, type LegalDoc } from "@/lib/legal-i18n";
 import { PORTAL_TEXT } from "@/lib/portal-i18n";
 import { LOCALES } from "@/pages/portal";
+import { ComplianceSeal } from "@/components/compliance-seal";
 
 // Datos de contacto que aparecen en las páginas legales. Cambia el correo aquí
 // si la plataforma pasa a usar uno propio (por ejemplo contacto@clinivista.cl).
 export const LEGAL_CONTACT_EMAIL = "jfferraezhp7@gmail.com";
-const UPDATED = new Date("2026-10-08T12:00:00Z");
+const UPDATED = new Date("2026-11-01T12:00:00Z");
 
 function Document({ doc }: { doc: (text: (typeof LEGAL_TEXT)["es"]) => LegalDoc }) {
   const { lang } = useLanguage();
@@ -56,6 +57,7 @@ function Document({ doc }: { doc: (text: (typeof LEGAL_TEXT)["es"]) => LegalDoc 
           <Link href="/privacidad" className="underline">{portal.privacy}</Link>
           <Link href="/terminos" className="underline">{portal.terms}</Link>
         </nav>
+        <ComplianceSeal />
       </article>
     </div>
   );

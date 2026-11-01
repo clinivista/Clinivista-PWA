@@ -1469,6 +1469,29 @@
   },
   {
    "id": "2.20",
+   "title": "Dati dei pazienti e richieste",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Nel menu laterale, «Richieste di dati» raccoglie le richieste dei pazienti sui propri dati (accesso, rettifica, cancellazione, opposizione, portabilità e blocco), con il termine legale di 30 giorni di calendario. Il paziente le crea con il pulsante «I miei dati e diritti» alla fine della valutazione."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "«Scarica i dati (JSON)» scarica i dati del paziente in un file JSON.",
+      "«Chi ha aperto questa scheda» mostra chi ha aperto quella scheda e quando.",
+      "«Segna come risolta» e «Rifiuta» chiudono la richiesta con una nota; restano registrati chi e quando."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Ciò che la legge obbliga a conservare, come la cartella clinica, non viene cancellato anche se il paziente lo chiede: rispondi spiegando il motivo. Maggiori dettagli nell'informativa sulla privacy."
+    }
+   ],
+   "key": "privacy"
+  },
+  {
+   "id": "2.21",
    "title": "Uso da telefono",
    "blocks": [
     {
@@ -1503,7 +1526,7 @@
    "key": "phone"
   },
   {
-   "id": "2.21",
+   "id": "2.22",
    "key": "support",
    "title": "Ticket di supporto",
    "blocks": [
@@ -1527,7 +1550,7 @@
    ]
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "title": "Consigli e risoluzione dei problemi",
    "blocks": [
     {

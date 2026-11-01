@@ -34,7 +34,7 @@ describe("manuales por especialidad", () => {
     for (const code of LANGS) for (const sp of MANUAL_SPECIALTIES) {
       const m = await loadManual(code, sp);
       const keysNow = (await loadRawManual(code)).staff.filter((s) => !s.only || s.only.includes(sp)).map((s) => s.key);
-      for (const k of ["clinics", "addpatient", "skipdischarge", "support", "users", "plan", "integrations"]) expect(keysNow, `${code}/${sp}/${k}`).toContain(k);
+      for (const k of ["clinics", "addpatient", "skipdischarge", "support", "users", "plan", "integrations", "privacy"]) expect(keysNow, `${code}/${sp}/${k}`).toContain(k);
       expect(m.staff.length, `${code}/${sp}`).toBe(keysNow.length);
     }
   });

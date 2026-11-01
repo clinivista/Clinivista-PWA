@@ -1,3 +1,4 @@
+import { logStaffAccess } from "../lib/data-rights";
 import { Router, type IRouter } from "express";
 import { eq, sql } from "drizzle-orm";
 import { listConsultTypes } from "../lib/consult-types";
@@ -146,6 +147,7 @@ router.get("/leads/:id", async (req, res): Promise<void> => {
     return;
   }
 
+  await logStaffAccess(context.centerId, lead.id, context.userId, "view");
   // Patients registered before the automatic states catch up when their file is opened.
   const status = await syncLeadStatus(lead.id);
   const siblings = (await db.select().from(leadsTable).where(eq(leadsTable.centerId, context.centerId)))

@@ -47,6 +47,10 @@ export const leadsTable = pgTable("leads", {
   status: text("status").notNull().default("nuevo"),
   consent: boolean("consent").notNull().default(false),
   marketingConsent: boolean("marketing_consent").notNull().default(false),
+  // Prueba del consentimiento dado por el propio paciente: cuándo lo marcó y qué versión de la
+  // política de privacidad se le mostraba. Vacío en fichas anteriores a la Ley 21.719.
+  consentAt: timestamp("consent_at", { withTimezone: true }),
+  consentPolicyVersion: text("consent_policy_version").default(""),
   photoCount: text("photo_count").notNull().default("0"),
   photos: jsonb("photos").notNull().default([]),
   // Fase 5: these six columns are specific to the "capilar" specialty (see

@@ -34,6 +34,7 @@ import {
   useGetPatient, getGetPatientQueryKey, useGetPatientClinic, getGetPatientClinicQueryKey, useCreatePatient, useGetClinic, getGetClinicQueryKey, useCreateClinicPatient, useUpdatePatient, useDiscardPatientPhotos, useGetPatientProtocol, getGetPatientProtocolQueryKey, useGetPortalOptions,
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
+import { DataRightsDialog } from "@/components/data-rights-dialog";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
 import type { UseFormReturn } from "react-hook-form";
 import { DERM_CHANGES_KEYS, DERM_DURATION_KEYS, DERM_REASON_KEYS, DERM_SKIN_KEYS, DERM_SUN_KEYS, DERM_TEXT, type DermText } from "@/lib/derm-i18n";
@@ -1810,6 +1811,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
                   {t.pGoHome}
                 </Button>
               </Link>
+              {token && <div className="mt-3"><DataRightsDialog token={token} /></div>}
             </div>
           </div>
         )}

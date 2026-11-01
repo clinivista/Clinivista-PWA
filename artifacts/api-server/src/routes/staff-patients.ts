@@ -122,6 +122,9 @@ router.post("/leads", async (req, res): Promise<void> => {
     centerId: staff.centerId,
     protocolId,
     ...data,
+    // El personal solo deja constancia de un consentimiento dado fuera de la app: no se afirma qué política vio el paciente.
+    consentAt: null,
+    consentPolicyVersion: "",
     consentRecordedBy: await staffName(staff.userId) || staff.userId,
     consentRecordedAt: new Date(),
   };
