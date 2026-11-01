@@ -77,6 +77,8 @@ beforeAll(async () => {
       status text NOT NULL DEFAULT 'nuevo',
       consent boolean NOT NULL DEFAULT false,
       marketing_consent boolean NOT NULL DEFAULT false,
+      consent_at timestamptz,
+      consent_policy_version text DEFAULT '',
       photo_count text NOT NULL DEFAULT '0',
       photos jsonb NOT NULL DEFAULT '[]',
       hair_loss_time text DEFAULT '',

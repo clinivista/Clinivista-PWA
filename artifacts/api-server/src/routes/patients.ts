@@ -1,3 +1,4 @@
+import { PRIVACY_POLICY_VERSION } from "../lib/legal-version";
 import express, { Router, type IRouter } from "express";
 import sharp from "sharp";
 import { and, eq, or } from "drizzle-orm";
@@ -69,6 +70,10 @@ export function buildLead(payload: Record<string, unknown>, existing: Partial<ty
     symptoms: clean(payload.symptoms, 250),
     surgeryHistory: clean(payload.surgeryHistory, 250),
     consent: Boolean(payload.consent),
+    // Prueba del consentimiento: se fija al darlo por primera vez y se renueva si el paciente lo vuelve a dar.
+    ...(Boolean(payload.consent) && !(existing.consent && existing.consentAt)
+      ? { consentAt: new Date(), consentPolicyVersion: PRIVACY_POLICY_VERSION }
+      : {}),
     marketingConsent: Boolean(payload.marketingConsent),
     language: payload.language === undefined ? existing.language ?? "" : toMailLanguage(payload.language) === payload.language ? String(payload.language) : "",
     deliveryChannel: payload.deliveryChannel === undefined
