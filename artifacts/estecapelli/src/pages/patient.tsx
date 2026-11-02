@@ -35,6 +35,7 @@ import {
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { DataRightsDialog } from "@/components/data-rights-dialog";
+import { DuplicateHelp } from "@/components/duplicate-help";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
 import type { UseFormReturn } from "react-hook-form";
 import { DERM_CHANGES_KEYS, DERM_DURATION_KEYS, DERM_REASON_KEYS, DERM_SKIN_KEYS, DERM_SUN_KEYS, DERM_TEXT, type DermText } from "@/lib/derm-i18n";
@@ -1612,6 +1613,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
                     <AlertDescription>{duplicateError === "inProgress" ? t.pDuplicateInProgress : t.pDuplicate}</AlertDescription>
                   </Alert>
                 )}
+                {duplicateError === "exists" && <DuplicateHelp />}
 
                 <Button
                   type="submit"
@@ -1756,6 +1758,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
                 <AlertDescription>{duplicateError === "inProgress" ? t.pDuplicateInProgress : t.pDuplicate}</AlertDescription>
               </Alert>
             )}
+            {duplicateError === "exists" && <DuplicateHelp className="mt-3" />}
 
             <div className="mt-8">
               <Button
