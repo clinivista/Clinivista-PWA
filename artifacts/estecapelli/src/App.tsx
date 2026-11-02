@@ -18,6 +18,7 @@ import { Compliance } from '@/pages/compliance';
 import Login from '@/pages/login';
 import StaffReset from '@/pages/staff-reset';
 import ContractAccept from '@/pages/contract-accept';
+import ConsentPhoto from '@/pages/consent-photo';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,6 +53,7 @@ function Router() {
         <Route path="/admin/login" component={Login} />
         <Route path="/admin/clave" component={StaffReset} />
         <Route path="/contrato" component={ContractAccept} />
+        <Route path="/consentimiento/:token" component={ConsentPhoto} />
         <Route component={NotFound} />
       </Switch>
     </RoutedErrorBoundary>

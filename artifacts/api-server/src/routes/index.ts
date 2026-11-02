@@ -27,6 +27,7 @@ import clinicPlanRouter from "./clinic-plan";
 import clinicContractRouter from "./clinic-contract";
 import clinicIntegrationsRouter from "./clinic-integrations";
 import dataRightsRouter from "./data-rights";
+import photoConsentsRouter from "./photo-consents";
 import patientUpdatesRouter, { patientEditGate } from "./patient-updates";
 
 const router: IRouter = Router();
@@ -62,5 +63,6 @@ router.use(clinicContractRouter);
 router.use(clinicIntegrationsRouter);
 router.use(dataRightsRouter);
 router.use(patientUpdatesRouter);
+router.use(photoConsentsRouter);
 
 export default router;

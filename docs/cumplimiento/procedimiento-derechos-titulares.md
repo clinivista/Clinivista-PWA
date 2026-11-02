@@ -36,3 +36,7 @@ Además del derecho de rectificación, el paciente puede cambiar su propia evalu
 
 **Pregunta para el abogado:** cómo se concilia la edición del paciente con la obligación de conservar la ficha clínica (Ley 20.584) una vez que la clínica la incorporó, y si el historial de cambios debe conservarse el mismo plazo que la ficha.
 
+
+## Autorización para fotografías tomadas por la clínica
+
+La ficha del paciente tiene una tarjeta «Autorización para fotografías» con tres vías: enlace por correo (con código de 6 dígitos), enlace por WhatsApp o copiado (sin código, evidencia más débil), documento firmado subido, y firma en tableta en la clínica. Se guarda fecha y hora, versión y copia del texto, método, quién la solicitó o registró, IP y navegador (en los enlaces). El enlace vence a los 7 días; el código, a los 10 minutos con 5 intentos. La clínica puede revocarla; lo ya incorporado a la ficha clínica se conserva mientras la ley lo exija. Se incluye en la exportación de datos y se elimina con el paciente. No bloquea la toma de fotografías. El texto (`foto-2026-11-borrador-1`) es un borrador sujeto a revisión del abogado. ClaveÚnica no está implementada: es una consulta en el paquete legal (secciones 6.8 y 6.9).

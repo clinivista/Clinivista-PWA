@@ -410,6 +410,30 @@
    "key": "edit"
   },
   {
+   "id": "1.x",
+   "title": "Die von der Klinik aufgenommenen Fotos erlauben",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Wenn die Klinik Ihre Fotos aufnimmt, bittet sie um Ihre Einwilligung auf einem von drei Wegen: ein Link per E-Mail oder WhatsApp, ein unterschriebenes Dokument oder Ihre Unterschrift mit dem Finger auf einem Tablet in der Klinik."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Mit dem Link: Öffnen Sie ihn auf dem Telefon, lesen Sie die Einwilligung, setzen Sie das Häkchen und geben Sie – falls eine E-Mail hinterlegt ist – den 6-stelligen Code ein, der ankommt. Der Link läuft in 7 Tagen ab und gilt einmal.",
+      "Oben auf der Seite können Sie die Sprache wählen und mit „Ich stimme nicht zu“ ablehnen: Ihre Behandlung ändert sich dadurch nicht.",
+      "Diese Einwilligung gilt nur für klinische Fotos. Eine Verwendung in Werbung, sozialen Netzwerken oder Lehre erfordert eine gesonderte Einwilligung.",
+      "Sie können die Einwilligung für künftige Fotos widerrufen, indem Sie die Klinik informieren."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Ohne hinterlegte E-Mail können wir keinen Code senden: Ihre Zustimmung wird mit Datum, Uhrzeit und Gerät erfasst. Geben Sie Link und Code niemals weiter."
+    }
+   ],
+   "key": "photoconsent"
+  },
+  {
    "id": "1.7",
    "key": "measure",
    "title": "Ihre Läsion mit einer Münze messen",
@@ -1539,6 +1563,30 @@
   },
   {
    "id": "2.22",
+   "title": "Einwilligung zu Fotos (Link, Dokument oder Tablet)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "In der Patientenakte zeigt das Feld „Einwilligung zu Fotos“, ob der Patient der Klinik erlaubt hat, klinische Fotos aufzunehmen und zu speichern, und erlaubt die Erfassung auf drei Wegen."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "„Link senden“: Sprache und Kanal wählen (E-Mail, WhatsApp oder nur Link kopieren). Der Patient öffnet ihn auf dem Telefon, stimmt zu und bestätigt – falls er eine E-Mail hat – mit einem 6-stelligen Code. Gespeichert werden der akzeptierte Text, seine Version, Datum und Uhrzeit, das Gerät und wer die Anfrage gestellt hat.",
+      "„Unterschriebenes Dokument erfassen“: PDF oder Foto des unterschriebenen Dokuments hochladen und Namen oder Version angeben. Wer es wann erfasst hat, wird gespeichert.",
+      "„Auf dem Tablet unterschreiben“: Der Patient liest den Text in seiner Sprache, setzt das Häkchen und unterschreibt mit dem Finger. Die Unterschrift wird mit dem akzeptierten Text gespeichert.",
+      "„Widerrufen“ erfasst, dass der Patient die Einwilligung zurückgezogen hat (Grund optional); „Verlauf“ zeigt frühere Einwilligungen."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Ein ohne Code akzeptierter Link (Patient ohne E-Mail) ist ein schwächerer Nachweis. Diese Einwilligung ersetzt nicht die Einwilligung zu einem medizinischen Eingriff und erlaubt keine Werbung mit Fotos. Der Text ist ein Entwurf, der der Prüfung Ihres Anwalts unterliegt."
+    }
+   ],
+   "key": "photoconsent"
+  },
+  {
+   "id": "2.23",
    "title": "Nutzung auf dem Smartphone",
    "blocks": [
     {
@@ -1573,7 +1621,7 @@
    "key": "phone"
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "key": "support",
    "title": "Support-Tickets",
    "blocks": [
@@ -1597,7 +1645,7 @@
    ]
   },
   {
-   "id": "2.24",
+   "id": "2.25",
    "title": "Tipps und Fehlerbehebung",
    "blocks": [
     {

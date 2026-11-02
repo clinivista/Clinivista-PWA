@@ -410,6 +410,30 @@
    "key": "edit"
   },
   {
+   "id": "1.x",
+   "title": "Autorizar as fotografias que a clínica tira",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Quando é a clínica que tira suas fotografias, ela pedirá uma autorização por uma de três vias: um link recebido por e-mail ou WhatsApp, um documento assinado ou a sua assinatura com o dedo em um tablet na clínica."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Com o link: abra no celular, leia a autorização, marque que aceita e, se tiver e-mail cadastrado, digite o código de 6 dígitos que chega. O link vence em 7 dias e vale uma vez.",
+      "Você pode escolher o idioma no topo da página e recusar com «Não autorizo»: seu atendimento não muda por isso.",
+      "Esta autorização é só para fotografias clínicas. Usar suas fotos em publicidade, redes sociais ou aulas exige outra autorização.",
+      "Você pode retirar a autorização para fotografias futuras avisando a clínica."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Se você não tiver e-mail cadastrado não podemos enviar o código: sua aceitação é registrada com data, hora e dispositivo. Nunca compartilhe o link nem o código."
+    }
+   ],
+   "key": "photoconsent"
+  },
+  {
    "id": "1.7",
    "key": "measure",
    "title": "Medir sua lesão com uma moeda",
@@ -1539,6 +1563,30 @@
   },
   {
    "id": "2.22",
+   "title": "Autorização para fotografias (link, documento ou tablet)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Na ficha do paciente, o quadro «Autorização para fotografias» mostra se o paciente autorizou a clínica a tirar e guardar suas fotos clínicas e permite registrar a autorização de três maneiras."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "«Enviar link»: escolha idioma e canal (e-mail, WhatsApp ou só copiar o link). O paciente abre no celular, aceita e, se tiver e-mail, confirma com um código de 6 dígitos. Ficam guardados o texto aceito, a versão, data e hora, o dispositivo e quem solicitou.",
+      "«Registrar documento assinado»: envie o PDF ou a foto do documento assinado e informe o nome ou a versão. Fica guardado quem registrou e quando.",
+      "«Assinar no tablet»: o paciente lê o texto no seu idioma, marca que aceita e assina com o dedo. A assinatura fica guardada junto com o texto aceito.",
+      "«Revogar» registra que o paciente retirou a autorização (com motivo opcional); «Histórico» mostra as anteriores."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Um link aceito sem código (o paciente não tem e-mail) vale menos como prova. Esta autorização não substitui o consentimento informado de um procedimento médico nem autoriza o uso de fotos em publicidade. O texto é um rascunho sujeito à revisão do seu advogado."
+    }
+   ],
+   "key": "photoconsent"
+  },
+  {
+   "id": "2.23",
    "title": "Uso pelo celular",
    "blocks": [
     {
@@ -1573,7 +1621,7 @@
    "key": "phone"
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "key": "support",
    "title": "Tickets de suporte",
    "blocks": [
@@ -1597,7 +1645,7 @@
    ]
   },
   {
-   "id": "2.24",
+   "id": "2.25",
    "title": "Dicas e solução de problemas",
    "blocks": [
     {

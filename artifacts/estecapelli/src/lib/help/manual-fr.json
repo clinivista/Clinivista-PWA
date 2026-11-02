@@ -410,6 +410,30 @@
    "key": "edit"
   },
   {
+   "id": "1.x",
+   "title": "Autoriser les photographies prises par la clinique",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Lorsque c'est la clinique qui prend vos photographies, elle vous demandera une autorisation par l'une de trois voies : un lien reçu par e-mail ou WhatsApp, un document signé, ou votre signature au doigt sur une tablette à la clinique."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Avec le lien : ouvrez-le sur votre téléphone, lisez l'autorisation, cochez que vous acceptez et, si vous avez un e-mail enregistré, saisissez le code à 6 chiffres reçu. Le lien expire dans 7 jours et ne sert qu'une fois.",
+      "Vous pouvez choisir la langue en haut de la page et refuser avec « Je n'autorise pas » : votre prise en charge ne change pas.",
+      "Cette autorisation ne concerne que les photographies cliniques. Utiliser vos photos dans la publicité, les réseaux sociaux ou des cours exige une autre autorisation.",
+      "Vous pouvez retirer l'autorisation pour les photographies futures en prévenant la clinique."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Sans e-mail enregistré, nous ne pouvons pas envoyer le code : votre acceptation est enregistrée avec la date, l'heure et l'appareil. Ne partagez jamais le lien ni le code."
+    }
+   ],
+   "key": "photoconsent"
+  },
+  {
    "id": "1.7",
    "key": "measure",
    "title": "Mesurer votre lésion avec une pièce",
@@ -1539,6 +1563,30 @@
   },
   {
    "id": "2.22",
+   "title": "Autorisation pour les photographies (lien, document ou tablette)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Dans le dossier du patient, l'encadré « Autorisation pour les photographies » indique si le patient a autorisé la clinique à prendre et conserver ses photos cliniques, et permet d'enregistrer l'autorisation de trois façons."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "« Envoyer un lien » : choisissez la langue et le canal (e-mail, WhatsApp ou copier le lien). Le patient l'ouvre sur son téléphone, accepte et, s'il a un e-mail, confirme avec un code à 6 chiffres. Le texte accepté, sa version, la date et l'heure, l'appareil et la personne demandeuse sont conservés.",
+      "« Enregistrer un document signé » : téléversez le PDF ou la photo du document signé et indiquez son nom ou sa version. La personne qui l'a enregistré et la date sont conservées.",
+      "« Signer sur tablette » : le patient lit le texte dans sa langue, coche qu'il accepte et signe au doigt. La signature est conservée avec le texte accepté.",
+      "« Révoquer » enregistre que le patient a retiré l'autorisation (motif facultatif) ; « Historique » montre les précédentes."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Un lien accepté sans code (patient sans e-mail) a moins de valeur comme preuve. Cette autorisation ne remplace pas le consentement éclairé pour un acte médical et n'autorise pas l'usage des photos en publicité. Le texte est un projet soumis à la relecture de votre avocat."
+    }
+   ],
+   "key": "photoconsent"
+  },
+  {
+   "id": "2.23",
    "title": "Utilisation depuis le téléphone",
    "blocks": [
     {
@@ -1573,7 +1621,7 @@
    "key": "phone"
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "key": "support",
    "title": "Tickets d'assistance",
    "blocks": [
@@ -1597,7 +1645,7 @@
    ]
   },
   {
-   "id": "2.24",
+   "id": "2.25",
    "title": "Conseils et dépannage",
    "blocks": [
     {

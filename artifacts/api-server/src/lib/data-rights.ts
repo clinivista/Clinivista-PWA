@@ -5,6 +5,7 @@ import {
 } from "@workspace/db";
 import { uid } from "./helpers";
 import { updatesForLead } from "./patient-edits";
+import { consentsForLead, publicConsent } from "./photo-consents";
 
 /** Plazo legal de respuesta (Ley 21.719, art. 11): 30 días corridos, prorrogable una vez por otros 30. */
 export const DATA_REQUEST_DAYS = 30;
@@ -82,6 +83,7 @@ export async function exportPatientData(lead: Lead) {
     diagnoses.push(...(await db.select().from(diagnosesTable).where(eq(diagnosesTable.evaluationId, evaluation.id))));
   }
   const edits = await updatesForLead(lead.centerId ?? "default-center", lead.id).catch(() => ({ updates: [], additions: [] }));
+  const photoConsents = await consentsForLead(lead.centerId ?? "default-center", lead.id).catch(() => []);
   return {
     exportedAt: new Date().toISOString(),
     format: "clinivista-patient-data/1",
@@ -91,5 +93,6 @@ export async function exportPatientData(lead: Lead) {
     diagnoses: diagnoses.map((row) => clean(row as unknown as Record<string, unknown>)),
     patientUpdates: edits.updates.map((row) => clean(row as unknown as Record<string, unknown>)),
     patientAdditions: edits.additions,
+    photoConsents: photoConsents.map(publicConsent),
   };
 }

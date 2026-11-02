@@ -17,6 +17,7 @@ import { isVideoMime, sendPrivateVideo } from "../lib/video-upload";
 import { privatePhotoStorage } from "../lib/clinical-photo-storage";
 import { syncLeadStatus } from "../lib/lead-status";
 import { deletePatientEditsForLeads } from "../lib/patient-edits";
+import { deletePhotoConsentsForLeads } from "../lib/photo-consents";
 import { LEAD_STATUSES } from "../lib/lead-status-rules";
 import { clinicIdentity } from "../lib/clinic-identity";
 import { countTranscribedDocuments } from "../lib/transcription";
@@ -235,6 +236,7 @@ router.delete("/leads/:id", async (req, res): Promise<void> => {
     await db.delete(leadsTable).where(eq(leadsTable.id, child.id));
   }
   await deletePatientEditsForLeads([lead.id, ...children.map((child) => child.id)]);
+  await deletePhotoConsentsForLeads([lead.id, ...children.map((child) => child.id)]);
   await deleteClinicalDataForLead(lead);
   await db.delete(leadsTable).where(eq(leadsTable.id, params.data.id));
 

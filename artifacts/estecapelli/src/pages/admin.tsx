@@ -39,6 +39,7 @@ import { HELP_TEXT } from "@/lib/help-i18n";
 import { LeadPhases } from "@/components/lead-phases";
 import { AddPatientDialog } from "@/components/add-patient-dialog";
 import { PatientUpdatesCard, UpdatesBadge, useUnseenUpdates } from "@/components/patient-updates-card";
+import { PhotoConsentCard } from "@/components/photo-consent-card";
 import { ConsultationsStrip } from "@/components/consultations-strip";
 import { CONSULT_TEXT } from "@/lib/consult-types-i18n";
 import { ClinicChooser, selectClinic } from "@/components/clinic-chooser";
@@ -692,6 +693,7 @@ export default function Admin() {
 
                   <ConsultationsStrip leadId={fullLead.id} onOpen={(id) => setSelectedLeadId(id)} />
                   <PatientUpdatesCard leadId={fullLead.id} />
+                  <PhotoConsentCard leadId={fullLead.id} patientName={fullLead.name || ""} />
 
                   <div className="shrink-0 px-5 md:px-8 py-2 bg-card border-b border-border flex justify-end">
                     <Button
