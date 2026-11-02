@@ -486,6 +486,23 @@ describe("Full patient form flow — end to end", () => {
     expect(fetchSpy.mock.calls.some(([, init]) => (init?.method ?? "GET") === "POST")).toBe(false);
   });
 
+  it("shows the locked screen (additional information only) once the clinic is reviewing the evaluation", async () => {
+    window.history.replaceState({}, "", `/patient?token=${RESUME_TOKEN}`);
+    fetchSpy.mockImplementation(async (input, init) => {
+      const url = String(input);
+      const method = init?.method ?? "GET";
+      if (url.endsWith(`/api/patients/${RESUME_TOKEN}`) && method === "GET") return jsonResponse({ ok: true, lead: RESUME_LEAD }, 200);
+      if (url.endsWith(`/api/patients/${RESUME_TOKEN}/photos`) && method === "GET") return jsonResponse({ ok: true, photos: [resumedPhoto("frontal")] }, 200);
+      if (url.endsWith(`/api/patients/${RESUME_TOKEN}/edit-state`)) return jsonResponse({ locked: true, additions: [] }, 200);
+      throw new Error(`Unexpected request: ${method} ${url}`);
+    });
+    renderFlow();
+    expect(await screen.findByText("Tu evaluación ya está en revisión")).toBeInTheDocument();
+    expect(screen.queryByText("Tienes un avance guardado")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Continuar donde quedé" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Enviar a la clínica/i })).toBeInTheDocument();
+  });
+
   it("drops a remembered token the server no longer knows and starts a fresh evaluation", async () => {
     window.localStorage.setItem(PATIENT_TOKEN_KEY, "stale-token");
     fetchSpy.mockImplementation(async () => jsonResponse({ error: "Este enlace ya no está disponible." }, 404));

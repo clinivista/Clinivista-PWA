@@ -387,6 +387,29 @@
    "key": "account"
   },
   {
+   "id": "1.x",
+   "title": "Modificar tu evaluación o enviar más información",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Después de enviar tu evaluación puedes cambiarla mientras la clínica no haya empezado a revisarla: entra a «Mi cuenta» y toca «Modificar mi evaluación». Puedes corregir tus datos y reemplazar fotos; lo anterior queda guardado y la clínica ve qué cambió."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Cuando el equipo médico empieza a revisar tu evaluación, ya no se pueden cambiar las fotos ni los datos enviados. En «Mi cuenta» el botón pasa a «Enviar información adicional».",
+      "Con «Enviar información adicional» escribes un mensaje y agregas hasta 4 fotos. No reemplaza lo anterior: la clínica lo revisa y, si corresponde, lo incorpora a tu ficha. Ves el estado de cada envío.",
+      "Para corregir un dato de tu ficha (nombre, teléfono, etc.) después de la revisión usa «Mis datos y derechos» y elige Rectificación; la clínica responde en un máximo de 30 días corridos."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Si ya enviaste tu evaluación y intentas registrarte otra vez con el mismo teléfono o correo, la app te explica cómo continuar: revisa el correo «Crea tu clave» y entra a «Mi cuenta»."
+    }
+   ],
+   "key": "edit"
+  },
+  {
    "id": "1.7",
    "key": "measure",
    "title": "Medir tu lesión con una moneda",
@@ -1492,6 +1515,30 @@
   },
   {
    "id": "2.21",
+   "title": "Novedades del paciente: cambios y envíos adicionales",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Si el paciente cambia sus datos o reemplaza una foto después de enviar su evaluación, o manda información adicional cuando ya la estás revisando, aparece la etiqueta «Novedades» junto a su nombre en la lista y el recuadro «Novedades del paciente» al abrir su ficha."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Cada cambio muestra qué cambió y cuándo, con el valor anterior y el nuevo. Las fotos reemplazadas no se borran: quedan guardadas.",
+      "«Marcar como vistas» quita la etiqueta de la lista.",
+      "En un envío adicional puedes abrir las fotos. «Incorporar a la ficha» lo marca como revisado e incorporado y «Descartar» como revisado sin cambios; el paciente ve el estado.",
+      "El paciente puede modificar su evaluación mientras esté en estado Nuevo, Incompleto o Listo y no exista un diagnóstico, ni siquiera borrador. Desde ese momento solo puede enviar información adicional."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Nada se sobrescribe sin rastro. Lo que el paciente envió se elimina junto con la ficha si la eliminas. Si pide corregir un dato después de la revisión, llega a «Solicitudes de datos» como Rectificación."
+    }
+   ],
+   "key": "patientupdates"
+  },
+  {
+   "id": "2.22",
    "title": "Uso desde el teléfono",
    "blocks": [
     {
@@ -1526,7 +1573,7 @@
    "key": "phone"
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "key": "support",
    "title": "Tickets de soporte",
    "blocks": [
@@ -1550,7 +1597,7 @@
    ]
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "title": "Consejos y solución de problemas",
    "blocks": [
     {

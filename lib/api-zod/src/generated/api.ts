@@ -606,6 +606,8 @@ export const GetPortalMeResponse = zod.object({
   "leadId": zod.string(),
   "clinicName": zod.string(),
   "patientName": zod.string(),
+  "editToken": zod.string(),
+  "locked": zod.boolean(),
   "results": zod.array(zod.object({
   "id": zod.string(),
   "createdAt": zod.coerce.date()

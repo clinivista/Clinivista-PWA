@@ -3624,11 +3624,15 @@ components:
 
     PortalCase:
       type: object
-      required: [leadId, clinicName, patientName, results]
+      required: [leadId, clinicName, patientName, results, editToken, locked]
       properties:
         leadId: {type: string}
         clinicName: {type: string}
         patientName: {type: string}
+        # Enlace de la evaluación del paciente: sirve para modificarla o enviar información adicional.
+        editToken: {type: string}
+        # La clínica ya empezó a revisar: se cierra la edición libre y solo queda la información adicional.
+        locked: {type: boolean}
         results:
           type: array
           items:

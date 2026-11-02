@@ -38,6 +38,7 @@ import { HelpPanel } from "./help-panel";
 import { HELP_TEXT } from "@/lib/help-i18n";
 import { LeadPhases } from "@/components/lead-phases";
 import { AddPatientDialog } from "@/components/add-patient-dialog";
+import { PatientUpdatesCard, UpdatesBadge, useUnseenUpdates } from "@/components/patient-updates-card";
 import { ConsultationsStrip } from "@/components/consultations-strip";
 import { CONSULT_TEXT } from "@/lib/consult-types-i18n";
 import { ClinicChooser, selectClinic } from "@/components/clinic-chooser";
@@ -94,6 +95,7 @@ export default function Admin() {
   const [focusListSearch, setFocusListSearch] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const unseenUpdates = useUnseenUpdates();
   const [linkCopied, setLinkCopied] = useState(false);
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -592,7 +594,7 @@ export default function Admin() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <div className="font-semibold text-foreground text-base truncate">{lead.name || "—"}</div>
+                            <div className="font-semibold text-foreground text-base truncate">{lead.name || "—"}<UpdatesBadge count={unseenUpdates[lead.id] ?? 0} /></div>
                             <div className="text-muted-foreground text-sm truncate tabular-nums"><bdi dir="ltr">{lead.phone}</bdi></div>
                             {lead.consultTypeName && <div className="text-xs font-semibold text-[hsl(var(--cd-teal))] truncate mt-0.5" data-testid="lead-consult">{consultLabel(lead)}</div>}
                           </div>
@@ -637,7 +639,7 @@ export default function Admin() {
                       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedLeadId(lead.id); } }}
                     >
                       <td className="px-6 py-4">
-                        <div className="font-semibold text-foreground text-[15px] mb-0.5">{lead.name || "—"}</div>
+                        <div className="font-semibold text-foreground text-[15px] mb-0.5">{lead.name || "—"}<UpdatesBadge count={unseenUpdates[lead.id] ?? 0} /></div>
                         <div className="text-muted-foreground text-sm tabular-nums"><bdi dir="ltr">{lead.phone}</bdi></div>
                         {lead.consultTypeName && <div className="text-xs font-semibold text-[hsl(var(--cd-teal))] mt-0.5" data-testid="lead-consult">{consultLabel(lead)}</div>}
                       </td>
@@ -689,6 +691,7 @@ export default function Admin() {
                   </div>
 
                   <ConsultationsStrip leadId={fullLead.id} onOpen={(id) => setSelectedLeadId(id)} />
+                  <PatientUpdatesCard leadId={fullLead.id} />
 
                   <div className="shrink-0 px-5 md:px-8 py-2 bg-card border-b border-border flex justify-end">
                     <Button

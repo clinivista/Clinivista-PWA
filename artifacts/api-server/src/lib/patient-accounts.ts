@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { isEvaluationLocked } from "./patient-edits";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import {
   db, leadsTable, patientAccountsTable, resultDeliveriesTable, hashPassword, verifyPassword, normalizeEmail, type Lead,
@@ -204,6 +205,8 @@ export async function portalOverview(accountId: string) {
       leadId: lead.id,
       clinicName: identity.name,
       patientName: lead.name,
+      editToken: lead.token,
+      locked: await isEvaluationLocked(lead),
       results: deliveries
         .filter((delivery) => delivery.leadId === lead.id)
         .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())

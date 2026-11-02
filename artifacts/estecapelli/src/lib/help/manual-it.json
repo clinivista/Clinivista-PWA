@@ -387,6 +387,29 @@
    "key": "account"
   },
   {
+   "id": "1.x",
+   "title": "Modificare la valutazione o inviare altre informazioni",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Dopo aver inviato la valutazione puoi modificarla finché la clinica non inizia a esaminarla: accedi a «Il mio account» e tocca «Modifica la mia valutazione». Puoi correggere i dati e sostituire le foto; quanto inviato prima resta salvato e la clinica vede cosa è cambiato."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Quando l'équipe medica inizia a esaminare la valutazione, foto e dati inviati non si possono più modificare. In «Il mio account» il pulsante diventa «Invia informazioni aggiuntive».",
+      "Con «Invia informazioni aggiuntive» scrivi un messaggio e aggiungi fino a 4 foto. Non sostituisce quanto inviato prima: la clinica lo esamina e, se opportuno, lo incorpora nella tua scheda. Vedi lo stato di ogni invio.",
+      "Per correggere un dato della scheda (nome, telefono, ecc.) dopo la revisione usa «I miei dati e diritti» e scegli Rettifica; la clinica risponde entro un massimo di 30 giorni di calendario."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Se hai già inviato la valutazione e provi a registrarti di nuovo con lo stesso telefono o la stessa email, l'app spiega come proseguire: controlla l'email «Crea la tua password» e accedi a «Il mio account»."
+    }
+   ],
+   "key": "edit"
+  },
+  {
    "id": "1.7",
    "key": "measure",
    "title": "Misurare la tua lesione con una moneta",
@@ -1492,6 +1515,30 @@
   },
   {
    "id": "2.21",
+   "title": "Novità del paziente: modifiche e invii aggiuntivi",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Se il paziente modifica i dati o sostituisce una foto dopo aver inviato la valutazione, oppure invia informazioni aggiuntive mentre la stai già esaminando, compare l'etichetta «Novità» accanto al nome nell'elenco e il riquadro «Novità del paziente» all'apertura della scheda."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Ogni modifica mostra cosa è cambiato e quando, con il valore precedente e quello nuovo. Le foto sostituite non vengono eliminate: restano salvate.",
+      "«Segna come viste» rimuove l'etichetta dall'elenco.",
+      "In un invio aggiuntivo puoi aprire le foto. «Incorpora nella scheda» lo segna come esaminato e incorporato, «Scarta» come esaminato senza modifiche; il paziente vede lo stato.",
+      "Il paziente può modificare la valutazione finché è Nuovo, Incompleto o Pronto e non esiste una diagnosi, nemmeno in bozza. Da quel momento può solo inviare informazioni aggiuntive."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Nulla viene sovrascritto senza traccia. Quanto inviato dal paziente viene eliminato insieme alla scheda se la elimini. Se chiede di correggere un dato dopo la revisione, arriva in «Richieste di dati» come Rettifica."
+    }
+   ],
+   "key": "patientupdates"
+  },
+  {
+   "id": "2.22",
    "title": "Uso da telefono",
    "blocks": [
     {
@@ -1526,7 +1573,7 @@
    "key": "phone"
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "key": "support",
    "title": "Ticket di supporto",
    "blocks": [
@@ -1550,7 +1597,7 @@
    ]
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "title": "Consigli e risoluzione dei problemi",
    "blocks": [
     {

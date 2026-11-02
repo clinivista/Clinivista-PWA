@@ -29,6 +29,16 @@ import { PORTAL_TEXT } from "@/lib/portal-i18n";
 import Portal, { PortalSetPassword } from "./portal";
 
 describe("Portal del paciente", () => {
+  it("offers to edit while the clinic has not started, and only additional information once it is reviewing", () => {
+    api.me = { email: "p@x.cl", cases: [
+      { leadId: "l1", clinicName: "Clínica Uno", patientName: "Ana", results: [], editToken: "tok-1", locked: false },
+      { leadId: "l2", clinicName: "Clínica Dos", patientName: "Ana", results: [], editToken: "tok-2", locked: true },
+    ] };
+    render(<Portal />);
+    expect(screen.getByRole("link", { name: "Modificar mi evaluación" })).toHaveAttribute("href", "/patient?token=tok-1");
+    expect(screen.getByRole("link", { name: "Enviar información adicional" })).toHaveAttribute("href", "/patient?token=tok-2");
+  });
+
   it("logout resets the session query so the stale results disappear", async () => {
     const user = userEvent.setup();
     api.me = { email: "p@x.cl", cases: [] };
