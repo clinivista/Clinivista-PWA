@@ -118,7 +118,7 @@ export default function Portal() {
           </section>
         ))}
         <Button variant="outline" className="rounded-xl self-start" disabled={logout.isPending}
-          onClick={() => logout.mutate(undefined, { onSuccess: refresh })}>
+          onClick={() => logout.mutate(undefined, { onSuccess: () => { void queryClient.resetQueries({ queryKey: getGetPortalMeQueryKey() }); void queryClient.invalidateQueries({ queryKey: getGetPortalOptionsQueryKey() }); } })}>
           <LogOut className="w-4 h-4 me-1.5" />{text.logout}
         </Button>
       </Shell>
