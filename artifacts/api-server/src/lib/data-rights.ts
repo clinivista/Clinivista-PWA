@@ -4,6 +4,7 @@ import {
   DATA_REQUEST_TYPES, DATA_REQUEST_STATUSES, type DataRequest, type DataRequestType, type DataRequestStatus, type Lead,
 } from "@workspace/db";
 import { uid } from "./helpers";
+import { updatesForLead } from "./patient-edits";
 
 /** Plazo legal de respuesta (Ley 21.719, art. 11): 30 días corridos, prorrogable una vez por otros 30. */
 export const DATA_REQUEST_DAYS = 30;
@@ -80,6 +81,7 @@ export async function exportPatientData(lead: Lead) {
     photos.push(...(await db.select().from(clinicalPhotosTable).where(eq(clinicalPhotosTable.evaluationId, evaluation.id))));
     diagnoses.push(...(await db.select().from(diagnosesTable).where(eq(diagnosesTable.evaluationId, evaluation.id))));
   }
+  const edits = await updatesForLead(lead.centerId ?? "default-center", lead.id).catch(() => ({ updates: [], additions: [] }));
   return {
     exportedAt: new Date().toISOString(),
     format: "clinivista-patient-data/1",
@@ -87,5 +89,7 @@ export async function exportPatientData(lead: Lead) {
     evaluations: evaluations.map((row) => clean(row as unknown as Record<string, unknown>)),
     photos: photos.map((row) => clean(row as unknown as Record<string, unknown>)),
     diagnoses: diagnoses.map((row) => clean(row as unknown as Record<string, unknown>)),
+    patientUpdates: edits.updates.map((row) => clean(row as unknown as Record<string, unknown>)),
+    patientAdditions: edits.additions,
   };
 }

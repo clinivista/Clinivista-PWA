@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 
 const api = vi.hoisted(() => ({
   me: undefined as unknown, options: { googleEnabled: true, profile: null } as unknown,
-  login: vi.fn(), forgot: vi.fn(), logout: vi.fn(), setup: vi.fn(), invalidate: vi.fn(), navigate: vi.fn(), search: "",
+  login: vi.fn(), forgot: vi.fn(), logout: vi.fn(), setup: vi.fn(), invalidate: vi.fn(), reset: vi.fn(), navigate: vi.fn(), search: "",
 }));
 
 vi.mock("@workspace/api-client-react", () => ({
@@ -17,7 +17,7 @@ vi.mock("@workspace/api-client-react", () => ({
   usePortalLogout: () => ({ mutate: api.logout, isPending: false }),
   usePortalSetup: () => ({ mutate: api.setup, isPending: false }),
 }));
-vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: api.invalidate }) }));
+vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: api.invalidate, resetQueries: api.reset }) }));
 vi.mock("wouter", () => ({
   Link: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
   useLocation: () => ["/", api.navigate],
@@ -29,6 +29,25 @@ import { PORTAL_TEXT } from "@/lib/portal-i18n";
 import Portal, { PortalSetPassword } from "./portal";
 
 describe("Portal del paciente", () => {
+  it("offers to edit while the clinic has not started, and only additional information once it is reviewing", () => {
+    api.me = { email: "p@x.cl", cases: [
+      { leadId: "l1", clinicName: "Clínica Uno", patientName: "Ana", results: [], editToken: "tok-1", locked: false },
+      { leadId: "l2", clinicName: "Clínica Dos", patientName: "Ana", results: [], editToken: "tok-2", locked: true },
+    ] };
+    render(<Portal />);
+    expect(screen.getByRole("link", { name: "Modificar mi evaluación" })).toHaveAttribute("href", "/patient?token=tok-1");
+    expect(screen.getByRole("link", { name: "Enviar información adicional" })).toHaveAttribute("href", "/patient?token=tok-2");
+  });
+
+  it("logout resets the session query so the stale results disappear", async () => {
+    const user = userEvent.setup();
+    api.me = { email: "p@x.cl", cases: [] };
+    api.logout.mockImplementation((_vars, options) => options.onSuccess());
+    render(<Portal />);
+    await user.click(screen.getByRole("button", { name: /Cerrar sesión/i }));
+    expect(api.reset).toHaveBeenCalledWith({ queryKey: ["/api/portal/me"] });
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     api.me = undefined;

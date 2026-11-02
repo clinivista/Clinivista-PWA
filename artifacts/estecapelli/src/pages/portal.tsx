@@ -17,8 +17,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
 import { LanguagePicker } from "@/components/language-picker";
-import { useLanguage } from "@/lib/language";
+import { useLanguage, type LangCode } from "@/lib/language";
 import { PORTAL_TEXT, type PortalText } from "@/lib/portal-i18n";
+import { PORTAL_EDIT_TEXT } from "@/lib/evaluation-edit-i18n";
 
 export const LOCALES: Record<string, string> = { es: "es-CL", en: "en-US", pt: "pt-BR", fr: "fr-FR", de: "de-DE", it: "it-IT", tr: "tr-TR", ar: "ar", zh: "zh-CN" };
 
@@ -79,6 +80,7 @@ export default function Portal() {
   const [error, setError] = useState<string | null>(null);
   const googleNotice = search.get("google") === "error" ? text.googleError : search.get("google") === "off" ? text.googleOff : null;
   const shownError = error ?? googleNotice;
+  const editText = PORTAL_EDIT_TEXT[lang as LangCode] ?? PORTAL_EDIT_TEXT.es;
   const when = (iso: string) => new Date(iso).toLocaleString(LOCALES[lang], { dateStyle: "long", timeStyle: "short" });
 
   const refresh = () => {
@@ -101,6 +103,12 @@ export default function Portal() {
               <p className="font-bold text-foreground">{item.clinicName}</p>
               <p className="text-xs text-muted-foreground">{item.patientName}</p>
             </div>
+            <div className="rounded-xl bg-[#F5F2EE] p-3 text-xs text-muted-foreground flex flex-col gap-2" data-testid="portal-edit">
+              <p>{item.locked ? editText.lockedHint : editText.openHint}</p>
+              <Button asChild variant="outline" size="sm" className="rounded-xl self-start">
+                <Link href={`/patient?token=${encodeURIComponent(item.editToken)}`}>{item.locked ? editText.extra : editText.edit}</Link>
+              </Button>
+            </div>
             {item.results.length === 0 ? (
               <p className="text-sm text-muted-foreground">{text.noResults}</p>
             ) : (
@@ -118,7 +126,7 @@ export default function Portal() {
           </section>
         ))}
         <Button variant="outline" className="rounded-xl self-start" disabled={logout.isPending}
-          onClick={() => logout.mutate(undefined, { onSuccess: refresh })}>
+          onClick={() => logout.mutate(undefined, { onSuccess: () => { void queryClient.resetQueries({ queryKey: getGetPortalMeQueryKey() }); void queryClient.invalidateQueries({ queryKey: getGetPortalOptionsQueryKey() }); } })}>
           <LogOut className="w-4 h-4 me-1.5" />{text.logout}
         </Button>
       </Shell>

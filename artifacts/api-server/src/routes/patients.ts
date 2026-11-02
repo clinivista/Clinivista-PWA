@@ -47,6 +47,7 @@ import { isCenterActive } from "../lib/centers";
 import { assertCanAddPatient, sendIfPlanLimit } from "../lib/plan-limits";
 import { clinicIdentity, findCenterBySlug } from "../lib/clinic-identity";
 import { cleanIntake, getSpecialty } from "../lib/specialties";
+import { changedFields, recordPatientUpdate } from "../lib/patient-edits";
 import { ALLOWED_IMAGE_TYPES, MAX_PHOTO_BYTES, parseImageRequest, parseOptionalPixelDimension } from "../lib/image-upload";
 
 const router: IRouter = Router();
@@ -442,6 +443,8 @@ router.put("/patients/:token", async (req, res): Promise<void> => {
   const [updated] = await db.update(leadsTable)
     .set({ ...data, status: updatedStatus(existing.status, completed, requiredKeys.length), photoCount: String(completed) })
     .where(eq(leadsTable.id, existing.id)).returning();
+  const changes = changedFields(existing, updated);
+  if (Object.keys(changes).length) await recordPatientUpdate(existing, "data", "data", { changes });
   if (normalizeEmail(updated.email ?? "") !== normalizeEmail(existing.email ?? "") && existing.patientAccountId) {
     // A different email is a different account.
     await db.update(leadsTable).set({ patientAccountId: null }).where(eq(leadsTable.id, updated.id));
@@ -569,6 +572,7 @@ router.post("/patients/:token/photos/:photoId/confirm", async (req, res): Promis
     res.status(404).json({ error: "Borrador no encontrado." });
     return;
   }
+  if (lead) await recordPatientUpdate(lead, "photo", "photo", { view: photo.label || photo.key });
   res.json(photo);
 });
 

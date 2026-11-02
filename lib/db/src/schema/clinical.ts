@@ -425,3 +425,40 @@ export const staffAccessEventsTable = pgTable("staff_access_events", {
   action: text("action").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [index("staff_access_events_lead_idx").on(table.leadId, table.createdAt)]);
+
+// Cambios que el paciente hace en su evaluación ya enviada (datos o fotos reemplazadas) y la
+// información adicional que envía cuando la clínica ya empezó a revisarla. Nada se sobrescribe sin
+// rastro: la clínica ve qué cambió y cuándo, y marca lo que ya revisó.
+export const PATIENT_UPDATE_KINDS = ["data", "photo", "addition"] as const;
+export type PatientUpdateKind = (typeof PATIENT_UPDATE_KINDS)[number];
+
+export const patientUpdatesTable = pgTable("patient_updates", {
+  id: text("id").primaryKey(),
+  centerId: text("center_id").notNull(),
+  leadId: text("lead_id").notNull(),
+  kind: text("kind").notNull(),
+  summary: text("summary").notNull().default(""),
+  // Para cambios de datos: { campo: { from, to } }. Para fotos: { view }. Para adicionales: { additionId }.
+  details: jsonb("details").notNull().default({}),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  seenAt: timestamp("seen_at", { withTimezone: true }),
+  seenByName: text("seen_by_name").notNull().default(""),
+}, (table) => [index("patient_updates_lead_idx").on(table.centerId, table.leadId, table.seenAt)]);
+export type PatientUpdate = typeof patientUpdatesTable.$inferSelect;
+
+export const ADDITION_STATUSES = ["pending", "incorporated", "dismissed"] as const;
+export type AdditionStatus = (typeof ADDITION_STATUSES)[number];
+export type AdditionFile = { objectPath: string; mimeType: string; bytes: number; sha256: string };
+
+export const patientAdditionsTable = pgTable("patient_additions", {
+  id: text("id").primaryKey(),
+  centerId: text("center_id").notNull(),
+  leadId: text("lead_id").notNull(),
+  note: text("note").notNull().default(""),
+  files: jsonb("files").$type<AdditionFile[]>().notNull().default([]),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  resolvedByName: text("resolved_by_name").notNull().default(""),
+}, (table) => [index("patient_additions_lead_idx").on(table.centerId, table.leadId)]);
+export type PatientAddition = typeof patientAdditionsTable.$inferSelect;

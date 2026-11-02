@@ -387,6 +387,29 @@
    "key": "account"
   },
   {
+   "id": "1.x",
+   "title": "Değerlendirmenizi değiştirin veya daha fazla bilgi gönderin",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Değerlendirmenizi gönderdikten sonra klinik incelemeye başlamadan önce değiştirebilirsiniz: «Hesabım»a girin ve «Değerlendirmemi düzenle»ye dokunun. Verilerinizi düzeltebilir ve fotoğrafları değiştirebilirsiniz; önceki hâli saklanır ve klinik neyin değiştiğini görür."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Tıbbi ekip değerlendirmenizi incelemeye başladığında, gönderdiğiniz fotoğraf ve veriler artık değiştirilemez. «Hesabım»da düğme «Ek bilgi gönder» olur.",
+      "«Ek bilgi gönder» ile bir mesaj yazar ve en fazla 4 fotoğraf eklersiniz. Öncekinin yerine geçmez: klinik inceler ve uygunsa dosyanıza ekler. Her gönderimin durumunu görürsünüz.",
+      "İncelemeden sonra dosyanızdaki bir bilgiyi (ad, telefon vb.) düzeltmek için «Verilerim ve haklarım»ı kullanın ve Düzeltme'yi seçin; klinik en geç 30 takvim günü içinde yanıt verir."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Değerlendirmenizi zaten gönderdiyseniz ve aynı telefon ya da e-postayla yeniden kayıt olmaya çalışırsanız uygulama nasıl devam edeceğinizi açıklar: «Şifrenizi oluşturun» e-postasına bakın ve «Hesabım»a girin."
+    }
+   ],
+   "key": "edit"
+  },
+  {
    "id": "1.7",
    "key": "measure",
    "title": "Lezyonunuzu bir madeni parayla ölçmek",
@@ -1492,6 +1515,30 @@
   },
   {
    "id": "2.21",
+   "title": "Hasta güncellemeleri: değişiklikler ve ek gönderimler",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Hasta değerlendirmesini gönderdikten sonra verilerini değiştirir ya da bir fotoğrafı değiştirirse veya siz zaten incelerken ek bilgi gönderirse, listede adının yanında «Yenilik» etiketi, dosyayı açtığınızda ise «Hasta güncellemeleri» kutusu görünür."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Her değişiklik neyin ne zaman değiştiğini, önceki ve yeni değerle gösterir. Değiştirilen fotoğraflar silinmez: saklanır.",
+      "«Görüldü olarak işaretle» etiketi listeden kaldırır.",
+      "Ek gönderimde fotoğrafları açabilirsiniz. «Dosyaya ekle» incelendi ve eklendi olarak, «Yok say» ise değişiklik olmadan incelendi olarak işaretler; hasta durumu görür.",
+      "Hasta, değerlendirme Yeni, Eksik veya Hazır durumundayken ve taslak dahil hiçbir tanı yokken değerlendirmesini değiştirebilir. Bundan sonra yalnızca ek bilgi gönderebilir."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Hiçbir şey iz bırakmadan üzerine yazılmaz. Hastanın gönderdikleri, dosyayı silerseniz onunla birlikte silinir. İncelemeden sonra bir bilginin düzeltilmesini isterse talep, «Veri talepleri» bölümüne Düzeltme olarak düşer."
+    }
+   ],
+   "key": "patientupdates"
+  },
+  {
+   "id": "2.22",
    "title": "Telefondan kullanım",
    "blocks": [
     {
@@ -1526,7 +1573,7 @@
    "key": "phone"
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "key": "support",
    "title": "Destek biletleri",
    "blocks": [
@@ -1550,7 +1597,7 @@
    ]
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "title": "İpuçları ve sorun giderme",
    "blocks": [
     {

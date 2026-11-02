@@ -25,3 +25,14 @@ La **clínica** (responsable). Clinivista le da las herramientas: panel «Solici
 
 ## Control
 Revisar semanalmente solicitudes «Vencida». Conservar las solicitudes resueltas como prueba.
+
+## Modificar la evaluación sin pasar por una solicitud
+
+Además del derecho de rectificación, el paciente puede cambiar su propia evaluación **mientras la clínica no haya empezado a revisarla**:
+
+- **Abierta** (estado Nuevo, Incompleto o Listo, sin diagnóstico ni borrador de diagnóstico): el paciente corrige sus datos y reemplaza fotos desde su cuenta («Modificar mi evaluación»). Cada cambio queda registrado con el valor anterior y el nuevo; las fotos reemplazadas no se borran. La clínica ve la etiqueta «Novedades» y el recuadro «Novedades del paciente».
+- **En revisión** (cualquier estado posterior o con diagnóstico): se cierra la edición. El paciente solo puede enviar **información adicional** (mensaje y hasta 4 fotos) que no reemplaza nada; la clínica la incorpora a la ficha o la descarta, y el paciente ve el estado. Corregir un dato de la ficha pasa a ser una solicitud de **Rectificación** (plazo de 30 días corridos).
+- La información adicional y el historial de cambios se eliminan junto con la ficha y se incluyen en la exportación de datos del paciente.
+
+**Pregunta para el abogado:** cómo se concilia la edición del paciente con la obligación de conservar la ficha clínica (Ley 20.584) una vez que la clínica la incorporó, y si el historial de cambios debe conservarse el mismo plazo que la ficha.
+

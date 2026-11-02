@@ -36,6 +36,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { DataRightsDialog } from "@/components/data-rights-dialog";
 import { DuplicateHelp } from "@/components/duplicate-help";
+import { LockedEvaluation } from "@/components/locked-evaluation";
+import { EVALUATION_EDIT_TEXT } from "@/lib/evaluation-edit-i18n";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
 import type { UseFormReturn } from "react-hook-form";
 import { DERM_CHANGES_KEYS, DERM_DURATION_KEYS, DERM_REASON_KEYS, DERM_SKIN_KEYS, DERM_SUN_KEYS, DERM_TEXT, type DermText } from "@/lib/derm-i18n";
@@ -582,7 +584,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
   const PHOTO_REQUIREMENTS = getConfiguredPhotoProtocol(t, protocolConfig?.views, lang);
   const photoTotal = PHOTO_REQUIREMENTS.length;
 
-  const [step, setStep] = useState<"intro" | "data" | "photos" | "success">(startAtData ? "data" : "intro");
+  const [step, setStep] = useState<"intro" | "data" | "photos" | "success" | "locked">(startAtData ? "data" : "intro");
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
   const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
@@ -663,6 +665,22 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
   useEffect(() => {
     if (googleReturn === "ok" && googleProfile && !token) setStep("data");
   }, [googleReturn, googleProfile?.email, token]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cuando la clínica ya empezó a revisar la evaluación, el enlace del paciente solo permite enviar
+  // información adicional (no cambiar lo ya enviado).
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    fetch(`/api/patients/${encodeURIComponent(token)}/edit-state`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body: { locked?: boolean } | null) => {
+        if (cancelled || !body?.locked) return;
+        setResumeOffer(false);
+        setStep("locked");
+      })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [token]);
 
   // Live gate for the "Continuar" button: all required fields valid + consent checked
   const watchedValues = form.watch();
@@ -1782,6 +1800,8 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
         )}
 
         {/* ── STEP: SUCCESS ── */}
+        {step === "locked" && token && <LockedEvaluation token={token} />}
+
         {step === "success" && (
           <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm animate-in fade-in zoom-in-95 duration-500">
             <div className="h-1.5 bg-gradient-to-r from-primary via-[#4F9CF9] to-[#A78BFA]" />
@@ -1814,6 +1834,8 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
                   {t.pGoHome}
                 </Button>
               </Link>
+              <p className="mt-4 text-xs text-muted-foreground leading-relaxed" data-testid="success-edit-note">{EVALUATION_EDIT_TEXT[lang].successNote}</p>
+              <Link href="/paciente"><Button variant="ghost" className="mt-1 w-full rounded-full text-sm text-primary">{EVALUATION_EDIT_TEXT[lang].goAccount}</Button></Link>
               {token && <div className="mt-3"><DataRightsDialog token={token} /></div>}
             </div>
           </div>

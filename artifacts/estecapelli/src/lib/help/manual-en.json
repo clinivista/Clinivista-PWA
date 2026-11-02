@@ -387,6 +387,29 @@
    "key": "account"
   },
   {
+   "id": "1.x",
+   "title": "Change your evaluation or send more information",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "After sending your evaluation you can change it until the clinic starts reviewing it: sign in to “My account” and tap “Edit my evaluation”. You can correct your data and replace photos; what you sent before is kept and the clinic sees what changed."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Once the medical team starts reviewing your evaluation, the photos and data you sent can no longer be changed. In “My account” the button becomes “Send additional information”.",
+      "With “Send additional information” you write a message and add up to 4 photos. It does not replace what you sent before: the clinic reviews it and, if appropriate, includes it in your record. You can see the status of each submission.",
+      "To correct a detail in your record (name, phone, etc.) after the review, use “My data and rights” and choose Rectification; the clinic answers within 30 calendar days."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "If you already sent your evaluation and try to register again with the same phone or email, the app explains how to continue: check the “Create your password” email and sign in to “My account”."
+    }
+   ],
+   "key": "edit"
+  },
+  {
    "id": "1.7",
    "key": "measure",
    "title": "Measuring your lesion with a coin",
@@ -1492,6 +1515,30 @@
   },
   {
    "id": "2.21",
+   "title": "Patient updates: changes and additional submissions",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "If a patient changes their data or replaces a photo after sending the evaluation, or sends additional information while you are already reviewing it, an “Updates” tag appears next to their name in the list and a “Patient updates” box appears when you open their record."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Each change shows what changed and when, with the previous and new value. Replaced photos are not deleted: they stay stored.",
+      "“Mark as seen” removes the tag from the list.",
+      "In an additional submission you can open the photos. “Include in record” marks it as reviewed and included; “Dismiss” marks it as reviewed without changes. The patient sees the status.",
+      "The patient can change their evaluation while it is New, Incomplete or Ready and no diagnosis exists, not even a draft. From then on they can only send additional information."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Nothing is overwritten without a trace. What the patient sent is deleted together with the record if you delete it. If they ask to correct a detail after the review, it arrives in “Data requests” as Rectification."
+    }
+   ],
+   "key": "patientupdates"
+  },
+  {
+   "id": "2.22",
    "title": "Using it from the phone",
    "blocks": [
     {
@@ -1526,7 +1573,7 @@
    "key": "phone"
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "key": "support",
    "title": "Support tickets",
    "blocks": [
@@ -1550,7 +1597,7 @@
    ]
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "title": "Tips and troubleshooting",
    "blocks": [
     {

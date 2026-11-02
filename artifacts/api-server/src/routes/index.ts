@@ -27,10 +27,13 @@ import clinicPlanRouter from "./clinic-plan";
 import clinicContractRouter from "./clinic-contract";
 import clinicIntegrationsRouter from "./clinic-integrations";
 import dataRightsRouter from "./data-rights";
+import patientUpdatesRouter, { patientEditGate } from "./patient-updates";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+// Debe ir antes de todas las rutas del enlace del paciente: cierra la edición cuando la clínica ya revisa.
+router.use("/patients/:token", patientEditGate);
 router.use(authRouter);
 router.use(leadsRouter);
 router.use(patientsRouter);
@@ -58,5 +61,6 @@ router.use(clinicPlanRouter);
 router.use(clinicContractRouter);
 router.use(clinicIntegrationsRouter);
 router.use(dataRightsRouter);
+router.use(patientUpdatesRouter);
 
 export default router;

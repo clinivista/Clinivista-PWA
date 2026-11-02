@@ -387,6 +387,29 @@
    "key": "account"
   },
   {
+   "id": "1.x",
+   "title": "Modificar sua avaliação ou enviar mais informações",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Depois de enviar sua avaliação você pode alterá-la enquanto a clínica não começar a analisá-la: entre em «Minha conta» e toque em «Modificar minha avaliação». Você pode corrigir seus dados e substituir fotos; o que foi enviado antes fica guardado e a clínica vê o que mudou."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Quando a equipe médica começa a analisar sua avaliação, as fotos e os dados enviados não podem mais ser alterados. Em «Minha conta» o botão passa a «Enviar informações adicionais».",
+      "Com «Enviar informações adicionais» você escreve uma mensagem e adiciona até 4 fotos. Não substitui o que foi enviado antes: a clínica analisa e, se for o caso, incorpora à sua ficha. Você vê o estado de cada envio.",
+      "Para corrigir um dado da sua ficha (nome, telefone etc.) depois da análise, use «Meus dados e direitos» e escolha Retificação; a clínica responde em no máximo 30 dias corridos."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Se você já enviou sua avaliação e tentar se cadastrar de novo com o mesmo telefone ou e-mail, o app explica como continuar: confira o e-mail «Crie sua senha» e entre em «Minha conta»."
+    }
+   ],
+   "key": "edit"
+  },
+  {
    "id": "1.7",
    "key": "measure",
    "title": "Medir sua lesão com uma moeda",
@@ -1492,6 +1515,30 @@
   },
   {
    "id": "2.21",
+   "title": "Novidades do paciente: alterações e envios adicionais",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Se o paciente alterar seus dados ou substituir uma foto depois de enviar a avaliação, ou mandar informações adicionais quando você já a estiver analisando, aparece a etiqueta «Novidades» ao lado do nome na lista e o quadro «Novidades do paciente» ao abrir a ficha."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Cada alteração mostra o que mudou e quando, com o valor anterior e o novo. As fotos substituídas não são apagadas: ficam guardadas.",
+      "«Marcar como vistas» remove a etiqueta da lista.",
+      "Em um envio adicional você pode abrir as fotos. «Incorporar à ficha» marca como analisado e incorporado e «Descartar» como analisado sem alterações; o paciente vê o estado.",
+      "O paciente pode modificar a avaliação enquanto estiver em Novo, Incompleto ou Pronto e não existir diagnóstico, nem mesmo rascunho. A partir daí só pode enviar informações adicionais."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Nada é sobrescrito sem registro. O que o paciente enviou é eliminado junto com a ficha se você a eliminar. Se ele pedir para corrigir um dado depois da análise, chega em «Solicitações de dados» como Retificação."
+    }
+   ],
+   "key": "patientupdates"
+  },
+  {
+   "id": "2.22",
    "title": "Uso pelo celular",
    "blocks": [
     {
@@ -1526,7 +1573,7 @@
    "key": "phone"
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "key": "support",
    "title": "Tickets de suporte",
    "blocks": [
@@ -1550,7 +1597,7 @@
    ]
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "title": "Dicas e solução de problemas",
    "blocks": [
     {

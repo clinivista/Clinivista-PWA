@@ -387,6 +387,29 @@
    "key": "account"
   },
   {
+   "id": "1.x",
+   "title": "Auswertung ändern oder weitere Informationen senden",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Nach dem Absenden können Sie Ihre Auswertung ändern, solange die Klinik sie nicht prüft: Melden Sie sich bei „Mein Konto“ an und tippen Sie auf „Meine Auswertung ändern“. Sie können Daten korrigieren und Fotos ersetzen; das Frühere bleibt gespeichert und die Klinik sieht, was sich geändert hat."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Sobald das medizinische Team Ihre Auswertung prüft, können gesendete Fotos und Daten nicht mehr geändert werden. Unter „Mein Konto“ wird die Schaltfläche zu „Zusätzliche Informationen senden“.",
+      "Mit „Zusätzliche Informationen senden“ schreiben Sie eine Nachricht und fügen bis zu 4 Fotos hinzu. Das ersetzt nichts: Die Klinik prüft es und übernimmt es gegebenenfalls in Ihre Akte. Sie sehen den Status jeder Sendung.",
+      "Um nach der Prüfung eine Angabe in Ihrer Akte zu korrigieren (Name, Telefon usw.), nutzen Sie „Meine Daten und Rechte“ und wählen Sie Berichtigung; die Klinik antwortet innerhalb von höchstens 30 Kalendertagen."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Haben Sie Ihre Auswertung bereits gesendet und versuchen, sich mit demselben Telefon oder derselben E-Mail erneut zu registrieren, erklärt die App, wie es weitergeht: E-Mail „Passwort erstellen“ prüfen und bei „Mein Konto“ anmelden."
+    }
+   ],
+   "key": "edit"
+  },
+  {
    "id": "1.7",
    "key": "measure",
    "title": "Ihre Läsion mit einer Münze messen",
@@ -1492,6 +1515,30 @@
   },
   {
    "id": "2.21",
+   "title": "Neuigkeiten des Patienten: Änderungen und zusätzliche Sendungen",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Ändert der Patient nach dem Absenden Daten oder ersetzt ein Foto, oder sendet er zusätzliche Informationen, während Sie die Auswertung bereits prüfen, erscheint in der Liste neben seinem Namen das Label „Neu“ und beim Öffnen der Akte das Feld „Neuigkeiten des Patienten“."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Jede Änderung zeigt, was sich wann geändert hat, mit altem und neuem Wert. Ersetzte Fotos werden nicht gelöscht, sondern bleiben gespeichert.",
+      "„Als gesehen markieren“ entfernt das Label aus der Liste.",
+      "Bei einer zusätzlichen Sendung können Sie die Fotos öffnen. „In die Akte übernehmen“ markiert sie als geprüft und übernommen, „Verwerfen“ als geprüft ohne Änderung; der Patient sieht den Status.",
+      "Der Patient kann seine Auswertung ändern, solange sie Neu, Unvollständig oder Bereit ist und kein Befund existiert, auch kein Entwurf. Danach kann er nur noch zusätzliche Informationen senden."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Nichts wird spurlos überschrieben. Was der Patient gesendet hat, wird mit der Akte gelöscht, wenn Sie diese löschen. Bittet er nach der Prüfung um Korrektur einer Angabe, erscheint dies unter „Datenanfragen“ als Berichtigung."
+    }
+   ],
+   "key": "patientupdates"
+  },
+  {
+   "id": "2.22",
    "title": "Nutzung auf dem Smartphone",
    "blocks": [
     {
@@ -1526,7 +1573,7 @@
    "key": "phone"
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "key": "support",
    "title": "Support-Tickets",
    "blocks": [
@@ -1550,7 +1597,7 @@
    ]
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "title": "Tipps und Fehlerbehebung",
    "blocks": [
     {

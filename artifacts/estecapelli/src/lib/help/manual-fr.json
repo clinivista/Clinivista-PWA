@@ -387,6 +387,29 @@
    "key": "account"
   },
   {
+   "id": "1.x",
+   "title": "Modifier votre évaluation ou envoyer plus d'informations",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Après avoir envoyé votre évaluation, vous pouvez la modifier tant que la clinique n'a pas commencé son examen : connectez-vous à « Mon compte » et touchez « Modifier mon évaluation ». Vous pouvez corriger vos données et remplacer des photos ; ce qui a été envoyé avant est conservé et la clinique voit ce qui a changé."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Quand l'équipe médicale commence à examiner votre évaluation, les photos et les données envoyées ne peuvent plus être modifiées. Dans « Mon compte », le bouton devient « Envoyer des informations complémentaires ».",
+      "Avec « Envoyer des informations complémentaires », vous écrivez un message et ajoutez jusqu'à 4 photos. Cela ne remplace pas ce qui a été envoyé : la clinique l'examine et, le cas échéant, l'intègre à votre dossier. Vous voyez l'état de chaque envoi.",
+      "Pour corriger une donnée de votre dossier (nom, téléphone, etc.) après l'examen, utilisez « Mes données et droits » et choisissez Rectification ; la clinique répond sous 30 jours calendaires au maximum."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Si vous avez déjà envoyé votre évaluation et essayez de vous inscrire à nouveau avec le même téléphone ou e-mail, l'application explique comment continuer : consultez l'e-mail « Créez votre mot de passe » et connectez-vous à « Mon compte »."
+    }
+   ],
+   "key": "edit"
+  },
+  {
    "id": "1.7",
    "key": "measure",
    "title": "Mesurer votre lésion avec une pièce",
@@ -1492,6 +1515,30 @@
   },
   {
    "id": "2.21",
+   "title": "Nouveautés du patient : modifications et envois complémentaires",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Si le patient modifie ses données ou remplace une photo après avoir envoyé son évaluation, ou envoie des informations complémentaires alors que vous l'examinez déjà, l'étiquette « Nouveautés » apparaît à côté de son nom dans la liste et l'encadré « Nouveautés du patient » s'affiche à l'ouverture du dossier."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Chaque modification indique ce qui a changé et quand, avec l'ancienne et la nouvelle valeur. Les photos remplacées ne sont pas supprimées : elles restent conservées.",
+      "« Marquer comme vues » retire l'étiquette de la liste.",
+      "Dans un envoi complémentaire, vous pouvez ouvrir les photos. « Intégrer au dossier » le marque comme examiné et intégré, « Écarter » comme examiné sans changement ; le patient voit l'état.",
+      "Le patient peut modifier son évaluation tant qu'elle est Nouveau, Incomplet ou Prêt et qu'aucun diagnostic n'existe, même en brouillon. Ensuite, il ne peut qu'envoyer des informations complémentaires."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Rien n'est écrasé sans trace. Ce que le patient a envoyé est supprimé avec le dossier si vous le supprimez. S'il demande de corriger une donnée après l'examen, la demande arrive dans « Demandes de données » comme Rectification."
+    }
+   ],
+   "key": "patientupdates"
+  },
+  {
+   "id": "2.22",
    "title": "Utilisation depuis le téléphone",
    "blocks": [
     {
@@ -1526,7 +1573,7 @@
    "key": "phone"
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "key": "support",
    "title": "Tickets d'assistance",
    "blocks": [
@@ -1550,7 +1597,7 @@
    ]
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "title": "Conseils et dépannage",
    "blocks": [
     {

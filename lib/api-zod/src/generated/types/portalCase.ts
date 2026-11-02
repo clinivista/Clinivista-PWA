@@ -11,5 +11,7 @@ export interface PortalCase {
   leadId: string;
   clinicName: string;
   patientName: string;
+  editToken: string;
+  locked: boolean;
   results: PortalResult[];
 }
