@@ -462,3 +462,43 @@ export const patientAdditionsTable = pgTable("patient_additions", {
   resolvedByName: text("resolved_by_name").notNull().default(""),
 }, (table) => [index("patient_additions_lead_idx").on(table.centerId, table.leadId)]);
 export type PatientAddition = typeof patientAdditionsTable.$inferSelect;
+
+// Autorización para las fotografías clínicas que toma la clínica. Tres vías de registro:
+// «link» (el paciente acepta en su teléfono, con código al correo si tiene), «document» (la clínica sube el
+// documento firmado) y «tablet» (el paciente firma con el dedo en la clínica). Guarda quién, cuándo y qué texto.
+export const PHOTO_CONSENT_METHODS = ["link", "document", "tablet"] as const;
+export type PhotoConsentMethod = (typeof PHOTO_CONSENT_METHODS)[number];
+export const PHOTO_CONSENT_STATUSES = ["pending", "granted", "declined", "revoked", "cancelled"] as const;
+export type PhotoConsentStatus = (typeof PHOTO_CONSENT_STATUSES)[number];
+export type ConsentFile = { objectPath: string; mimeType: string; bytes: number; sha256: string };
+
+export const photoConsentsTable = pgTable("photo_consents", {
+  id: text("id").primaryKey(),
+  centerId: text("center_id").notNull(),
+  leadId: text("lead_id").notNull(),
+  method: text("method").notNull(),
+  status: text("status").notNull().default("pending"),
+  language: text("language").notNull().default("es"),
+  // Versión y copia exacta del texto que el paciente aceptó (o la etiqueta del documento subido).
+  textVersion: text("text_version").notNull().default(""),
+  textSnapshot: text("text_snapshot").notNull().default(""),
+  // Enlace: solo se guarda el hash del token, y el del código de 6 dígitos.
+  tokenHash: text("token_hash"),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  codeHash: text("code_hash"),
+  codeExpiresAt: timestamp("code_expires_at", { withTimezone: true }),
+  codeAttempts: integer("code_attempts").notNull().default(0),
+  // Cómo se comprobó: email_code | link | in_clinic | document.
+  verifiedBy: text("verified_by").notNull().default(""),
+  file: jsonb("file").$type<ConsentFile | null>(),
+  requestedByName: text("requested_by_name").notNull().default(""),
+  registeredByName: text("registered_by_name").notNull().default(""),
+  ip: text("ip").notNull().default(""),
+  userAgent: text("user_agent").notNull().default(""),
+  contact: text("contact").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  grantedAt: timestamp("granted_at", { withTimezone: true }),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  revokeNote: text("revoke_note").notNull().default(""),
+}, (table) => [index("photo_consents_lead_idx").on(table.centerId, table.leadId), index("photo_consents_token_idx").on(table.tokenHash)]);
+export type PhotoConsent = typeof photoConsentsTable.$inferSelect;

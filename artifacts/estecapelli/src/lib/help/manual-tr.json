@@ -410,6 +410,30 @@
    "key": "edit"
   },
   {
+   "id": "1.x",
+   "title": "Klinik tarafından çekilen fotoğraflara izin verme",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Fotoğraflarınızı klinik çektiğinde sizden üç yoldan biriyle izin ister: e-posta veya WhatsApp ile gelen bir bağlantı, imzalı bir belge ya da klinikte tablet üzerinde parmağınızla atacağınız imza."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Bağlantıyla: telefonunuzdan açın, izni okuyun, kabul ettiğinizi işaretleyin ve kayıtlı e-postanız varsa gelen 6 haneli kodu yazın. Bağlantı 7 günde sona erer ve bir kez geçerlidir.",
+      "Sayfanın üstünden dili seçebilir ve «İzin vermiyorum» ile reddedebilirsiniz: bakımınız bundan etkilenmez.",
+      "Bu izin yalnızca klinik fotoğraflar içindir. Fotoğraflarınızın reklamda, sosyal medyada veya derslerde kullanılması ayrı bir izin gerektirir.",
+      "Kliniği bilgilendirerek gelecekteki fotoğraflar için izni geri çekebilirsiniz."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Kayıtlı e-postanız yoksa kod gönderemeyiz: onayınız tarih, saat ve cihazla kaydedilir. Bağlantıyı ve kodu asla paylaşmayın."
+    }
+   ],
+   "key": "photoconsent"
+  },
+  {
    "id": "1.7",
    "key": "measure",
    "title": "Lezyonunuzu bir madeni parayla ölçmek",
@@ -1539,6 +1563,30 @@
   },
   {
    "id": "2.22",
+   "title": "Fotoğraf izni (bağlantı, belge veya tablet)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Hasta dosyasındaki «Fotoğraf izni» kutusu, hastanın kliniğin klinik fotoğraflarını çekmesine ve saklamasına izin verip vermediğini gösterir ve izni üç yolla kaydetmenizi sağlar."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "«Bağlantı gönder»: dili ve kanalı seçin (e-posta, WhatsApp veya yalnızca bağlantıyı kopyala). Hasta telefonunda açar, kabul eder ve e-postası varsa 6 haneli kodla doğrular. Kabul edilen metin, sürümü, tarih ve saat, cihaz ve talep eden kişi saklanır.",
+      "«İmzalı belgeyi kaydet»: imzalı belgenin PDF'ini veya fotoğrafını yükleyin ve adını ya da sürümünü yazın. Kimin ne zaman kaydettiği saklanır.",
+      "«Tablette imzala»: hasta metni kendi dilinde okur, kabul ettiğini işaretler ve parmağıyla imzalar. İmza, kabul edilen metinle birlikte saklanır.",
+      "«Geri çek» hastanın izni geri çektiğini kaydeder (isteğe bağlı neden); «Geçmiş» öncekileri gösterir."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Kodsuz kabul edilen bağlantı (e-postası olmayan hasta) kanıt olarak daha zayıftır. Bu izin, bir tıbbi işlem için bilgilendirilmiş onamın yerini tutmaz ve fotoğrafların reklamda kullanılmasına izin vermez. Metin, avukatınızın incelemesine tabi bir taslaktır."
+    }
+   ],
+   "key": "photoconsent"
+  },
+  {
+   "id": "2.23",
    "title": "Telefondan kullanım",
    "blocks": [
     {
@@ -1573,7 +1621,7 @@
    "key": "phone"
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "key": "support",
    "title": "Destek biletleri",
    "blocks": [
@@ -1597,7 +1645,7 @@
    ]
   },
   {
-   "id": "2.24",
+   "id": "2.25",
    "title": "İpuçları ve sorun giderme",
    "blocks": [
     {

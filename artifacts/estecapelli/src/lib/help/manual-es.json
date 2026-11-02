@@ -410,6 +410,30 @@
    "key": "edit"
   },
   {
+   "id": "1.x",
+   "title": "Autorizar las fotografías que toma la clínica",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Cuando es la clínica quien toma tus fotografías, te pedirá una autorización por una de tres vías: un enlace que recibes por correo o WhatsApp, un documento firmado, o tu firma con el dedo en una tableta en la clínica."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Con el enlace: ábrelo desde tu teléfono, lee la autorización, marca que aceptas y, si tienes correo registrado, escribe el código de 6 dígitos que te llega. El enlace vence en 7 días y sirve una vez.",
+      "Puedes elegir el idioma en la parte superior de la página, y rechazar con «No autorizo»: tu atención no cambia por ello.",
+      "Esta autorización es solo para fotografías clínicas. Usar tus fotos en publicidad, redes sociales o clases requiere otra autorización aparte.",
+      "Puedes retirar la autorización para fotografías futuras avisando a la clínica."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Si no tienes correo registrado no podemos enviarte el código: tu aceptación queda registrada con la fecha, la hora y el dispositivo. Nunca compartas el enlace ni el código."
+    }
+   ],
+   "key": "photoconsent"
+  },
+  {
    "id": "1.7",
    "key": "measure",
    "title": "Medir tu lesión con una moneda",
@@ -1539,6 +1563,30 @@
   },
   {
    "id": "2.22",
+   "title": "Autorización para fotografías (enlace, documento o tableta)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "En la ficha del paciente, el recuadro «Autorización para fotografías» muestra si el paciente autorizó que la clínica tome y guarde sus fotos clínicas, y deja registrar la autorización de tres maneras."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "«Enviar enlace»: elige idioma y canal (correo, WhatsApp o solo copiar el enlace). El paciente lo abre en su teléfono, acepta y, si tiene correo, confirma con un código de 6 dígitos. Queda guardado el texto aceptado, su versión, la fecha y hora, el dispositivo y quién lo solicitó.",
+      "«Registrar documento firmado»: sube el PDF o la foto del documento firmado e indica su nombre o versión. Queda guardado quién lo registró y cuándo.",
+      "«Firmar en tableta»: el paciente lee el texto en su idioma, marca que acepta y firma con el dedo. Queda guardada la firma junto con el texto aceptado.",
+      "«Revocar» registra que el paciente retiró la autorización (con un motivo opcional); «Historial» muestra las anteriores."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Un enlace aceptado sin código (el paciente no tiene correo) tiene menos valor como prueba. Esta autorización no reemplaza el consentimiento informado de un procedimiento médico ni autoriza el uso de fotos en publicidad. El texto es un borrador sujeto a la revisión de tu abogado."
+    }
+   ],
+   "key": "photoconsent"
+  },
+  {
+   "id": "2.23",
    "title": "Uso desde el teléfono",
    "blocks": [
     {
@@ -1573,7 +1621,7 @@
    "key": "phone"
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "key": "support",
    "title": "Tickets de soporte",
    "blocks": [
@@ -1597,7 +1645,7 @@
    ]
   },
   {
-   "id": "2.24",
+   "id": "2.25",
    "title": "Consejos y solución de problemas",
    "blocks": [
     {

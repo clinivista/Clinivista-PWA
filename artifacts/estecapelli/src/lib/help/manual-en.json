@@ -410,6 +410,30 @@
    "key": "edit"
   },
   {
+   "id": "1.x",
+   "title": "Authorizing the photographs the clinic takes",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "When the clinic takes your photographs, it will ask for your authorization in one of three ways: a link you receive by email or WhatsApp, a signed document, or your signature with your finger on a tablet at the clinic."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "With the link: open it on your phone, read the authorization, tick that you accept and, if you have an email on file, type the 6-digit code you receive. The link expires in 7 days and works once.",
+      "You can choose the language at the top of the page and decline with “I do not authorize”: your care does not change because of it.",
+      "This authorization covers clinical photographs only. Using your photos in advertising, social media or classes needs a separate authorization.",
+      "You can withdraw the authorization for future photographs by telling the clinic."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "If you have no email on file we cannot send you the code: your acceptance is recorded with the date, time and device. Never share the link or the code."
+    }
+   ],
+   "key": "photoconsent"
+  },
+  {
    "id": "1.7",
    "key": "measure",
    "title": "Measuring your lesion with a coin",
@@ -1539,6 +1563,30 @@
   },
   {
    "id": "2.22",
+   "title": "Photograph authorization (link, document or tablet)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "In the patient's record, the “Photograph authorization” box shows whether the patient authorized the clinic to take and store their clinical photos, and lets you record the authorization in three ways."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "“Send link”: choose language and channel (email, WhatsApp or just copy the link). The patient opens it on their phone, accepts and, if they have an email, confirms with a 6-digit code. The accepted text, its version, date and time, device and who requested it are stored.",
+      "“Record signed document”: upload the PDF or photo of the signed document and enter its name or version. Who recorded it and when is stored.",
+      "“Sign on tablet”: the patient reads the text in their language, ticks that they accept and signs with a finger. The signature is stored together with the accepted text.",
+      "“Revoke” records that the patient withdrew the authorization (with an optional reason); “History” shows previous ones."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "A link accepted without a code (the patient has no email) is weaker evidence. This authorization does not replace the informed consent for a medical procedure nor allow photos to be used in advertising. The text is a draft subject to your lawyer's review."
+    }
+   ],
+   "key": "photoconsent"
+  },
+  {
+   "id": "2.23",
    "title": "Using it from the phone",
    "blocks": [
     {
@@ -1573,7 +1621,7 @@
    "key": "phone"
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "key": "support",
    "title": "Support tickets",
    "blocks": [
@@ -1597,7 +1645,7 @@
    ]
   },
   {
-   "id": "2.24",
+   "id": "2.25",
    "title": "Tips and troubleshooting",
    "blocks": [
     {

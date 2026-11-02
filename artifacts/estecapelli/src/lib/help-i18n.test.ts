@@ -34,7 +34,7 @@ describe("manuales por especialidad", () => {
     for (const code of LANGS) for (const sp of MANUAL_SPECIALTIES) {
       const m = await loadManual(code, sp);
       const keysNow = (await loadRawManual(code)).staff.filter((s) => !s.only || s.only.includes(sp)).map((s) => s.key);
-      for (const k of ["clinics", "addpatient", "skipdischarge", "support", "users", "plan", "integrations", "privacy", "patientupdates"]) expect(keysNow, `${code}/${sp}/${k}`).toContain(k);
+      for (const k of ["clinics", "addpatient", "skipdischarge", "support", "users", "plan", "integrations", "privacy", "patientupdates", "photoconsent"]) expect(keysNow, `${code}/${sp}/${k}`).toContain(k);
       expect(m.staff.length, `${code}/${sp}`).toBe(keysNow.length);
     }
   });
@@ -48,6 +48,11 @@ describe("manuales por especialidad", () => {
       const updates = raw.staff.find((s) => s.key === "patientupdates");
       expect(updates, `${code}/patientupdates`).toBeTruthy();
       expect(updates!.blocks.map((b) => b.t), `${code}/patientupdates`).toEqual(["p", "ul", "note"]);
+      for (const side of [raw.patient, raw.staff]) {
+        const consent = side.find((s) => s.key === "photoconsent");
+        expect(consent, `${code}/photoconsent`).toBeTruthy();
+        expect(consent!.blocks.map((b) => b.t), `${code}/photoconsent`).toEqual(["p", "ul", "note"]);
+      }
     }
   });
 
