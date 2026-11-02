@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { ConsentDocument } from "@/components/consent-document";
 import { LANGS, useLanguage, type LangCode } from "@/lib/language";
 import { PHOTO_CONSENT_UI } from "@/lib/photo-consent-i18n";
 
@@ -13,7 +14,7 @@ type Consent = {
   registeredByName: string; requestedByName: string; createdAt: string; grantedAt: string | null; revokedAt: string | null; revokeNote: string; hasFile: boolean; fileMime: string | null;
 };
 type Overview = { consents: Consent[]; hasEmail: boolean; email: string; language: string; currentVersion: string };
-type ConsentText = { language: string; title: string; intro: string; points: string[]; checkbox: string };
+type ConsentText = { language: string; clinicName: string; clinicLogo: string | null; patientName: string; title: string; intro: string; points: string[]; checkbox: string };
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -67,34 +68,32 @@ function SignaturePad({ onChange, label, clear }: { onChange: (dataUrl: string |
   );
 }
 
-// «Autorización para fotografías»: la clínica deja constancia de que el paciente autoriza las fotos clínicas,
-// por enlace (con código al correo), con el documento firmado o con firma en tableta.
-export function PhotoConsentCard({ leadId, patientName }: { leadId: string; patientName: string }) {
+export type ConsentMode = "link" | "doc" | "tablet";
+
+/** Contenido de cada vía (enlace, documento firmado, firma en pantalla). Lo usan la ficha y «Agregar paciente». */
+export function PhotoConsentFlow({ leadId, patientName, phone, mode, initialChannel, autoStart, onDone }: {
+  leadId: string; patientName: string; phone?: string; mode: ConsentMode; initialChannel?: "email" | "whatsapp" | "link"; autoStart?: boolean; onDone: () => void;
+}) {
   const { lang: appLang } = useLanguage();
   const x = PHOTO_CONSENT_UI[appLang];
   const queryClient = useQueryClient();
   const key = ["/api/leads", leadId, "photo-consent"];
   const base = `/api/leads/${encodeURIComponent(leadId)}/photo-consent`;
-  const [dialog, setDialog] = useState<null | "link" | "doc" | "tablet">(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showHistory, setShowHistory] = useState(false);
-
-  // enlace
-  const [channel, setChannel] = useState<"email" | "whatsapp" | "link">("whatsapp");
-  const [linkLang, setLinkLang] = useState<LangCode>("es");
+  const [channel, setChannel] = useState<"email" | "whatsapp" | "link">(initialChannel ?? "whatsapp");
+  const [linkLang, setLinkLang] = useState<LangCode>(appLang);
   const [created, setCreated] = useState<null | { url: string; emailSent: boolean; emailError: string; whatsappText: string }>(null);
   const [copied, setCopied] = useState(false);
-  // documento
   const [docLabel, setDocLabel] = useState("");
   const [docFile, setDocFile] = useState<File | null>(null);
-  // tableta
   const [text, setText] = useState<ConsentText | null>(null);
-  const [tabLang, setTabLang] = useState<LangCode>("es");
+  const [tabLang, setTabLang] = useState<LangCode>(appLang);
   const [signature, setSignature] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
+  const started = useRef(false);
 
-  const { data, isError } = useQuery({
+  const { data } = useQuery({
     queryKey: key,
     queryFn: async () => {
       const response = await fetch(base, { credentials: "include" });
@@ -108,23 +107,18 @@ export function PhotoConsentCard({ leadId, patientName }: { leadId: string; pati
     if (!data) return;
     const initial = (LANGS.some((item) => item.code === data.language) ? data.language : "es") as LangCode;
     setLinkLang(initial); setTabLang(initial);
-    if (!data.hasEmail) setChannel("whatsapp"); else setChannel("email");
+    if (!initialChannel) setChannel(data.hasEmail ? "email" : "whatsapp");
   }, [data?.language, data?.hasEmail]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (dialog !== "tablet") return;
+    if (mode !== "tablet") return;
     let cancelled = false;
     fetch(`${base}/text?lang=${tabLang}`, { credentials: "include" })
       .then((response) => (response.ok ? response.json() : null))
       .then((body: ConsentText | null) => { if (!cancelled && body) setText(body); })
       .catch(() => undefined);
     return () => { cancelled = true; };
-  }, [dialog, tabLang, base]);
-
-  const closeDialog = () => {
-    setDialog(null); setError(null); setCreated(null); setCopied(false); setDocLabel(""); setDocFile(null); setSignature(null); setAccepted(false); setText(null);
-  };
-  const dateOf = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString(appLang, { dateStyle: "medium" }) : "");
+  }, [mode, tabLang, base]);
 
   const createLink = async () => {
     setBusy(true); setError(null);
@@ -135,6 +129,11 @@ export function PhotoConsentCard({ leadId, patientName }: { leadId: string; pati
       setCreated(body); refresh();
     } catch { setError(x.failed); } finally { setBusy(false); }
   };
+
+  // «Agregar paciente» ya eligió la vía: el enlace se crea (y el correo se envía) sin pedir otro clic.
+  useEffect(() => {
+    if (autoStart && mode === "link" && data && !started.current) { started.current = true; void createLink(); }
+  }, [autoStart, mode, data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const copy = async (value: string) => {
     try { await navigator.clipboard.writeText(value); setCopied(true); } catch { setError(x.failed); }
@@ -150,7 +149,7 @@ export function PhotoConsentCard({ leadId, patientName }: { leadId: string; pati
         headers: { "Content-Type": docFile.type || "application/pdf", "X-Document-Label": encodeURIComponent(docLabel) },
       });
       if (!response.ok) { setError(x.failed); return; }
-      refresh(); closeDialog();
+      refresh(); onDone();
     } catch { setError(x.failed); } finally { setBusy(false); }
   };
 
@@ -161,9 +160,115 @@ export function PhotoConsentCard({ leadId, patientName }: { leadId: string; pati
     try {
       const response = await fetch(`${base}/tablet`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ language: tabLang, accepted: true, signature }) });
       if (!response.ok) { setError(x.failed); return; }
-      refresh(); closeDialog();
+      refresh(); onDone();
     } catch { setError(x.failed); } finally { setBusy(false); }
   };
+
+  const digits = (phone ?? "").trim().startsWith("+") ? (phone ?? "").replace(/\D/g, "") : "";
+  const whatsappHref = created ? `https://wa.me/${digits}?text=${encodeURIComponent(created.whatsappText)}` : "#";
+  if (!data) return null;
+
+  return (
+    <>
+      {mode === "link" && (
+        <>
+          <DialogHeader><DialogTitle>{x.linkTitle}</DialogTitle></DialogHeader>
+          {!created ? (
+            <div className="space-y-3 text-sm">
+              <label className="block text-xs font-semibold">{x.language}
+                <select value={linkLang} onChange={(event) => setLinkLang(event.target.value as LangCode)} className="mt-1 h-10 w-full rounded-xl border bg-white px-3 text-sm">
+                  {LANGS.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}
+                </select>
+              </label>
+              <fieldset className="space-y-2">
+                <label className={`flex items-center gap-2 ${data.hasEmail ? "" : "opacity-50"}`}><input type="radio" name="channel" checked={channel === "email"} disabled={!data.hasEmail} onChange={() => setChannel("email")} />{data.hasEmail ? x.chEmail(data.email) : x.chNoEmail}</label>
+                <label className="flex items-center gap-2"><input type="radio" name="channel" checked={channel === "whatsapp"} onChange={() => setChannel("whatsapp")} />{x.chWhatsapp}</label>
+                <label className="flex items-center gap-2"><input type="radio" name="channel" checked={channel === "link"} onChange={() => setChannel("link")} />{x.chCopy}</label>
+              </fieldset>
+              <p className="text-xs text-muted-foreground">{x.linkValid}</p>
+              {!data.hasEmail && <p className="text-xs text-amber-800">{x.weak}</p>}
+              {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+              <Button className="w-full rounded-full" disabled={busy} onClick={createLink}>{busy ? x.saving : x.create}</Button>
+            </div>
+          ) : (
+            <div className="space-y-3 text-sm">
+              {channel === "email" && <p role="status" className={created.emailSent ? "text-emerald-700" : "text-destructive"}>{created.emailSent ? x.emailSent : (created.emailError || x.emailFailed)}</p>}
+              <Input readOnly value={created.url} dir="ltr" aria-label={x.copyLink} onFocus={(event) => event.currentTarget.select()} />
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" className="rounded-xl" onClick={() => copy(created.url)}><Copy className="w-4 h-4 me-1.5" />{copied ? x.copied : x.copyLink}</Button>
+                {channel === "whatsapp" && <Button asChild className="rounded-xl"><a href={whatsappHref} target="_blank" rel="noreferrer">{x.openWhatsapp}</a></Button>}
+              </div>
+              <p className="text-xs text-muted-foreground">{patientName} · {x.linkValid}</p>
+              <Button variant="ghost" className="w-full" onClick={onDone}>{x.close}</Button>
+            </div>
+          )}
+        </>
+      )}
+      {mode === "doc" && (
+        <>
+          <DialogHeader><DialogTitle>{x.docTitle}</DialogTitle></DialogHeader>
+          <div className="space-y-3 text-sm">
+            <label className="block text-xs font-semibold">{x.docLabel}
+              <Input value={docLabel} maxLength={120} onChange={(event) => setDocLabel(event.target.value)} className="mt-1 rounded-xl" />
+            </label>
+            <label className="block text-xs font-semibold">{x.docFile}
+              <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" data-testid="consent-doc-file" className="mt-1 block w-full text-sm"
+                onChange={(event) => setDocFile(event.target.files?.[0] ?? null)} />
+            </label>
+            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+            <Button className="w-full rounded-full" disabled={busy || !docFile} onClick={saveDocument}>{busy ? x.saving : x.docSave}</Button>
+          </div>
+        </>
+      )}
+      {mode === "tablet" && (
+        <>
+          <DialogHeader><DialogTitle>{x.tabTitle}</DialogTitle></DialogHeader>
+          <div className="space-y-3 text-sm">
+            <select aria-label={x.language} value={tabLang} onChange={(event) => setTabLang(event.target.value as LangCode)} className="h-10 w-full rounded-xl border bg-white px-3 text-sm">
+              {LANGS.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}
+            </select>
+            {text && (
+              <div data-testid="tablet-text" dir={tabLang === "ar" ? "rtl" : "ltr"}>
+                <ConsentDocument lang={tabLang} clinicName={text.clinicName} clinicLogo={text.clinicLogo} patientName={text.patientName || patientName}
+                  title={text.title} intro={text.intro} points={text.points}>
+                  <label className="flex items-start gap-3 rounded-2xl border p-3 cursor-pointer">
+                    <Checkbox checked={accepted} onCheckedChange={(value) => setAccepted(value === true)} aria-label={text.checkbox} />
+                    <span className="text-sm font-semibold">{text.checkbox}</span>
+                  </label>
+                  <SignaturePad label={x.tabSign} clear={x.tabClear} onChange={setSignature} />
+                </ConsentDocument>
+              </div>
+            )}
+            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+            <Button className="w-full rounded-full" disabled={busy || !text} onClick={saveTablet}>{busy ? x.saving : x.tabSave}</Button>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+// «Autorización para fotografías»: la clínica deja constancia de que el paciente autoriza las fotos clínicas,
+// por enlace (con código al correo), con el documento firmado o con firma en pantalla.
+export function PhotoConsentCard({ leadId, patientName, phone }: { leadId: string; patientName: string; phone?: string }) {
+  const { lang: appLang } = useLanguage();
+  const x = PHOTO_CONSENT_UI[appLang];
+  const queryClient = useQueryClient();
+  const key = ["/api/leads", leadId, "photo-consent"];
+  const base = `/api/leads/${encodeURIComponent(leadId)}/photo-consent`;
+  const [dialog, setDialog] = useState<null | ConsentMode>(null);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const { data, isError } = useQuery({
+    queryKey: key,
+    queryFn: async () => {
+      const response = await fetch(base, { credentials: "include" });
+      if (!response.ok) throw new Error();
+      return (await response.json()) as Overview;
+    },
+  });
+  const refresh = () => void queryClient.invalidateQueries({ queryKey: key });
+  const dateOf = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString(appLang, { dateStyle: "medium" }) : "");
 
   const revoke = async (id: string) => {
     const note = window.prompt(x.revokeNote) ?? null;
@@ -177,7 +282,6 @@ export function PhotoConsentCard({ leadId, patientName }: { leadId: string; pati
   const label = !current ? x.none : current.status === "granted" ? x.granted : current.status === "pending" ? x.pending : current.status === "declined" ? x.rejected : x.revoked;
   const tone = current?.status === "granted" ? "border-emerald-200 bg-emerald-50/60" : "border-amber-200 bg-amber-50/60";
   const fileUrl = (id: string) => `${base}/${encodeURIComponent(id)}/file`;
-  const whatsappHref = created ? `https://wa.me/?text=${encodeURIComponent(created.whatsappText)}` : "#";
 
   return (
     <section className={`mx-5 md:mx-8 my-3 rounded-2xl border p-4 text-sm space-y-3 ${tone}`} data-testid="photo-consent">
@@ -211,82 +315,9 @@ export function PhotoConsentCard({ leadId, patientName }: { leadId: string; pati
         </ul>
       )}
 
-      <Dialog open={dialog !== null} onOpenChange={(open) => { if (!open) closeDialog(); }}>
+      <Dialog open={dialog !== null} onOpenChange={(open) => { if (!open) setDialog(null); }}>
         <DialogContent className="rounded-3xl max-w-lg max-h-[90vh] overflow-y-auto">
-          {dialog === "link" && (
-            <>
-              <DialogHeader><DialogTitle>{x.linkTitle}</DialogTitle></DialogHeader>
-              {!created ? (
-                <div className="space-y-3 text-sm">
-                  <label className="block text-xs font-semibold">{x.language}
-                    <select value={linkLang} onChange={(event) => setLinkLang(event.target.value as LangCode)} className="mt-1 h-10 w-full rounded-xl border bg-white px-3 text-sm">
-                      {LANGS.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}
-                    </select>
-                  </label>
-                  <fieldset className="space-y-2">
-                    <label className={`flex items-center gap-2 ${data.hasEmail ? "" : "opacity-50"}`}><input type="radio" name="channel" checked={channel === "email"} disabled={!data.hasEmail} onChange={() => setChannel("email")} />{data.hasEmail ? x.chEmail(data.email) : x.chNoEmail}</label>
-                    <label className="flex items-center gap-2"><input type="radio" name="channel" checked={channel === "whatsapp"} onChange={() => setChannel("whatsapp")} />{x.chWhatsapp}</label>
-                    <label className="flex items-center gap-2"><input type="radio" name="channel" checked={channel === "link"} onChange={() => setChannel("link")} />{x.chCopy}</label>
-                  </fieldset>
-                  <p className="text-xs text-muted-foreground">{x.linkValid}</p>
-                  {!data.hasEmail && <p className="text-xs text-amber-800">{x.weak}</p>}
-                  {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-                  <Button className="w-full rounded-full" disabled={busy} onClick={createLink}>{busy ? x.saving : x.create}</Button>
-                </div>
-              ) : (
-                <div className="space-y-3 text-sm">
-                  {channel === "email" && <p role="status" className={created.emailSent ? "text-emerald-700" : "text-destructive"}>{created.emailSent ? x.emailSent : (created.emailError || x.emailFailed)}</p>}
-                  <Input readOnly value={created.url} dir="ltr" aria-label={x.copyLink} onFocus={(event) => event.currentTarget.select()} />
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" className="rounded-xl" onClick={() => copy(created.url)}><Copy className="w-4 h-4 me-1.5" />{copied ? x.copied : x.copyLink}</Button>
-                    {channel === "whatsapp" && <Button asChild className="rounded-xl"><a href={whatsappHref} target="_blank" rel="noreferrer">{x.openWhatsapp}</a></Button>}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{patientName} · {x.linkValid}</p>
-                  <Button variant="ghost" className="w-full" onClick={closeDialog}>{x.close}</Button>
-                </div>
-              )}
-            </>
-          )}
-          {dialog === "doc" && (
-            <>
-              <DialogHeader><DialogTitle>{x.docTitle}</DialogTitle></DialogHeader>
-              <div className="space-y-3 text-sm">
-                <label className="block text-xs font-semibold">{x.docLabel}
-                  <Input value={docLabel} maxLength={120} onChange={(event) => setDocLabel(event.target.value)} className="mt-1 rounded-xl" />
-                </label>
-                <label className="block text-xs font-semibold">{x.docFile}
-                  <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" data-testid="consent-doc-file" className="mt-1 block w-full text-sm"
-                    onChange={(event) => setDocFile(event.target.files?.[0] ?? null)} />
-                </label>
-                {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-                <Button className="w-full rounded-full" disabled={busy || !docFile} onClick={saveDocument}>{busy ? x.saving : x.docSave}</Button>
-              </div>
-            </>
-          )}
-          {dialog === "tablet" && (
-            <>
-              <DialogHeader><DialogTitle>{x.tabTitle}</DialogTitle></DialogHeader>
-              <div className="space-y-3 text-sm" dir={tabLang === "ar" ? "rtl" : "ltr"}>
-                <select aria-label={x.language} value={tabLang} onChange={(event) => setTabLang(event.target.value as LangCode)} className="h-10 w-full rounded-xl border bg-white px-3 text-sm">
-                  {LANGS.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}
-                </select>
-                {text && (
-                  <div className="space-y-2" data-testid="tablet-text">
-                    <p className="font-bold">{text.title}</p>
-                    <p className="text-xs text-muted-foreground">{text.intro}</p>
-                    <ul className="space-y-1.5 text-xs">{text.points.map((point) => <li key={point} className="rounded-lg bg-muted/60 p-2">{point}</li>)}</ul>
-                    <label className="flex items-start gap-2 rounded-xl border p-2 cursor-pointer">
-                      <Checkbox checked={accepted} onCheckedChange={(value) => setAccepted(value === true)} aria-label={text.checkbox} />
-                      <span className="text-xs font-semibold">{text.checkbox}</span>
-                    </label>
-                  </div>
-                )}
-                <SignaturePad label={x.tabSign} clear={x.tabClear} onChange={setSignature} />
-                {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-                <Button className="w-full rounded-full" disabled={busy || !text} onClick={saveTablet}>{busy ? x.saving : x.tabSave}</Button>
-              </div>
-            </>
-          )}
+          {dialog && <PhotoConsentFlow key={dialog} leadId={leadId} patientName={patientName} phone={phone} mode={dialog} onDone={() => setDialog(null)} />}
         </DialogContent>
       </Dialog>
     </section>

@@ -79,7 +79,7 @@ router.get("/leads/:id/photo-consent/text", async (req, res): Promise<void> => {
   const language = toMailLanguage(req.query.lang || lead.language);
   const text = photoConsentText(language);
   const identity = await clinicIdentity(lead.centerId);
-  res.json({ language, version: PHOTO_CONSENT_VERSION, title: text.title, intro: text.intro(identity.name), points: text.points, checkbox: text.checkbox });
+  res.json({ language, version: PHOTO_CONSENT_VERSION, clinicName: identity.name, clinicLogo: identity.logoDataUrl, patientName: lead.name, title: text.title, intro: text.intro(identity.name), points: text.points, checkbox: text.checkbox });
 });
 
 router.post("/leads/:id/photo-consent/request", async (req, res): Promise<void> => {

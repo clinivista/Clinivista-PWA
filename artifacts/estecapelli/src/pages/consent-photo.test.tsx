@@ -8,7 +8,7 @@ import ConsentPhoto from "./consent-photo";
 afterEach(() => { vi.restoreAllMocks(); });
 const open = (over: Record<string, unknown> = {}) => ({
   state: "open", clinicName: "Clínica Uno", language: "es", title: "Autorización para fotografías clínicas", intro: "Clínica Uno tomará fotografías tuyas.",
-  points: ["Para qué: evaluar tu caso.", "Quién las ve: el equipo."], checkbox: "He leído esta autorización y acepto.", requiresCode: true, maskedEmail: "pa••@correo.cl", ...over,
+  clinicLogo: "data:image/png;base64,AAAA", patientName: "Paciente Uno", points: ["Para qué: evaluar tu caso.", "Quién las ve: el equipo."], checkbox: "He leído esta autorización y acepto.", requiresCode: true, maskedEmail: "pa••@correo.cl", ...over,
 });
 
 describe("Página de autorización del paciente", () => {
@@ -23,6 +23,8 @@ describe("Página de autorización del paciente", () => {
     render(<ConsentPhoto />);
     expect(await screen.findByText("Autorización para fotografías clínicas")).toBeInTheDocument();
     expect(screen.getByText(/Quién las ve/)).toBeInTheDocument();
+    expect(screen.getByTestId("consent-clinic-name")).toHaveTextContent("Clínica Uno");
+    expect(screen.getByTestId("consent-clinic-logo")).toHaveAttribute("src", "data:image/png;base64,AAAA");
     const confirm = screen.getByRole("button", { name: "Confirmar y autorizar" });
     expect(confirm).toBeDisabled();
     await user.click(screen.getByRole("checkbox"));
