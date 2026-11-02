@@ -426,6 +426,8 @@ describe("Full patient form flow — end to end", () => {
     expect(
       screen.queryByText("¡Tu evaluación fue recibida!"),
     ).not.toBeInTheDocument();
+    expect(screen.getByText(/Tu evaluación ya fue enviada/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Entrar a mi cuenta/i })).toHaveAttribute("href", "/paciente");
 
     // The public creation endpoint was attempted once and no image upload occurred.
     expect(fetchSpy).toHaveBeenCalledWith(
