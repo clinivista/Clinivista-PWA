@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { PhotoConsentFlow } from "@/components/photo-consent-card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/lib/language";
@@ -13,6 +14,7 @@ import { STAFF_FLOW_TEXT } from "@/lib/staff-flow-i18n";
 import { CONSULT_TEXT } from "@/lib/consult-types-i18n";
 import { selectableTypes, useConsultTypes } from "@/lib/consult-types";
 
+type PhotoWay = "none" | "email" | "whatsapp" | "tablet";
 const EMPTY = { name: "", documentId: "", phone: "", email: "", city: "" };
 
 /** El personal (médico o administrativo) registra a un paciente que atiende en la clínica. */
@@ -32,6 +34,8 @@ export function AddPatientDialog({ open, onOpenChange, onCreated }: {
   const [form, setForm] = useState(EMPTY);
   const [consent, setConsent] = useState(false);
   const [sendPortal, setSendPortal] = useState(false);
+  const [photoWay, setPhotoWay] = useState<PhotoWay>("none");
+  const [next, setNext] = useState<null | { leadId: string; way: Exclude<PhotoWay, "none">; name: string; phone: string }>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [duplicateId, setDuplicateId] = useState<string | null>(null);
@@ -61,10 +65,18 @@ export function AddPatientDialog({ open, onOpenChange, onCreated }: {
       toast({ title: s.created, description: s.createdDesc });
       await refreshLeadViews(queryClient);
       queryClient.invalidateQueries({ queryKey: ["/api/leads/stats"] });
+      const saved = form;
       setForm(EMPTY);
       setConsultTypeId("");
       setConsent(false);
       setSendPortal(false);
+      if (photoWay !== "none" && (photoWay !== "email" || saved.email.trim())) {
+        // Segundo paso: el paciente ya está guardado; se pide la autorización con la vía elegida.
+        setNext({ leadId: body.lead.id, way: photoWay, name: saved.name.trim(), phone: saved.phone.trim() });
+        setPhotoWay("none");
+        return;
+      }
+      setPhotoWay("none");
       onOpenChange(false);
       onCreated(body.lead.id);
     } catch {
@@ -73,6 +85,33 @@ export function AddPatientDialog({ open, onOpenChange, onCreated }: {
       setBusy(false);
     }
   };
+
+  const finishNext = () => {
+    const id = next?.leadId;
+    setNext(null);
+    onOpenChange(false);
+    if (id) onCreated(id);
+  };
+  const ways: { id: PhotoWay; label: string; disabled?: boolean }[] = [
+    { id: "none", label: s.photoNone },
+    { id: "email", label: form.email.trim() ? s.photoEmail : s.photoEmailMissing, disabled: !form.email.trim() },
+    { id: "whatsapp", label: s.photoWhatsapp },
+    { id: "tablet", label: s.photoTablet },
+  ];
+
+  if (next) {
+    return (
+      <Dialog open={open} onOpenChange={(value) => { if (!value) finishNext(); }}>
+        <DialogContent className="rounded-3xl max-w-lg max-h-[92dvh] overflow-y-auto" data-testid="add-patient-photo-step">
+          <p className="text-sm text-muted-foreground">{s.photoStep}</p>
+          <PhotoConsentFlow leadId={next.leadId} patientName={next.name} phone={next.phone}
+            mode={next.way === "tablet" ? "tablet" : "link"} initialChannel={next.way === "tablet" ? undefined : next.way}
+            autoStart={next.way === "email"} onDone={finishNext} />
+          <Button type="button" variant="ghost" className="rounded-full" onClick={finishNext}>{s.photoNone}</Button>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!busy) onOpenChange(next); }}>
@@ -122,6 +161,16 @@ export function AddPatientDialog({ open, onOpenChange, onCreated }: {
               <span className="block text-xs text-muted-foreground mt-1">{s.consentHelp}</span>
             </label>
           </div>
+          <fieldset className="space-y-2 rounded-2xl border border-[#E8E4DE] p-3" data-testid="add-photo-way">
+            <legend className="px-1 text-sm font-semibold">{s.photoAuth}</legend>
+            <p className="text-xs text-muted-foreground">{s.photoAuthHelp}</p>
+            {ways.map((way) => (
+              <label key={way.id} className={`flex items-center gap-2 text-sm ${way.disabled ? "opacity-50" : ""}`}>
+                <input type="radio" name="photo-way" value={way.id} checked={photoWay === way.id} disabled={way.disabled} onChange={() => setPhotoWay(way.id)} />
+                {way.label}
+              </label>
+            ))}
+          </fieldset>
           {error && (
             <p role="alert" className="text-sm text-destructive">
               {error}{" "}

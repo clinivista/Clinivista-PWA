@@ -93,7 +93,7 @@ async function byToken(token: string) {
 export type PublicConsentView =
   | { state: "invalid" }
   | { state: "done"; status: string; grantedAt: Date | null }
-  | { state: "open"; clinicName: string; patientName: string; language: string; title: string; intro: string; points: string[]; checkbox: string; requiresCode: boolean; maskedEmail: string | null };
+  | { state: "open"; clinicName: string; clinicLogo: string | null; patientName: string; language: string; title: string; intro: string; points: string[]; checkbox: string; requiresCode: boolean; maskedEmail: string | null };
 
 export async function viewByToken(token: string, language?: string): Promise<PublicConsentView> {
   const found = await byToken(token);
@@ -106,7 +106,7 @@ export async function viewByToken(token: string, language?: string): Promise<Pub
   const text = photoConsentText(chosen);
   const hasEmail = EMAIL.test((lead.email ?? "").trim());
   return {
-    state: "open", clinicName: identity.name, patientName: lead.name, language: chosen, title: text.title, intro: text.intro(identity.name),
+    state: "open", clinicName: identity.name, clinicLogo: identity.logoDataUrl, patientName: lead.name, language: chosen, title: text.title, intro: text.intro(identity.name),
     points: text.points, checkbox: text.checkbox, requiresCode: hasEmail, maskedEmail: hasEmail ? maskEmail(lead.email!.trim()) : null,
   };
 }

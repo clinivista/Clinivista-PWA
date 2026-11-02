@@ -71,6 +71,8 @@ describe("autorización por enlace", () => {
 
     const view = await request(app).get(`/api/consents/photo/${token}`);
     expect(view.body).toMatchObject({ state: "open", clinicName: "Clínica Uno", requiresCode: true });
+    expect(view.body).toHaveProperty("clinicLogo");
+    expect(view.body.patientName).toBeTruthy();
     expect(view.body.points.length).toBeGreaterThanOrEqual(5);
     expect(view.body.maskedEmail).toMatch(/^pa•+@correo\.cl$/);
 

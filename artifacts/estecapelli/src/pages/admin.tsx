@@ -693,7 +693,7 @@ export default function Admin() {
 
                   <ConsultationsStrip leadId={fullLead.id} onOpen={(id) => setSelectedLeadId(id)} />
                   <PatientUpdatesCard leadId={fullLead.id} />
-                  <PhotoConsentCard leadId={fullLead.id} patientName={fullLead.name || ""} />
+                  <PhotoConsentCard leadId={fullLead.id} patientName={fullLead.name || ""} phone={fullLead.phone || ""} />
 
                   <div className="shrink-0 px-5 md:px-8 py-2 bg-card border-b border-border flex justify-end">
                     <Button

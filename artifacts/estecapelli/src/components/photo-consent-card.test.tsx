@@ -43,12 +43,12 @@ describe("Autorización para fotografías (clínica)", () => {
   });
 
   it("sin correo el canal por defecto es WhatsApp y avisa que la evidencia es más débil", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify(overview({ hasEmail: false, email: "" })), { status: 200 }));
+    vi.spyOn(globalThis, "fetch").mockImplementation(async () => new Response(JSON.stringify(overview({ hasEmail: false, email: "" })), { status: 200 }));
     localStorage.setItem("clinivista_lang", "es");
     const user = userEvent.setup();
     wrap();
     await user.click(await screen.findByRole("button", { name: /Enviar enlace/ }));
-    expect(screen.getByLabelText("Enviar por WhatsApp")).toBeChecked();
+    expect(await screen.findByLabelText("Enviar por WhatsApp")).toBeChecked();
     expect(screen.getByLabelText(/no tiene correo/)).toBeDisabled();
     expect(screen.getByText(/evidencia es más débil/)).toBeInTheDocument();
   });
@@ -75,7 +75,7 @@ describe("Autorización para fotografías (clínica)", () => {
   it("tableta: pide la aceptación y la firma antes de registrar", async () => {
     vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url = String(input);
-      if (url.includes("/photo-consent/text")) return new Response(JSON.stringify({ language: "es", title: "Autorización para fotografías clínicas", intro: "Clínica Uno tomará fotografías", points: ["a", "b"], checkbox: "He leído esta autorización" }), { status: 200 });
+      if (url.includes("/photo-consent/text")) return new Response(JSON.stringify({ language: "es", clinicName: "Clínica Uno", clinicLogo: "data:image/png;base64,AAAA", patientName: "Paciente Uno", title: "Autorización para fotografías clínicas", intro: "Clínica Uno tomará fotografías", points: ["a", "b"], checkbox: "He leído esta autorización" }), { status: 200 });
       return new Response(JSON.stringify(overview()), { status: 200 });
     });
     localStorage.setItem("clinivista_lang", "es");

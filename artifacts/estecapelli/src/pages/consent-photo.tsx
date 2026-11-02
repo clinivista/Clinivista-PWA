@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "wouter";
 import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
+import { ConsentDocument } from "@/components/consent-document";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import { PHOTO_CONSENT_UI } from "@/lib/photo-consent-i18n";
 type View =
   | { state: "invalid" }
   | { state: "done"; status: "granted" | "declined"; grantedAt: string | null }
-  | { state: "open"; clinicName: string; language: LangCode; title: string; intro: string; points: string[]; checkbox: string; requiresCode: boolean; maskedEmail: string | null };
+  | { state: "open"; clinicName: string; clinicLogo?: string | null; patientName?: string; language: LangCode; title: string; intro: string; points: string[]; checkbox: string; requiresCode: boolean; maskedEmail: string | null };
 
 // Página pública a la que llega el paciente desde el enlace que le envió la clínica: lee la autorización,
 // confirma con un código que llega a su correo (si lo tiene) y acepta o la rechaza. No necesita cuenta.
@@ -75,15 +76,15 @@ export default function ConsentPhoto() {
   return (
     <div className="min-h-[100dvh] cv-page px-4 py-8" dir={dir}>
       <div className="mx-auto max-w-xl space-y-5">
-        <div className="flex items-center justify-between gap-3">
-          <BrandLogo className="h-10" />
-          {view?.state === "open" && (
+        {view?.state === "open" && (
+          <div className="flex justify-end">
             <select aria-label={ui.language} value={lang} className="h-10 rounded-xl border bg-white px-3 text-sm"
               onChange={(event) => { setLang(event.target.value as LangCode); void load(event.target.value); }}>
               {LANGS.map((item) => <option key={item.code} value={item.code}>{item.flag} {item.name}</option>)}
             </select>
-          )}
-        </div>
+          </div>
+        )}
+        {view?.state !== "open" && <div className="flex justify-center"><BrandLogo className="h-10" /></div>}
 
         {!view && <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" aria-label={ui.loading} /></div>}
         {view?.state === "invalid" && <p role="alert" className="rounded-2xl bg-white p-6 text-sm text-muted-foreground">{ui.invalid}</p>}
@@ -99,17 +100,8 @@ export default function ConsentPhoto() {
         )}
 
         {view?.state === "open" && !finished && (
-          <div className="rounded-3xl bg-white p-6 md:p-8 shadow-sm space-y-5">
-            <div className="flex items-start gap-3">
-              <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0"><ShieldCheck className="w-5 h-5 text-primary" /></div>
-              <div>
-                <h1 className="text-xl font-extrabold text-foreground">{view.title}</h1>
-                <p className="text-sm text-muted-foreground mt-1">{view.intro}</p>
-              </div>
-            </div>
-            <ul className="space-y-3 text-sm leading-relaxed">
-              {view.points.map((point) => <li key={point} className="rounded-2xl bg-[#F5F2EE] p-3">{point}</li>)}
-            </ul>
+          <ConsentDocument lang={(lang || view.language) as LangCode} clinicName={view.clinicName} clinicLogo={view.clinicLogo} patientName={view.patientName}
+            title={view.title} intro={view.intro} points={view.points}>
             <label className="flex items-start gap-3 rounded-2xl border p-3 cursor-pointer">
               <Checkbox checked={agreed} onCheckedChange={(value) => setAgreed(value === true)} aria-label={view.checkbox} />
               <span className="text-sm font-semibold">{view.checkbox}</span>
@@ -141,8 +133,9 @@ export default function ConsentPhoto() {
               </Button>
               <Button type="button" variant="ghost" className="rounded-full text-muted-foreground" disabled={busy} onClick={decline}>{ui.decline}</Button>
             </div>
-          </div>
+          </ConsentDocument>
         )}
+        {view?.state === "open" && <div className="flex justify-center pt-2 opacity-80"><BrandLogo className="h-7" variant="logo-sin-lema" /></div>}
       </div>
     </div>
   );
