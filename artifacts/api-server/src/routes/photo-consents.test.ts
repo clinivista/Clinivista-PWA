@@ -26,6 +26,7 @@ import * as mockedDb from "@workspace/db";
 import photoConsentsRouter from "./photo-consents";
 import dataRightsRouter from "./data-rights";
 import leadsRouter from "./leads";
+import staffPatientsRouter from "./staff-patients";
 import { createSession } from "../lib/sessions";
 import { resetThrottleForTests } from "../lib/patient-accounts";
 import { PHOTO_CONSENT_VERSION } from "../lib/photo-consent-text";
@@ -36,6 +37,7 @@ app.use(express.json({ limit: "1mb" }));
 app.use("/api", photoConsentsRouter);
 app.use("/api", dataRightsRouter);
 app.use("/api", leadsRouter);
+app.use("/api", staffPatientsRouter);
 
 const asA = () => `clinivista_session=${createSession({ userId: "user-a", centerId: "clinic-a", role: "administrativo" })}`;
 const asB = () => `clinivista_session=${createSession({ userId: "user-b", centerId: "clinic-b", role: "administrativo" })}`;
@@ -207,5 +209,45 @@ describe("permisos y datos", () => {
     expect(JSON.stringify(exported.body)).not.toMatch(/objectPath/i);
     expect((await request(app).delete("/api/leads/lead-a").set("Cookie", asA())).status).toBe(200);
     expect(Number((await pglite.query(`SELECT count(*)::int AS n FROM photo_consents`)).rows[0].n)).toBe(0);
+  });
+});
+
+describe("consentimiento al agregar un paciente", () => {
+  const NEW = { name: "Nuevo Paciente", phone: "+56933333333", documentId: "12.345.678-5", email: "nuevo@correo.cl", language: "es" };
+
+  it("sin consentimiento, firma ni envío no se guarda", async () => {
+    expect((await request(app).post("/api/leads").set("Cookie", asA()).send(NEW)).status).toBe(422);
+    expect((await request(app).post("/api/leads").set("Cookie", asA()).send({ ...NEW, consentMode: "tablet", consentAccepted: true })).status).toBe(422);
+  });
+
+  it("firmado en pantalla: guarda la ficha y la firma juntas", async () => {
+    const res = await request(app).post("/api/leads").set("Cookie", asA()).send({ ...NEW, consentMode: "tablet", consentAccepted: true, consentSignature: await signatureDataUrl() });
+    expect(res.status).toBe(201);
+    const rows = (await pglite.query(`SELECT method, status, verified_by FROM photo_consents WHERE lead_id = '${res.body.lead.id}'`)).rows;
+    expect(rows).toEqual([{ method: "tablet", status: "granted", verified_by: "in_clinic" }]);
+    const lead = (await pglite.query(`SELECT consent, consent_recorded_by FROM leads WHERE id = '${res.body.lead.id}'`)).rows[0];
+    expect(lead.consent).toBe(true);
+    expect(lead.consent_recorded_by).toBeTruthy();
+  });
+
+  it("pendiente: queda sin constancia hasta que el paciente acepta el enlace", async () => {
+    const res = await request(app).post("/api/leads").set("Cookie", asA()).send({ ...NEW, consentMode: "pending" });
+    expect(res.status).toBe(201);
+    expect(res.body.consentPending).toBe(true);
+    const id = res.body.lead.id as string;
+    const before = (await pglite.query(`SELECT consent, consent_recorded_at FROM leads WHERE id = '${id}'`)).rows[0];
+    expect(before).toEqual({ consent: false, consent_recorded_at: null });
+    const req = await request(app).post(`/api/leads/${id}/photo-consent/request`).set("Cookie", asA()).send({ channel: "email", language: "es" });
+    const token = tokenOf(req.body.url);
+    await request(app).post(`/api/consents/photo/${token}/code`).send({});
+    await request(app).post(`/api/consents/photo/${token}/accept`).send({ language: "es", code: codeFromMail() });
+    const after = (await pglite.query(`SELECT consent, consent_recorded_by FROM leads WHERE id = '${id}'`)).rows[0];
+    expect(after.consent).toBe(true);
+    expect(after.consent_recorded_by).toMatch(/Autorización del paciente/);
+  });
+
+  it("el texto sin ficha trae el nombre de la clínica", async () => {
+    const res = await request(app).get("/api/clinic/photo-consent-text?lang=en").set("Cookie", asA());
+    expect(res.body).toMatchObject({ language: "en", clinicName: "Clínica Uno" });
   });
 });

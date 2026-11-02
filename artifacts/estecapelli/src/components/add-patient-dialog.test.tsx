@@ -27,13 +27,13 @@ describe("AddPatientDialog", () => {
     await user.type(screen.getByLabelText(/Teléfono/), "+56911111111");
   }
 
-  it("no deja guardar sin la constancia de consentimiento", async () => {
+  it("no deja guardar sin elegir cómo se da el consentimiento", async () => {
     const user = userEvent.setup();
     render(<AddPatientDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} />);
     await fill(user);
     const save = screen.getByRole("button", { name: "Guardar paciente" });
     expect(save).toBeDisabled();
-    await user.click(screen.getByRole("checkbox", { name: /El paciente dio su consentimiento/ }));
+    await user.click(screen.getByRole("radio", { name: /Ya lo dio/ }));
     expect(save).toBeEnabled();
   });
 
@@ -43,7 +43,7 @@ describe("AddPatientDialog", () => {
     const onCreated = vi.fn();
     render(<AddPatientDialog open onOpenChange={vi.fn()} onCreated={onCreated} />);
     await fill(user);
-    await user.click(screen.getByRole("checkbox", { name: /El paciente dio su consentimiento/ }));
+    await user.click(screen.getByRole("radio", { name: /Ya lo dio/ }));
     await user.click(screen.getByRole("button", { name: "Guardar paciente" }));
     await waitFor(() => expect(onCreated).toHaveBeenCalledWith("nuevo-1"));
     const [url, init] = fetchSpy.mock.calls[0];
@@ -58,41 +58,63 @@ describe("AddPatientDialog", () => {
     const onCreated = vi.fn();
     render(<AddPatientDialog open onOpenChange={vi.fn()} onCreated={onCreated} />);
     await fill(user);
-    await user.click(screen.getByRole("checkbox", { name: /El paciente dio su consentimiento/ }));
+    await user.click(screen.getByRole("radio", { name: /Ya lo dio/ }));
     await user.click(screen.getByRole("button", { name: "Guardar paciente" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Ya existe un paciente");
     await user.click(screen.getByRole("button", { name: "Abrir ficha existente" }));
     expect(onCreated).toHaveBeenCalledWith("viejo-1");
   });
 
-  it("ofrece las vías de autorización de fotografías y deshabilita el correo si falta", async () => {
+  it("exige elegir cómo da el consentimiento y no ofrece «más tarde»", async () => {
     const user = userEvent.setup();
     render(<AddPatientDialog open onOpenChange={vi.fn()} onCreated={vi.fn()} />);
-    const group = screen.getByTestId("add-photo-way");
-    expect(group).toHaveTextContent("Autorización para fotografías");
-    expect(screen.getByRole("radio", { name: /Pedirla más tarde/ })).toBeChecked();
+    expect(screen.getByTestId("add-consent-way")).toHaveTextContent("Consentimiento del paciente (obligatorio)");
+    expect(screen.queryByText(/más tarde/i)).toBeNull();
+    for (const radio of screen.getAllByRole("radio")) expect(radio).not.toBeChecked();
     expect(screen.getByRole("radio", { name: /falta el correo/ })).toBeDisabled();
-    expect(screen.getByRole("radio", { name: "Enviar por WhatsApp" })).toBeEnabled();
-    expect(screen.getByRole("radio", { name: "Firmar en pantalla ahora" })).toBeEnabled();
+    await fill(user);
+    expect(screen.getByRole("button", { name: "Guardar paciente" })).toBeDisabled();
     await user.type(screen.getByLabelText(/Correo/), "p@correo.cl");
-    expect(screen.getByRole("radio", { name: "Enviar por correo" })).toBeEnabled();
+    await user.click(screen.getByRole("radio", { name: "Enviar por WhatsApp" }));
+    expect(screen.getByText(/consentimiento pendiente/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Guardar paciente" })).toBeEnabled();
   });
 
-  it("con «Firmar en pantalla» guarda al paciente y pasa al paso de la firma", async () => {
+  it("con «Firmar en pantalla» muestra el documento de la clínica y guarda con la firma", async () => {
     const user = userEvent.setup();
-    fetchSpy.mockImplementation(async (input) => {
-      const url = String(input);
+    const calls: Array<{ url: string; body?: string }> = [];
+    fetchSpy.mockImplementation(async (input, init) => {
+      const url = String(input); calls.push({ url, body: init?.body as string | undefined });
       if (url === "/api/leads") return new Response(JSON.stringify({ ok: true, lead: { id: "nuevo-9" } }), { status: 201 });
-      return new Response(JSON.stringify({ language: "es", clinicName: "Clínica Uno", clinicLogo: null, patientName: "Paciente De Prueba", title: "Autorización para fotografías clínicas", intro: "i", points: ["a"], checkbox: "He leído" }), { status: 200 });
+      return new Response(JSON.stringify({ language: "es", clinicName: "Clínica Uno", clinicLogo: null, title: "Autorización para fotografías clínicas", intro: "i", points: ["a"], checkbox: "He leído" }), { status: 200 });
     });
     const onCreated = vi.fn();
     render(<AddPatientDialog open onOpenChange={vi.fn()} onCreated={onCreated} />);
     await fill(user);
-    await user.click(screen.getByRole("checkbox", { name: /El paciente dio su consentimiento/ }));
     await user.click(screen.getByRole("radio", { name: "Firmar en pantalla ahora" }));
+    await user.click(screen.getByRole("button", { name: "Continuar a la firma" }));
+    expect(await screen.findByTestId("add-patient-sign-step")).toBeInTheDocument();
+    expect(await screen.findByTestId("consent-clinic-name")).toHaveTextContent("Clínica Uno");
+    expect(calls.some((c) => c.url === "/api/leads")).toBe(false);
+    expect(screen.getByRole("button", { name: "Firmar y guardar paciente" })).toBeDisabled();
+    expect(onCreated).not.toHaveBeenCalled();
+  });
+
+  it("con «Enviar por WhatsApp» guarda con el consentimiento pendiente y pasa al envío", async () => {
+    const user = userEvent.setup();
+    fetchSpy.mockImplementation(async (input) => {
+      if (String(input) === "/api/leads") return new Response(JSON.stringify({ ok: true, consentPending: true, lead: { id: "nuevo-8" } }), { status: 201 });
+      return new Response("{}", { status: 200 });
+    });
+    const onCreated = vi.fn();
+    render(<AddPatientDialog open onOpenChange={vi.fn()} onCreated={onCreated} />);
+    await fill(user);
+    await user.click(screen.getByRole("radio", { name: "Enviar por WhatsApp" }));
     await user.click(screen.getByRole("button", { name: "Guardar paciente" }));
     expect(await screen.findByTestId("add-patient-photo-step")).toBeInTheDocument();
-    expect(await screen.findByTestId("consent-clinic-name")).toHaveTextContent("Clínica Uno");
+    const sent = JSON.parse(String((fetchSpy.mock.calls[0][1] as RequestInit).body));
+    expect(sent).toMatchObject({ consentMode: "pending" });
+    expect(sent.consentConfirmed).toBeUndefined();
     expect(onCreated).not.toHaveBeenCalled();
   });
 
@@ -112,7 +134,7 @@ describe("AddPatientDialog", () => {
     expect(Array.from(select.options).map((o) => o.text)).toEqual(["Consulta general", "Acné"]);
     await fill(user);
     await user.selectOptions(select, "c-acne");
-    await user.click(screen.getByRole("checkbox", { name: /El paciente dio su consentimiento/ }));
+    await user.click(screen.getByRole("radio", { name: /Ya lo dio/ }));
     await user.click(screen.getByRole("button", { name: "Guardar paciente" }));
     await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
     expect(JSON.parse(String((fetchSpy.mock.calls[0][1] as RequestInit).body))).toMatchObject({ consultTypeId: "c-acne" });

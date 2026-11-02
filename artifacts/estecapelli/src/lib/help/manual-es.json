@@ -786,7 +786,7 @@
     },
     {
      "t": "p",
-     "text": "Debes marcar que el paciente dio su consentimiento (en persona o por escrito): queda registrado quién lo confirmó y cuándo, y sin esa casilla no se puede guardar. Si quieres, marca también «Enviar al paciente por correo el acceso a su portal»."
+     "text": "Elige cómo da su consentimiento el paciente; sin elegir una opción no se puede guardar. «Ya lo dio, en persona o por escrito» deja constancia de quién lo confirmó y cuándo. «Firmar en pantalla ahora» muestra el documento con el nombre y el logo de tu clínica: el paciente lo lee, marca la casilla y firma con el dedo antes de guardar la ficha. «Enviar por correo» o «Enviar por WhatsApp» guarda la ficha con el consentimiento pendiente y le envía el enlace; queda registrado cuando el paciente lo acepta. Si quieres, marca también «Enviar al paciente por correo el acceso a su portal»."
     },
     {
      "t": "p",

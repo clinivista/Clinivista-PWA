@@ -786,7 +786,7 @@
     },
     {
      "t": "p",
-     "text": "Hastanın onayını (yüz yüze veya yazılı) verdiğini işaretlemelisin: kimin ve ne zaman onayladığı kaydedilir, bu kutu olmadan kaydedilemez. İstersen «Hastaya portal erişimini e-postayla gönder» kutusunu da işaretle."
+     "text": "Hastanın onayı nasıl vereceğini seç; seçim yapmadan kaydedilemez. «Zaten verdi, yüz yüze veya yazılı olarak» onayı kimin ve ne zaman doğruladığını kaydeder. «Şimdi ekranda imzala» klinik adın ve logonla belgeyi gösterir: hasta okur, kutuyu işaretler ve dosya kaydedilmeden önce parmağıyla imzalar. «E-posta ile gönder» veya «WhatsApp ile gönder» dosyayı onay beklemede olarak kaydeder ve hastaya bağlantıyı yollar; hasta kabul ettiğinde kaydedilir. İstersen «Hastaya portal erişimini e-postayla gönder» kutusunu da işaretle."
     },
     {
      "t": "p",

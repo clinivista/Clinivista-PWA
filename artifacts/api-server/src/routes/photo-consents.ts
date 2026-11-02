@@ -82,6 +82,16 @@ router.get("/leads/:id/photo-consent/text", async (req, res): Promise<void> => {
   res.json({ language, version: PHOTO_CONSENT_VERSION, clinicName: identity.name, clinicLogo: identity.logoDataUrl, patientName: lead.name, title: text.title, intro: text.intro(identity.name), points: text.points, checkbox: text.checkbox });
 });
 
+// El mismo texto antes de que exista la ficha: lo necesita «Agregar paciente» para firmar en pantalla.
+router.get("/clinic/photo-consent-text", async (req, res): Promise<void> => {
+  const staff = requireStaffAuth(req, res);
+  if (!staff) return;
+  const language = toMailLanguage(req.query.lang);
+  const text = photoConsentText(language);
+  const identity = await clinicIdentity(staff.centerId);
+  res.json({ language, version: PHOTO_CONSENT_VERSION, clinicName: identity.name, clinicLogo: identity.logoDataUrl, title: text.title, intro: text.intro(identity.name), points: text.points, checkbox: text.checkbox });
+});
+
 router.post("/leads/:id/photo-consent/request", async (req, res): Promise<void> => {
   const staff = requireStaffAuth(req, res);
   if (!staff) return;

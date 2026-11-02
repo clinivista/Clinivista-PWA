@@ -786,7 +786,7 @@
     },
     {
      "t": "p",
-     "text": "Devi spuntare che il paziente ha dato il consenso (di persona o per iscritto): vengono registrati chi lo ha confermato e quando, e senza questa casella non si può salvare. Se vuoi, seleziona anche «Invia al paziente via e-mail l'accesso al suo portale»."
+     "text": "Scegli come il paziente dà il consenso; senza una scelta non si può salvare. «Già dato, di persona o per iscritto» registra chi lo ha confermato e quando. «Firma sullo schermo ora» mostra il documento con il nome e il logo della tua clinica: il paziente lo legge, spunta la casella e firma con il dito prima del salvataggio. «Invia per e-mail» o «Invia per WhatsApp» salva la scheda con il consenso in sospeso e invia il link al paziente; viene registrato quando il paziente accetta. Se vuoi, seleziona anche «Invia al paziente via e-mail l'accesso al suo portale»."
     },
     {
      "t": "p",

@@ -23,7 +23,7 @@ export function currentConsent(consents: Consent[]): Consent | null {
   return consents.find((item) => item.status === "granted") ?? consents.find((item) => item.status === "pending") ?? consents[0] ?? null;
 }
 
-function SignaturePad({ onChange, label, clear }: { onChange: (dataUrl: string | null) => void; label: string; clear: string }) {
+export function SignaturePad({ onChange, label, clear }: { onChange: (dataUrl: string | null) => void; label: string; clear: string }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
   const touched = useRef(false);

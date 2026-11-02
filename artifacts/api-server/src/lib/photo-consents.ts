@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { db, leadsTable, photoConsentsTable, usersTable, type ConsentFile, type Lead, type PhotoConsent } from "@workspace/db";
 import { clinicIdentity } from "./clinic-identity";
 import { ensureEvaluationForLead } from "./clinical-photos";
@@ -149,6 +149,7 @@ export async function acceptByToken(token: string, input: { language?: string; c
     status: "granted", grantedAt: new Date(), language, textVersion: PHOTO_CONSENT_VERSION, textSnapshot: snapshotOf(language, identity.name),
     verifiedBy: hasEmail ? "email_code" : "link", ip: input.ip.slice(0, 80), userAgent: input.userAgent.slice(0, 300), codeHash: null,
   }).where(eq(photoConsentsTable.id, row.id));
+  await markLeadConsent(lead.id, "Autorización del paciente (enlace)");
   return "granted";
 }
 
@@ -178,12 +179,20 @@ export async function registerDocumentConsent(lead: Lead, userId: string, input:
     id: uid(18), centerId: lead.centerId ?? "default-center", leadId: lead.id, method: "document", status: "granted",
     textVersion: input.label.trim().slice(0, 120), verifiedBy: "document", file, requestedByName: name, registeredByName: name, grantedAt: new Date(),
   }).returning();
+  await markLeadConsent(lead.id, name);
   return row;
 }
 
 // ── Firma en tableta, en la clínica ───────────────────────────────────────
 const PNG_HEADER = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const MAX_SIGNATURE_BYTES = 400 * 1024;
+
+/** Una autorización aceptada también deja constancia del consentimiento de la ficha, si estaba pendiente. */
+async function markLeadConsent(leadId: string, by: string): Promise<void> {
+  await db.update(leadsTable).set({ consent: true, consentRecordedBy: by, consentRecordedAt: new Date() })
+    .where(and(eq(leadsTable.id, leadId), isNull(leadsTable.consentRecordedAt)));
+}
+
 
 export function parseSignature(dataUrl: unknown): Buffer | null {
   if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/png;base64,")) return null;
@@ -201,6 +210,7 @@ export async function registerTabletConsent(lead: Lead, userId: string, input: {
     textVersion: PHOTO_CONSENT_VERSION, textSnapshot: snapshotOf(language, identity.name), verifiedBy: "in_clinic", file,
     requestedByName: name, registeredByName: name, grantedAt: new Date(),
   }).returning();
+  await markLeadConsent(lead.id, name);
   return row;
 }
 
