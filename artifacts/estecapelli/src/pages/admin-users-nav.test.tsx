@@ -190,9 +190,9 @@ describe("Admin — barra superior y menú lateral", () => {
   });
 
   it.each([
-    ["basic", "Plan Básico"],
-    ["unlimited", "Plan Ilimitado"],
-    ["titanium", "Plan Titanium"],
+    ["basic", "Plan Bronce"],
+    ["unlimited", "Plan Plata"],
+    ["titanium", "Plan Oro"],
   ] as const)("«Mi clínica» muestra el plan real de la clínica (%s)", async (plan, label) => {
     me = { ...signedIn("administrativo", true), user: { ...signedIn("administrativo", true).user, plan, features: plan === "titanium" ? ["video"] : [] } };
     renderAdmin();
@@ -203,11 +203,11 @@ describe("Admin — barra superior y menú lateral", () => {
     window.localStorage.setItem("clinivista_lang", "en");
     me = { ...signedIn("administrativo", true), user: { ...signedIn("administrativo", true).user, plan: "unlimited", features: [] } };
     const { unmount } = renderAdmin();
-    expect(await screen.findByTestId("my-clinic-plan")).toHaveTextContent("Plan Unlimited");
+    expect(await screen.findByTestId("my-clinic-plan")).toHaveTextContent("Plan Silver");
     unmount();
     window.localStorage.setItem("clinivista_lang", "ar");
     renderAdmin();
-    expect(await screen.findByTestId("my-clinic-plan")).toHaveTextContent("الباقة غير المحدودة");
+    expect(await screen.findByTestId("my-clinic-plan")).toHaveTextContent("الباقة الفضية");
   });
 
   it("«Mi clínica» muestra el nombre y la especialidad reales; sin plan en la sesión no inventa uno; la tarjeta de ayuda abre los manuales", async () => {

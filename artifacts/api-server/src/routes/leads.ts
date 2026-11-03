@@ -190,7 +190,7 @@ router.get("/leads/:id/photos/:photoId", async (req, res): Promise<void> => {
   }
 });
 
-// Video de una vista (plan Titanium), por tramos. Misma autorización que las
+// Video de una vista (plan Oro), por tramos. Misma autorización que las
 // fotos: personal de la clínica del paciente. Se sigue viendo aunque la clínica baje de plan.
 router.get("/leads/:id/videos/:photoId", async (req, res): Promise<void> => {
   const context = requireStaffAuth(req, res);

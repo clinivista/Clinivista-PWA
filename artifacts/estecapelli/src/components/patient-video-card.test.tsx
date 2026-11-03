@@ -39,11 +39,11 @@ describe("PatientVideoCard", () => {
   });
 
   it("muestra el error del servidor (p. ej. la clínica no tiene el plan)", async () => {
-    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ error: "El video por fotografía está disponible solo en el plan Titanium." }), { status: 403, headers: { "Content-Type": "application/json" } }));
+    fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify({ error: "El video por fotografía está disponible solo en el plan Oro." }), { status: 403, headers: { "Content-Type": "application/json" } }));
     render(<LanguageProvider><PatientVideoCard viewKey="movilidad" title="Movilidad" photoOfLabel="Foto 2 de 5" token="tok-123" saved={null} onSaved={vi.fn()} /></LanguageProvider>);
     fireEvent.click(screen.getByTestId("patient-video-record-movilidad"));
     fireEvent.change(screen.getByTestId("video-file"), { target: { files: [new File([new Uint8Array(300)], "clip.mp4", { type: "video/mp4" })] } });
     fireEvent.click(screen.getByTestId("video-use"));
-    expect(await screen.findByText(/solo en el plan Titanium/)).toBeInTheDocument();
+    expect(await screen.findByText(/solo en el plan Oro/)).toBeInTheDocument();
   });
 });

@@ -1475,11 +1475,11 @@
   {
    "id": "2.18",
    "key": "video",
-   "title": "Video pro Foto (Titanium-Tarif)",
+   "title": "Video pro Foto (Gold-Tarif)",
    "blocks": [
     {
      "t": "p",
-     "text": "Im Titanium-Tarif können Sie unter „Phasen“ bei einer Ansicht „Video“ markieren: Statt eines Fotos wird ein kurzes Video von bis zu 20 Sekunden aufgenommen (zum Beispiel, um eine Bewegung zu sehen). Nicht kombinierbar mit „Dokument“ oder „Messen“. In anderen Tarifen ist das Kästchen mit dem Hinweis „Im Titanium-Tarif verfügbar“ deaktiviert; den Tarif jeder Klinik legt die Supra-Kontrolle fest."
+     "text": "Im Gold-Tarif können Sie unter „Phasen“ bei einer Ansicht „Video“ markieren: Statt eines Fotos wird ein kurzes Video von bis zu 20 Sekunden aufgenommen (zum Beispiel, um eine Bewegung zu sehen). Nicht kombinierbar mit „Dokument“ oder „Messen“. In anderen Tarifen ist das Kästchen mit dem Hinweis „Im Gold-Tarif verfügbar“ deaktiviert; den Tarif jeder Klinik legt die Supra-Kontrolle fest."
     },
     {
      "t": "p",

@@ -1475,11 +1475,11 @@
   {
    "id": "2.18",
    "key": "video",
-   "title": "Vidéo par photo (forfait Titanium)",
+   "title": "Vidéo par photo (forfait Or)",
    "blocks": [
     {
      "t": "p",
-     "text": "Avec le forfait Titanium, dans « Phases », vous pouvez cocher « Vidéo » sur une vue : au lieu d'une photo, une courte vidéo de 20 secondes maximum est enregistrée (par exemple pour voir un mouvement). Elle ne se combine pas avec « Document » ni « Mesurer ». Avec les autres forfaits, la case est désactivée avec la mention « Disponible avec le forfait Titanium » ; le forfait de chaque clinique est fixé par le supra-contrôle."
+     "text": "Avec le forfait Or, dans « Phases », vous pouvez cocher « Vidéo » sur une vue : au lieu d'une photo, une courte vidéo de 20 secondes maximum est enregistrée (par exemple pour voir un mouvement). Elle ne se combine pas avec « Document » ni « Mesurer ». Avec les autres forfaits, la case est désactivée avec la mention « Disponible avec le forfait Or » ; le forfait de chaque clinique est fixé par le supra-contrôle."
     },
     {
      "t": "p",

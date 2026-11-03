@@ -9,7 +9,7 @@ import { uid } from "./helpers";
 import { logger } from "./logger";
 
 const INVITE_TTL_MS = 30 * 24 * 60 * 60_000;
-const PLAN_LABEL: Record<Plan, string> = { basic: "Basic", unlimited: "Unlimited", titanium: "Titanium" };
+const PLAN_LABEL: Record<Plan, string> = { basic: "Bronce", unlimited: "Plata", titanium: "Oro" };
 const sha256 = (value: string) => crypto.createHash("sha256").update(value).digest("hex");
 const dateText = (date: Date) => date.toLocaleDateString("es-CL", { year: "numeric", month: "long", day: "numeric", timeZone: "America/Santiago" });
 

@@ -96,7 +96,7 @@ router.post("/capture/:token/views/:viewId/photo", RAW_IMAGE, async (req, res): 
   }
 });
 
-// The phone records the short video of a view of that phase (Titanium plan).
+// The phone records the short video of a view of that phase (Gold plan).
 // Link, view and plan are checked before the body (up to 25 MB) is read.
 const captureVideoGate = async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
   if (!guard(req, res)) return;

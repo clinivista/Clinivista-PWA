@@ -1475,11 +1475,11 @@
   {
    "id": "2.18",
    "key": "video",
-   "title": "Fotoğraf başına video (Titanium paketi)",
+   "title": "Fotoğraf başına video (Altın paketi)",
    "blocks": [
     {
      "t": "p",
-     "text": "Titanium paketiyle «Aşamalar» bölümünde bir görünüm için «Video»yu işaretleyebilirsiniz: fotoğraf yerine en fazla 20 saniyelik kısa bir video kaydedilir (örneğin bir hareketi görmek için). «Belge» veya «Ölç» ile birlikte kullanılamaz. Diğer paketlerde kutu «Titanium paketinde mevcut» notuyla devre dışıdır; her kliniğin paketini süper kontrol belirler."
+     "text": "Altın paketiyle «Aşamalar» bölümünde bir görünüm için «Video»yu işaretleyebilirsiniz: fotoğraf yerine en fazla 20 saniyelik kısa bir video kaydedilir (örneğin bir hareketi görmek için). «Belge» veya «Ölç» ile birlikte kullanılamaz. Diğer paketlerde kutu «Altın paketinde mevcut» notuyla devre dışıdır; her kliniğin paketini süper kontrol belirler."
     },
     {
      "t": "p",

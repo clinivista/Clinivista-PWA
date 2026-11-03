@@ -1,4 +1,4 @@
-// Grabación y subida de los videos cortos por vista (plan Titanium).
+// Grabación y subida de los videos cortos por vista (plan Oro).
 
 export const MAX_VIDEO_SECONDS = 20;
 export const MAX_VIDEO_BYTES = 25 * 1024 * 1024;

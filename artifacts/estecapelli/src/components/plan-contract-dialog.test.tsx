@@ -38,7 +38,7 @@ describe("Mi plan y contrato", () => {
     stub(contract(), "unlimited");
     dialog("compare");
     const table = await screen.findByTestId("plan-compare");
-    for (const name of ["Ilimitado", "Titanium", "Básico"]) expect(within(table).getByText(new RegExp(name))).toBeInTheDocument();
+    for (const name of ["Plata", "Oro", "Bronce"]) expect(within(table).getByText(new RegExp(name))).toBeInTheDocument();
     expect(within(table).getByText(new RegExp(T.yourPlan))).toBeInTheDocument();
     expect(within(table).getByText(/1[.\u00a0]?000 GB/)).toBeInTheDocument();
     expect(within(table).getAllByText("Sin límite").length).toBeGreaterThanOrEqual(2);

@@ -21,7 +21,7 @@ type View = {
   hoursLog: Array<{ id: string; kind: HoursKind; minutes: number; note: string; createdAt: string }>;
 };
 
-const PLAN_NAMES: Record<PlanId, string> = { basic: "Básico", unlimited: "Ilimitado", titanium: "Titanium" };
+const PLAN_NAMES: Record<PlanId, string> = { basic: "Bronce", unlimited: "Plata", titanium: "Oro" };
 const STAGES: Record<string, string> = {
   sin_registro: "Sin pago registrado", al_dia: "Al día", aviso: "Por vencer", gracia: "En gracia", solo_lectura: "Solo lectura", suspendida: "Suspendida",
 };

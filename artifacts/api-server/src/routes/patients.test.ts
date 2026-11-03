@@ -1329,7 +1329,7 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
     await request(app).get("/api/leads").expect(401);
   });
 
-  describe("video por vista (plan Titanium)", () => {
+  describe("video por vista (plan Oro)", () => {
     // Contenedores mínimos con la cabecera real de cada formato (no son videos reproducibles, pero sí detectables).
     const MP4 = Buffer.concat([Buffer.from([0, 0, 0, 0x18]), Buffer.from("ftypisom", "latin1"), Buffer.alloc(4000, 7)]);
     const WEBM = Buffer.concat([Buffer.from([0x1a, 0x45, 0xdf, 0xa3, 0x9f, 0x42, 0x86, 0x81]), Buffer.from("\x01B\x82\x84webm", "latin1"), Buffer.alloc(2000, 3)]);
@@ -1348,10 +1348,10 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
       return { lead, viewId: view.id };
     }
 
-    it("sin el plan Titanium no se acepta el video (403) y no se guarda nada", async () => {
+    it("sin el plan Oro no se acepta el video (403) y no se guarda nada", async () => {
       const { lead, viewId } = await staffVideoView();
       const res = await staffVideo(lead.id, viewId, MP4).expect(403);
-      expect(res.body.error).toMatch(/Titanium/);
+      expect(res.body.error).toMatch(/Oro/);
       expect(await videoRows()).toEqual([]);
     });
 

@@ -727,7 +727,7 @@ export type LeadPhaseView = {
   document: boolean;
   /** La clínica pidió medir la lesión en esta foto con una moneda de referencia. */
   measure: boolean;
-  /** Esta vista se registra con un video corto (plan Titanium) en vez de una foto. */
+  /** Esta vista se registra con un video corto (plan Oro) en vez de una foto. */
   video: boolean;
   /** Transcripción de la foto actual (solo el personal la ve). */
   transcription: {
@@ -1011,7 +1011,7 @@ export async function saveMeasurement(lead: Lead, photoId: string, actor: { type
   return photoStatus(photo, located.view);
 }
 
-// ── Videos por vista (plan Titanium) ────────────────────────────────────
+// ── Videos por vista (plan Oro) ────────────────────────────────────
 // Se registran en clinical_photos (mismo ciclo de vida: borrador, confirmado,
 // reemplazado, descartado y borrado con los datos del paciente), con un
 // mimeType video/* y sin pasar por el procesamiento de imagen: no hay
