@@ -128,14 +128,14 @@ describe("PhasesPanel", () => {
     expect(sent[0].views[1].measure).toBe(false);
   });
 
-  describe("casilla «Video» (plan Titanium)", () => {
-    it("fuera de Titanium se ve deshabilitada con «Disponible en el plan Titanium»", () => {
+  describe("casilla «Video» (plan Oro)", () => {
+    it("fuera del plan Oro se ve deshabilitada con «Disponible en el plan Oro»", () => {
       api.protocol = { ...protocol(true), plan: "basic", features: [] };
       render(<PhasesPanel />);
       const box = screen.getAllByLabelText("Grabar video: Frontal", { selector: "input" })[0] as HTMLInputElement;
       expect(box).toBeDisabled();
-      expect(box).toHaveAccessibleDescription(/Disponible en el plan Titanium/);
-      expect(screen.getAllByText(/Disponible en el plan Titanium/).length).toBeGreaterThan(0);
+      expect(box).toHaveAccessibleDescription(/Disponible en el plan Oro/);
+      expect(screen.getAllByText(/Disponible en el plan Oro/).length).toBeGreaterThan(0);
     });
 
     it("con Titanium se marca, desmarca documento y medir, y se envía al guardar", async () => {

@@ -170,9 +170,9 @@ describe("Inicio de supra-control", () => {
     wrap(<SupraDashboard onOpenClinic={onOpenClinic} />);
     const cards = await screen.findAllByTestId("supra-recent-clinic");
     expect(cards[0]).toHaveTextContent("Clínica Sur");
-    expect(cards[0]).toHaveTextContent("Capilar · Plan Básico");
+    expect(cards[0]).toHaveTextContent("Capilar · Plan Bronce");
     expect(cards[0]).toHaveTextContent("1 paciente ·");
-    expect(cards[1]).toHaveTextContent("Dermatología · Plan Titanium");
+    expect(cards[1]).toHaveTextContent("Dermatología · Plan Oro");
     expect(cards[1]).toHaveTextContent("2 pacientes");
     expect(cards[1]!.querySelector("img")).toHaveAttribute("src", "data:image/png;base64,AAAA");
     await user.click(cards[1]!);

@@ -1475,11 +1475,11 @@
   {
    "id": "2.18",
    "key": "video",
-   "title": "Video per foto (piano Titanium)",
+   "title": "Video per foto (piano Oro)",
    "blocks": [
     {
      "t": "p",
-     "text": "Con il piano Titanium, in «Fasi» puoi spuntare «Video» su una vista: invece di una foto si registra un breve video fino a 20 secondi (per esempio per vedere un movimento). Non si combina con «Documento» né «Misura». Negli altri piani la casella è disattivata con l'avviso «Disponibile nel piano Titanium»; il piano di ogni clinica lo stabilisce il supra-controllo."
+     "text": "Con il piano Oro, in «Fasi» puoi spuntare «Video» su una vista: invece di una foto si registra un breve video fino a 20 secondi (per esempio per vedere un movimento). Non si combina con «Documento» né «Misura». Negli altri piani la casella è disattivata con l'avviso «Disponibile nel piano Oro»; il piano di ogni clinica lo stabilisce il supra-controllo."
     },
     {
      "t": "p",

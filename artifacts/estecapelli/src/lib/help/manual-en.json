@@ -1475,11 +1475,11 @@
   {
    "id": "2.18",
    "key": "video",
-   "title": "Video per photo (Titanium plan)",
+   "title": "Video per photo (Gold plan)",
    "blocks": [
     {
      "t": "p",
-     "text": "With the Titanium plan, you can tick “Video” on a view in “Phases”: instead of a photo, a short video of up to 20 seconds is recorded (for example, to see a movement). It cannot be combined with “Document” or “Measure”. On other plans the box is disabled with the note “Available on the Titanium plan”; each clinic's plan is set by supra-control."
+     "text": "With the Gold plan, you can tick “Video” on a view in “Phases”: instead of a photo, a short video of up to 20 seconds is recorded (for example, to see a movement). It cannot be combined with “Document” or “Measure”. On other plans the box is disabled with the note “Available on the Gold plan”; each clinic's plan is set by supra-control."
     },
     {
      "t": "p",

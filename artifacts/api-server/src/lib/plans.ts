@@ -94,4 +94,4 @@ export class PlanFeatureError extends Error {
   readonly status = 403 as const;
 }
 
-export const VIDEO_PLAN_MESSAGE = "El video por fotografía está disponible solo en el plan Titanium.";
+export const VIDEO_PLAN_MESSAGE = "El video por fotografía está disponible solo en el plan Oro.";

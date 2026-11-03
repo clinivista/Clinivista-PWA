@@ -71,7 +71,7 @@ router.post("/leads/:id/views/:viewId/photo", RAW_IMAGE, async (req, res): Promi
   }
 });
 
-// Staff record the short video of a view (Titanium plan). The clinic and the
+// Staff record the short video of a view (Gold plan). The clinic and the
 // plan are checked before the body (up to 25 MB) is read.
 const staffVideoGate = async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
   const staff = requireStaffAuth(req, res);

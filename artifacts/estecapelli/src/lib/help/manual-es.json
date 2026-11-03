@@ -1475,11 +1475,11 @@
   {
    "id": "2.18",
    "key": "video",
-   "title": "Video por fotografía (plan Titanium)",
+   "title": "Video por fotografía (plan Oro)",
    "blocks": [
     {
      "t": "p",
-     "text": "Con el plan Titanium, en «Fases» puedes marcar «Video» en una vista: en vez de una foto se graba un video corto de hasta 20 segundos (por ejemplo, para ver un movimiento). No se combina con «Documento» ni «Medir». En otros planes la casilla aparece deshabilitada con el aviso «Disponible en el plan Titanium»; el plan de cada clínica lo fija supra-control."
+     "text": "Con el plan Oro, en «Fases» puedes marcar «Video» en una vista: en vez de una foto se graba un video corto de hasta 20 segundos (por ejemplo, para ver un movimiento). No se combina con «Documento» ni «Medir». En otros planes la casilla aparece deshabilitada con el aviso «Disponible en el plan Oro»; el plan de cada clínica lo fija supra-control."
     },
     {
      "t": "p",

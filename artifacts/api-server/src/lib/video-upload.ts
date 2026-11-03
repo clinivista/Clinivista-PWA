@@ -1,7 +1,7 @@
 import express from "express";
 import { privatePhotoStorage } from "./clinical-photo-storage";
 
-// Videos cortos por vista (plan Titanium). No pasan por el camino de las fotos
+// Videos cortos por vista (plan Oro). No pasan por el camino de las fotos
 // (sharp, derivadas, tope de 10 MB, lectura entera en memoria): tienen su propio
 // tope, su propio límite de subidas simultáneas y se sirven por tramos (Range).
 

@@ -509,7 +509,7 @@ router.post("/patients/:token/photos", express.raw({ type: ["image/jpeg", "image
   }
 });
 
-// ── Video de una vista de la pre-evaluación (plan Titanium) ──────────────
+// ── Video de una vista de la pre-evaluación (plan Oro) ──────────────
 // Antes de recibir los bytes se comprueba el enlace y el plan de la clínica: sin
 // la función «video» no se acepta (403), aunque los videos ya guardados se sigan viendo.
 const patientVideoGate = async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {

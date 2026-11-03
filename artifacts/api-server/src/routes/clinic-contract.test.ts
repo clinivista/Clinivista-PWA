@@ -85,7 +85,7 @@ describe("contrato de servicio", () => {
     expect(view.status).toBe(200);
     expect(view.body).toMatchObject({ enabled: true, plan: "basic", accepted: false, canAccept: true });
     expect(view.body.contract.clauses).toHaveLength(19);
-    expect(view.body.contract.annexTitle).toBe("Anexo: Plan Basic");
+    expect(view.body.contract.annexTitle).toBe("Anexo: Plan Bronce");
     expect(view.body.contract.hash).toBe((await contractForCenter("clinic-a", "basic")).hash);
   });
 
@@ -125,7 +125,7 @@ describe("contrato de servicio", () => {
     await pglite.exec(`UPDATE clinical_centers SET plan = 'titanium' WHERE id = 'clinic-a'`);
     const view = await request(app).get("/api/clinic/contract").set("Cookie", cookie("admin-1", "administrativo"));
     expect(view.body).toMatchObject({ plan: "titanium", accepted: false });
-    expect(view.body.contract.annexTitle).toBe("Anexo: Plan Titanium");
+    expect(view.body.contract.annexTitle).toBe("Anexo: Plan Oro");
     const history = await request(app).get("/api/director/centers/clinic-a/contract").set("Cookie", director());
     expect(history.body.status).toBe("pendiente");
     expect(history.body.history).toHaveLength(1);

@@ -281,7 +281,7 @@ describe("fotografías marcadas para medir", () => {
   });
 });
 
-describe("vistas marcadas como video (plan Titanium)", () => {
+describe("vistas marcadas como video (plan Oro)", () => {
   type VideoInput = Array<{ id?: string; name: string; views: Array<{ id?: string; label: string; video?: boolean; document?: boolean; measure?: boolean }> }>;
   type VideoPhases = Array<{ id: string; name: string; views: Array<{ id: string; label: string; hasPhotos: boolean; document: boolean; measure: boolean; video: boolean }> }>;
   const setPlan = (plan: string) => pglite.exec(`UPDATE clinical_centers SET plan = '${plan}' WHERE id = 'clinic-a';`);
@@ -297,7 +297,7 @@ describe("vistas marcadas como video (plan Titanium)", () => {
     const next = toInput(basic.phases) as VideoInput;
     next[2].views[0].video = true;
     const refused = await put(cookie, next).expect(403);
-    expect(refused.body.error).toMatch(/Titanium/);
+    expect(refused.body.error).toMatch(/Oro/);
     next[2].views[0].video = undefined;
     next[2].views.push({ label: "Movilidad", video: true });
     await put(cookie, next).expect(403);

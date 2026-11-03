@@ -46,7 +46,7 @@ describe("LeadPhases", () => {
     expect(within(locked).queryByRole("button")).not.toBeInTheDocument();
   });
 
-  it("una vista de video se reproduce desde la ruta de video; grabar solo con el plan Titanium", () => {
+  it("una vista de video se reproduce desde la ruta de video; grabar solo con el plan Oro", () => {
     const video = { id: "vid1", mimeType: "video/mp4", durationMs: 12000, measurement: null };
     api.phases = [
       phase("p1", "Pre-evaluación", { patientCaptured: true, enabled: true, complete: true, views: [view("p1-a", "Frontal", "f1")] }),
@@ -57,7 +57,7 @@ describe("LeadPhases", () => {
     expect(within(slot).getByTestId("video-player")).toHaveAttribute("src", "/api/leads/lead-1/videos/vid1");
     expect(within(slot).getByTestId("video-player")).toHaveAttribute("controlslist", expect.stringContaining("nodownload"));
     expect(within(slot).getByTestId("video-player")).toHaveAttribute("preload", "metadata");
-    expect(within(slot).getByTestId("video-plan-note")).toHaveTextContent("Disponible en el plan Titanium");
+    expect(within(slot).getByTestId("video-plan-note")).toHaveTextContent("Disponible en el plan Oro");
     expect(within(slot).queryByTestId("video-record-p2-a")).not.toBeInTheDocument();
     unmount();
 

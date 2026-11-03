@@ -8,7 +8,7 @@ import { COUNTRIES as COUNTRY_NAMES } from "./profiles";
  * «Contratos de servicio Clinivista»; los [PRECIO A DEFINIR] y similares deben cerrarse y
  * pasar por revisión legal antes de activar CONTRACTS_ENABLED=true en Render.
  */
-export const CONTRACT_VERSION = "2026-10-borrador-2";
+export const CONTRACT_VERSION = "2026-11-borrador-3";
 
 export const contractsEnabled = (): boolean => process.env.CONTRACTS_ENABLED === "true";
 
@@ -19,7 +19,7 @@ export type ContractParty = {
 };
 export type ContractText = { title: string; version: string; clauses: ContractClause[]; annexTitle: string; annex: { label: string; value: string }[]; hash: string; missing: string[] };
 
-const PLAN_LABEL: Record<Plan, string> = { basic: "Basic", unlimited: "Unlimited", titanium: "Titanium" };
+const PLAN_LABEL: Record<Plan, string> = { basic: "Bronce", unlimited: "Plata", titanium: "Oro" };
 
 const CLAUSES: ContractClause[] = [
   { title: "1. Objeto", body: "El Proveedor otorga a la Clínica una licencia no exclusiva e intransferible de uso de la Plataforma, con las capacidades del plan contratado descrito en el Anexo." },
@@ -27,9 +27,9 @@ const CLAUSES: ContractClause[] = [
   { title: "3. Contador de uso", body: "La Plataforma muestra a la Clínica, en su panel administrativo, el uso del mes y el saldo de horas. Al llegar al 80% de una cuota se muestra un aviso; al llegar al 100% se informa que el cupo está completo." },
   { title: "4. Efecto de alcanzar una cuota", body: "Con la cuota de pacientes o de almacenamiento completa, la Plataforma no permite crear nuevos pacientes ni subir nuevas fotos o videos hasta el mes siguiente (pacientes), o hasta ampliar el plan o el almacenamiento. Los datos ya almacenados siguen accesibles y no se borran por esta causa." },
   { title: "5. Almacenamiento adicional", body: "La Clínica puede pasar a un tramo de almacenamiento superior. El precio sube por tramo, según la tarifa vigente informada por escrito antes de aplicarla; el cambio rige desde que la Clínica lo acepta." },
-  { title: "6. Horas de servicio", body: "Las horas incluidas en la contratación inicial se destinan a inducción y personalización. Agotadas, las Clínicas con plan Unlimited o Titanium pueden comprar horas adicionales al valor por hora vigente [VALOR HORA A DEFINIR]. El plan Basic no incluye compra de horas. Las horas no usadas [CADUCAN / SE ACUMULAN: A DEFINIR] y se registran en un libro de horas visible para la Clínica." },
-  { title: "7. Mejoras a medida", body: "Solo las Clínicas con plan Titanium pueden solicitar mejoras a medida. Cada una se cotiza por escrito en número de horas antes de iniciarse, con alcance, plazo y entregables; no comienza sin aceptación de la Clínica. Cambios de alcance se cotizan aparte." },
-  { title: "8. Cambio de plan", body: "El aumento de plan (upgrade) rige de inmediato desde la solicitud, y se cobra la diferencia [PRORRATEO A DEFINIR]. La baja de plan (downgrade) rige al término del período pagado, salvo acuerdo distinto. Si al bajar de plan el uso supera los nuevos límites, los datos se conservan, pero no podrán crearse nuevos pacientes ni subirse archivos hasta volver bajo el límite. Al bajar de Titanium se terminan las mejoras a medida no iniciadas; las iniciadas se rigen por su cotización." },
+  { title: "6. Horas de servicio", body: "Las horas incluidas en la contratación inicial se destinan a inducción y personalización. Agotadas, las Clínicas con plan Plata u Oro pueden comprar horas adicionales al valor por hora vigente [VALOR HORA A DEFINIR]. El plan Bronce no incluye compra de horas. Las horas no usadas [CADUCAN / SE ACUMULAN: A DEFINIR] y se registran en un libro de horas visible para la Clínica." },
+  { title: "7. Mejoras a medida", body: "Solo las Clínicas con plan Oro pueden solicitar mejoras a medida. Cada una se cotiza por escrito en número de horas antes de iniciarse, con alcance, plazo y entregables; no comienza sin aceptación de la Clínica. Cambios de alcance se cotizan aparte." },
+  { title: "8. Cambio de plan", body: "El aumento de plan (upgrade) rige de inmediato desde la solicitud, y se cobra la diferencia [PRORRATEO A DEFINIR]. La baja de plan (downgrade) rige al término del período pagado, salvo acuerdo distinto. Si al bajar de plan el uso supera los nuevos límites, los datos se conservan, pero no podrán crearse nuevos pacientes ni subirse archivos hasta volver bajo el límite. Al bajar del plan Oro se terminan las mejoras a medida no iniciadas; las iniciadas se rigen por su cotización." },
   { title: "9. Precio y pago", body: "El precio es el del Anexo [PRECIO A DEFINIR: moneda, IVA y periodicidad]. El pago se hace [MEDIO DE PAGO A DEFINIR] por período anticipado. El Proveedor puede reajustar precios con aviso escrito de 30 días." },
   { title: "10. Mora, aviso y suspensión", body: "Si el pago no se recibe, el servicio sigue estas etapas contadas desde la Fecha de vencimiento: aviso desde 7 días antes; gracia hasta 5 días después, sin restricciones; solo lectura hasta el día 20, sin crear pacientes ni subir archivos; suspensión desde el día 21. Estas restricciones se aplican solo a las Clínicas que tengan activado el cobro automático. Pagado lo adeudado, el servicio se restablece de inmediato." },
   { title: "11. Datos de pacientes", body: "La Clínica es responsable de los datos personales y sensibles (salud, imágenes) de sus pacientes y de contar con su consentimiento informado. El Proveedor actúa como encargado de tratamiento: los trata solo siguiendo instrucciones de la Clínica y para prestar el servicio." },

@@ -22,7 +22,7 @@ export type PhotoProtocolView = {
   referenceVisual: ReactNode;
   /** La clínica pidió medir la lesión en esta foto con una moneda de referencia. */
   measure?: boolean;
-  /** Esta vista se registra con un video corto (plan Titanium) en vez de una foto. */
+  /** Esta vista se registra con un video corto (plan Oro) en vez de una foto. */
   video?: boolean;
 };
 
