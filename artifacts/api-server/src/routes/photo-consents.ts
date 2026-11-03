@@ -25,6 +25,15 @@ router.get("/consents/photo/:token", async (req, res): Promise<void> => {
   res.json(await viewByToken(String(req.params.token), typeof req.query.lang === "string" ? req.query.lang : undefined));
 });
 
+// El mismo documento para quien se registra por su cuenta: el cliente pone el nombre de la clínica en la introducción.
+router.get("/consents/photo-info", (req, res): void => {
+  if (tooMany(req)) { res.status(429).json({ error: "Demasiados intentos. Intenta más tarde." }); return; }
+  const language = toMailLanguage(req.query.lang);
+  const text = photoConsentText(language);
+  res.setHeader("Cache-Control", "public, max-age=300");
+  res.json({ language, version: PHOTO_CONSENT_VERSION, title: text.title, intro: text.selfIntro("{clinic}"), points: text.points, checkbox: text.checkbox });
+});
+
 router.post("/consents/photo/:token/code", async (req, res): Promise<void> => {
   const token = String(req.params.token);
   if (tooMany(req) || throttled(`consent-code:${token.slice(0, 16)}`, 3, 15 * 60_000)) { res.status(429).json({ error: "Demasiados códigos pedidos. Espera unos minutos." }); return; }

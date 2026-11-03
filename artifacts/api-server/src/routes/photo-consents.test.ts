@@ -261,4 +261,16 @@ describe("consentimiento al agregar un paciente", () => {
         .toEqual({ title: staff.title, intro: staff.intro, points: staff.points, checkbox: staff.checkbox, clinicName: staff.clinicName, clinicLogo: staff.clinicLogo });
     }
   });
+
+  it("quien se registra por su cuenta recibe el mismo documento, con su propia introducción, en los nueve idiomas", async () => {
+    for (const lang of ["es", "en", "pt", "fr", "de", "it", "tr", "ar", "zh"]) {
+      const staff = (await request(app).get(`/api/clinic/photo-consent-text?lang=${lang}`).set("Cookie", asA())).body;
+      const info = (await request(app).get(`/api/consents/photo-info?lang=${lang}`)).body;
+      expect(info.points).toEqual(staff.points);
+      expect(info.checkbox).toBe(staff.checkbox);
+      expect(info.version).toBe(PHOTO_CONSENT_VERSION);
+      expect(info.intro).toContain("{clinic}");
+      expect(info.intro).not.toBe(staff.intro.replace("Clínica Uno", "{clinic}"));
+    }
+  });
 });
