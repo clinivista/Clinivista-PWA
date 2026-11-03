@@ -201,7 +201,7 @@ describe("rutas de supra-control", () => {
 });
 
 describe("horas", () => {
-  it("lleva el saldo: incluidas y compradas suman, usadas restan, y Basic no compra", async () => {
+  it("lleva el saldo: incluidas y compradas suman, usadas restan, y Bronce no compra", async () => {
     await pglite.exec(`UPDATE clinical_centers SET plan = 'unlimited' WHERE id = 'clinic-a';`);
     const post = (body: object) => request(app).post("/api/director/centers/clinic-a/hours").set("Cookie", director()).send(body);
     await post({ kind: "incluidas", hours: 5, note: "Contrato inicial" }).expect(201);

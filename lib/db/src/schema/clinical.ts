@@ -22,7 +22,7 @@ export const centersTable = pgTable("clinical_centers", {
   // las fases iniciales de la clínica. La fija supra-control al crearla.
   specialty: text("specialty").notNull().default("capilar"),
   // Plan de la clínica (lo fija supra-control). Qué habilita cada uno está en
-  // artifacts/api-server/src/lib/plans.ts; hoy solo «titanium» agrega el video.
+  // artifacts/api-server/src/lib/plans.ts; hoy solo «titanium» (plan Oro) agrega el video. Nombres visibles: basic=Bronce, unlimited=Plata, titanium=Oro.
   // Migración: lib/db/sql/sql0001-plan-de-clinica.sql.
   plan: text("plan").notNull().default("basic"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

@@ -360,7 +360,7 @@ describe("vistas marcadas como video (plan Oro)", () => {
 describe("cuota de transcripciones por clínica (supra-control)", () => {
   const supra = () => `clinivista_session=${createSession({ userId: "dir", centerId: null, role: "director" })}`;
 
-  it("sin configuración usa la cuota del plan (Basic 20, Unlimited 100, Titanium 300) y el reintento avanzado apagado", async () => {
+  it("sin configuración usa la cuota del plan (Bronce 20, Plata 100, Oro 300) y el reintento avanzado apagado", async () => {
     const res = await request(app).get("/api/director/centers/clinic-a/transcription").set("Cookie", supra()).expect(200);
     expect(res.body).toMatchObject({ monthlyQuota: 20, used: 0, remaining: 20, advancedEnabled: false });
     await pglite.exec(`UPDATE clinical_centers SET plan = 'titanium' WHERE id = 'clinic-a';`);

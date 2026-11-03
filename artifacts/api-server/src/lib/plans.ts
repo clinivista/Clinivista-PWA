@@ -13,6 +13,7 @@ import { logger } from "./logger";
  * `PlanFeature` y a los planes que la incluyen. Las cuotas (p. ej. pacientes
  * por mes) están en `PLAN_DEFAULT_LIMITS`.
  */
+/** Los identificadores no cambian; los nombres visibles son basic=Bronce, unlimited=Plata y titanium=Oro. */
 export const PLANS = ["basic", "unlimited", "titanium"] as const;
 export type Plan = (typeof PLANS)[number];
 

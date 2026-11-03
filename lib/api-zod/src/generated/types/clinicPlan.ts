@@ -7,7 +7,7 @@
  */
 
 /**
- * The clinic's plan. Today only "titanium" adds a function (video); no plan removes anything a clinic already used.
+ * The clinic's plan. Shown to people as Bronze (basic), Silver (unlimited) and Gold (titanium); the identifiers do not change. Today only "titanium" (Gold) adds a function (video); no plan removes anything a clinic already used.
  */
 export type ClinicPlan = typeof ClinicPlan[keyof typeof ClinicPlan];
 

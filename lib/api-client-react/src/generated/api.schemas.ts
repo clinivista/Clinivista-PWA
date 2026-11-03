@@ -40,7 +40,7 @@ export interface SupraActivity {
 }
 
 /**
- * The clinic's plan. Today only "titanium" adds a function (video); no plan removes anything a clinic already used.
+ * The clinic's plan. Shown to people as Bronze (basic), Silver (unlimited) and Gold (titanium); the identifiers do not change. Today only "titanium" (Gold) adds a function (video); no plan removes anything a clinic already used.
  */
 export type ClinicPlan = typeof ClinicPlan[keyof typeof ClinicPlan];
 
@@ -279,7 +279,7 @@ export interface ClinicProtocolView {
   document: boolean;
   /** The lesion is measured on this photo with a reference coin next to it. */
   measure: boolean;
-  /** This view is recorded as a short video (up to 20 s) instead of a photo. Titanium plan only. */
+  /** This view is recorded as a short video (up to 20 s) instead of a photo. Gold plan (titanium) only. */
   video: boolean;
 }
 
