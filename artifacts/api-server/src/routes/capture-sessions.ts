@@ -2,7 +2,7 @@ import express, { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, leadsTable } from "@workspace/db";
 import { requireStaffAuth } from "./auth";
-import { DEFAULT_CENTER_ID, PhaseCaptureError, createStaffPhasePhoto, createStaffPhaseVideo } from "../lib/clinical-photos";
+import { DEFAULT_CENTER_ID, PhaseCaptureError, captureErrorBody, createStaffPhasePhoto, createStaffPhaseVideo } from "../lib/clinical-photos";
 import { closeCaptureSession, createCaptureSession, openCaptureSession } from "../lib/capture-sessions";
 import { syncLeadStatus } from "../lib/lead-status";
 import { MAX_PHOTO_BYTES, parseImageRequest } from "../lib/image-upload";
@@ -33,7 +33,7 @@ router.post("/leads/:id/phases/:phaseId/capture-session", async (req, res): Prom
     res.status(201).json({ token, path: `/captura/${token}`, expiresAt: expiresAt.toISOString() });
   } catch (error) {
     if (error instanceof PhaseCaptureError) {
-      res.status(error.status).json({ error: error.message });
+      res.status(error.status).json(captureErrorBody(error));
       return;
     }
     throw error;
@@ -89,7 +89,7 @@ router.post("/capture/:token/views/:viewId/photo", RAW_IMAGE, async (req, res): 
     res.status(201).json({ ok: true });
   } catch (error) {
     if (error instanceof PhaseCaptureError) {
-      res.status(error.status).json({ error: error.message });
+      res.status(error.status).json(captureErrorBody(error));
       return;
     }
     throw error;
@@ -131,7 +131,7 @@ router.post("/capture/:token/views/:viewId/video", videoUploadSlot, captureVideo
     res.status(201).json({ ok: true });
   } catch (error) {
     if (error instanceof PhaseCaptureError) {
-      res.status(error.status).json({ error: error.message });
+      res.status(error.status).json(captureErrorBody(error));
       return;
     }
     throw error;

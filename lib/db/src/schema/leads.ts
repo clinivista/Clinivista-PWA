@@ -47,6 +47,9 @@ export const leadsTable = pgTable("leads", {
   status: text("status").notNull().default("nuevo"),
   consent: boolean("consent").notNull().default(false),
   marketingConsent: boolean("marketing_consent").notNull().default(false),
+  // Cuándo y con qué versión del texto aceptó recibir información comercial. Vacío si nunca lo aceptó o lo aceptó antes de guardar esta prueba.
+  marketingConsentAt: timestamp("marketing_consent_at", { withTimezone: true }),
+  marketingConsentVersion: text("marketing_consent_version").default(""),
   // Prueba del consentimiento dado por el propio paciente: cuándo lo marcó y qué versión de la
   // política de privacidad se le mostraba. Vacío en fichas anteriores a la Ley 21.719.
   consentAt: timestamp("consent_at", { withTimezone: true }),

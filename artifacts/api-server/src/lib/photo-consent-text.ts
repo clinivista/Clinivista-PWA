@@ -261,3 +261,9 @@ export function snapshotOf(language: unknown, clinicName: string): string {
   const text = photoConsentText(language);
   return [text.title, text.intro(clinicName), ...text.points, text.checkbox].join("\n");
 }
+
+/** Lo que leyó quien se registra por su cuenta (introducción propia: él envía sus fotos). La casilla que marcó es la del registro. */
+export function selfSnapshotOf(language: unknown, clinicName: string): string {
+  const text = photoConsentText(language);
+  return [text.title, text.selfIntro(clinicName), ...text.points].join("\n");
+}

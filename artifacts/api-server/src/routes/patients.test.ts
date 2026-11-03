@@ -69,7 +69,8 @@ const VALID_BODY = {
 
 beforeAll(async () => {
   await pglite.exec(`
-    CREATE TABLE IF NOT EXISTS leads (parent_lead_id text, 
+    CREATE TABLE IF NOT EXISTS photo_consents (id text PRIMARY KEY, center_id text NOT NULL, lead_id text NOT NULL, method text NOT NULL, status text NOT NULL DEFAULT 'pending', language text NOT NULL DEFAULT 'es', text_version text NOT NULL DEFAULT '', text_snapshot text NOT NULL DEFAULT '', token_hash text, expires_at timestamptz, code_hash text, code_expires_at timestamptz, code_attempts integer NOT NULL DEFAULT 0, verified_by text NOT NULL DEFAULT '', file jsonb, requested_by_name text NOT NULL DEFAULT '', registered_by_name text NOT NULL DEFAULT '', ip text NOT NULL DEFAULT '', user_agent text NOT NULL DEFAULT '', contact text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now(), granted_at timestamptz, revoked_at timestamptz, revoke_note text NOT NULL DEFAULT '');
+    CREATE TABLE IF NOT EXISTS leads (marketing_consent_at timestamptz, marketing_consent_version text DEFAULT '', parent_lead_id text, 
       id text PRIMARY KEY,
       token text NOT NULL UNIQUE,
       created_at timestamptz NOT NULL DEFAULT now(),
@@ -220,6 +221,7 @@ beforeEach(async () => {
     DELETE FROM clinical_protocol_views;
     DELETE FROM clinical_protocols;
     DELETE FROM clinical_centers;
+    DELETE FROM photo_consents;
     DELETE FROM leads;
   `);
 });
@@ -236,6 +238,30 @@ async function createPatient(overrides: Record<string, unknown> = {}) {
   expect(res.status).toBe(201);
   return res.body.lead as { id: string; token: string };
 }
+
+describe("consentimiento comercial y autorización de fotografías al registrarse", () => {
+  const rows = async (sql: string) => {
+    const res = (await pglite.exec(sql)) as Array<{ rows: Array<Record<string, unknown>> }>;
+    return res[0].rows;
+  };
+
+  it("guarda fecha y versión del consentimiento comercial solo si lo acepta, y las borra si lo retira", async () => {
+    const yes = await createPatient({ marketingConsent: true });
+    const first = (await rows(`SELECT marketing_consent_at, marketing_consent_version FROM leads WHERE id = '${yes.id}'`))[0];
+    expect(first.marketing_consent_at).toBeTruthy();
+    expect(first.marketing_consent_version).toBe("comercial-2026-11");
+    const no = await createPatient({ marketingConsent: false, documentId: "11.111.111-1", phone: "+56922222222", email: "otro@example.com" });
+    const second = (await rows(`SELECT marketing_consent_at, marketing_consent_version FROM leads WHERE id = '${no.id}'`))[0];
+    expect(second.marketing_consent_at).toBeNull();
+    expect(second.marketing_consent_version).toBe("");
+  });
+
+  it("al registrarse por su cuenta queda una autorización de fotografías propia, con la versión del texto", async () => {
+    const lead = await createPatient();
+    const list = await rows(`SELECT method, status, verified_by, text_version FROM photo_consents WHERE lead_id = '${lead.id}'`);
+    expect(list).toEqual([{ method: "self", status: "granted", verified_by: "self", text_version: "foto-2026-11-borrador-1" }]);
+  });
+});
 
 describe("POST /api/patients", () => {
   it("creates a lead and returns 201 with a token", async () => {

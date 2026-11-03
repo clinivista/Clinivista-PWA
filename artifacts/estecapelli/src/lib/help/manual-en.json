@@ -1580,7 +1580,7 @@
     },
     {
      "t": "note",
-     "text": "A link accepted without a code (the patient has no email) is weaker evidence. This authorization does not replace the informed consent for a medical procedure nor allow photos to be used in advertising. The text is a draft subject to your lawyer's review."
+     "text": "Without a valid authorization (accepted and not revoked) staff cannot take photographs of the patient; earlier records that carry the record consent can still do so. A link accepted without a code (the patient has no email) is weaker evidence. This authorization does not replace the informed consent for a medical procedure nor allow photos to be used in advertising. The text is a draft subject to your lawyer's review."
     }
    ],
    "key": "photoconsent"

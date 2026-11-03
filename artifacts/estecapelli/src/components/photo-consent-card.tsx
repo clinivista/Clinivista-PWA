@@ -10,7 +10,7 @@ import { LANGS, useLanguage, type LangCode } from "@/lib/language";
 import { PHOTO_CONSENT_UI } from "@/lib/photo-consent-i18n";
 
 type Consent = {
-  id: string; method: "link" | "document" | "tablet"; status: "pending" | "granted" | "declined" | "revoked"; verifiedBy: string; textVersion: string;
+  id: string; method: "link" | "document" | "tablet" | "self"; status: "pending" | "granted" | "declined" | "revoked"; verifiedBy: string; textVersion: string;
   registeredByName: string; requestedByName: string; createdAt: string; grantedAt: string | null; revokedAt: string | null; revokeNote: string; hasFile: boolean; fileMime: string | null;
 };
 type Overview = { consents: Consent[]; hasEmail: boolean; email: string; language: string; currentVersion: string };

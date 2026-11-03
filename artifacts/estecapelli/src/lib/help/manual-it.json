@@ -1580,7 +1580,7 @@
     },
     {
      "t": "note",
-     "text": "Un link accettato senza codice (paziente senza email) vale meno come prova. Questa autorizzazione non sostituisce il consenso informato per una procedura medica né autorizza l'uso delle foto in pubblicità. Il testo è una bozza soggetta alla revisione del tuo avvocato."
+     "text": "Senza un'autorizzazione valida (accettata e non revocata) il personale non può scattare fotografie del paziente; le schede precedenti con il consenso della scheda possono ancora farlo. Un link accettato senza codice (paziente senza email) vale meno come prova. Questa autorizzazione non sostituisce il consenso informato per una procedura medica né autorizza l'uso delle foto in pubblicità. Il testo è una bozza soggetta alla revisione del tuo avvocato."
     }
    ],
    "key": "photoconsent"

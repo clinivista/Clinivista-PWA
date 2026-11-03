@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useLanguage } from "@/lib/language";
 import { refreshLeadViews } from "@/lib/phases-i18n";
 import { CAPTURE_TEXT } from "@/lib/capture-i18n";
+import { PHOTO_CONSENT_UI } from "@/lib/photo-consent-i18n";
 
 type Session = { token: string; path: string; expiresAt: string };
 
@@ -33,15 +34,15 @@ export function CaptureHandoff({ leadId, phase }: { leadId: string; phase: LeadP
     setSession(null);
     try {
       const response = await fetch(`/api/leads/${encodeURIComponent(leadId)}/phases/${encodeURIComponent(phase.id)}/capture-session`, { method: "POST", credentials: "include" });
-      const data = (await response.json().catch(() => ({}))) as Partial<Session> & { error?: string };
-      if (!response.ok || !data.token || !data.path || !data.expiresAt) throw new Error(data.error ?? c.failed);
+      const data = (await response.json().catch(() => ({}))) as Partial<Session> & { error?: string; code?: string };
+      if (!response.ok || !data.token || !data.path || !data.expiresAt) throw new Error(data.code === "photo_consent_required" ? PHOTO_CONSENT_UI[lang].gate : data.error ?? c.failed);
       setSession({ token: data.token, path: data.path, expiresAt: data.expiresAt });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : c.failed);
     } finally {
       setBusy(false);
     }
-  }, [leadId, phase.id, c.failed]);
+  }, [leadId, phase.id, c.failed, lang]);
 
   const link = session ? `${window.location.origin}${import.meta.env.BASE_URL.replace(/\/$/, "")}${session.path}` : "";
 

@@ -1580,7 +1580,7 @@
     },
     {
      "t": "note",
-     "text": "Un enlace aceptado sin código (el paciente no tiene correo) tiene menos valor como prueba. Esta autorización no reemplaza el consentimiento informado de un procedimiento médico ni autoriza el uso de fotos en publicidad. El texto es un borrador sujeto a la revisión de tu abogado."
+     "text": "Sin una autorización vigente (aceptada y no revocada) el personal no puede tomar fotografías del paciente; las fichas anteriores con el consentimiento de la ficha siguen pudiendo. Un enlace aceptado sin código (el paciente no tiene correo) tiene menos valor como prueba. Esta autorización no reemplaza el consentimiento informado de un procedimiento médico ni autoriza el uso de fotos en publicidad. El texto es un borrador sujeto a la revisión de tu abogado."
     }
    ],
    "key": "photoconsent"

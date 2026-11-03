@@ -1,4 +1,5 @@
 import { assertCanStore } from "./plan-limits";
+import { PHOTO_CONSENT_REQUIRED_MESSAGE, photoConsentGate } from "./photo-consent-gate";
 import { MeasurementError, computeMeasurement, readMeasurement, type PhotoMeasurement } from "./measurement";
 import crypto from "crypto";
 import sharp from "sharp";
@@ -856,6 +857,14 @@ export async function getLeadPhases(lead: Lead): Promise<LeadPhase[]> {
   });
 }
 
+/** El personal solo toma fotografías de pacientes que las autorizaron. */
+async function assertPhotoConsent(lead: Lead): Promise<void> {
+  if ((await photoConsentGate(lead)) !== "ok") throw new PhaseCaptureError(PHOTO_CONSENT_REQUIRED_MESSAGE, 409);
+}
+
+export const captureErrorBody = (error: PhaseCaptureError) =>
+  error.message === PHOTO_CONSENT_REQUIRED_MESSAGE ? { error: error.message, code: "photo_consent_required" } : { error: error.message };
+
 export class PhaseCaptureError extends Error {
   constructor(message: string, readonly status: 400 | 404 | 409 = 400) {
     super(message);
@@ -875,6 +884,7 @@ export async function createStaffPhasePhoto(input: {
   width: number;
   height: number;
 }): Promise<PhotoStatus> {
+  await assertPhotoConsent(input.lead);
   const evaluation = await ensureEvaluationForLead(input.lead);
   await assertCanStore(evaluation.centerId);
   const phases = await getLeadPhases(input.lead);
@@ -1056,6 +1066,7 @@ async function storeVideo(input: {
 
 /** El paciente graba el video de una vista de su pre-evaluación (queda en borrador hasta que lo confirma, como una foto). */
 export async function createClinicalVideo(input: { lead: Lead; key: string; source: "camera" | "upload"; video: ParsedVideo }): Promise<PhotoStatus> {
+  await assertPhotoConsent(input.lead);
   const evaluation = await ensureEvaluationForLead(input.lead);
   await assertCanStore(evaluation.centerId);
   const { views } = await getPatientPhaseViews(evaluation.protocolId);
