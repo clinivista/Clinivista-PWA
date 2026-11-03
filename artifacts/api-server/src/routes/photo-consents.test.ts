@@ -250,4 +250,15 @@ describe("consentimiento al agregar un paciente", () => {
     const res = await request(app).get("/api/clinic/photo-consent-text?lang=en").set("Cookie", asA());
     expect(res.body).toMatchObject({ language: "en", clinicName: "Clínica Uno" });
   });
+
+  it("el enlace remoto muestra exactamente el mismo documento que la firma en pantalla, en los nueve idiomas", async () => {
+    const req = await request(app).post("/api/leads/lead-a/photo-consent/request").set("Cookie", asA()).send({ channel: "link", language: "es" });
+    const token = tokenOf(req.body.url);
+    for (const lang of ["es", "en", "pt", "fr", "de", "it", "tr", "ar", "zh"]) {
+      const staff = (await request(app).get(`/api/clinic/photo-consent-text?lang=${lang}`).set("Cookie", asA())).body;
+      const remote = (await request(app).get(`/api/consents/photo/${token}?lang=${lang}`)).body;
+      expect({ title: remote.title, intro: remote.intro, points: remote.points, checkbox: remote.checkbox, clinicName: remote.clinicName, clinicLogo: remote.clinicLogo })
+        .toEqual({ title: staff.title, intro: staff.intro, points: staff.points, checkbox: staff.checkbox, clinicName: staff.clinicName, clinicLogo: staff.clinicLogo });
+    }
+  });
 });
