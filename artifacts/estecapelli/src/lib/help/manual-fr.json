@@ -786,7 +786,7 @@
     },
     {
      "t": "p",
-     "text": "Vous devez cocher que le patient a donné son consentement (en personne ou par écrit) : qui l'a confirmé et quand est enregistré, et sans cette case l'enregistrement est impossible. Si vous le souhaitez, cochez aussi «Envoyer au patient par e-mail l'accès à son portail»."
+     "text": "Choisissez comment le patient donne son consentement ; sans choix, la fiche ne peut pas être enregistrée. « Déjà donné, en personne ou par écrit » enregistre qui l'a confirmé et quand. « Signer à l'écran maintenant » affiche le document avec le nom et le logo de votre clinique : le patient le lit, coche la case et signe du doigt avant l'enregistrement. « Envoyer par e-mail » ou « Envoyer par WhatsApp » enregistre la fiche avec le consentement en attente et envoie le lien au patient ; il est enregistré lorsque le patient accepte. Si vous le souhaitez, cochez aussi «Envoyer au patient par e-mail l'accès à son portail»."
     },
     {
      "t": "p",

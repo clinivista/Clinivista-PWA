@@ -4,7 +4,9 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { PhotoConsentFlow } from "@/components/photo-consent-card";
+import { PhotoConsentFlow, SignaturePad } from "@/components/photo-consent-card";
+import { ConsentDocument } from "@/components/consent-document";
+import { PHOTO_CONSENT_UI } from "@/lib/photo-consent-i18n";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/lib/language";
@@ -14,7 +16,8 @@ import { STAFF_FLOW_TEXT } from "@/lib/staff-flow-i18n";
 import { CONSULT_TEXT } from "@/lib/consult-types-i18n";
 import { selectableTypes, useConsultTypes } from "@/lib/consult-types";
 
-type PhotoWay = "none" | "email" | "whatsapp" | "tablet";
+type ConsentWay = "" | "done" | "email" | "whatsapp" | "tablet";
+type SignText = { language: string; clinicName: string; clinicLogo: string | null; title: string; intro: string; points: string[]; checkbox: string };
 const EMPTY = { name: "", documentId: "", phone: "", email: "", city: "" };
 
 /** El personal (médico o administrativo) registra a un paciente que atiende en la clínica. */
@@ -32,51 +35,73 @@ export function AddPatientDialog({ open, onOpenChange, onCreated }: {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY);
-  const [consent, setConsent] = useState(false);
+  const [way, setWay] = useState<ConsentWay>("");
+  const [signing, setSigning] = useState(false);
+  const [signText, setSignText] = useState<SignText | null>(null);
+  const [accepted, setAccepted] = useState(false);
+  const [signature, setSignature] = useState<string | null>(null);
   const [sendPortal, setSendPortal] = useState(false);
-  const [photoWay, setPhotoWay] = useState<PhotoWay>("none");
-  const [next, setNext] = useState<null | { leadId: string; way: Exclude<PhotoWay, "none">; name: string; phone: string }>(null);
+  const [next, setNext] = useState<null | { leadId: string; way: "email" | "whatsapp"; name: string; phone: string }>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [duplicateId, setDuplicateId] = useState<string | null>(null);
 
   const set = (key: keyof typeof EMPTY) => (event: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [key]: key === "documentId" ? formatRut(event.target.value) : event.target.value }));
-  const canSave = consent && form.name.trim().length > 1 && form.documentId.trim().length > 3 && form.phone.trim().length > 5 && !busy;
+  const canSave = way !== "" && form.name.trim().length > 1 && form.documentId.trim().length > 3 && form.phone.trim().length > 5 && !busy;
+
+  const resetAll = () => {
+    setForm(EMPTY); setConsultTypeId(""); setWay(""); setSendPortal(false); setSigning(false); setSignText(null); setAccepted(false); setSignature(null);
+  };
+
+  // «Firmar en pantalla»: se muestra el documento (con el nombre y logo de la clínica) antes de guardar la ficha.
+  const goSign = async () => {
+    setError("");
+    setSigning(true);
+    try {
+      const response = await fetch(`/api/clinic/photo-consent-text?lang=${lang}`, { credentials: "include" });
+      if (!response.ok) throw new Error();
+      setSignText((await response.json()) as SignText);
+    } catch {
+      setSigning(false);
+      setError(s.cantCreate);
+    }
+  };
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (way === "tablet" && !signing) { await goSign(); return; }
+    if (way === "tablet" && (!accepted || !signature)) return;
     setBusy(true);
     setError("");
     setDuplicateId(null);
     try {
+      const consentFields = way === "done" ? { consentConfirmed: true }
+        : way === "tablet" ? { consentMode: "tablet", consentAccepted: true, consentSignature: signature }
+          : { consentMode: "pending" };
       const response = await fetch("/api/leads", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, language: lang, consentConfirmed: consent, ...(types.length > 1 && consultTypeId ? { consultTypeId } : {}), sendPortalAccess: sendPortal && !!form.email.trim() }),
+        body: JSON.stringify({ ...form, language: lang, ...consentFields, ...(types.length > 1 && consultTypeId ? { consultTypeId } : {}), sendPortalAccess: sendPortal && !!form.email.trim() }),
       });
       const body = (await response.json().catch(() => null)) as { error?: string; leadId?: string; lead?: { id: string } } | null;
       if (!response.ok || !body?.lead) {
         setError(body?.error ?? s.cantCreate);
-        if (response.status === 409 && body?.leadId) setDuplicateId(body.leadId);
+        if (response.status === 409 && body?.leadId) { setDuplicateId(body.leadId); setSigning(false); }
         return;
       }
       toast({ title: s.created, description: s.createdDesc });
       await refreshLeadViews(queryClient);
       queryClient.invalidateQueries({ queryKey: ["/api/leads/stats"] });
       const saved = form;
-      setForm(EMPTY);
-      setConsultTypeId("");
-      setConsent(false);
-      setSendPortal(false);
-      if (photoWay !== "none" && (photoWay !== "email" || saved.email.trim())) {
-        // Segundo paso: el paciente ya está guardado; se pide la autorización con la vía elegida.
-        setNext({ leadId: body.lead.id, way: photoWay, name: saved.name.trim(), phone: saved.phone.trim() });
-        setPhotoWay("none");
+      const chosen = way;
+      resetAll();
+      if (chosen === "email" || chosen === "whatsapp") {
+        // Segundo paso: la ficha ya está guardada; el consentimiento se envía al paciente.
+        setNext({ leadId: body.lead.id, way: chosen, name: saved.name.trim(), phone: saved.phone.trim() });
         return;
       }
-      setPhotoWay("none");
       onOpenChange(false);
       onCreated(body.lead.id);
     } catch {
@@ -92,12 +117,13 @@ export function AddPatientDialog({ open, onOpenChange, onCreated }: {
     onOpenChange(false);
     if (id) onCreated(id);
   };
-  const ways: { id: PhotoWay; label: string; disabled?: boolean }[] = [
-    { id: "none", label: s.photoNone },
+  const ways: { id: Exclude<ConsentWay, "">; label: string; disabled?: boolean }[] = [
+    { id: "done", label: s.consentDone },
+    { id: "tablet", label: s.photoTablet },
     { id: "email", label: form.email.trim() ? s.photoEmail : s.photoEmailMissing, disabled: !form.email.trim() },
     { id: "whatsapp", label: s.photoWhatsapp },
-    { id: "tablet", label: s.photoTablet },
   ];
+  const pu = PHOTO_CONSENT_UI[lang];
 
   if (next) {
     return (
@@ -105,9 +131,36 @@ export function AddPatientDialog({ open, onOpenChange, onCreated }: {
         <DialogContent className="rounded-3xl max-w-lg max-h-[92dvh] overflow-y-auto" data-testid="add-patient-photo-step">
           <p className="text-sm text-muted-foreground">{s.photoStep}</p>
           <PhotoConsentFlow leadId={next.leadId} patientName={next.name} phone={next.phone}
-            mode={next.way === "tablet" ? "tablet" : "link"} initialChannel={next.way === "tablet" ? undefined : next.way}
+            mode="link" initialChannel={next.way}
             autoStart={next.way === "email"} onDone={finishNext} />
-          <Button type="button" variant="ghost" className="rounded-full" onClick={finishNext}>{s.photoNone}</Button>
+          <Button type="button" variant="ghost" className="rounded-full" onClick={finishNext}>{pu.close}</Button>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (signing) {
+    return (
+      <Dialog open={open} onOpenChange={(value) => { if (!busy && !value) { setSigning(false); onOpenChange(false); } }}>
+        <DialogContent className="rounded-3xl max-w-lg max-h-[92dvh] overflow-y-auto" data-testid="add-patient-sign-step">
+          <DialogHeader><DialogTitle>{pu.tabTitle}</DialogTitle></DialogHeader>
+          {signText && (
+            <ConsentDocument lang={lang} clinicName={signText.clinicName} clinicLogo={signText.clinicLogo} patientName={form.name.trim()}
+              title={signText.title} intro={signText.intro} points={signText.points}>
+              <label className="flex items-start gap-3 rounded-2xl border p-3 cursor-pointer">
+                <Checkbox checked={accepted} onCheckedChange={(value) => setAccepted(value === true)} aria-label={signText.checkbox} />
+                <span className="text-sm font-semibold">{signText.checkbox}</span>
+              </label>
+              <SignaturePad label={pu.tabSign} clear={pu.tabClear} onChange={setSignature} />
+            </ConsentDocument>
+          )}
+          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="ghost" className="rounded-full" disabled={busy} onClick={() => setSigning(false)}>{s.back}</Button>
+            <Button type="button" className="rounded-full" disabled={busy || !signText || !accepted || !signature} onClick={(event) => void submit(event as unknown as React.FormEvent)}>
+              {busy && <Loader2 className="w-4 h-4 me-2 animate-spin" />}{busy ? s.saving : s.signSave}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     );
@@ -154,22 +207,17 @@ export function AddPatientDialog({ open, onOpenChange, onCreated }: {
               <label htmlFor="add-portal" className="text-sm">{s.sendPortal}</label>
             </div>
           )}
-          <div className="flex items-start gap-3 rounded-2xl bg-[#F5F2EE] p-3">
-            <Checkbox id="add-consent" checked={consent} onCheckedChange={(value) => setConsent(value === true)} className="mt-0.5" />
-            <label htmlFor="add-consent" className="text-sm">
-              <span className="font-semibold">{s.consent}</span>
-              <span className="block text-xs text-muted-foreground mt-1">{s.consentHelp}</span>
-            </label>
-          </div>
-          <fieldset className="space-y-2 rounded-2xl border border-[#E8E4DE] p-3" data-testid="add-photo-way">
-            <legend className="px-1 text-sm font-semibold">{s.photoAuth}</legend>
-            <p className="text-xs text-muted-foreground">{s.photoAuthHelp}</p>
-            {ways.map((way) => (
-              <label key={way.id} className={`flex items-center gap-2 text-sm ${way.disabled ? "opacity-50" : ""}`}>
-                <input type="radio" name="photo-way" value={way.id} checked={photoWay === way.id} disabled={way.disabled} onChange={() => setPhotoWay(way.id)} />
-                {way.label}
+          <fieldset className="space-y-2 rounded-2xl border border-[#E8E4DE] bg-[#F5F2EE] p-3" data-testid="add-consent-way">
+            <legend className="px-1 text-sm font-semibold">{s.consentGroup}</legend>
+            <p className="text-xs text-muted-foreground">{s.consentGroupHelp}</p>
+            {ways.map((item) => (
+              <label key={item.id} className={`flex items-center gap-2 text-sm ${item.disabled ? "opacity-50" : ""}`}>
+                <input type="radio" name="consent-way" value={item.id} checked={way === item.id} disabled={item.disabled} onChange={() => setWay(item.id)} />
+                {item.label}
               </label>
             ))}
+            {(way === "email" || way === "whatsapp") && <p className="text-xs font-semibold text-amber-800">{s.consentPendingNote}</p>}
+            {way === "done" && <p className="text-xs text-muted-foreground">{s.consentHelp}</p>}
           </fieldset>
           {error && (
             <p role="alert" className="text-sm text-destructive">
@@ -182,7 +230,7 @@ export function AddPatientDialog({ open, onOpenChange, onCreated }: {
           <DialogFooter className="gap-2">
             <Button type="button" variant="ghost" className="rounded-full" disabled={busy} onClick={() => onOpenChange(false)}>{s.cancel}</Button>
             <Button type="submit" className="rounded-full" disabled={!canSave}>
-              {busy && <Loader2 className="w-4 h-4 me-2 animate-spin" />}{busy ? s.saving : s.save}
+              {busy && <Loader2 className="w-4 h-4 me-2 animate-spin" />}{busy ? s.saving : way === "tablet" ? s.continueSign : s.save}
             </Button>
           </DialogFooter>
         </form>

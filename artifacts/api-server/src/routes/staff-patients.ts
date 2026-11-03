@@ -1,3 +1,4 @@
+import { parseSignature, registerTabletConsent } from "../lib/photo-consents";
 import { Router, type IRouter } from "express";
 import { and, eq, or } from "drizzle-orm";
 import { db, leadsTable, usersTable, centersTable, type SkippedPhase, type PhaseAttention } from "@workspace/db";
@@ -57,8 +58,12 @@ router.post("/leads", async (req, res): Promise<void> => {
     throw error;
   }
   const body = (req.body ?? {}) as Record<string, unknown>;
-  if (body.consentConfirmed !== true) {
-    res.status(422).json({ error: "Confirma que el paciente dio su consentimiento para guardar su ficha." });
+  // Tres formas de dejar el consentimiento: ya dado fuera de la app (constancia del personal), firmado ahora en pantalla
+  // (la firma llega con el alta y se guarda junto con la ficha) o pendiente: se envía al paciente por correo o WhatsApp.
+  const signature = body.consentMode === "tablet" && body.consentAccepted === true ? parseSignature(body.consentSignature) : null;
+  const consentWay = body.consentConfirmed === true ? "confirmed" : signature ? "tablet" : body.consentMode === "pending" ? "pending" : null;
+  if (!consentWay) {
+    res.status(422).json({ error: "El paciente debe dar su consentimiento para guardar su ficha: confirma que ya lo dio, haz que lo firme o envíaselo." });
     return;
   }
   const rutCheck = validateRut(String(body.documentId ?? ""));
@@ -123,16 +128,20 @@ router.post("/leads", async (req, res): Promise<void> => {
     protocolId,
     ...data,
     // El personal solo deja constancia de un consentimiento dado fuera de la app: no se afirma qué política vio el paciente.
+    consent: consentWay !== "pending",
     consentAt: null,
     consentPolicyVersion: "",
-    consentRecordedBy: await staffName(staff.userId) || staff.userId,
-    consentRecordedAt: new Date(),
+    consentRecordedBy: consentWay === "pending" ? "" : await staffName(staff.userId) || staff.userId,
+    consentRecordedAt: consentWay === "pending" ? null : new Date(),
   };
   await db.insert(leadsTable).values(newLead);
   const [inserted] = await db.select().from(leadsTable).where(eq(leadsTable.id, newLead.id));
+  if (consentWay === "tablet" && signature) {
+    await registerTabletConsent(inserted, staff.userId, { language: String(body.language ?? "es"), signature });
+  }
   // Acceso al portal del paciente por correo, solo si el personal lo pide.
   if (body.sendPortalAccess === true && inserted.email) void ensurePatientAccountForLead(inserted, baseUrl(req));
-  res.status(201).json({ ok: true, lead: { id: inserted.id, token: inserted.token, name: inserted.name, status: inserted.status } });
+  res.status(201).json({ ok: true, consentPending: consentWay === "pending", lead: { id: inserted.id, token: inserted.token, name: inserted.name, status: inserted.status } });
 });
 
 // ── Consultas adicionales (dermatología) ──────────────────────────────────

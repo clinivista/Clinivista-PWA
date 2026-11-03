@@ -786,7 +786,7 @@
     },
     {
      "t": "p",
-     "text": "You must tick that the patient gave consent (in person or in writing): who confirmed it and when is recorded, and it cannot be saved without that box. If you wish, also tick «Email the patient access to their portal»."
+     "text": "Choose how the patient gives consent; the record cannot be saved until you pick one. «Already given, in person or in writing» records who confirmed it and when. «Sign on screen now» shows the document with your clinic's name and logo: the patient reads it, ticks the box and signs with a finger before the record is saved. «Send by email» or «Send by WhatsApp» saves the record with consent pending and sends the patient the link; it is recorded when the patient accepts. If you wish, also tick «Email the patient access to their portal»."
     },
     {
      "t": "p",

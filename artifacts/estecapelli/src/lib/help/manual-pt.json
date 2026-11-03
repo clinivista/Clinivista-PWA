@@ -786,7 +786,7 @@
     },
     {
      "t": "p",
-     "text": "Você deve marcar que o paciente deu consentimento (pessoalmente ou por escrito): fica registrado quem confirmou e quando, e sem essa caixa não é possível salvar. Se quiser, marque também «Enviar ao paciente por e-mail o acesso ao portal»."
+     "text": "Escolha como o paciente dá o consentimento; sem escolher uma opção não é possível salvar. «Já deu, pessoalmente ou por escrito» registra quem confirmou e quando. «Assinar na tela agora» mostra o documento com o nome e o logo da sua clínica: o paciente lê, marca a caixa e assina com o dedo antes de salvar a ficha. «Enviar por e-mail» ou «Enviar por WhatsApp» salva a ficha com o consentimento pendente e envia o link; fica registrado quando o paciente aceita. Se quiser, marque também «Enviar ao paciente por e-mail o acesso ao portal»."
     },
     {
      "t": "p",

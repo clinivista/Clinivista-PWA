@@ -786,7 +786,7 @@
     },
     {
      "t": "p",
-     "text": "Sie müssen bestätigen, dass der Patient seine Einwilligung gegeben hat (persönlich oder schriftlich): Wer sie bestätigt hat und wann, wird festgehalten; ohne dieses Kästchen lässt sich nicht speichern. Auf Wunsch markieren Sie auch «Dem Patienten den Portalzugang per E-Mail senden»."
+     "text": "Wählen Sie, wie der Patient einwilligt; ohne Auswahl kann nicht gespeichert werden. „Bereits erteilt, persönlich oder schriftlich“ hält fest, wer es bestätigt hat und wann. „Jetzt auf dem Bildschirm unterschreiben“ zeigt das Dokument mit Namen und Logo Ihrer Klinik: Der Patient liest es, setzt den Haken und unterschreibt mit dem Finger, bevor die Akte gespeichert wird. „Per E-Mail senden“ oder „Per WhatsApp senden“ speichert die Akte mit offener Einwilligung und schickt dem Patienten den Link; sie wird festgehalten, sobald der Patient zustimmt. Auf Wunsch markieren Sie auch «Dem Patienten den Portalzugang per E-Mail senden»."
     },
     {
      "t": "p",
