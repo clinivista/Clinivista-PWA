@@ -7,7 +7,7 @@ import { createObjectKey, privatePhotoStorage } from "./clinical-photo-storage";
 import { assertCanStore } from "./plan-limits";
 import { sendMail, type Mail } from "./mailer";
 import { toMailLanguage } from "./mail-i18n";
-import { PHOTO_CONSENT_VERSION, photoConsentText, snapshotOf } from "./photo-consent-text";
+import { PHOTO_CONSENT_VERSION, photoConsentText, selfSnapshotOf, snapshotOf } from "./photo-consent-text";
 import { uid } from "./helpers";
 
 export const LINK_TTL_MS = 7 * 24 * 3600_000;
@@ -186,6 +186,25 @@ export async function registerDocumentConsent(lead: Lead, userId: string, input:
 // ── Firma en tableta, en la clínica ───────────────────────────────────────
 const PNG_HEADER = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const MAX_SIGNATURE_BYTES = 400 * 1024;
+
+/**
+ * Quien se registra por su cuenta lee el documento y marca la casilla del registro: eso queda como su autorización
+ * de fotografías (método «self»). Se guarda una sola vez; reemplaza a un enlace pendiente que la clínica le hubiera enviado.
+ */
+export async function ensureSelfPhotoConsent(lead: Lead, language?: string): Promise<void> {
+  const existing = await db.select({ status: photoConsentsTable.status }).from(photoConsentsTable).where(eq(photoConsentsTable.leadId, lead.id));
+  if (existing.some((row) => row.status === "granted")) return;
+  const centerId = lead.centerId ?? "default-center";
+  const identity = await clinicIdentity(lead.centerId);
+  const lang = toMailLanguage(language || lead.language);
+  await db.update(photoConsentsTable).set({ status: "cancelled", codeHash: null })
+    .where(and(eq(photoConsentsTable.leadId, lead.id), eq(photoConsentsTable.status, "pending")));
+  await db.insert(photoConsentsTable).values({
+    id: uid(18), centerId, leadId: lead.id, method: "self", status: "granted", language: lang,
+    textVersion: PHOTO_CONSENT_VERSION, textSnapshot: selfSnapshotOf(lang, identity.name), verifiedBy: "self",
+    requestedByName: "", registeredByName: lead.name ?? "", grantedAt: new Date(),
+  });
+}
 
 /** Una autorización aceptada también deja constancia del consentimiento de la ficha, si estaba pendiente. */
 async function markLeadConsent(leadId: string, by: string): Promise<void> {

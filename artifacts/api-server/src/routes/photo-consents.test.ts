@@ -30,6 +30,7 @@ import staffPatientsRouter from "./staff-patients";
 import { createSession } from "../lib/sessions";
 import { resetThrottleForTests } from "../lib/patient-accounts";
 import { PHOTO_CONSENT_VERSION } from "../lib/photo-consent-text";
+import { photoConsentGate } from "../lib/photo-consent-gate";
 
 const pglite = (mockedDb as unknown as { __pglite: { exec(sql: string): Promise<unknown>; query(sql: string): Promise<{ rows: Array<Record<string, unknown>> }> } }).__pglite;
 const app = express();
@@ -272,5 +273,30 @@ describe("consentimiento al agregar un paciente", () => {
       expect(info.intro).toContain("{clinic}");
       expect(info.intro).not.toBe(staff.intro.replace("Clínica Uno", "{clinic}"));
     }
+  });
+
+  it("el personal solo puede tomar fotos con una autorización vigente", async () => {
+    const lead = { id: "lead-a", consent: true } as never;
+    // Ficha anterior a esta función con consentimiento de la ficha: puede.
+    expect(await photoConsentGate(lead)).toBe("ok");
+    // Sin consentimiento de la ficha ni autorización: no.
+    expect(await photoConsentGate({ id: "lead-a", consent: false } as never)).toBe("missing");
+    // Enlace enviado y sin aceptar: no, aunque la ficha tenga consentimiento.
+    const req = await request(app).post("/api/leads/lead-a/photo-consent/request").set("Cookie", asA()).send({ channel: "link", language: "es" });
+    expect(await photoConsentGate(lead)).toBe("pending");
+    // Aceptada: sí.
+    const tablet = await request(app).post("/api/leads/lead-a/photo-consent/tablet").set("Cookie", asA()).send({ language: "es", accepted: true, signature: await signatureDataUrl() });
+    expect(tablet.status).toBe(201);
+    expect(await photoConsentGate(lead)).toBe("ok");
+    // Revocada: vuelve a bloquear.
+    await request(app).post(`/api/leads/lead-a/photo-consent/${tablet.body.consent.id}/revoke`).set("Cookie", asA()).send({ note: "" });
+    expect(await photoConsentGate(lead)).toBe("pending");
+    expect(req.status).toBe(201);
+  });
+
+  it("revocada sin otro enlace pendiente queda bloqueada como «revoked»", async () => {
+    const tablet = await request(app).post("/api/leads/lead-a/photo-consent/tablet").set("Cookie", asA()).send({ language: "es", accepted: true, signature: await signatureDataUrl() });
+    await request(app).post(`/api/leads/lead-a/photo-consent/${tablet.body.consent.id}/revoke`).set("Cookie", asA()).send({ note: "" });
+    expect(await photoConsentGate({ id: "lead-a", consent: true } as never)).toBe("revoked");
   });
 });

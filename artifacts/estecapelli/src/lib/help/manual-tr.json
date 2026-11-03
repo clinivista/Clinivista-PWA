@@ -1580,7 +1580,7 @@
     },
     {
      "t": "note",
-     "text": "Kodsuz kabul edilen bağlantı (e-postası olmayan hasta) kanıt olarak daha zayıftır. Bu izin, bir tıbbi işlem için bilgilendirilmiş onamın yerini tutmaz ve fotoğrafların reklamda kullanılmasına izin vermez. Metin, avukatınızın incelemesine tabi bir taslaktır."
+     "text": "Geçerli bir izin (kabul edilmiş ve geri çekilmemiş) olmadan personel hastanın fotoğrafını çekemez; dosya onayı bulunan eski dosyalar çekmeye devam edebilir. Kodsuz kabul edilen bağlantı (e-postası olmayan hasta) kanıt olarak daha zayıftır. Bu izin, bir tıbbi işlem için bilgilendirilmiş onamın yerini tutmaz ve fotoğrafların reklamda kullanılmasına izin vermez. Metin, avukatınızın incelemesine tabi bir taslaktır."
     }
    ],
    "key": "photoconsent"

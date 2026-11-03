@@ -396,7 +396,7 @@ export const integrationRequestsTable = pgTable("integration_requests", {
 
 // Solicitudes de los titulares (Ley 21.719, derechos de acceso, rectificación, supresión,
 // oposición, portabilidad y bloqueo). El responsable tiene 30 días corridos para responder.
-export const DATA_REQUEST_TYPES = ["access", "rectification", "erasure", "opposition", "portability", "blocking"] as const;
+export const DATA_REQUEST_TYPES = ["access", "withdrawal", "rectification", "erasure", "opposition", "portability", "blocking"] as const;
 export type DataRequestType = (typeof DATA_REQUEST_TYPES)[number];
 export const DATA_REQUEST_STATUSES = ["pending", "in_progress", "resolved", "rejected"] as const;
 export type DataRequestStatus = (typeof DATA_REQUEST_STATUSES)[number];
@@ -466,7 +466,7 @@ export type PatientAddition = typeof patientAdditionsTable.$inferSelect;
 // Autorización para las fotografías clínicas que toma la clínica. Tres vías de registro:
 // «link» (el paciente acepta en su teléfono, con código al correo si tiene), «document» (la clínica sube el
 // documento firmado) y «tablet» (el paciente firma con el dedo en la clínica). Guarda quién, cuándo y qué texto.
-export const PHOTO_CONSENT_METHODS = ["link", "document", "tablet"] as const;
+export const PHOTO_CONSENT_METHODS = ["link", "document", "tablet", "self"] as const;
 export type PhotoConsentMethod = (typeof PHOTO_CONSENT_METHODS)[number];
 export const PHOTO_CONSENT_STATUSES = ["pending", "granted", "declined", "revoked", "cancelled"] as const;
 export type PhotoConsentStatus = (typeof PHOTO_CONSENT_STATUSES)[number];

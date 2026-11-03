@@ -4,7 +4,7 @@ import { db, leadsTable } from "@workspace/db";
 import { requireStaffAuth } from "./auth";
 import {
   DEFAULT_CENTER_ID,
-  PhaseCaptureError,
+  PhaseCaptureError, captureErrorBody,
   createStaffPhasePhoto,
   createStaffPhaseVideo,
   discardStaffPhasePhoto,
@@ -64,7 +64,7 @@ router.post("/leads/:id/views/:viewId/photo", RAW_IMAGE, async (req, res): Promi
     res.status(201).json(photo);
   } catch (error) {
     if (error instanceof PhaseCaptureError) {
-      res.status(error.status).json({ error: error.message });
+      res.status(error.status).json(captureErrorBody(error));
       return;
     }
     throw error;
@@ -108,7 +108,7 @@ router.post("/leads/:id/views/:viewId/video", videoUploadSlot, staffVideoGate, r
     res.status(201).json(photo);
   } catch (error) {
     if (error instanceof PhaseCaptureError) {
-      res.status(error.status).json({ error: error.message });
+      res.status(error.status).json(captureErrorBody(error));
       return;
     }
     throw error;
@@ -130,7 +130,7 @@ router.delete("/leads/:id/phase-photos/:photoId", async (req, res): Promise<void
     }
   } catch (error) {
     if (error instanceof PhaseCaptureError) {
-      res.status(error.status).json({ error: error.message });
+      res.status(error.status).json(captureErrorBody(error));
       return;
     }
     throw error;

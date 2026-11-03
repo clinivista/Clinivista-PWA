@@ -1580,7 +1580,7 @@
     },
     {
      "t": "note",
-     "text": "Um link aceito sem código (o paciente não tem e-mail) vale menos como prova. Esta autorização não substitui o consentimento informado de um procedimento médico nem autoriza o uso de fotos em publicidade. O texto é um rascunho sujeito à revisão do seu advogado."
+     "text": "Sem uma autorização vigente (aceita e não revogada), a equipe não pode tirar fotografias do paciente; as fichas anteriores com o consentimento da ficha continuam podendo. Um link aceito sem código (o paciente não tem e-mail) vale menos como prova. Esta autorização não substitui o consentimento informado de um procedimento médico nem autoriza o uso de fotos em publicidade. O texto é um rascunho sujeito à revisão do seu advogado."
     }
    ],
    "key": "photoconsent"

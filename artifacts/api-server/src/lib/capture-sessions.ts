@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { and, eq, gt, isNull } from "drizzle-orm";
 import { db, captureSessionsTable, leadsTable, centersTable, type Lead } from "@workspace/db";
 import { DEFAULT_CENTER_ID, PhaseCaptureError, getLeadPhases, type LeadPhase } from "./clinical-photos";
+import { PHOTO_CONSENT_REQUIRED_MESSAGE, photoConsentGate } from "./photo-consent-gate";
 
 /** The phone link lives a few minutes: enough to photograph one phase, short enough to be harmless if it leaks. */
 export const CAPTURE_SESSION_MINUTES = 20;
@@ -23,6 +24,7 @@ function capturablePhase(phases: LeadPhase[], phaseId: string): LeadPhase {
 /** Opens a capture session; any earlier open one for the same phase is closed, so only the newest link works. */
 export async function createCaptureSession(lead: Lead, phaseId: string, userId: string): Promise<{ token: string; expiresAt: Date }> {
   capturablePhase(await getLeadPhases(lead), phaseId);
+  if ((await photoConsentGate(lead)) !== "ok") throw new PhaseCaptureError(PHOTO_CONSENT_REQUIRED_MESSAGE, 409);
   const centerId = lead.centerId ?? DEFAULT_CENTER_ID;
   const now = new Date();
   await db.update(captureSessionsTable).set({ closedAt: now }).where(and(

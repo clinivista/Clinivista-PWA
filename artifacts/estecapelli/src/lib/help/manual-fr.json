@@ -1580,7 +1580,7 @@
     },
     {
      "t": "note",
-     "text": "Un lien accepté sans code (patient sans e-mail) a moins de valeur comme preuve. Cette autorisation ne remplace pas le consentement éclairé pour un acte médical et n'autorise pas l'usage des photos en publicité. Le texte est un projet soumis à la relecture de votre avocat."
+     "text": "Sans autorisation en cours (acceptée et non révoquée), le personnel ne peut pas prendre de photographies du patient ; les fiches antérieures avec le consentement de la fiche le peuvent encore. Un lien accepté sans code (patient sans e-mail) a moins de valeur comme preuve. Cette autorisation ne remplace pas le consentement éclairé pour un acte médical et n'autorise pas l'usage des photos en publicité. Le texte est un projet soumis à la relecture de votre avocat."
     }
    ],
    "key": "photoconsent"

@@ -13,6 +13,7 @@ import { DiagnosisPanel, type DiagnosisLeadData } from "@/components/diagnosis-p
 import { useLanguage } from "@/lib/language";
 import { PHASES_TEXT, phaseName, refreshLeadViews, viewLabel } from "@/lib/phases-i18n";
 import { STAFF_FLOW_TEXT } from "@/lib/staff-flow-i18n";
+import { PHOTO_CONSENT_UI } from "@/lib/photo-consent-i18n";
 import { DischargeControl, SkipPhaseButton, SkippedNote } from "@/components/phase-actions";
 import { PhaseAttention } from "@/components/phase-attention";
 import { PhotoTranscription } from "@/components/photo-transcription";
@@ -196,8 +197,8 @@ function PhotoViewSlot({ leadId, phase, view, disabled, onExpand }: {
         body,
       });
       if (!response.ok) {
-        const detail = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(detail?.error ?? p.cantSavePhoto);
+        const detail = (await response.json().catch(() => null)) as { error?: string; code?: string } | null;
+        throw new Error(detail?.code === "photo_consent_required" ? PHOTO_CONSENT_UI[lang].gate : detail?.error ?? p.cantSavePhoto);
       }
       await refresh();
     } catch (error) {

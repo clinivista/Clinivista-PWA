@@ -1580,7 +1580,7 @@
     },
     {
      "t": "note",
-     "text": "Ein ohne Code akzeptierter Link (Patient ohne E-Mail) ist ein schwächerer Nachweis. Diese Einwilligung ersetzt nicht die Einwilligung zu einem medizinischen Eingriff und erlaubt keine Werbung mit Fotos. Der Text ist ein Entwurf, der der Prüfung Ihres Anwalts unterliegt."
+     "text": "Ohne gültige Einwilligung (erteilt und nicht widerrufen) darf das Personal keine Fotos des Patienten aufnehmen; ältere Akten mit der Einwilligung der Akte können es weiterhin. Ein ohne Code akzeptierter Link (Patient ohne E-Mail) ist ein schwächerer Nachweis. Diese Einwilligung ersetzt nicht die Einwilligung zu einem medizinischen Eingriff und erlaubt keine Werbung mit Fotos. Der Text ist ein Entwurf, der der Prüfung Ihres Anwalts unterliegt."
     }
    ],
    "key": "photoconsent"

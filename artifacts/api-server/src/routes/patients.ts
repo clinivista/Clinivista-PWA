@@ -1,4 +1,5 @@
-import { PRIVACY_POLICY_VERSION } from "../lib/legal-version";
+import { ensureSelfPhotoConsent } from "../lib/photo-consents";
+import { MARKETING_CONSENT_VERSION, PRIVACY_POLICY_VERSION } from "../lib/legal-version";
 import express, { Router, type IRouter } from "express";
 import sharp from "sharp";
 import { and, eq, or } from "drizzle-orm";
@@ -76,6 +77,10 @@ export function buildLead(payload: Record<string, unknown>, existing: Partial<ty
       ? { consentAt: new Date(), consentPolicyVersion: PRIVACY_POLICY_VERSION }
       : {}),
     marketingConsent: Boolean(payload.marketingConsent),
+    // Prueba del consentimiento comercial: se fija al aceptarlo y se borra si lo retira.
+    ...(Boolean(payload.marketingConsent)
+      ? (existing.marketingConsent && existing.marketingConsentAt ? {} : { marketingConsentAt: new Date(), marketingConsentVersion: MARKETING_CONSENT_VERSION })
+      : { marketingConsentAt: null, marketingConsentVersion: "" }),
     language: payload.language === undefined ? existing.language ?? "" : toMailLanguage(payload.language) === payload.language ? String(payload.language) : "",
     deliveryChannel: payload.deliveryChannel === undefined
       ? existing.deliveryChannel ?? ""
@@ -304,6 +309,7 @@ async function createPatientInCenter(req: express.Request, res: express.Response
   };
   await db.insert(leadsTable).values(newLead);
   const [inserted] = await db.select().from(leadsTable).where(eq(leadsTable.id, newLead.id));
+  await ensureSelfPhotoConsent(inserted).catch(() => undefined);
   // The patient's portal account is created from the email they typed; the
   // mail with the link to choose a password goes out in the background.
   void ensurePatientAccountForLead(inserted, baseUrl(req));
@@ -443,6 +449,7 @@ router.put("/patients/:token", async (req, res): Promise<void> => {
   const [updated] = await db.update(leadsTable)
     .set({ ...data, status: updatedStatus(existing.status, completed, requiredKeys.length), photoCount: String(completed) })
     .where(eq(leadsTable.id, existing.id)).returning();
+  if (updated.consent) await ensureSelfPhotoConsent(updated).catch(() => undefined);
   const changes = changedFields(existing, updated);
   if (Object.keys(changes).length) await recordPatientUpdate(existing, "data", "data", { changes });
   if (normalizeEmail(updated.email ?? "") !== normalizeEmail(existing.email ?? "") && existing.patientAccountId) {

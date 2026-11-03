@@ -56,7 +56,8 @@ const VALID_BODY = {
 
 beforeAll(async () => {
   await pglite.exec(`
-    CREATE TABLE IF NOT EXISTS leads (parent_lead_id text, 
+    CREATE TABLE IF NOT EXISTS photo_consents (id text PRIMARY KEY, center_id text NOT NULL, lead_id text NOT NULL, method text NOT NULL, status text NOT NULL DEFAULT 'pending', language text NOT NULL DEFAULT 'es', text_version text NOT NULL DEFAULT '', text_snapshot text NOT NULL DEFAULT '', token_hash text, expires_at timestamptz, code_hash text, code_expires_at timestamptz, code_attempts integer NOT NULL DEFAULT 0, verified_by text NOT NULL DEFAULT '', file jsonb, requested_by_name text NOT NULL DEFAULT '', registered_by_name text NOT NULL DEFAULT '', ip text NOT NULL DEFAULT '', user_agent text NOT NULL DEFAULT '', contact text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now(), granted_at timestamptz, revoked_at timestamptz, revoke_note text NOT NULL DEFAULT '');
+    CREATE TABLE IF NOT EXISTS leads (marketing_consent_at timestamptz, marketing_consent_version text DEFAULT '', parent_lead_id text, 
       id text PRIMARY KEY,
       token text NOT NULL UNIQUE,
       created_at timestamptz NOT NULL DEFAULT now(),

@@ -58,6 +58,13 @@ describe("solicitudes de los titulares", () => {
     expect(list.body.requests[0]).toMatchObject({ type: "portability", status: "pending", patientName: "Paciente Uno" });
   });
 
+  it("acepta «retirar mi consentimiento» como solicitud", async () => {
+    const created = await request(app).post("/api/patients/tok-a/data-requests").send({ type: "withdrawal", message: "Ya no quiero recibir nada" });
+    expect(created.status).toBe(201);
+    const list = await request(app).get("/api/clinic/data-requests").set("Cookie", asA());
+    expect(list.body.requests[0]).toMatchObject({ type: "withdrawal", status: "pending" });
+  });
+
   it("rechaza tipos inválidos y enlaces desconocidos", async () => {
     expect((await request(app).post("/api/patients/tok-a/data-requests").send({ type: "otro" })).status).toBe(400);
     expect((await request(app).post("/api/patients/nope/data-requests").send({ type: "access" })).status).toBe(404);

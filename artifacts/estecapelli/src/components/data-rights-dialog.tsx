@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/lib/language";
 import { DATA_RIGHTS_TEXT } from "@/lib/data-rights-i18n";
 
-const TYPES = ["access", "rectification", "erasure", "opposition", "portability", "blocking"] as const;
+const TYPES = ["access", "withdrawal", "rectification", "erasure", "opposition", "portability", "blocking"] as const;
 
 // «Mis datos y derechos»: el paciente pide acceso, rectificación, eliminación, oposición, portabilidad o bloqueo.
 // La clínica ve la solicitud en su panel y tiene 30 días corridos para responder.
