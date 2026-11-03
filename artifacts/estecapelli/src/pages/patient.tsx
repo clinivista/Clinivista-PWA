@@ -36,6 +36,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { DataRightsDialog } from "@/components/data-rights-dialog";
 import { DuplicateHelp } from "@/components/duplicate-help";
+import { SelfConsentDocument } from "@/components/self-consent-document";
 import { LockedEvaluation } from "@/components/locked-evaluation";
 import { EVALUATION_EDIT_TEXT } from "@/lib/evaluation-edit-i18n";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
@@ -1586,6 +1587,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
                   <div className="h-1 bg-gradient-to-r from-[#A78BFA] to-[#A78BFA]/30" />
                   <div className="p-6 md:p-8 space-y-4">
                     <h3 className="font-bold text-sm uppercase tracking-wider text-[#A78BFA]">{t.pConsentTitle}</h3>
+                    <SelfConsentDocument lang={lang as LangCode} clinicName={clinic?.name ?? ""} clinicLogo={clinic?.logoDataUrl} patientName={form.watch("name")} />
                     <ul className="space-y-2.5 text-sm text-muted-foreground">
                       <li className="flex items-start gap-2.5 bg-[#F5F2EE] rounded-2xl p-3.5">
                         <Check className="w-4 h-4 text-[#A78BFA] mt-0.5 shrink-0" />{t.pConsentLine1}

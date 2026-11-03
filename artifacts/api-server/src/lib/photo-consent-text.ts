@@ -9,6 +9,8 @@ export const PHOTO_CONSENT_VERSION = "foto-2026-11-borrador-1";
 export type PhotoConsentText = {
   title: string;
   intro: (clinic: string) => string;
+  /** Para el paciente que se registra por su cuenta y envía sus propias fotos (no las toma la clínica). */
+  selfIntro: (clinic: string) => string;
   points: string[];
   checkbox: string;
   mail: {
@@ -28,6 +30,7 @@ export const PHOTO_CONSENT_TEXT: Record<MailLanguage, PhotoConsentText> = {
   es: {
     title: "Autorización para fotografías clínicas",
     intro: (c) => `${c} tomará fotografías tuyas para tu atención. Léelas con calma y acepta solo si estás de acuerdo.`,
+    selfIntro: (c) => `${c} recibirá y guardará los datos y las fotografías que envíes para tu pre-evaluación. Léelo con calma y acepta solo si estás de acuerdo.`,
     points: [
       "Para qué: las fotografías se usan solo para evaluar tu caso, hacer el diagnóstico y seguir tu evolución clínica.",
       "Quién las ve: el equipo médico y administrativo autorizado de la clínica. Clinivista las guarda como proveedor técnico de la clínica y no las usa para otros fines.",
@@ -52,6 +55,7 @@ export const PHOTO_CONSENT_TEXT: Record<MailLanguage, PhotoConsentText> = {
   en: {
     title: "Authorization for clinical photographs",
     intro: (c) => `${c} will take photographs of you for your care. Read this carefully and accept only if you agree.`,
+    selfIntro: (c) => `${c} will receive and store the data and photographs you send for your pre-evaluation. Read this carefully and accept only if you agree.`,
     points: [
       "Purpose: the photographs are used only to evaluate your case, make the diagnosis and follow your clinical progress.",
       "Who sees them: the clinic's authorized medical and administrative team. Clinivista stores them as the clinic's technical provider and does not use them for any other purpose.",
@@ -76,6 +80,7 @@ export const PHOTO_CONSENT_TEXT: Record<MailLanguage, PhotoConsentText> = {
   pt: {
     title: "Autorização para fotografias clínicas",
     intro: (c) => `${c} tirará fotografias suas para o seu atendimento. Leia com calma e aceite somente se concordar.`,
+    selfIntro: (c) => `${c} receberá e guardará os dados e as fotografias que você enviar para sua pré-avaliação. Leia com calma e aceite somente se concordar.`,
     points: [
       "Para quê: as fotografias são usadas apenas para avaliar seu caso, fazer o diagnóstico e acompanhar sua evolução clínica.",
       "Quem vê: a equipe médica e administrativa autorizada da clínica. A Clinivista as guarda como fornecedora técnica da clínica e não as usa para outros fins.",
@@ -100,6 +105,7 @@ export const PHOTO_CONSENT_TEXT: Record<MailLanguage, PhotoConsentText> = {
   fr: {
     title: "Autorisation pour les photographies cliniques",
     intro: (c) => `${c} prendra des photographies de vous pour votre prise en charge. Lisez attentivement et n'acceptez que si vous êtes d'accord.`,
+    selfIntro: (c) => `${c} recevra et conservera les données et les photographies que vous envoyez pour votre pré-évaluation. Lisez attentivement et n'acceptez que si vous êtes d'accord.`,
     points: [
       "Finalité : les photographies servent uniquement à évaluer votre cas, établir le diagnostic et suivre votre évolution clinique.",
       "Qui les voit : l'équipe médicale et administrative autorisée de la clinique. Clinivista les conserve en tant que prestataire technique de la clinique et ne les utilise à aucune autre fin.",
@@ -124,6 +130,7 @@ export const PHOTO_CONSENT_TEXT: Record<MailLanguage, PhotoConsentText> = {
   de: {
     title: "Einwilligung zu klinischen Fotos",
     intro: (c) => `${c} wird für Ihre Behandlung Fotos von Ihnen aufnehmen. Lesen Sie in Ruhe und stimmen Sie nur zu, wenn Sie einverstanden sind.`,
+    selfIntro: (c) => `${c} erhält und speichert die Daten und Fotos, die Sie für Ihre Voreinschätzung senden. Lesen Sie in Ruhe und stimmen Sie nur zu, wenn Sie einverstanden sind.`,
     points: [
       "Zweck: Die Fotos dienen ausschließlich der Beurteilung Ihres Falls, der Diagnose und der Verfolgung Ihres klinischen Verlaufs.",
       "Wer sie sieht: das autorisierte medizinische und administrative Team der Klinik. Clinivista speichert sie als technischer Dienstleister der Klinik und nutzt sie nicht für andere Zwecke.",
@@ -148,6 +155,7 @@ export const PHOTO_CONSENT_TEXT: Record<MailLanguage, PhotoConsentText> = {
   it: {
     title: "Autorizzazione per le fotografie cliniche",
     intro: (c) => `${c} scatterà fotografie di te per la tua assistenza. Leggi con calma e accetta solo se sei d'accordo.`,
+    selfIntro: (c) => `${c} riceverà e conserverà i dati e le fotografie che invii per la tua pre-valutazione. Leggi con calma e accetta solo se sei d'accordo.`,
     points: [
       "Finalità: le fotografie servono solo a valutare il tuo caso, formulare la diagnosi e seguire la tua evoluzione clinica.",
       "Chi le vede: l'équipe medica e amministrativa autorizzata della clinica. Clinivista le conserva come fornitore tecnico della clinica e non le usa per altri scopi.",
@@ -172,6 +180,7 @@ export const PHOTO_CONSENT_TEXT: Record<MailLanguage, PhotoConsentText> = {
   tr: {
     title: "Klinik fotoğraf izni",
     intro: (c) => `${c}, bakımınız için sizin fotoğraflarınızı çekecek. Dikkatle okuyun ve yalnızca kabul ediyorsanız onaylayın.`,
+    selfIntro: (c) => `${c}, ön değerlendirmeniz için gönderdiğiniz verileri ve fotoğrafları alıp saklayacak. Dikkatle okuyun ve yalnızca kabul ediyorsanız onaylayın.`,
     points: [
       "Amaç: fotoğraflar yalnızca durumunuzu değerlendirmek, tanı koymak ve klinik seyrinizi izlemek için kullanılır.",
       "Kimler görür: kliniğin yetkili tıbbi ve idari ekibi. Clinivista bunları kliniğin teknik sağlayıcısı olarak saklar ve başka amaçla kullanmaz.",
@@ -196,6 +205,7 @@ export const PHOTO_CONSENT_TEXT: Record<MailLanguage, PhotoConsentText> = {
   ar: {
     title: "إذن بالتصوير السريري",
     intro: (c) => `ستلتقط ${c} صورًا لك من أجل رعايتك. اقرأ بتمعّن ووافق فقط إذا كنت موافقًا.`,
+    selfIntro: (c) => `ستتلقى ${c} البيانات والصور التي ترسلها لتقييمك الأولي وتحتفظ بها. اقرأ بتمعّن ووافق فقط إذا كنت موافقًا.`,
     points: [
       "الغرض: تُستخدم الصور فقط لتقييم حالتك وإجراء التشخيص ومتابعة تطورك السريري.",
       "من يراها: الفريق الطبي والإداري المصرّح له في العيادة. تحفظها Clinivista بصفتها مزوّدًا تقنيًا للعيادة ولا تستخدمها لأي غرض آخر.",
@@ -220,6 +230,7 @@ export const PHOTO_CONSENT_TEXT: Record<MailLanguage, PhotoConsentText> = {
   zh: {
     title: "临床照片授权",
     intro: (c) => `${c} 将为您的诊疗拍摄您的照片。请仔细阅读，仅在同意时接受。`,
+    selfIntro: (c) => `${c} 将接收并保存您为预评估发送的数据和照片。请仔细阅读，仅在同意时接受。`,
     points: [
       "用途：照片仅用于评估您的病情、作出诊断和跟踪您的临床进展。",
       "谁能查看：诊所获授权的医疗和行政团队。Clinivista 作为诊所的技术服务提供方保存照片，不会用于其他目的。",

@@ -12,13 +12,15 @@ type Props = {
   points: string[];
   /** Casilla de aceptación, firma, etc.: se muestra al pie del documento. */
   children?: ReactNode;
+  /** Nivel del título: h1 en la página propia, h2 cuando va dentro de otra página. */
+  heading?: "h1" | "h2";
 };
 
 /**
  * La autorización como documento formal: encabezado con el logo y el nombre de la clínica, datos del paciente,
  * puntos numerados y, al pie, lo que el paciente debe hacer (aceptar, firmar). Se usa en el enlace y en la firma en pantalla.
  */
-export function ConsentDocument({ lang, clinicName, clinicLogo, patientName, title, intro, points, children }: Props) {
+export function ConsentDocument({ lang, clinicName, clinicLogo, patientName, title, intro, points, children, heading: Heading = "h1" }: Props) {
   const ui = PHOTO_CONSENT_UI[lang];
   const date = new Date().toLocaleDateString(lang, { dateStyle: "long" });
   return (
@@ -39,7 +41,7 @@ export function ConsentDocument({ lang, clinicName, clinicLogo, patientName, tit
 
       <div className="space-y-5 px-5 py-6 md:px-8">
         <div>
-          <h1 className="text-xl font-extrabold text-foreground md:text-2xl">{title}</h1>
+          <Heading className="text-xl font-extrabold text-foreground md:text-2xl">{title}</Heading>
           {(patientName || date) && (
             <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
               {patientName ? (<div className="flex gap-2"><dt className="text-muted-foreground">{ui.patientLabel}:</dt><dd className="font-semibold">{patientName}</dd></div>) : null}
