@@ -485,7 +485,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OkResponse"
+                $ref: "#/components/schemas/PortalForgotResult"
   /portal/logout:
     post:
       operationId: portalLogout
@@ -3593,6 +3593,13 @@ components:
       properties:
         token: {type: string}
         password: {type: string}
+
+    PortalForgotResult:
+      type: object
+      required: [ok]
+      properties:
+        ok: {type: boolean}
+        throttled: {type: boolean, description: "true when too many links were requested in a short time and none was sent"}
 
     PortalForgotInput:
       type: object

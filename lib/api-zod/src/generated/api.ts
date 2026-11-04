@@ -573,7 +573,8 @@ export const PortalForgotBody = zod.object({
 })
 
 export const PortalForgotResponse = zod.object({
-  "ok": zod.boolean()
+  "ok": zod.boolean(),
+  "throttled": zod.boolean().optional().describe('true when too many links were requested in a short time and none was sent')
 })
 
 

@@ -38,6 +38,7 @@ import { DataRightsDialog } from "@/components/data-rights-dialog";
 import { DuplicateHelp } from "@/components/duplicate-help";
 import { SelfConsentDocument } from "@/components/self-consent-document";
 import { CONSENT_FIRST_TEXT } from "@/lib/patient-consent-first-i18n";
+import { PATIENT_ACCOUNT_TEXT } from "@/lib/patient-account-i18n";
 import { LockedEvaluation } from "@/components/locked-evaluation";
 import { EVALUATION_EDIT_TEXT } from "@/lib/evaluation-edit-i18n";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
@@ -572,6 +573,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
   const { t, lang, setLang } = useLanguage();
   const extra = PATIENT_EXTRA_TEXT[lang];
   const consentText = CONSENT_FIRST_TEXT[lang];
+  const accountText = PATIENT_ACCOUNT_TEXT[lang];
   const [langOpen, setLangOpen] = useState(false);
   const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
 
@@ -1529,6 +1531,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
                       <FormItem>
                         <FormLabel className="text-sm font-bold">{t.pEmail}</FormLabel>
                         <FormControl><Input type="email" placeholder="correo@ejemplo.com" readOnly={Boolean(googleProfile) && !token} className="h-12 rounded-2xl bg-[#F5F2EE] border-[#E8E4DE] focus:bg-white text-base" {...field} /></FormControl>
+                        {!googleProfile && <p className="text-xs text-muted-foreground" data-testid="email-account-hint">{accountText.emailHint}</p>}
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -1865,6 +1868,19 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
                     </div>
                   ))}
                 </div>
+              </div>
+
+              <div className="mb-8 rounded-2xl border border-primary/20 bg-primary/5 p-5 text-left" data-testid="success-account-box">
+                <h3 className="mb-2 font-bold text-foreground">{accountText.successTitle}</h3>
+                {googleProfile ? (
+                  <p className="text-sm text-muted-foreground">{accountText.successGoogle}</p>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground">{accountText.successBody.replace("{email}", form.getValues("email"))}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">{accountText.successSpam}</p>
+                  </>
+                )}
+                <Link href="/paciente?recover=1"><Button variant="outline" className="mt-3 h-11 rounded-full text-sm font-semibold bg-white">{accountText.successAction}</Button></Link>
               </div>
 
               <Link href={clinicSlug ? basePath : "/"}>

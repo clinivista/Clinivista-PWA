@@ -3,6 +3,7 @@ import {
   AccountError, createPatientSession, destroyPatientSession, getPatientSession, loginPatient, portalOverview,
   portalResultPath, requestPasswordReset, setPasswordWithToken, throttled,
 } from "../lib/patient-accounts";
+import { logger } from "../lib/logger";
 import { privatePhotoStorage } from "../lib/clinical-photo-storage";
 import { baseUrl } from "./results";
 import crypto from "crypto";
@@ -51,11 +52,18 @@ router.post("/portal/setup", async (req, res): Promise<void> => {
 });
 
 // Always answers the same, so it cannot be used to find out who has an account.
+// Si pidió demasiados enlaces seguidos se le dice (`throttled`): no revela si la cuenta existe.
 router.post("/portal/forgot", async (req, res): Promise<void> => {
   const { email, language } = (req.body ?? {}) as { email?: unknown; language?: unknown };
-  if (typeof email === "string" && email.includes("@") && !throttled(`forgot:${email.trim().toLowerCase()}`, 3, 15 * 60_000) && !throttled(`forgot-ip:${req.ip}`, 20, 15 * 60_000)) {
-    await requestPasswordReset(email, baseUrl(req), typeof language === "string" ? language : null).catch(() => undefined);
+  if (typeof email !== "string" || !email.includes("@")) {
+    res.json({ ok: true });
+    return;
   }
+  if (throttled(`forgot:${email.trim().toLowerCase()}`, 3, 15 * 60_000) || throttled(`forgot-ip:${req.ip}`, 20, 15 * 60_000)) {
+    res.json({ ok: true, throttled: true });
+    return;
+  }
+  await requestPasswordReset(email, baseUrl(req), typeof language === "string" ? language : null).catch((err) => logger.error({ err }, "Falló la solicitud de clave del paciente"));
   res.json({ ok: true });
 });
 

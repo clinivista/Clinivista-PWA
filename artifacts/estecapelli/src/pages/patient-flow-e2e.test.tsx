@@ -326,6 +326,9 @@ describe("Full patient form flow — end to end", () => {
       await screen.findByText("¡Tu evaluación fue recibida!"),
     ).toBeInTheDocument();
     expect(screen.getByText(/24 horas hábiles/i)).toBeInTheDocument();
+    // The patient is told an email was sent and why they need a password.
+    expect(screen.getByTestId("success-account-box")).toHaveTextContent(/Te enviamos un correo a .+ para crear tu clave/);
+    expect(screen.getByTestId("success-account-box")).toHaveTextContent(/ejercer tus derechos/);
 
     // 8. The form first creates the tokenized evaluation, then uploads binary photo data.
     expect(fetchSpy).toHaveBeenCalledWith(

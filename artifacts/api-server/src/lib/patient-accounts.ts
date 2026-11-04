@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { isEvaluationLocked } from "./patient-edits";
-import { and, eq, inArray, ne } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 import {
   db, leadsTable, patientAccountsTable, resultDeliveriesTable, hashPassword, verifyPassword, normalizeEmail, type Lead,
 } from "@workspace/db";
@@ -105,7 +105,11 @@ export async function ensurePatientAccountForLead(lead: Lead, baseUrl: string): 
     await db.insert(patientAccountsTable).values({ id: uid(18), email, emailNormalized: normalized }).onConflictDoNothing();
     const [account] = await db.select().from(patientAccountsTable).where(eq(patientAccountsTable.emailNormalized, normalized));
     if (!account) return;
-    await db.update(leadsTable).set({ patientAccountId: account.id }).where(eq(leadsTable.id, lead.id));
+    // Solo quien logra vincular el caso envía el correo: dos guardados casi simultáneos (crear y autoguardar) no deben
+    // mandar dos enlaces, porque el segundo deja sin efecto al primero.
+    const claimed = await db.update(leadsTable).set({ patientAccountId: account.id })
+      .where(and(eq(leadsTable.id, lead.id), isNull(leadsTable.patientAccountId))).returning({ id: leadsTable.id });
+    if (claimed.length === 0) return;
     // Signed in with Google (verified email) or already has a password: nothing to set up.
     if (account.passwordHash || account.emailVerified) return;
     const token = await issueToken(account.id, SETUP_TTL_MS);
@@ -136,14 +140,23 @@ export async function accountProfile(accountId: string): Promise<{ email: string
   return account ? { email: account.email, name: account.name } : null;
 }
 
-export async function requestPasswordReset(email: string, baseUrl: string, language?: string | null): Promise<void> {
+export type ResetOutcome = "sent" | "no_account" | "failed";
+
+/** Envía el enlace para crear o cambiar la clave. El resultado es solo para el registro del servidor: al paciente se le responde igual exista o no la cuenta. */
+export async function requestPasswordReset(email: string, baseUrl: string, language?: string | null): Promise<ResetOutcome> {
   const normalized = normalizeEmail(email);
   const [account] = await db.select().from(patientAccountsTable).where(eq(patientAccountsTable.emailNormalized, normalized));
-  if (!account) return;
+  if (!account) return "no_account";
   const [lead] = await db.select().from(leadsTable).where(eq(leadsTable.patientAccountId, account.id)).limit(1);
   const kind = account.passwordHash ? "reset" : "setup";
   const token = await issueToken(account.id, kind === "reset" ? RESET_TTL_MS : SETUP_TTL_MS);
-  await sendAccountMail(account.email, lead?.centerId ?? null, kind, token, baseUrl, language || lead?.language);
+  try {
+    await sendAccountMail(account.email, lead?.centerId ?? null, kind, token, baseUrl, language || lead?.language);
+    return "sent";
+  } catch (error) {
+    logger.error({ err: error, kind }, "No se pudo enviar el correo para crear o cambiar la clave del paciente");
+    return "failed";
+  }
 }
 
 export class AccountError extends Error {

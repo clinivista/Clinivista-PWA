@@ -19,7 +19,7 @@ vi.mock("@workspace/api-client-react", () => ({
 }));
 vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: api.invalidate, resetQueries: api.reset }) }));
 vi.mock("wouter", () => ({
-  Link: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
+  Link: ({ children, href, ...rest }: { children: React.ReactNode; href: string }) => <a href={href} {...rest}>{children}</a>,
   useLocation: () => ["/", api.navigate],
   useSearch: () => api.search,
 }));
@@ -81,16 +81,50 @@ describe("Portal del paciente", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Correo o clave incorrectos.");
   });
 
-  it("asks for the email before sending the password link, and always answers the same", async () => {
+  it("opens the recover screen, asks for the email, and tells the patient what happened", async () => {
     const user = userEvent.setup();
-    api.forgot.mockImplementation((_vars, options) => options.onSuccess());
+    api.forgot.mockImplementation((_vars, options) => options.onSuccess({ ok: true }));
     render(<Portal />);
-    const forgot = screen.getByRole("button", { name: /Crear o recuperar mi clave/ });
-    expect(forgot).toBeDisabled();
+    expect(screen.getByTestId("first-time-hint")).toBeInTheDocument();
+    await user.click(screen.getByTestId("open-recover"));
+    const send = screen.getByTestId("recover-send");
+    expect(send).toBeDisabled();
     await user.type(screen.getByLabelText("Correo electrónico"), "p@x.cl");
-    await user.click(forgot);
+    await user.click(send);
     expect(api.forgot.mock.calls[0][0]).toEqual({ data: { email: "p@x.cl", language: "es" } });
-    expect(screen.getByRole("status")).toHaveTextContent(/Si el correo tiene una cuenta/);
+    expect(screen.getByTestId("recover-done")).toHaveTextContent(/Revisa tu correo/);
+    expect(screen.getByTestId("recover-done")).toHaveTextContent(/p@x.cl/);
+    expect(screen.getByTestId("recover-resend")).toBeDisabled();
+  });
+
+  it("says plainly when too many links were requested instead of pretending one was sent", async () => {
+    const user = userEvent.setup();
+    api.forgot.mockImplementation((_vars, options) => options.onSuccess({ ok: true, throttled: true }));
+    render(<Portal />);
+    await user.click(screen.getByTestId("open-recover"));
+    await user.type(screen.getByLabelText("Correo electrónico"), "p@x.cl");
+    await user.click(screen.getByTestId("recover-send"));
+    expect(screen.getByTestId("recover-done")).toHaveTextContent(/Ya pediste varios enlaces/);
+    expect(screen.getByTestId("recover-done")).not.toHaveTextContent(/Revisa tu correo/);
+  });
+
+  it("shows an error when the request fails, and can go back to sign in", async () => {
+    const user = userEvent.setup();
+    api.forgot.mockImplementation((_vars, options) => options.onError({ status: 500 }));
+    render(<Portal />);
+    await user.click(screen.getByTestId("open-recover"));
+    await user.type(screen.getByLabelText("Correo electrónico"), "p@x.cl");
+    await user.click(screen.getByTestId("recover-send"));
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    await user.click(screen.getByTestId("recover-back"));
+    expect(screen.getByTestId("open-recover")).toBeInTheDocument();
+  });
+
+  it("shows the confirmation banner after the password was created", () => {
+    api.search = "clave=ok";
+    render(<Portal />);
+    expect(screen.getByTestId("password-created")).toBeInTheDocument();
+    api.search = "";
   });
 
   it("lists the delivered results of each clinic, and says when there are none yet", () => {
@@ -125,7 +159,19 @@ describe("Portal del paciente", () => {
     await user.type(screen.getByLabelText("Repite la clave"), "clave-segura-1");
     await user.click(save);
     expect(api.setup.mock.calls[0][0]).toEqual({ data: { token: "abc123", password: "clave-segura-1" } });
-    expect(api.navigate).toHaveBeenCalledWith("/paciente");
+    expect(api.navigate).toHaveBeenCalledWith("/paciente?clave=ok");
+  });
+
+  it("an expired or used link explains why and offers to request a new one", async () => {
+    const user = userEvent.setup();
+    api.search = "token=viejo";
+    api.setup.mockImplementation((_vars, options) => options.onError({ status: 400 }));
+    render(<PortalSetPassword />);
+    await user.type(screen.getByLabelText(/Nueva clave/), "clave-segura-1");
+    await user.type(screen.getByLabelText("Repite la clave"), "clave-segura-1");
+    await user.click(screen.getByRole("button", { name: "Guardar clave" }));
+    expect(screen.getByRole("alert")).toHaveTextContent(/ya no sirve/);
+    expect(screen.getByTestId("request-new-link")).toHaveAttribute("href", "/paciente?recover=1");
   });
 
   it.each(LANGS.map((language) => language.code))("in %s: shows the portal in that language, with the failure message chosen by status", async (code) => {
