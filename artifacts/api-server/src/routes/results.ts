@@ -1,3 +1,4 @@
+import { getClinicChannels } from "../lib/clinic-channels";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { db, leadsTable, usersTable } from "@workspace/db";
@@ -42,6 +43,7 @@ router.get("/leads/:id/results", async (req, res): Promise<void> => {
   if (!ctx) return;
   const channel = ctx.lead.deliveryChannel === "email" || ctx.lead.deliveryChannel === "whatsapp" ? ctx.lead.deliveryChannel : null;
   res.json({
+    channels: await getClinicChannels(ctx.lead.centerId),
     preferredChannel: channel,
     email: ctx.lead.email || null,
     phone: whatsappNumber(ctx.lead.phone) ? ctx.lead.phone : null,
@@ -72,6 +74,10 @@ router.post("/leads/:id/results/deliver", async (req, res): Promise<void> => {
   const channel = (req.body as { channel?: unknown } | undefined)?.channel;
   if (channel !== "email" && channel !== "whatsapp") {
     res.status(400).json({ error: "Elige correo o WhatsApp." });
+    return;
+  }
+  if (!(await getClinicChannels(ctx.lead.centerId)).includes(channel)) {
+    res.status(422).json({ error: "Tu clínica no tiene activo ese canal. Actívalo en «Canales de comunicación»." });
     return;
   }
   const [user] = await db.select({ name: usersTable.name, email: usersTable.email }).from(usersTable).where(eq(usersTable.id, ctx.staff.userId));

@@ -3031,10 +3031,16 @@ components:
 
     PatientClinic:
       type: object
-      required: [name, logoDataUrl, specialty]
+      required: [name, logoDataUrl, specialty, channels]
       properties:
         name:
           type: string
+        channels:
+          type: array
+          description: Channels the clinic uses to deliver results; the patient chooses one of them (nothing is preselected).
+          items:
+            type: string
+            enum: [email, whatsapp]
         logoDataUrl:
           type: string
           nullable: true
@@ -3654,8 +3660,12 @@ components:
 
     ResultsState:
       type: object
-      required: [emailConfigured, deliveries]
+      required: [emailConfigured, deliveries, channels]
       properties:
+        channels:
+          type: array
+          description: Channels the clinic has enabled to deliver results.
+          items: {type: string, enum: [email, whatsapp]}
         preferredChannel: {type: ["string", "null"]}
         email: {type: ["string", "null"]}
         phone: {type: ["string", "null"]}

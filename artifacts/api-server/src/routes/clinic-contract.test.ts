@@ -30,7 +30,7 @@ beforeAll(async () => {
     CREATE TABLE clinical_centers (
       id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE, active boolean NOT NULL DEFAULT true,
       paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar',
-      plan text NOT NULL DEFAULT 'basic', created_at timestamptz NOT NULL DEFAULT now()
+      plan text NOT NULL DEFAULT 'basic', result_channels text NOT NULL DEFAULT 'email,whatsapp', created_at timestamptz NOT NULL DEFAULT now()
     );
     CREATE TABLE users (id text PRIMARY KEY, email text NOT NULL, email_normalized text NOT NULL, password_hash text NOT NULL, name text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', role text NOT NULL, center_id text, active boolean NOT NULL DEFAULT true, legal_representative boolean NOT NULL DEFAULT false, reset_token_hash text, reset_token_expires_at timestamptz, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE clinic_plan_settings (

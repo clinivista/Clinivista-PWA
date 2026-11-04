@@ -344,6 +344,14 @@ export interface PatientProtocol {
   views: PatientProtocolView[];
 }
 
+export type PatientClinicChannelsItem = typeof PatientClinicChannelsItem[keyof typeof PatientClinicChannelsItem];
+
+
+export const PatientClinicChannelsItem = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+} as const;
+
 /**
  * The clinic's specialty; it decides the patient form, the photo protocol and the starting phases.
  */
@@ -358,6 +366,8 @@ export const PatientClinicSpecialty = {
 
 export interface PatientClinic {
   name: string;
+  /** Channels the clinic uses to deliver results; the patient chooses one of them (nothing is preselected). */
+  channels: PatientClinicChannelsItem[];
   logoDataUrl: string | null;
   /** The clinic's specialty; it decides the patient form, the photo protocol and the starting phases. */
   specialty: PatientClinicSpecialty;
@@ -918,6 +928,14 @@ export interface PortalOverview {
   cases: PortalCase[];
 }
 
+export type ResultsStateChannelsItem = typeof ResultsStateChannelsItem[keyof typeof ResultsStateChannelsItem];
+
+
+export const ResultsStateChannelsItem = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+} as const;
+
 export interface ResultsDeliveryRecord {
   id: string;
   channel: string;
@@ -932,6 +950,8 @@ export interface ResultsDeliveryRecord {
 }
 
 export interface ResultsState {
+  /** Channels the clinic has enabled to deliver results. */
+  channels: ResultsStateChannelsItem[];
   /** @nullable */
   preferredChannel?: string | null;
   /** @nullable */

@@ -46,6 +46,7 @@ import { ensurePatientAccountForLead } from "../lib/patient-accounts";
 import { baseUrl } from "./results";
 import { isCenterActive } from "../lib/centers";
 import { assertCanAddPatient, sendIfPlanLimit } from "../lib/plan-limits";
+import { channelProblem } from "../lib/clinic-channels";
 import { clinicIdentity, findCenterBySlug } from "../lib/clinic-identity";
 import { cleanIntake, getSpecialty } from "../lib/specialties";
 import { changedFields, recordPatientUpdate } from "../lib/patient-edits";
@@ -268,6 +269,11 @@ async function createPatientInCenter(req: express.Request, res: express.Response
     res.status(422).json({ error: "Para recibir los resultados por correo, ingresa tu correo electrónico." });
     return;
   }
+  const channelError = await channelProblem(centerId, data.deliveryChannel, true);
+  if (channelError) {
+    res.status(422).json({ error: channelError });
+    return;
+  }
   // Duplicates never return the existing token: phone, email and RUT are not
   // secrets. `resumable` only tells the client that the evaluation is still in
   // progress, so it can point the patient back to the device that holds it.
@@ -438,6 +444,13 @@ router.put("/patients/:token", async (req, res): Promise<void> => {
   if (data.deliveryChannel === "email" && !data.email) {
     res.status(422).json({ error: "Para recibir los resultados por correo, ingresa tu correo electrónico." });
     return;
+  }
+  if ((parsed.data as Record<string, unknown>).deliveryChannel !== undefined) {
+    const channelError = await channelProblem(existingCenterId, data.deliveryChannel, true);
+    if (channelError) {
+      res.status(422).json({ error: channelError });
+      return;
+    }
   }
   const clinicalPhotos = await getPhotoStatusesForLead(existing);
   const requiredKeys = await getRequiredViewKeysForLead(existing);

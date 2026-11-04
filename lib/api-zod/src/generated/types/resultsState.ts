@@ -6,8 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ResultsDeliveryRecord } from './resultsDeliveryRecord';
+import type { ResultsStateChannelsItem } from './resultsStateChannelsItem';
 
 export interface ResultsState {
+  /** Channels the clinic has enabled to deliver results. */
+  channels: ResultsStateChannelsItem[];
   /** @nullable */
   preferredChannel?: string | null;
   /** @nullable */

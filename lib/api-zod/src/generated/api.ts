@@ -675,6 +675,7 @@ export const GetLeadResultsParams = zod.object({
 })
 
 export const GetLeadResultsResponse = zod.object({
+  "channels": zod.array(zod.enum(['email', 'whatsapp'])).describe('Channels the clinic has enabled to deliver results.'),
   "preferredChannel": zod.string().nullish(),
   "email": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -1347,6 +1348,7 @@ export const GetClinicParams = zod.object({
 
 export const GetClinicResponse = zod.object({
   "name": zod.string(),
+  "channels": zod.array(zod.enum(['email', 'whatsapp'])).describe('Channels the clinic uses to deliver results; the patient chooses one of them (nothing is preselected).'),
   "logoDataUrl": zod.string().nullable(),
   "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
@@ -1651,6 +1653,7 @@ export const GetPatientClinicParams = zod.object({
 
 export const GetPatientClinicResponse = zod.object({
   "name": zod.string(),
+  "channels": zod.array(zod.enum(['email', 'whatsapp'])).describe('Channels the clinic uses to deliver results; the patient chooses one of them (nothing is preselected).'),
   "logoDataUrl": zod.string().nullable(),
   "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })

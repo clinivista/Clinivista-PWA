@@ -25,6 +25,10 @@ export const centersTable = pgTable("clinical_centers", {
   // artifacts/api-server/src/lib/plans.ts; hoy solo «titanium» (plan Oro) agrega el video. Nombres visibles: basic=Bronce, unlimited=Plata, titanium=Oro.
   // Migración: lib/db/sql/sql0001-plan-de-clinica.sql.
   plan: text("plan").notNull().default("basic"),
+  // Canales con los que la clínica entrega resultados a sus pacientes (lista separada por comas:
+  // email, whatsapp). La clínica los elige en su panel; SMS está preparado pero aún no envía.
+  // Migración: lib/db/sql/sql0017-canales-de-resultados.sql.
+  resultChannels: text("result_channels").notNull().default("email,whatsapp"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   check("clinical_centers_plan_check", sql`${table.plan} in ('basic', 'unlimited', 'titanium')`),

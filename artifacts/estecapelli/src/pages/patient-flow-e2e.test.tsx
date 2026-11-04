@@ -137,6 +137,7 @@ async function fillForm(user: ReturnType<typeof setupUser>) {
   );
   await user.click(screen.getByText("Selecciona tu ciudad o comuna"));
   await user.click(await screen.findByRole("option", { name: "Santiago" }));
+  await user.click(screen.getByRole("radio", { name: "Por correo" }));
 }
 
 // La autorización ya se aceptó al entrar (es lo primero que ve el paciente); aquí solo se comprueba.
@@ -218,6 +219,7 @@ const RESUME_LEAD = {
   id: "resume-lead-1",
   token: RESUME_TOKEN,
   name: "Paciente de recuperación",
+  deliveryChannel: "email",
   documentId: "12.345.678-5",
   phone: "+56 911111111",
   email: "recuperacion@example.com",

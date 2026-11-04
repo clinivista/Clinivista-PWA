@@ -70,6 +70,7 @@ function ResultsDelivery_({ leadId }: { leadId: string }) {
       },
     });
   const preferred = (channel: "email" | "whatsapp") => data.preferredChannel === channel;
+  const enabled = (channel: "email" | "whatsapp") => (data.channels ?? ["email", "whatsapp"]).includes(channel);
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-border bg-background p-4" data-testid="results-delivery">
       <p className="text-sm font-bold">{p.sendTitle}</p>
@@ -81,13 +82,13 @@ function ResultsDelivery_({ leadId }: { leadId: string }) {
         <Button type="button" variant="outline" className="rounded-full" asChild>
           <a href={`/api/leads/${encodeURIComponent(leadId)}/results/pdf`} target="_blank" rel="noreferrer"><FileText className="w-4 h-4 me-1.5" />{p.viewPdf}</a>
         </Button>
-        <Button type="button" variant={preferred("email") ? "default" : "outline"} className="rounded-full" disabled={deliver.isPending || !data.email} onClick={() => send("email")}
+        {enabled("email") && <Button type="button" variant={preferred("email") ? "default" : "outline"} className="rounded-full" disabled={deliver.isPending || !data.email} onClick={() => send("email")}
           title={data.email ? undefined : p.noEmailTitle}>
           <Mail className="w-4 h-4 me-1.5" />{p.sendEmail}
-        </Button>
-        <Button type="button" variant={preferred("whatsapp") ? "default" : "outline"} className="rounded-full" disabled={deliver.isPending || !data.phone} onClick={() => send("whatsapp")}>
+        </Button>}
+        {enabled("whatsapp") && <Button type="button" variant={preferred("whatsapp") ? "default" : "outline"} className="rounded-full" disabled={deliver.isPending || !data.phone} onClick={() => send("whatsapp")}>
           <MessageCircle className="w-4 h-4 me-1.5" />{p.sendWhatsapp}
-        </Button>
+        </Button>}
         {deliver.isPending && <Loader2 className="w-4 h-4 animate-spin self-center" />}
       </div>
       {!data.emailConfigured && <p className="text-xs text-amber-700">{p.emailNotConfigured}</p>}

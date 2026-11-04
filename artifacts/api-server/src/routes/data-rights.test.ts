@@ -146,7 +146,7 @@ describe("consentimiento del paciente", () => {
     patientsApp.use(express.json());
     patientsApp.use("/api", patientsRouter);
     await pglite.exec(`INSERT INTO clinical_centers (id, name, slug) VALUES ('clinic-a', 'Clínica A', 'clinica-a') ON CONFLICT DO NOTHING;`);
-    const created = await request(patientsApp).post("/api/patients").send({ name: "Paciente Dos", phone: "+56922222222", documentId: "11.111.111-1", consent: true, clinicSlug: "clinica-a" });
+    const created = await request(patientsApp).post("/api/patients").send({ name: "Paciente Dos", phone: "+56922222222", documentId: "11.111.111-1", consent: true, deliveryChannel: "email", email: "dos@example.com", clinicSlug: "clinica-a" });
     expect([200, 201]).toContain(created.status);
     const [row] = (await (mockedDb as unknown as { db: { select: () => { from: (t: unknown) => Promise<Array<{ consentAt: Date | null; consentPolicyVersion: string | null; name: string }>> } } }).db.select().from(mockedDb.leadsTable)).filter((lead) => lead.name === "Paciente Dos");
     expect(row.consentAt).toBeInstanceOf(Date);

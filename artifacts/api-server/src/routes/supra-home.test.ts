@@ -29,7 +29,7 @@ app.use("/api", supraHomeRouter);
 
 beforeAll(async () => {
   await pglite.exec(`
-    CREATE TABLE clinical_centers (id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE, active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', plan text NOT NULL DEFAULT 'basic' CHECK (plan IN ('basic', 'unlimited', 'titanium')), created_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE clinical_centers (id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE, active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', plan text NOT NULL DEFAULT 'basic' CHECK (plan IN ('basic', 'unlimited', 'titanium')), result_channels text NOT NULL DEFAULT 'email,whatsapp', created_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE leads (id text PRIMARY KEY, name text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', center_id text DEFAULT 'default-center', parent_lead_id text, is_demo boolean DEFAULT false, created_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE clinical_evaluations (id text PRIMARY KEY, lead_id text NOT NULL UNIQUE, center_id text NOT NULL DEFAULT 'default-center');
     CREATE TABLE clinical_photos (id text PRIMARY KEY, evaluation_id text NOT NULL, status text NOT NULL DEFAULT 'draft', original_mime_type text NOT NULL DEFAULT 'image/jpeg', created_at timestamptz NOT NULL DEFAULT now());

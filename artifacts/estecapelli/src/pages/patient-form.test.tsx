@@ -62,6 +62,7 @@ async function fillRequiredFields(user: ReturnType<typeof userEvent.setup>) {
   // City via Radix Select
   await user.click(screen.getByText(CITY_PLACEHOLDER));
   await user.click(await screen.findByRole("option", { name: "Santiago" }));
+  await user.click(screen.getByRole("radio", { name: "Por correo" }));
 }
 
 beforeEach(() => {
@@ -124,6 +125,25 @@ describe("Patient data step", () => {
     renderPatientFlow();
     await goToDataStep(user);
     await fillRequiredFields(user);
+    expect(screen.getByRole("button", { name: CONTINUE_CTA })).toBeEnabled();
+  });
+
+  it("offers the results channels with none preselected, and 'Continuar' needs one", async () => {
+    const user = setupUser();
+    renderPatientFlow();
+    await goToDataStep(user);
+    const radios = screen.getAllByRole("radio");
+    expect(radios.map((radio) => radio.getAttribute("aria-checked"))).toEqual(["false", "false"]);
+    expect(screen.getByTestId("delivery-hint")).toHaveTextContent("Elige una opción para continuar.");
+    await user.type(screen.getByPlaceholderText("María García"), "Paciente De Prueba");
+    await user.type(screen.getByPlaceholderText("12.345.678-5"), "12.345.678-5");
+    await user.type(screen.getByPlaceholderText("9 1234 5678"), "911111111");
+    await user.type(screen.getByPlaceholderText("correo@ejemplo.com"), "prueba@example.com");
+    await user.click(screen.getByText(CITY_PLACEHOLDER));
+    await user.click(await screen.findByRole("option", { name: "Santiago" }));
+    expect(screen.getByRole("button", { name: CONTINUE_CTA })).toBeDisabled();
+    await user.click(screen.getByRole("radio", { name: "Por WhatsApp" }));
+    expect(screen.getByTestId("delivery-hint")).toHaveTextContent(/WhatsApp/);
     expect(screen.getByRole("button", { name: CONTINUE_CTA })).toBeEnabled();
   });
 
