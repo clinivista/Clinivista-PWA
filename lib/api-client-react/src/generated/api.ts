@@ -82,6 +82,7 @@ import type {
   PhotoConfirmation,
   PhotoMarkup,
   PortalForgotInput,
+  PortalForgotResult,
   PortalLoginInput,
   PortalOptions,
   PortalOverview,
@@ -1396,9 +1397,9 @@ export const getPortalForgotUrl = () => {
 /**
  * @summary Email the patient a link to choose a new password
  */
-export const portalForgot = async (portalForgotInput: PortalForgotInput, options?: Parameters<typeof customFetch>[1]): Promise<OkResponse> => {
+export const portalForgot = async (portalForgotInput: PortalForgotInput, options?: Parameters<typeof customFetch>[1]): Promise<PortalForgotResult> => {
 
-  return customFetch<OkResponse>(getPortalForgotUrl(),
+  return customFetch<PortalForgotResult>(getPortalForgotUrl(),
   {
     ...options,
     method: 'POST',

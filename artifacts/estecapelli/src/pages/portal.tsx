@@ -1,5 +1,5 @@
 import { BrandLogo } from "@/components/brand-logo";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { FileText, Loader2, LogOut } from "lucide-react";
@@ -78,6 +78,21 @@ export default function Portal() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // «Crear o recuperar mi clave»: pantalla propia que le dice al paciente qué pasó y qué hacer.
+  const [mode, setMode] = useState<"login" | "recover">(search.get("recover") === "1" ? "recover" : "login");
+  const [recoverStatus, setRecoverStatus] = useState<"form" | "sent" | "throttled" | "error">("form");
+  const [cooldown, setCooldown] = useState(0);
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown((value) => value - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
+  const sendRecovery = () => {
+    forgot.mutate({ data: { email: email.trim(), language: lang } }, {
+      onSuccess: (response) => { setRecoverStatus(response?.throttled ? "throttled" : "sent"); setCooldown(60); },
+      onError: () => setRecoverStatus("error"),
+    });
+  };
   const googleNotice = search.get("google") === "error" ? text.googleError : search.get("google") === "off" ? text.googleOff : null;
   const shownError = error ?? googleNotice;
   const editText = PORTAL_EDIT_TEXT[lang as LangCode] ?? PORTAL_EDIT_TEXT.es;
@@ -95,6 +110,7 @@ export default function Portal() {
   if (me) {
     return (
       <Shell title={text.homeTitle}>
+        {search.get("clave") === "ok" && <p role="status" className="rounded-2xl bg-[#00A9A5]/10 px-4 py-3 text-sm font-semibold text-[#007f7c]" data-testid="password-created">{text.passwordCreated}</p>}
         <p className="text-sm text-muted-foreground">{text.signedInAs} {me.email}</p>
         {me.cases.length === 0 && <p className="rounded-2xl bg-white p-5 text-sm text-muted-foreground">{text.noCases}</p>}
         {me.cases.map((item) => (
@@ -133,8 +149,40 @@ export default function Portal() {
     );
   }
 
+  if (mode === "recover") {
+    return (
+      <Shell title={text.recoverTitle}>
+        {recoverStatus === "form" || recoverStatus === "error" ? (
+          <form className="rounded-2xl bg-white p-5 shadow-sm flex flex-col gap-3" data-testid="recover-form"
+            onSubmit={(event) => { event.preventDefault(); sendRecovery(); }}>
+            <p className="text-sm text-muted-foreground">{text.recoverIntro}</p>
+            <p className="text-xs text-muted-foreground rounded-xl bg-[#F5F2EE] p-3">{text.accountWhy}</p>
+            <label className="text-sm font-bold" htmlFor="recover-email">{text.emailLabel}</label>
+            <Input id="recover-email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="h-12 rounded-xl" />
+            {recoverStatus === "error" && <p role="alert" className="text-sm text-destructive">{text.genericError}</p>}
+            <Button type="submit" className="rounded-xl font-bold" disabled={forgot.isPending || !email.includes("@")} data-testid="recover-send">
+              {forgot.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : text.recoverSend}
+            </Button>
+          </form>
+        ) : (
+          <div className="rounded-2xl bg-white p-5 shadow-sm flex flex-col gap-3" data-testid="recover-done" role="status">
+            <p className="text-lg font-bold text-foreground">{recoverStatus === "throttled" ? text.recoverThrottled : text.recoverSentTitle}</p>
+            {recoverStatus === "sent" && <p className="text-sm text-muted-foreground">{text.recoverSentBody.replace("{email}", email.trim())}</p>}
+            {recoverStatus === "sent" && <p className="text-sm font-semibold text-foreground">{text.recoverLatest}</p>}
+            <p className="text-xs text-muted-foreground">{text.recoverNoMail}</p>
+            <Button type="button" variant="outline" className="rounded-xl" disabled={cooldown > 0 || forgot.isPending} onClick={sendRecovery} data-testid="recover-resend">
+              {cooldown > 0 ? text.recoverWait.replace("{s}", String(cooldown)) : text.recoverResend}
+            </Button>
+          </div>
+        )}
+        <button type="button" className="text-sm text-primary underline self-start" onClick={() => { setMode("login"); setRecoverStatus("form"); }} data-testid="recover-back">{text.recoverBack}</button>
+      </Shell>
+    );
+  }
+
   return (
     <Shell title={text.loginTitle}>
+        {search.get("clave") === "ok" && <p role="status" className="rounded-2xl bg-[#00A9A5]/10 px-4 py-3 text-sm font-semibold text-[#007f7c]" data-testid="password-created">{text.passwordCreated}</p>}
       {options?.googleEnabled && (
         <a href="/api/portal/google/start?next=/paciente" data-testid="google-start"
           className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-[#E8E4DE] bg-white text-sm font-bold shadow-sm hover:bg-[#F5F2EE]">
@@ -160,13 +208,11 @@ export default function Portal() {
         <Button type="submit" className="rounded-xl font-bold" disabled={login.isPending || !email || !password}>
           {login.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : text.enter}
         </Button>
-        <button type="button" className="text-sm text-primary underline self-start disabled:opacity-50" disabled={forgot.isPending || !email.includes("@")}
-          onClick={() => {
-            setError(null);
-            forgot.mutate({ data: { email, language: lang } }, { onSuccess: () => setMessage(text.forgotSent) });
-          }}>
+        <button type="button" className="text-sm font-semibold text-primary underline self-start" data-testid="open-recover"
+          onClick={() => { setError(null); setMessage(null); setRecoverStatus("form"); setMode("recover"); }}>
           {text.forgot}
         </button>
+        <p className="text-xs text-muted-foreground rounded-xl bg-[#F5F2EE] p-3" data-testid="first-time-hint">{text.firstTimeHint} {text.accountWhy}</p>
       </form>
     </Shell>
   );
@@ -189,8 +235,8 @@ export function PortalSetPassword() {
           event.preventDefault();
           setError(null);
           setup.mutate({ data: { token, password } }, {
-            onSuccess: () => setLocation("/paciente"),
-            onError: (e) => setError(failure(text, e, { 400: text.invalidLink })),
+            onSuccess: () => setLocation("/paciente?clave=ok"),
+            onError: (e) => setError(failure(text, e, { 400: text.invalidLinkLong })),
           });
         }}>
         <label className="text-sm font-bold" htmlFor="new-password">{text.newPassword}</label>
@@ -198,7 +244,7 @@ export function PortalSetPassword() {
         <label className="text-sm font-bold" htmlFor="repeat-password">{text.repeatPassword}</label>
         <PasswordInput id="repeat-password" autoComplete="new-password" value={again} onChange={(event) => setAgain(event.target.value)} className="h-12 rounded-xl" />
         {mismatch && <p role="alert" className="text-sm text-destructive">{text.mismatch}</p>}
-        {error && <p role="alert" className="text-sm text-destructive">{error} <Link href="/paciente" className="underline">{text.requestNew}</Link></p>}
+        {error && <p role="alert" className="text-sm text-destructive">{error} <Link href="/paciente?recover=1" className="underline font-semibold" data-testid="request-new-link">{text.requestNew}</Link></p>}
         <Button type="submit" className="rounded-xl font-bold" disabled={setup.isPending || password.length < 8 || password !== again || !token}>
           {setup.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : text.savePassword}
         </Button>

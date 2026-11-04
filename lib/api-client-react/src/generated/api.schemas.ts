@@ -874,6 +874,12 @@ export interface PortalSetupInput {
   password: string;
 }
 
+export interface PortalForgotResult {
+  ok: boolean;
+  /** true when too many links were requested in a short time and none was sent */
+  throttled?: boolean;
+}
+
 export interface PortalForgotInput {
   email: string;
   language?: string;

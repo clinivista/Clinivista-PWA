@@ -1980,6 +1980,30 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
       expect(sent).toHaveLength(0);
     });
 
+    it("forgot-password tells the page when it is throttled, instead of pretending to send", async () => {
+      mailOn();
+      await createPatient();
+      await vi.waitFor(() => expect(sent).toHaveLength(1));
+      const answers: Array<{ ok: boolean; throttled?: boolean }> = [];
+      for (let i = 0; i < 5; i += 1) {
+        const res = await request(app).post("/api/portal/forgot").send({ email: "prueba@example.com" }).expect(200);
+        answers.push(res.body);
+      }
+      expect(answers.slice(0, 3).every((a) => !a.throttled)).toBe(true);
+      expect(answers[3].throttled).toBe(true);
+      expect(answers[4].throttled).toBe(true);
+    });
+
+    it("a patient whose evaluation is created and then edited gets one setup mail, not two", async () => {
+      mailOn();
+      const lead = await createPatient();
+      await vi.waitFor(() => expect(sent).toHaveLength(1));
+      await request(app).put(`/api/patients/${lead.token}`).send(VALID_BODY).expect(200);
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      expect(sent).toHaveLength(1);
+      expect(await accountCount()).toBe(1);
+    });
+
     it("the portal lists only the signed-in patient's delivered results and serves only their PDFs", async () => {
       mailOn();
       const mine = await patientReadyForCapture();

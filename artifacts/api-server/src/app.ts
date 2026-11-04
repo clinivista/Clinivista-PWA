@@ -9,6 +9,8 @@ import { createHttpLogger } from "./lib/http-logger";
 import { PlanLimitError } from "./lib/plan-limits";
 
 const app: Express = express();
+// Detrás del proxy de Render: así `req.ip` es la persona real y los límites de intentos no se comparten entre todos los usuarios.
+app.set("trust proxy", 1);
 
 app.use(createHttpLogger(logger));
 // Cabeceras de seguridad. La cámara se permite solo a este mismo origen (captura de fotos del paciente).

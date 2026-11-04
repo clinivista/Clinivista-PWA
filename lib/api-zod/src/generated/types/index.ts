@@ -136,6 +136,7 @@ export * from './photoTranscriptionTier';
 export * from './planFeature';
 export * from './portalCase';
 export * from './portalForgotInput';
+export * from './portalForgotResult';
 export * from './portalLoginInput';
 export * from './portalOptions';
 export * from './portalOptionsProfile';
