@@ -17,7 +17,10 @@ vi.mock("@workspace/db", async () => {
 });
 
 const sent = vi.hoisted(() => [] as Array<{ to: string; subject: string; text: string }>);
-vi.mock("../lib/mailer", () => ({ sendMail: async (mail: { to: string; subject: string; text: string }) => { sent.push(mail); } }));
+vi.mock("../lib/mailer", async (importOriginal) => {
+  const real = await importOriginal<typeof import("../lib/mailer")>();
+  return { ...real, sendMail: async (mail: { to: string; subject: string; text: string }) => { sent.push(mail); } };
+});
 
 import * as mockedDb from "@workspace/db";
 import dataRightsRouter from "./data-rights";
