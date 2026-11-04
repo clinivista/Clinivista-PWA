@@ -22,9 +22,13 @@ export const centersTable = pgTable("clinical_centers", {
   // las fases iniciales de la clínica. La fija supra-control al crearla.
   specialty: text("specialty").notNull().default("capilar"),
   // Plan de la clínica (lo fija supra-control). Qué habilita cada uno está en
-  // artifacts/api-server/src/lib/plans.ts; hoy solo «titanium» agrega el video.
+  // artifacts/api-server/src/lib/plans.ts; hoy solo «titanium» (plan Oro) agrega el video. Nombres visibles: basic=Bronce, unlimited=Plata, titanium=Oro.
   // Migración: lib/db/sql/sql0001-plan-de-clinica.sql.
   plan: text("plan").notNull().default("basic"),
+  // Canales con los que la clínica entrega resultados a sus pacientes (lista separada por comas:
+  // email, whatsapp). La clínica los elige en su panel; SMS está preparado pero aún no envía.
+  // Migración: lib/db/sql/sql0017-canales-de-resultados.sql.
+  resultChannels: text("result_channels").notNull().default("email,whatsapp"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   check("clinical_centers_plan_check", sql`${table.plan} in ('basic', 'unlimited', 'titanium')`),
@@ -413,6 +417,8 @@ export const dataRequestsTable = pgTable("data_requests", {
   resolvedAt: timestamp("resolved_at", { withTimezone: true }),
   resolvedByName: text("resolved_by_name").notNull().default(""),
   resolutionNote: text("resolution_note").notNull().default(""),
+  // Avisos automáticos a la clínica: 0 ninguno, 1 «por vencer» (7 días o menos), 2 «vencida».
+  reminderStage: integer("reminder_stage").notNull().default(0),
 }, (table) => [index("data_requests_center_idx").on(table.centerId, table.status)]);
 export type DataRequest = typeof dataRequestsTable.$inferSelect;
 

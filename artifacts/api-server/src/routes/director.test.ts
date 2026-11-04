@@ -43,7 +43,7 @@ beforeAll(async () => {
     CREATE TABLE IF NOT EXISTS user_profiles (user_id text PRIMARY KEY, rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', prefix text NOT NULL DEFAULT '', specialty text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE IF NOT EXISTS clinical_centers (
       id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
-      active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', plan text NOT NULL DEFAULT 'basic' CHECK (plan IN ('basic', 'unlimited', 'titanium')),
+      active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', plan text NOT NULL DEFAULT 'basic' CHECK (plan IN ('basic', 'unlimited', 'titanium')), result_channels text NOT NULL DEFAULT 'email,whatsapp',
       created_at timestamptz NOT NULL DEFAULT now()
     );
     CREATE TABLE IF NOT EXISTS clinical_protocols (template_key text NOT NULL DEFAULT '', 

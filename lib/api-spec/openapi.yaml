@@ -2842,7 +2842,7 @@ components:
     ClinicPlan:
       type: string
       enum: [basic, unlimited, titanium]
-      description: The clinic's plan. Today only "titanium" adds a function (video); no plan removes anything a clinic already used.
+      description: The clinic's plan. Shown to people as Bronze (basic), Silver (unlimited) and Gold (titanium); the identifiers do not change. Today only "titanium" (Gold) adds a function (video); no plan removes anything a clinic already used.
 
     PlanFeature:
       type: string
@@ -2934,7 +2934,7 @@ components:
           description: The lesion is measured on this photo with a reference coin next to it.
         video:
           type: boolean
-          description: This view is recorded as a short video (up to 20 s) instead of a photo. Titanium plan only.
+          description: This view is recorded as a short video (up to 20 s) instead of a photo. Gold plan (titanium) only.
 
     ClinicProtocolPhase:
       type: object
@@ -3031,10 +3031,16 @@ components:
 
     PatientClinic:
       type: object
-      required: [name, logoDataUrl, specialty]
+      required: [name, logoDataUrl, specialty, channels]
       properties:
         name:
           type: string
+        channels:
+          type: array
+          description: Channels the clinic uses to deliver results; the patient chooses one of them (nothing is preselected).
+          items:
+            type: string
+            enum: [email, whatsapp]
         logoDataUrl:
           type: string
           nullable: true
@@ -3654,8 +3660,12 @@ components:
 
     ResultsState:
       type: object
-      required: [emailConfigured, deliveries]
+      required: [emailConfigured, deliveries, channels]
       properties:
+        channels:
+          type: array
+          description: Channels the clinic has enabled to deliver results.
+          items: {type: string, enum: [email, whatsapp]}
         preferredChannel: {type: ["string", "null"]}
         email: {type: ["string", "null"]}
         phone: {type: ["string", "null"]}

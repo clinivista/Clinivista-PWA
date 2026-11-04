@@ -30,7 +30,7 @@ beforeAll(async () => {
   await pglite.exec(`
     CREATE TABLE IF NOT EXISTS clinical_centers (
       id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
-      active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', plan text NOT NULL DEFAULT 'basic' CHECK (plan IN ('basic', 'unlimited', 'titanium')),
+      active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', plan text NOT NULL DEFAULT 'basic' CHECK (plan IN ('basic', 'unlimited', 'titanium')), result_channels text NOT NULL DEFAULT 'email,whatsapp',
       created_at timestamptz NOT NULL DEFAULT now()
     );
     CREATE TABLE IF NOT EXISTS users (
@@ -360,7 +360,7 @@ describe("vistas marcadas como video (plan Oro)", () => {
 describe("cuota de transcripciones por clínica (supra-control)", () => {
   const supra = () => `clinivista_session=${createSession({ userId: "dir", centerId: null, role: "director" })}`;
 
-  it("sin configuración usa la cuota del plan (Basic 20, Unlimited 100, Titanium 300) y el reintento avanzado apagado", async () => {
+  it("sin configuración usa la cuota del plan (Bronce 20, Plata 100, Oro 300) y el reintento avanzado apagado", async () => {
     const res = await request(app).get("/api/director/centers/clinic-a/transcription").set("Cookie", supra()).expect(200);
     expect(res.body).toMatchObject({ monthlyQuota: 20, used: 0, remaining: 20, advancedEnabled: false });
     await pglite.exec(`UPDATE clinical_centers SET plan = 'titanium' WHERE id = 'clinic-a';`);

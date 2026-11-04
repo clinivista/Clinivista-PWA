@@ -65,6 +65,7 @@ const VALID_BODY = {
   email: "prueba@example.com",
   city: "Santiago",
   consent: true,
+  deliveryChannel: "email",
 };
 
 beforeAll(async () => {
@@ -110,7 +111,7 @@ beforeAll(async () => {
       WHERE document_normalized IS NOT NULL AND document_normalized <> '';
      CREATE TABLE IF NOT EXISTS clinical_centers (
        id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
-       active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', plan text NOT NULL DEFAULT 'basic' CHECK (plan IN ('basic', 'unlimited', 'titanium')),
+       active boolean NOT NULL DEFAULT true, paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar', plan text NOT NULL DEFAULT 'basic' CHECK (plan IN ('basic', 'unlimited', 'titanium')), result_channels text NOT NULL DEFAULT 'email,whatsapp',
        created_at timestamptz NOT NULL DEFAULT now()
      );
      CREATE TABLE IF NOT EXISTS clinical_protocols (template_key text NOT NULL DEFAULT '', 
@@ -831,7 +832,7 @@ describe("GET /api/patients/:token/clinic (identidad de la clínica para el paci
     await pglite.exec(`INSERT INTO clinical_centers (id, name, slug, logo_data_url) VALUES ('otra', 'Otra Clínica', 'otra', 'data:image/png;base64,BBBB');`);
 
     const res = await request(app).get(`/api/patients/${token}/clinic`).expect(200);
-    expect(res.body).toEqual({ name: "Estecapelli", logoDataUrl: "data:image/png;base64,AAAA", specialty: "capilar" });
+    expect(res.body).toEqual({ name: "Estecapelli", logoDataUrl: "data:image/png;base64,AAAA", specialty: "capilar", channels: ["email", "whatsapp"] });
     expect(JSON.stringify(res.body)).not.toContain("Otra");
   });
 
@@ -1731,17 +1732,47 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
       delete process.env.PUBLIC_APP_URL;
     });
 
+    it("staff cannot deliver by a channel the clinic has not enabled, and the state lists the enabled ones", async () => {
+      const created = await request(app).post("/api/patients").send({ ...VALID_BODY, deliveryChannel: "whatsapp" }).expect(201);
+      const id = created.body.lead.id as string;
+      expect((await results(id).expect(200)).body.channels).toEqual(["email", "whatsapp"]);
+      await pglite.exec("INSERT INTO clinical_centers (id, name, slug, result_channels) VALUES ('default-center', 'Centro', 'default-center', 'email') ON CONFLICT (id) DO UPDATE SET result_channels = 'email';");
+      try {
+        expect((await results(id).expect(200)).body.channels).toEqual(["email"]);
+        const blocked = await deliver(id, "whatsapp").expect(422);
+        expect(blocked.body.error).toMatch(/no tiene activo ese canal/);
+      } finally {
+        await pglite.exec("DELETE FROM clinical_centers WHERE id = 'default-center';");
+      }
+    });
+
+    it("the patient must choose a channel (nothing is preselected) and only one the clinic enabled", async () => {
+      const { deliveryChannel: _omitted, ...withoutChoice } = VALID_BODY;
+      const missing = await request(app).post("/api/patients").send(withoutChoice).expect(422);
+      expect(missing.body.error).toMatch(/Elige cómo quieres recibir/);
+      const existed = (await pglite.query("SELECT 1 FROM clinical_centers WHERE id = 'default-center'")).rows.length > 0;
+      await pglite.exec("INSERT INTO clinical_centers (id, name, slug, result_channels) VALUES ('default-center', 'Centro', 'default-center', 'whatsapp') ON CONFLICT (id) DO UPDATE SET result_channels = 'whatsapp';");
+      try {
+        const blocked = await request(app).post("/api/patients").send({ ...VALID_BODY, deliveryChannel: "email" }).expect(422);
+        expect(blocked.body.error).toMatch(/no entrega resultados por ese canal/);
+        await request(app).post("/api/patients").send({ ...VALID_BODY, deliveryChannel: "whatsapp" }).expect(201);
+      } finally {
+        await pglite.exec(existed ? "UPDATE clinical_centers SET result_channels = 'email,whatsapp' WHERE id = 'default-center';" : "DELETE FROM clinical_centers WHERE id = 'default-center';");
+      }
+    });
+
     it("the patient picks how to receive results in phase 1 and the clinic sees it; email needs an email", async () => {
       const created = await request(app).post("/api/patients").send({ ...VALID_BODY, deliveryChannel: "whatsapp" }).expect(201);
       expect(created.body.lead.deliveryChannel).toBe("whatsapp");
       const token = created.body.lead.token as string;
       // an update that omits the choice keeps it; an unknown value is cleared
-      const kept = await request(app).put(`/api/patients/${token}`).send({ ...VALID_BODY }).expect(200);
+      const { deliveryChannel: _omitted, ...withoutChoice } = VALID_BODY;
+      const kept = await request(app).put(`/api/patients/${token}`).send(withoutChoice).expect(200);
       expect(kept.body.lead.deliveryChannel).toBe("whatsapp");
       const noEmail = await request(app).put(`/api/patients/${token}`).send({ ...VALID_BODY, email: "", deliveryChannel: "email" });
       expect(noEmail.status).toBe(422);
-      const bogus = await request(app).put(`/api/patients/${token}`).send({ ...VALID_BODY, deliveryChannel: "paloma" }).expect(200);
-      expect(bogus.body.lead.deliveryChannel).toBe("");
+      await request(app).put(`/api/patients/${token}`).send({ ...VALID_BODY, deliveryChannel: "paloma" }).expect(422);
+      await request(app).put(`/api/patients/${token}`).send({ ...VALID_BODY, deliveryChannel: "sms" }).expect(422);
       await request(app).post("/api/patients").send({ ...VALID_BODY, documentId: "20.347.878-K", phone: "+56933333333", email: "", deliveryChannel: "email" }).expect(422);
       await request(app).put(`/api/patients/${token}`).send({ ...VALID_BODY, deliveryChannel: "email" }).expect(200);
       const state = await results(created.body.lead.id).expect(200);

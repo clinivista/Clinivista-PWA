@@ -1,3 +1,4 @@
+import { channelProblem, getClinicChannels } from "../lib/clinic-channels";
 import { parseSignature, registerTabletConsent } from "../lib/photo-consents";
 import { Router, type IRouter } from "express";
 import { and, eq, or } from "drizzle-orm";
@@ -71,8 +72,9 @@ router.post("/leads", async (req, res): Promise<void> => {
     res.status(400).json({ error: rutCheck.error });
     return;
   }
+  const clinicChannels = await getClinicChannels(staff.centerId);
   const data = buildLead(
-    { ...body, consent: true, marketingConsent: false, deliveryChannel: body.deliveryChannel ?? (body.email ? "email" : "") },
+    { ...body, consent: true, marketingConsent: false, deliveryChannel: body.deliveryChannel ?? (body.email && clinicChannels.includes("email") ? "email" : "") },
     {},
     await specialtyAnswers(staff.centerId, body),
   );
@@ -86,6 +88,11 @@ router.post("/leads", async (req, res): Promise<void> => {
   }
   if (data.deliveryChannel === "email" && !data.email) {
     res.status(422).json({ error: "Para enviar los resultados por correo, ingresa el correo del paciente." });
+    return;
+  }
+  const channelError = await channelProblem(staff.centerId, data.deliveryChannel, false);
+  if (channelError) {
+    res.status(422).json({ error: "Esta clínica no entrega resultados por ese canal. Cámbialo en «Canales de comunicación»." });
     return;
   }
   const [rutDuplicate] = await db.select({ id: leadsTable.id }).from(leadsTable)

@@ -33,7 +33,7 @@ beforeAll(async () => {
     CREATE TABLE clinical_centers (
       id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE, active boolean NOT NULL DEFAULT true,
       paid_until timestamptz, logo_data_url text, specialty text NOT NULL DEFAULT 'capilar',
-      plan text NOT NULL DEFAULT 'basic', created_at timestamptz NOT NULL DEFAULT now()
+      plan text NOT NULL DEFAULT 'basic', result_channels text NOT NULL DEFAULT 'email,whatsapp', created_at timestamptz NOT NULL DEFAULT now()
     );
     CREATE TABLE leads (
       id text PRIMARY KEY, token text NOT NULL UNIQUE, parent_lead_id text, center_id text DEFAULT 'default-center',
@@ -201,7 +201,7 @@ describe("rutas de supra-control", () => {
 });
 
 describe("horas", () => {
-  it("lleva el saldo: incluidas y compradas suman, usadas restan, y Basic no compra", async () => {
+  it("lleva el saldo: incluidas y compradas suman, usadas restan, y Bronce no compra", async () => {
     await pglite.exec(`UPDATE clinical_centers SET plan = 'unlimited' WHERE id = 'clinic-a';`);
     const post = (body: object) => request(app).post("/api/director/centers/clinic-a/hours").set("Cookie", director()).send(body);
     await post({ kind: "incluidas", hours: 5, note: "Contrato inicial" }).expect(201);

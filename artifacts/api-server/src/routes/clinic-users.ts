@@ -42,17 +42,20 @@ type ClinicManager = { userId: string; centerId: string };
  * permission is read from the database on every request, so removing it or
  * blocking the account takes effect immediately, not at the next login.
  */
-async function requireClinicUserManager(req: Request, res: Response): Promise<ClinicManager | undefined> {
-  const staff = requireStaffAuth(req, res);
-  if (!staff) return undefined;
+export async function clinicManagerOf(staff: NonNullable<ReturnType<typeof requireStaffAuth>>): Promise<ClinicManager | undefined> {
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, staff.userId));
   // A director looking at the clinic as its legal representative or as an administrativo manages its people too.
   if (user?.role === "director" && (staff.legal === true || staff.role === "administrativo")) return { userId: staff.userId, centerId: staff.centerId };
-  if (!user || user.centerId !== staff.centerId || !canManageClinicUsers(user)) {
-    res.status(403).json({ error: "Solo el personal administrativo o el representante legal puede gestionar usuarios." });
-    return undefined;
-  }
+  if (!user || user.centerId !== staff.centerId || !canManageClinicUsers(user)) return undefined;
   return { userId: staff.userId, centerId: staff.centerId };
+}
+
+export async function requireClinicUserManager(req: Request, res: Response, what = "gestionar usuarios"): Promise<ClinicManager | undefined> {
+  const staff = requireStaffAuth(req, res);
+  if (!staff) return undefined;
+  const manager = await clinicManagerOf(staff);
+  if (!manager) res.status(403).json({ error: `Solo el personal administrativo o el representante legal puede ${what}.` });
+  return manager;
 }
 
 async function findClinicUser(centerId: string, userId: string) {

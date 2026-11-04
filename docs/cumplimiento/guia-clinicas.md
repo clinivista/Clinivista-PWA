@@ -13,7 +13,7 @@ La clínica es la **responsable** de los datos de sus pacientes. Clinivista es s
 ## Lo que debes hacer tú
 1. Designar una persona responsable de datos personales en la clínica.
 2. Tener el consentimiento informado de cada paciente (en fichas que cargues tú, marcar la constancia solo si de verdad lo dio).
-3. Responder las solicitudes del panel dentro de 30 días corridos.
+3. Responder las solicitudes del panel dentro de 30 días corridos. Recibirás un correo cuando una esté por vencer (7 días) y otro si vence. El paciente ve el estado y tu respuesta en su portal. Las solicitudes que lleguen por correo, teléfono o en persona hay que llevarlas en un registro propio hasta que el panel permita ingresarlas.
 4. Conservar la ficha clínica el tiempo que fija la Ley 20.584; no borrar lo que debes conservar.
 5. Si hay una vulneración: avisar a la Agencia y a los pacientes afectados; Clinivista procura avisarte en menos de 48 horas (objetivo interno, aún no es compromiso contractual).
 6. Capacitar a tu equipo: no compartir claves, no compartir enlaces de resultados, cerrar sesión en equipos compartidos.

@@ -147,7 +147,7 @@ export class PlanLimitError extends Error {
 export async function addHours(centerId: string, input: { kind: HoursKind; minutes: number; note: string; createdBy: string | null }) {
   const plan = await centerPlan(centerId);
   if (input.kind === "compradas" && !PLAN_SERVICES[plan].buyHours) {
-    throw new PlanLimitError("El plan Basic no puede comprar horas adicionales.", "billing");
+    throw new PlanLimitError("El plan Bronce no puede comprar horas adicionales.", "billing");
   }
   const [row] = await db.insert(clinicHoursTable).values({ id: uid(18), centerId, kind: input.kind, minutes: input.minutes, note: input.note, createdBy: input.createdBy }).returning();
   return row;

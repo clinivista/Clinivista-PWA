@@ -5,7 +5,7 @@ import { es as dateFnsEs } from "date-fns/locale";
 import {
   Users, UserCog, Layers,
   Search, ChevronRight, X, Phone, Camera, Mail, CreditCard, Trash2, Check, Copy,
-  ClipboardList, LifeBuoy, UserPlus, Building2, Home, Plug, ShieldCheck,
+  ClipboardList, LifeBuoy, UserPlus, Building2, Home, Plug, ShieldCheck, MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,8 @@ import { NAV_TEXT } from "@/lib/phases-i18n";
 import { INTEGRATIONS_TEXT } from "@/lib/integrations-i18n";
 import { IntegrationsPanel } from "./integrations-panel";
 import { DataRequestsPanel } from "./data-requests-panel";
+import { ChannelsPanel } from "./channels-panel";
+import { CHANNELS_TEXT } from "@/lib/channels-i18n";
 import { DATA_REQUESTS_PANEL_TEXT } from "@/lib/data-rights-i18n";
 import { ClinicHome } from "@/components/clinic-home";
 import { PlanNotice } from "@/components/plan-counter";
@@ -86,7 +88,7 @@ export default function Admin() {
   const queryClient = useQueryClient();
   const { t, lang } = useLanguage();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [view, setView] = useState<"home" | "patients" | "users" | "phases" | "report" | "integrations" | "datarequests" | "help">("home");
+  const [view, setView] = useState<"home" | "patients" | "users" | "phases" | "report" | "integrations" | "datarequests" | "channels" | "help">("home");
   // Pestaña con la que se abre Ayuda: la campana lleva a Soporte; la tarjeta del menú, a los manuales.
   const [helpTab, setHelpTab] = useState<"manual" | "support" | null>(null);
 
@@ -359,6 +361,16 @@ export default function Admin() {
             </Button>
             <Button
               variant="ghost"
+              onClick={() => go("channels")}
+              aria-current={view === "channels" ? "page" : undefined}
+              className={navItemClass(view === "channels")}
+              data-testid="nav-channels"
+            >
+              <MessageSquare className="w-5 h-5" />
+              {CHANNELS_TEXT[lang].nav}
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => go("datarequests")}
               aria-current={view === "datarequests" ? "page" : undefined}
               className={navItemClass(view === "datarequests")}
@@ -475,7 +487,7 @@ export default function Admin() {
             onCopyAccess={handleCopyGenericLink}
             onOpenLead={(id) => { setView("patients"); setSelectedLeadId(id); }}
           />
-        ) : view === "help" ? <HelpPanel key={helpTab ?? "auto"} initialTab={helpTab ?? (helpUnread > 0 ? "support" : "manual")} specialty={myClinic?.specialty} /> : view === "report" ? <ReportPanel onOpenLead={(id) => { setView("patients"); setSelectedLeadId(id); }} /> : view === "users" && canManageUsers ? <ClinicUsersPanel /> : view === "phases" && canEditPhases ? <PhasesPanel /> : view === "integrations" ? <IntegrationsPanel /> : view === "datarequests" ? <DataRequestsPanel /> : (
+        ) : view === "help" ? <HelpPanel key={helpTab ?? "auto"} initialTab={helpTab ?? (helpUnread > 0 ? "support" : "manual")} specialty={myClinic?.specialty} /> : view === "report" ? <ReportPanel onOpenLead={(id) => { setView("patients"); setSelectedLeadId(id); }} /> : view === "users" && canManageUsers ? <ClinicUsersPanel /> : view === "phases" && canEditPhases ? <PhasesPanel /> : view === "integrations" ? <IntegrationsPanel /> : view === "channels" ? <ChannelsPanel /> : view === "datarequests" ? <DataRequestsPanel /> : (
           <>
         {/* Mobile: whole content scrolls; desktop: only the patient list scrolls */}
         <div className="flex-1 min-h-0 flex flex-col overflow-y-auto md:overflow-hidden">

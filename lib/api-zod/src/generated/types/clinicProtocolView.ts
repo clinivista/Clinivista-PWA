@@ -16,6 +16,6 @@ export interface ClinicProtocolView {
   document: boolean;
   /** The lesion is measured on this photo with a reference coin next to it. */
   measure: boolean;
-  /** This view is recorded as a short video (up to 20 s) instead of a photo. Titanium plan only. */
+  /** This view is recorded as a short video (up to 20 s) instead of a photo. Gold plan (titanium) only. */
   video: boolean;
 }

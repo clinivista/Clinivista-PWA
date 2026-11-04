@@ -30,6 +30,7 @@ export function DataRightsDialog({ token }: { token: string }) {
       if (!response.ok || !body?.dueAt) { setState("error"); return; }
       setDue(new Date(body.dueAt).toLocaleDateString(lang, { dateStyle: "long" }));
       setState("sent");
+      window.dispatchEvent(new Event("clinivista:data-request-sent"));
     } catch {
       setState("error");
     }

@@ -16,6 +16,12 @@ vi.mock("@workspace/db", async () => {
   return { ...schema, ...passwords, db, pool: client, __pglite: client };
 });
 
+const sent = vi.hoisted(() => [] as Array<{ to: string; subject: string; text: string }>);
+vi.mock("../lib/mailer", async (importOriginal) => {
+  const real = await importOriginal<typeof import("../lib/mailer")>();
+  return { ...real, sendMail: async (mail: { to: string; subject: string; text: string }) => { sent.push(mail); } };
+});
+
 import * as mockedDb from "@workspace/db";
 import dataRightsRouter from "./data-rights";
 import leadsRouter from "./leads";
@@ -36,6 +42,7 @@ const asB = () => cookie("user-b", "clinic-b");
 beforeAll(() => { void PRIVACY_POLICY_VERSION; });
 beforeEach(async () => {
   resetThrottleForTests();
+  sent.length = 0;
   await pglite.exec(`TRUNCATE users, leads, data_requests, staff_access_events RESTART IDENTITY;`);
   await pglite.exec(`
     INSERT INTO users (id, email, email_normalized, password_hash, name, role, center_id) VALUES
@@ -142,10 +149,54 @@ describe("consentimiento del paciente", () => {
     patientsApp.use(express.json());
     patientsApp.use("/api", patientsRouter);
     await pglite.exec(`INSERT INTO clinical_centers (id, name, slug) VALUES ('clinic-a', 'Clínica A', 'clinica-a') ON CONFLICT DO NOTHING;`);
-    const created = await request(patientsApp).post("/api/patients").send({ name: "Paciente Dos", phone: "+56922222222", documentId: "11.111.111-1", consent: true, clinicSlug: "clinica-a" });
+    const created = await request(patientsApp).post("/api/patients").send({ name: "Paciente Dos", phone: "+56922222222", documentId: "11.111.111-1", consent: true, deliveryChannel: "email", email: "dos@example.com", clinicSlug: "clinica-a" });
     expect([200, 201]).toContain(created.status);
     const [row] = (await (mockedDb as unknown as { db: { select: () => { from: (t: unknown) => Promise<Array<{ consentAt: Date | null; consentPolicyVersion: string | null; name: string }>> } } }).db.select().from(mockedDb.leadsTable)).filter((lead) => lead.name === "Paciente Dos");
     expect(row.consentAt).toBeInstanceOf(Date);
     expect(row.consentPolicyVersion).toBe(PRIVACY_POLICY_VERSION);
+  });
+});
+
+describe("seguimiento de las solicitudes por el paciente", () => {
+  it("el paciente ve solo sus solicitudes, con estado, plazo y respuesta", async () => {
+    await pglite.exec(`INSERT INTO leads (id, token, name, phone, center_id, consent) VALUES ('lead-b', 'tok-b', 'Paciente Dos', '+56922222222', 'clinic-a', true);`);
+    const created = await request(app).post("/api/patients/tok-a/data-requests").send({ type: "withdrawal", message: "privado" });
+    await request(app).post("/api/patients/tok-b/data-requests").send({ type: "access" });
+    await request(app).patch(`/api/clinic/data-requests/${created.body.id}`).set("Cookie", asA()).send({ status: "resolved", note: "Listo, ya no te contactaremos" });
+    const own = await request(app).get("/api/patients/tok-a/data-requests");
+    expect(own.status).toBe(200);
+    expect(own.body.requests).toHaveLength(1);
+    expect(own.body.requests[0]).toMatchObject({ type: "withdrawal", status: "resolved", resolutionNote: "Listo, ya no te contactaremos" });
+    expect(own.body.requests[0].dueAt).toBeTruthy();
+    expect(JSON.stringify(own.body)).not.toMatch(/resolvedByName|leadId|centerId|privado/);
+    expect((await request(app).get("/api/patients/nope/data-requests")).status).toBe(404);
+  });
+});
+
+describe("avisos de vencimiento a la clínica", () => {
+  it("avisa una vez cuando faltan 7 días o menos y una vez cuando vence, sin datos del paciente", async () => {
+    const { runDataRequestReminders } = await import("../lib/data-rights");
+    const created = await request(app).post("/api/patients/tok-a/data-requests").send({ type: "erasure" });
+    expect(await runDataRequestReminders("https://app.test", new Date())).toBe(0);
+    const in25 = new Date(Date.now() + 25 * 86_400_000);
+    expect(await runDataRequestReminders("https://app.test", in25)).toBe(1);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({ to: "ana@x.cl", subject: "Solicitud de datos por vencer" });
+    expect(sent[0].text).toContain("eliminación");
+    expect(sent[0].text).not.toMatch(/Paciente Uno|\+56911111111/);
+    expect(await runDataRequestReminders("https://app.test", in25)).toBe(0);
+    const in31 = new Date(Date.now() + 31 * 86_400_000);
+    expect(await runDataRequestReminders("https://app.test", in31)).toBe(1);
+    expect(sent[1].subject).toBe("Solicitud de datos vencida");
+    expect(await runDataRequestReminders("https://app.test", in31)).toBe(0);
+    await request(app).patch(`/api/clinic/data-requests/${created.body.id}`).set("Cookie", asA()).send({ status: "resolved" });
+    expect(await runDataRequestReminders("https://app.test", new Date(Date.now() + 60 * 86_400_000))).toBe(0);
+  });
+
+  it("solo avisa a la administración de la clínica correspondiente", async () => {
+    const { runDataRequestReminders } = await import("../lib/data-rights");
+    await request(app).post("/api/patients/tok-a/data-requests").send({ type: "access" });
+    await runDataRequestReminders(undefined, new Date(Date.now() + 29 * 86_400_000));
+    expect(sent.map((mail) => mail.to)).toEqual(["ana@x.cl"]);
   });
 });

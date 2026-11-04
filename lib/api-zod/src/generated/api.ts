@@ -40,7 +40,7 @@ export const GetAuthMeResponse = zod.object({
   "id": zod.string(),
   "name": zod.string()
 }).optional(),
-  "plan": zod.enum(['basic', 'unlimited', 'titanium']).optional().describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.'),
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).optional().describe('The clinic\'s plan. Shown to people as Bronze (basic), Silver (unlimited) and Gold (titanium); the identifiers do not change. Today only \"titanium\" (Gold) adds a function (video); no plan removes anything a clinic already used.'),
   "features": zod.array(zod.enum(['video'])).optional().describe('Functions the current clinic\'s plan enables (the server decides; the interface only reflects it). Only present when a clinic is chosen.')
 }).optional()
 })
@@ -75,7 +75,7 @@ export const AdminLoginResponse = zod.object({
   "id": zod.string(),
   "name": zod.string()
 }).optional(),
-  "plan": zod.enum(['basic', 'unlimited', 'titanium']).optional().describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.'),
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).optional().describe('The clinic\'s plan. Shown to people as Bronze (basic), Silver (unlimited) and Gold (titanium); the identifiers do not change. Today only \"titanium\" (Gold) adds a function (video); no plan removes anything a clinic already used.'),
   "features": zod.array(zod.enum(['video'])).optional().describe('Functions the current clinic\'s plan enables (the server decides; the interface only reflects it). Only present when a clinic is chosen.')
 })
 })
@@ -675,6 +675,7 @@ export const GetLeadResultsParams = zod.object({
 })
 
 export const GetLeadResultsResponse = zod.object({
+  "channels": zod.array(zod.enum(['email', 'whatsapp'])).describe('Channels the clinic has enabled to deliver results.'),
   "preferredChannel": zod.string().nullish(),
   "email": zod.string().nullish(),
   "phone": zod.string().nullish(),
@@ -929,7 +930,7 @@ export const GetDirectorCentersResponse = zod.object({
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
   "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
   "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.'),
-  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.')
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Shown to people as Bronze (basic), Silver (unlimited) and Gold (titanium); the identifiers do not change. Today only \"titanium\" (Gold) adds a function (video); no plan removes anything a clinic already used.')
 }))
 })
 
@@ -968,7 +969,7 @@ export const CreateDirectorCenterResponse = zod.object({
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
   "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
   "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.'),
-  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.')
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Shown to people as Bronze (basic), Silver (unlimited) and Gold (titanium); the identifiers do not change. Today only \"titanium\" (Gold) adds a function (video); no plan removes anything a clinic already used.')
 })
 
 
@@ -981,7 +982,7 @@ export const PatchDirectorCenterParams = zod.object({
 
 export const PatchDirectorCenterBody = zod.object({
   "active": zod.boolean().optional(),
-  "plan": zod.enum(['basic', 'unlimited', 'titanium']).optional().describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.')
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).optional().describe('The clinic\'s plan. Shown to people as Bronze (basic), Silver (unlimited) and Gold (titanium); the identifiers do not change. Today only \"titanium\" (Gold) adds a function (video); no plan removes anything a clinic already used.')
 }).describe('Send at least one of the fields.')
 
 export const PatchDirectorCenterResponse = zod.object({
@@ -996,7 +997,7 @@ export const PatchDirectorCenterResponse = zod.object({
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
   "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
   "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.'),
-  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.')
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Shown to people as Bronze (basic), Silver (unlimited) and Gold (titanium); the identifiers do not change. Today only \"titanium\" (Gold) adds a function (video); no plan removes anything a clinic already used.')
 })
 
 
@@ -1240,7 +1241,7 @@ export const UpdateDirectorCenterIdentityResponse = zod.object({
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
   "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
   "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.'),
-  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.')
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Shown to people as Bronze (basic), Silver (unlimited) and Gold (titanium); the identifiers do not change. Today only \"titanium\" (Gold) adds a function (video); no plan removes anything a clinic already used.')
 })
 
 
@@ -1267,7 +1268,7 @@ export const RecordDirectorCenterPaymentResponse = zod.object({
   "paymentStatus": zod.enum(['al_dia', 'atrasada', 'sin_registro']),
   "logoDataUrl": zod.string().nullable().describe('The clinic\'s logo as shown to its patients (PNG data URL). Null if none has been uploaded.'),
   "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.'),
-  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.')
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Shown to people as Bronze (basic), Silver (unlimited) and Gold (titanium); the identifiers do not change. Today only \"titanium\" (Gold) adds a function (video); no plan removes anything a clinic already used.')
 })
 
 
@@ -1347,6 +1348,7 @@ export const GetClinicParams = zod.object({
 
 export const GetClinicResponse = zod.object({
   "name": zod.string(),
+  "channels": zod.array(zod.enum(['email', 'whatsapp'])).describe('Channels the clinic uses to deliver results; the patient chooses one of them (nothing is preselected).'),
   "logoDataUrl": zod.string().nullable(),
   "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
@@ -1554,7 +1556,7 @@ export const GetClinicProtocolQueryParams = zod.object({
 
 export const GetClinicProtocolResponse = zod.object({
   "canEdit": zod.boolean(),
-  "plan": zod.enum(['basic', 'unlimited', 'titanium']).optional().describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.'),
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).optional().describe('The clinic\'s plan. Shown to people as Bronze (basic), Silver (unlimited) and Gold (titanium); the identifiers do not change. Today only \"titanium\" (Gold) adds a function (video); no plan removes anything a clinic already used.'),
   "features": zod.array(zod.enum(['video'])).optional(),
   "phases": zod.array(zod.object({
   "id": zod.string(),
@@ -1571,7 +1573,7 @@ export const GetClinicProtocolResponse = zod.object({
   "hasPhotos": zod.boolean(),
   "document": zod.boolean().describe('The photo is a document (e.g. a handwritten sheet) that staff can transcribe.'),
   "measure": zod.boolean().describe('The lesion is measured on this photo with a reference coin next to it.'),
-  "video": zod.boolean().describe('This view is recorded as a short video (up to 20 s) instead of a photo. Titanium plan only.')
+  "video": zod.boolean().describe('This view is recorded as a short video (up to 20 s) instead of a photo. Gold plan (titanium) only.')
 }))
 }))
 })
@@ -1600,7 +1602,7 @@ export const UpdateClinicProtocolBody = zod.object({
 
 export const UpdateClinicProtocolResponse = zod.object({
   "canEdit": zod.boolean(),
-  "plan": zod.enum(['basic', 'unlimited', 'titanium']).optional().describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.'),
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).optional().describe('The clinic\'s plan. Shown to people as Bronze (basic), Silver (unlimited) and Gold (titanium); the identifiers do not change. Today only \"titanium\" (Gold) adds a function (video); no plan removes anything a clinic already used.'),
   "features": zod.array(zod.enum(['video'])).optional(),
   "phases": zod.array(zod.object({
   "id": zod.string(),
@@ -1617,7 +1619,7 @@ export const UpdateClinicProtocolResponse = zod.object({
   "hasPhotos": zod.boolean(),
   "document": zod.boolean().describe('The photo is a document (e.g. a handwritten sheet) that staff can transcribe.'),
   "measure": zod.boolean().describe('The lesion is measured on this photo with a reference coin next to it.'),
-  "video": zod.boolean().describe('This view is recorded as a short video (up to 20 s) instead of a photo. Titanium plan only.')
+  "video": zod.boolean().describe('This view is recorded as a short video (up to 20 s) instead of a photo. Gold plan (titanium) only.')
 }))
 }))
 })
@@ -1651,6 +1653,7 @@ export const GetPatientClinicParams = zod.object({
 
 export const GetPatientClinicResponse = zod.object({
   "name": zod.string(),
+  "channels": zod.array(zod.enum(['email', 'whatsapp'])).describe('Channels the clinic uses to deliver results; the patient chooses one of them (nothing is preselected).'),
   "logoDataUrl": zod.string().nullable(),
   "specialty": zod.enum(['capilar', 'plastica', 'dermatologia']).describe('The clinic\'s specialty; it decides the patient form, the photo protocol and the starting phases.')
 })
@@ -2173,7 +2176,7 @@ export const GetSupraRecentClinicsResponse = zod.object({
   "patients": zod.number(),
   "logo": zod.string().nullable(),
   "createdAt": zod.coerce.date(),
-  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Today only \"titanium\" adds a function (video); no plan removes anything a clinic already used.')
+  "plan": zod.enum(['basic', 'unlimited', 'titanium']).describe('The clinic\'s plan. Shown to people as Bronze (basic), Silver (unlimited) and Gold (titanium); the identifiers do not change. Today only \"titanium\" (Gold) adds a function (video); no plan removes anything a clinic already used.')
 }))
 })
 

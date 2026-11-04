@@ -38,6 +38,7 @@ import { DataRightsDialog } from "@/components/data-rights-dialog";
 import { DuplicateHelp } from "@/components/duplicate-help";
 import { SelfConsentDocument } from "@/components/self-consent-document";
 import { CONSENT_FIRST_TEXT } from "@/lib/patient-consent-first-i18n";
+import { PATIENT_CHANNEL_TEXT } from "@/lib/patient-channels-i18n";
 import { PATIENT_ACCOUNT_TEXT } from "@/lib/patient-account-i18n";
 import { LockedEvaluation } from "@/components/locked-evaluation";
 import { EVALUATION_EDIT_TEXT } from "@/lib/evaluation-edit-i18n";
@@ -134,7 +135,8 @@ const patientSchema = z.object({
   }).optional(),
   consent: z.boolean().refine(val => val === true, "Debes aceptar para continuar"),
   marketingConsent: z.boolean().optional(),
-  deliveryChannel: z.enum(["email", "whatsapp"]).default("email"),
+  // Sin opción preseleccionada: el paciente debe elegir uno de los canales que la clínica tiene activos.
+  deliveryChannel: z.string().refine((value): boolean => value === "email" || value === "whatsapp", "Elige una opción"),
 });
 
 type PatientFormValues = z.infer<typeof patientSchema>;
@@ -573,6 +575,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
   const { t, lang, setLang } = useLanguage();
   const extra = PATIENT_EXTRA_TEXT[lang];
   const consentText = CONSENT_FIRST_TEXT[lang];
+  const channelText = PATIENT_CHANNEL_TEXT[lang];
   const accountText = PATIENT_ACCOUNT_TEXT[lang];
   const [langOpen, setLangOpen] = useState(false);
   const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
@@ -658,7 +661,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
 
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema),
-    defaultValues: { name: "", documentId: "", email: "", phone: "", age: "", city: "", hairLossTime: "", pattern: "", previousTreatment: "", symptoms: "", surgeryHistory: "", clinicalData: {}, consent: false, marketingConsent: false, deliveryChannel: "email" },
+    defaultValues: { name: "", documentId: "", email: "", phone: "", age: "", city: "", hairLossTime: "", pattern: "", previousTreatment: "", symptoms: "", surgeryHistory: "", clinicalData: {}, consent: false, marketingConsent: false, deliveryChannel: "" },
   });
 
   useEffect(() => {
@@ -712,7 +715,8 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
 
   // Live gate for the "Continuar" button: all required fields valid + consent checked
   const watchedValues = form.watch();
-  const canContinue = patientSchema.safeParse(watchedValues).success;
+  const channelOptions: Array<"email" | "whatsapp"> = (clinic?.channels as Array<"email" | "whatsapp"> | undefined) ?? ["email", "whatsapp"];
+  const canContinue = patientSchema.safeParse(watchedValues).success && channelOptions.includes(watchedValues.deliveryChannel as "email" | "whatsapp");
 
   useEffect(() => {
     // The photo-status request and the patient summary are independent. The
@@ -728,7 +732,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
         previousTreatment: (l as any).previousTreatment || "", symptoms: (l as any).symptoms || "",
         surgeryHistory: (l as any).surgeryHistory || "", clinicalData: (l as any).clinicalData || {}, consent: l.consent || false,
         marketingConsent: (l as any).marketingConsent || false,
-        deliveryChannel: (l as any).deliveryChannel === "whatsapp" ? "whatsapp" : "email",
+        deliveryChannel: (l as any).deliveryChannel === "whatsapp" || (l as any).deliveryChannel === "email" ? (l as any).deliveryChannel : "",
       });
       const keys = Array.isArray((l as any).photoKeys) ? ((l as any).photoKeys as string[]) : [];
       if (keys.length > 0) {
@@ -1540,7 +1544,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
                       <FormItem>
                         <FormLabel className="text-sm font-bold">{t.pDeliveryTitle}</FormLabel>
                         <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label={t.pDeliveryTitle}>
-                          {([["email", t.pDeliveryEmail], ["whatsapp", t.pDeliveryWhatsapp]] as const).map(([value, label]) => (
+                          {([["email", t.pDeliveryEmail], ["whatsapp", t.pDeliveryWhatsapp]] as const).filter(([value]) => channelOptions.includes(value)).map(([value, label]) => (
                             <button key={value} type="button" role="radio" aria-checked={field.value === value}
                               onClick={() => field.onChange(value)}
                               className={`h-12 rounded-2xl border text-sm font-semibold transition-colors ${field.value === value ? "border-primary bg-primary/10 text-primary" : "border-[#E8E4DE] bg-[#F5F2EE] text-foreground"}`}>
@@ -1548,7 +1552,9 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
                             </button>
                           ))}
                         </div>
-                        <p className="text-xs text-muted-foreground">{t.pDeliveryHint}</p>
+                        <p className="text-xs text-muted-foreground" data-testid="delivery-hint">
+                          {field.value === "email" ? t.pDeliveryHint : field.value === "whatsapp" ? channelText.whatsappHint : channelText.pick}
+                        </p>
                         <FormMessage />
                       </FormItem>
                     )} />
