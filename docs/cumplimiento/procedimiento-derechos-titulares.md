@@ -4,9 +4,11 @@ Plazo legal (art. 11): **30 días corridos** desde el ingreso, prorrogable **una
 Bloqueo temporal: responder dentro de **2 días hábiles**.
 
 ## Entrada
-1. Paciente: botón «Mis datos y derechos» al final de su evaluación → crea la solicitud (`data_requests`, vence a los 30 días).
-2. Correo a contacto de Clinivista: quien lo recibe la registra en el panel de la clínica del paciente **el mismo día** (o la reenvía a la clínica, que la registra). El plazo corre desde que llegó el correo.
-3. En persona o por teléfono en la clínica: la clínica la registra igual.
+1. Paciente: botón «Mis datos y derechos» en su portal (`/paciente`, uno por cada caso), al final de su evaluación o en la evaluación bloqueada → crea la solicitud (`data_requests`, vence a los 30 días). Tipos: acceso, retiro del consentimiento, rectificación, eliminación, oposición, portabilidad y bloqueo temporal. En el portal el paciente ve «Mis solicitudes» con el estado, la fecha límite y la respuesta de la clínica.
+2. Correo a contacto de Clinivista, o aviso en persona o por teléfono en la clínica: **hoy el panel no permite registrar solicitudes a mano** (solo las crea el paciente). Mientras no exista esa función, la clínica debe llevar un registro propio con la fecha de recepción (el plazo corre desde ese día) o pedir al paciente que use el botón «Mis datos y derechos». Está en la lista de mejoras pendientes.
+
+## Avisos de vencimiento
+Cada hora el servidor revisa las solicitudes abiertas (Recibida o En curso). A los 7 días o menos del vencimiento, y otra vez cuando vence, envía un correo a las personas con rol administrativo activas de esa clínica, sin datos del paciente. Cada aviso se envía una sola vez por solicitud. No reemplaza la revisión semanal. No existe aviso para el bloqueo temporal de 2 días hábiles.
 
 ## Quién responde
 La **clínica** (responsable). Clinivista le da las herramientas: panel «Solicitudes de datos», exportación JSON, registro de accesos.

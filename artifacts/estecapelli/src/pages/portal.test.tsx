@@ -39,6 +39,18 @@ describe("Portal del paciente", () => {
     expect(screen.getByRole("link", { name: "Enviar información adicional" })).toHaveAttribute("href", "/patient?token=tok-2");
   });
 
+  it("shows «Mis datos y derechos» and the list of requests with their deadline in each case", async () => {
+    api.me = { email: "p@x.cl", cases: [{ leadId: "l1", clinicName: "Clínica Uno", patientName: "Ana", results: [], editToken: "tok-1", locked: false }] };
+    const due = new Date(Date.now() + 10 * 86_400_000).toISOString();
+    const spy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ requests: [{ id: "r1", type: "withdrawal", status: "pending", createdAt: new Date().toISOString(), dueAt: due, resolutionNote: "" }] }), { status: 200 }));
+    render(<LanguageProvider><Portal /></LanguageProvider>);
+    expect(screen.getByTestId("data-rights-open")).toBeInTheDocument();
+    expect(await screen.findByText("Retirar mi consentimiento (para el futuro)")).toBeInTheDocument();
+    expect(screen.getByText(/Recibida · Respuesta hasta el/)).toBeInTheDocument();
+    expect(spy).toHaveBeenCalledWith("/api/patients/tok-1/data-requests");
+    spy.mockRestore();
+  });
+
   it("logout resets the session query so the stale results disappear", async () => {
     const user = userEvent.setup();
     api.me = { email: "p@x.cl", cases: [] };

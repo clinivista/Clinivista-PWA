@@ -413,6 +413,8 @@ export const dataRequestsTable = pgTable("data_requests", {
   resolvedAt: timestamp("resolved_at", { withTimezone: true }),
   resolvedByName: text("resolved_by_name").notNull().default(""),
   resolutionNote: text("resolution_note").notNull().default(""),
+  // Avisos automáticos a la clínica: 0 ninguno, 1 «por vencer» (7 días o menos), 2 «vencida».
+  reminderStage: integer("reminder_stage").notNull().default(0),
 }, (table) => [index("data_requests_center_idx").on(table.centerId, table.status)]);
 export type DataRequest = typeof dataRequestsTable.$inferSelect;
 

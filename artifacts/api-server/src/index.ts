@@ -2,6 +2,7 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { runDueReports } from "./lib/pending-report";
 import { runMonitorTick } from "./lib/service-monitor";
+import { runDataRequestReminders } from "./lib/data-rights";
 
 const rawPort = process.env["PORT"];
 
@@ -41,3 +42,8 @@ const MONITOR_TICK_MS = 5 * 60_000;
 const monitorTick = () => runMonitorTick().catch((err) => logger.error({ err }, "Service monitor tick failed"));
 setTimeout(monitorTick, 60_000).unref();
 setInterval(monitorTick, MONITOR_TICK_MS).unref();
+
+// Solicitudes de datos de pacientes: cada hora avisa a la clínica de las que están por vencer o vencidas.
+const reminderTick = () => runDataRequestReminders(process.env["PUBLIC_APP_URL"]).catch((err) => logger.error({ err }, "Data request reminder tick failed"));
+setTimeout(reminderTick, 2 * 60_000).unref();
+setInterval(reminderTick, 60 * 60_000).unref();

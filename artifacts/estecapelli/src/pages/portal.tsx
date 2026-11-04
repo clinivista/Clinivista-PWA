@@ -20,6 +20,8 @@ import { LanguagePicker } from "@/components/language-picker";
 import { useLanguage, type LangCode } from "@/lib/language";
 import { PORTAL_TEXT, type PortalText } from "@/lib/portal-i18n";
 import { PORTAL_EDIT_TEXT } from "@/lib/evaluation-edit-i18n";
+import { DataRightsDialog } from "@/components/data-rights-dialog";
+import { MyDataRequests } from "@/components/my-data-requests";
 
 export const LOCALES: Record<string, string> = { es: "es-CL", en: "en-US", pt: "pt-BR", fr: "fr-FR", de: "de-DE", it: "it-IT", tr: "tr-TR", ar: "ar", zh: "zh-CN" };
 
@@ -125,6 +127,8 @@ export default function Portal() {
                 <Link href={`/patient?token=${encodeURIComponent(item.editToken)}`}>{item.locked ? editText.extra : editText.edit}</Link>
               </Button>
             </div>
+            <MyDataRequests token={item.editToken} />
+            <DataRightsDialog token={item.editToken} />
             {item.results.length === 0 ? (
               <p className="text-sm text-muted-foreground">{text.noResults}</p>
             ) : (

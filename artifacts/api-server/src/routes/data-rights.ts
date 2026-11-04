@@ -4,7 +4,7 @@ import { db, leadsTable } from "@workspace/db";
 import { requireStaffAuth } from "./auth";
 import { throttled } from "../lib/patient-accounts";
 import {
-  accessEventsForLead, createDataRequest, exportPatientData, isDataRequestStatus, isDataRequestType, listDataRequests, logStaffAccess, updateDataRequest,
+  accessEventsForLead, createDataRequest, requestsForLead, exportPatientData, isDataRequestStatus, isDataRequestType, listDataRequests, logStaffAccess, updateDataRequest,
 } from "../lib/data-rights";
 
 const router: IRouter = Router();
@@ -21,6 +21,18 @@ router.post("/patients/:token/data-requests", async (req, res): Promise<void> =>
   if (!isDataRequestType(type)) { res.status(400).json({ error: "Tipo de solicitud inválido." }); return; }
   const request = await createDataRequest(lead, type, typeof req.body?.message === "string" ? req.body.message : "");
   res.status(201).json({ ok: true, id: request.id, dueAt: request.dueAt });
+});
+
+// El paciente ve el estado y el plazo de sus propias solicitudes.
+router.get("/patients/:token/data-requests", async (req, res): Promise<void> => {
+  if (throttled(`data-request-list-ip:${req.ip}`, 60, 60 * 60_000)) {
+    res.status(429).json({ error: "Demasiadas consultas. Intenta más tarde." });
+    return;
+  }
+  const [lead] = await db.select().from(leadsTable).where(eq(leadsTable.token, String(req.params.token)));
+  if (!lead) { res.status(404).json({ error: "Este enlace ya no está disponible." }); return; }
+  res.setHeader("Cache-Control", "private, no-store");
+  res.json({ requests: await requestsForLead(lead.id) });
 });
 
 // La clínica ve y responde las solicitudes de sus pacientes.

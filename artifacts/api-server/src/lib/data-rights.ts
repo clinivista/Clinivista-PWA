@@ -1,9 +1,11 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import {
   db, leadsTable, dataRequestsTable, staffAccessEventsTable, evaluationsTable, clinicalPhotosTable, diagnosesTable, usersTable,
   DATA_REQUEST_TYPES, DATA_REQUEST_STATUSES, type DataRequest, type DataRequestType, type DataRequestStatus, type Lead,
 } from "@workspace/db";
 import { uid } from "./helpers";
+import { sendMail } from "./mailer";
+import { logger } from "./logger";
 import { updatesForLead } from "./patient-edits";
 import { consentsForLead, publicConsent } from "./photo-consents";
 
@@ -95,4 +97,52 @@ export async function exportPatientData(lead: Lead) {
     patientAdditions: edits.additions,
     photoConsents: photoConsents.map(publicConsent),
   };
+}
+
+/** Lo que el paciente puede ver de sus propias solicitudes: tipo, estado, plazo y la respuesta de la clínica. */
+export async function requestsForLead(leadId: string) {
+  const rows = await db.select().from(dataRequestsTable).where(eq(dataRequestsTable.leadId, leadId)).orderBy(desc(dataRequestsTable.createdAt));
+  return rows.map((row) => ({
+    id: row.id, type: row.type, status: row.status, createdAt: row.createdAt, dueAt: row.dueAt,
+    resolvedAt: row.resolvedAt, resolutionNote: row.resolutionNote,
+  }));
+}
+
+const REMINDER_DAYS = 7;
+const TYPE_LABEL: Record<DataRequestType, string> = {
+  access: "acceso", withdrawal: "retiro del consentimiento", rectification: "rectificación", erasure: "eliminación",
+  opposition: "oposición", portability: "portabilidad", blocking: "bloqueo temporal",
+};
+
+/**
+ * Avisa por correo a las personas administrativas de la clínica cuando una solicitud de datos está por vencer
+ * (7 días o menos) y cuando ya venció. Cada aviso se envía una sola vez por solicitud. No incluye datos del paciente.
+ */
+export async function runDataRequestReminders(baseUrl: string | undefined, now = new Date()): Promise<number> {
+  const open = await db.select().from(dataRequestsTable).where(inArray(dataRequestsTable.status, ["pending", "in_progress"]));
+  let sent = 0;
+  for (const request of open) {
+    const overdue = request.dueAt.getTime() < now.getTime();
+    const stage = overdue ? 2 : request.dueAt.getTime() - now.getTime() <= REMINDER_DAYS * DAY_MS ? 1 : 0;
+    if (stage === 0 || stage <= request.reminderStage) continue;
+    const staff = await db.select({ email: usersTable.email }).from(usersTable)
+      .where(and(eq(usersTable.centerId, request.centerId), eq(usersTable.role, "administrativo"), eq(usersTable.active, true)));
+    if (!staff.length) continue;
+    const due = request.dueAt.toLocaleDateString("es-CL", { dateStyle: "long", timeZone: "America/Santiago" });
+    const label = TYPE_LABEL[request.type as DataRequestType] ?? request.type;
+    const subject = overdue ? "Solicitud de datos vencida" : "Solicitud de datos por vencer";
+    const link = baseUrl ? `${baseUrl.replace(/\/+$/, "")}/admin` : "";
+    const text = `${overdue ? "Venció el plazo de" : "Está por vencer el plazo de"} una solicitud de ${label} de un paciente (fecha límite: ${due}). Revísala en el panel, menú «Solicitudes de datos»${link ? `: ${link}` : "."}`;
+    const html = `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.5"><p>${text.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p></div>`;
+    let delivered = false;
+    for (const person of staff) {
+      try { await sendMail({ to: person.email, subject, text, html }); delivered = true; }
+      catch (err) { logger.error({ err }, "No se pudo enviar el aviso de solicitud de datos"); }
+    }
+    if (delivered) {
+      await db.update(dataRequestsTable).set({ reminderStage: stage }).where(eq(dataRequestsTable.id, request.id));
+      sent += 1;
+    }
+  }
+  return sent;
 }

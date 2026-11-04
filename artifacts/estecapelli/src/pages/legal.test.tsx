@@ -62,3 +62,13 @@ describe("Política de privacidad actualizada (Ley 21.719)", () => {
     expect(LEGAL_TEXT[code].privacy.sections).toHaveLength(10);
   });
 });
+
+describe("Derechos del titular en la política de privacidad", () => {
+  it("lista los siete derechos, el plazo de 30 días y cómo pedirlos, en los nueve idiomas", () => {
+    for (const { code } of LANGS) {
+      const section = LEGAL_TEXT[code].privacy.sections.find((item) => item.ul?.length === 7 && item.after?.join(' ').includes('30') && item.after?.some((line) => line.includes("{email}")));
+      expect(section, code).toBeTruthy();
+      expect(section!.after!.join(" "), code).toMatch(/30/);
+    }
+  });
+});
