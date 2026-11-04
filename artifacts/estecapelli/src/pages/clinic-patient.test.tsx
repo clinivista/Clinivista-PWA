@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { LanguageProvider } from "@/lib/language";
 
 const state = vi.hoisted(() => ({
@@ -24,6 +24,14 @@ vi.mock("@workspace/api-client-react", () => ({
 }));
 
 import ClinicPatient from "./clinic-patient";
+
+/** La autorización es lo primero: antes de ver el formulario de datos hay que leerla y aceptarla. */
+async function acceptConsent() {
+  fireEvent.click(await screen.findByTestId("consent-main"));
+  const next = await screen.findByTestId("consent-continue");
+  await waitFor(() => expect(next).toBeEnabled());
+  fireEvent.click(next);
+}
 
 vi.mock("wouter", async (importOriginal) => ({
   ...(await importOriginal<typeof import("wouter")>()),
@@ -91,13 +99,28 @@ describe("/c/:slug", () => {
     state.options = { googleEnabled: true, profile: null };
     renderPage();
     screen.getByTestId("clinic-start").click();
+    // Lo primero es la autorización, sin pedir ningún dato.
+    expect(await screen.findByTestId("consent-step")).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("María García")).not.toBeInTheDocument();
+    await acceptConsent();
     // The data step keeps the clinic: Google returns to /c/estecapelli and the header shows its name.
     expect(await screen.findByTestId("google-start")).toHaveAttribute("href", "/api/portal/google/start?next=%2Fc%2Festecapelli");
     expect(screen.getAllByText("Estecapelli").length).toBeGreaterThan(0);
-    // «Volver» del paso de datos (primer botón del contenido) regresa a la bienvenida de la clínica.
+    // «Volver» del paso de datos regresa a la autorización y de ahí a la bienvenida de la clínica.
+    (document.querySelector("main button") as HTMLButtonElement).click();
+    expect(await screen.findByTestId("consent-step")).toBeInTheDocument();
     (document.querySelector("main button") as HTMLButtonElement).click();
     expect(await screen.findByTestId("clinic-welcome")).toBeInTheDocument();
     expect(screen.getByTestId("clinic-name")).toHaveTextContent("Estecapelli");
+  });
+
+  it("si vuelve de Google sin haber aceptado la autorización, se la pide antes de los datos", async () => {
+    window.history.pushState({}, "", "/c/estecapelli?google=ok");
+    sessionStorage.clear();
+    state.options = { googleEnabled: true, profile: { email: "paciente@gmail.com", name: "Paciente Google" } };
+    renderPage();
+    expect(await screen.findByTestId("consent-step")).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("María García")).not.toBeInTheDocument();
   });
 
   it("keeps a separate resume token per clinic", () => {
@@ -110,6 +133,7 @@ describe("/c/:slug", () => {
 
   it("after coming back from Google, goes to the data step with the verified name and email, and the email cannot be changed", async () => {
     window.history.pushState({}, "", "/c/estecapelli?google=ok");
+    sessionStorage.setItem("clinivista_consent_estecapelli", JSON.stringify({ consent: true, marketing: false }));
     state.options = { googleEnabled: true, profile: { email: "paciente@gmail.com", name: "Paciente Google" } };
     renderPage();
     expect(await screen.findByTestId("google-connected")).toHaveTextContent("paciente@gmail.com");
@@ -125,6 +149,7 @@ describe("/c/:slug", () => {
     // not signed in yet: the intro is shown; the data step offers the button
     const start = screen.getAllByRole("button").find((b) => /comenzar|empezar|iniciar/i.test(b.textContent ?? ""));
     if (start) start.click();
+    await acceptConsent();
     const link = await screen.findByTestId("google-start");
     expect(link).toHaveAttribute("href", "/api/portal/google/start?next=%2Fc%2Festecapelli");
   });
@@ -136,6 +161,7 @@ describe("/c/:slug", () => {
     expect(screen.getByTestId("clinic-name")).toHaveTextContent("Clínica Plástica");
     expect(screen.queryByText(/scalp/i)).not.toBeInTheDocument();
     screen.getByRole("button", { name: /Start pre-evaluation/ }).click();
+    await acceptConsent();
     const intake = await screen.findByTestId("plastic-intake");
     expect(intake).toHaveTextContent("Your interest in plastic surgery");
     expect(intake).toHaveTextContent("Which procedure are you interested in?");
@@ -150,6 +176,7 @@ describe("/c/:slug", () => {
     expect(screen.getByTestId("clinic-name")).toHaveTextContent("Clínica Derma");
     expect(screen.queryByText(/scalp/i)).not.toBeInTheDocument();
     screen.getByRole("button", { name: /Start pre-evaluation/ }).click();
+    await acceptConsent();
     const intake = await screen.findByTestId("derm-intake");
     expect(intake).toHaveTextContent("Your dermatology consultation");
     expect(intake).toHaveTextContent("What is your concern?");
@@ -163,6 +190,7 @@ describe("/c/:slug", () => {
     renderPage();
     const start = screen.getAllByRole("button").find((b) => /comenzar|empezar|iniciar/i.test(b.textContent ?? ""));
     start?.click();
+    await acceptConsent();
     expect(await screen.findByText("Historial Capilar")).toBeInTheDocument();
     expect(screen.queryByTestId("plastic-intake")).not.toBeInTheDocument();
   });

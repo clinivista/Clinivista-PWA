@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { within, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LanguageProvider } from "@/lib/language";
 
@@ -42,8 +42,15 @@ function renderPatientFlow() {
   );
 }
 
-async function goToDataStep(user: ReturnType<typeof userEvent.setup>) {
+async function goToConsentStep(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: new RegExp(BEGIN_CTA) }));
+}
+
+/** La autorización va primero: se lee, se marca y recién ahí aparece el formulario de datos. */
+async function goToDataStep(user: ReturnType<typeof userEvent.setup>) {
+  await goToConsentStep(user);
+  await user.click(screen.getByTestId("consent-main"));
+  await user.click(screen.getByTestId("consent-continue"));
 }
 
 /** Fills every required field except consent. Test fixture only — not real data. */
@@ -76,21 +83,47 @@ describe("Patient data step", () => {
     expect(screen.getByRole("button", { name: CONTINUE_CTA })).toBeDisabled();
   });
 
-  it("keeps 'Continuar' disabled when all fields are valid but consent is unchecked", async () => {
+  it("shows the authorization first, without asking for any personal data, and keeps «continue» off until it is ticked", async () => {
     const user = setupUser();
     renderPatientFlow();
-    await goToDataStep(user);
-    await fillRequiredFields(user);
-    expect(screen.getByRole("button", { name: CONTINUE_CTA })).toBeDisabled();
+    await goToConsentStep(user);
+    expect(screen.getByTestId("consent-step")).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("María García")).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("12.345.678-5")).not.toBeInTheDocument();
+    expect(screen.getByTestId("consent-continue")).toBeDisabled();
+    expect(screen.getByTestId("consent-need-check")).toBeInTheDocument();
+    await user.click(screen.getByTestId("consent-continue"));
+    expect(screen.getByTestId("consent-step")).toBeInTheDocument();
+    await user.click(screen.getByTestId("consent-main"));
+    expect(screen.getByTestId("consent-continue")).toBeEnabled();
+    expect(screen.queryByTestId("consent-need-check")).not.toBeInTheDocument();
   });
 
-  it("enables 'Continuar' once all required fields are valid and consent is ticked", async () => {
+  it("the optional newsletter box is marked optional and does not block continuing", async () => {
+    const user = setupUser();
+    renderPatientFlow();
+    await goToConsentStep(user);
+    expect(screen.getByTestId("consent-marketing")).not.toBeChecked();
+    await user.click(screen.getByTestId("consent-main"));
+    expect(screen.getByTestId("consent-continue")).toBeEnabled();
+  });
+
+  it("the data step shows the accepted authorization and lets the patient go back and review it", async () => {
+    const user = setupUser();
+    renderPatientFlow();
+    await goToDataStep(user);
+    expect(screen.getByTestId("consent-done-chip")).toBeInTheDocument();
+    expect(screen.queryByTestId("consent-main")).not.toBeInTheDocument();
+    await user.click(within(screen.getByTestId("consent-done-chip")).getByRole("button"));
+    expect(screen.getByTestId("consent-step")).toBeInTheDocument();
+    expect(screen.getByTestId("consent-main")).toBeChecked();
+  });
+
+  it("enables 'Continuar' once all required fields are valid (the authorization was already accepted)", async () => {
     const user = setupUser();
     renderPatientFlow();
     await goToDataStep(user);
     await fillRequiredFields(user);
-    const checkboxes = screen.getAllByRole("checkbox");
-    await user.click(checkboxes[0]); // first checkbox = mandatory consent
     expect(screen.getByRole("button", { name: CONTINUE_CTA })).toBeEnabled();
   });
 

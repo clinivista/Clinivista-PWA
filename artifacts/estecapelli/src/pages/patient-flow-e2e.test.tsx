@@ -118,6 +118,9 @@ async function goToDataStep(user: ReturnType<typeof setupUser>) {
   await user.click(
     screen.getByRole("button", { name: /Comenzar Evaluación/i }),
   );
+  // Primero la autorización; los datos se piden después.
+  await user.click(screen.getByTestId("consent-main"));
+  await user.click(screen.getByTestId("consent-continue"));
 }
 
 /**
@@ -136,9 +139,9 @@ async function fillForm(user: ReturnType<typeof setupUser>) {
   await user.click(await screen.findByRole("option", { name: "Santiago" }));
 }
 
-async function tickConsent(user: ReturnType<typeof setupUser>) {
-  const checkboxes = screen.getAllByRole("checkbox");
-  await user.click(checkboxes[0]);
+// La autorización ya se aceptó al entrar (es lo primero que ve el paciente); aquí solo se comprueba.
+async function tickConsent(_user: ReturnType<typeof setupUser>) {
+  expect(screen.getByTestId("consent-done-chip")).toBeInTheDocument();
 }
 
 async function uploadAndAcceptRequiredPhotos(user: ReturnType<typeof setupUser>) {
@@ -571,7 +574,7 @@ describe("Full patient form flow — end to end", () => {
     const rutInput = await screen.findByPlaceholderText("12.345.678-5");
     expect(rutInput).toHaveValue("12.345.678-5");
     expect(screen.getByPlaceholderText("correo@ejemplo.com")).toHaveValue("recuperacion@example.com");
-    expect(screen.getAllByRole("checkbox")[0]).toBeChecked();
+    expect(screen.getByTestId("consent-done-chip")).toBeInTheDocument(); // la autorización sigue aceptada
 
     firstRender.unmount();
     renderFlow();
@@ -607,7 +610,7 @@ describe("Full patient form flow — end to end", () => {
     await user.click(screen.getByRole("button", { name: "Vista frontal" }));
     await user.click(screen.getByRole("button", { name: "Volver" }));
     expect(await screen.findByPlaceholderText("12.345.678-5")).toHaveValue("12.345.678-5");
-    expect(screen.getAllByRole("checkbox")[0]).toBeChecked();
+    expect(screen.getByTestId("consent-done-chip")).toBeInTheDocument(); // la autorización sigue aceptada
     const continueButton = screen.getByRole("button", { name: /Continuar a Fotografías/i });
     expect(continueButton).toBeEnabled();
     await user.click(continueButton);
