@@ -37,6 +37,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DataRightsDialog } from "@/components/data-rights-dialog";
 import { DuplicateHelp } from "@/components/duplicate-help";
 import { SelfConsentDocument } from "@/components/self-consent-document";
+import { CONSENT_FIRST_TEXT } from "@/lib/patient-consent-first-i18n";
 import { LockedEvaluation } from "@/components/locked-evaluation";
 import { EVALUATION_EDIT_TEXT } from "@/lib/evaluation-edit-i18n";
 import { useLanguage, LANGS, type LangCode } from "@/lib/language";
@@ -570,6 +571,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
   const [patientToken, setPatientToken] = useState<string | null>(token);
   const { t, lang, setLang } = useLanguage();
   const extra = PATIENT_EXTRA_TEXT[lang];
+  const consentText = CONSENT_FIRST_TEXT[lang];
   const [langOpen, setLangOpen] = useState(false);
   const currentLang = LANGS.find(l => l.code === lang) ?? LANGS[0];
 
@@ -585,7 +587,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
   const PHOTO_REQUIREMENTS = getConfiguredPhotoProtocol(t, protocolConfig?.views, lang);
   const photoTotal = PHOTO_REQUIREMENTS.length;
 
-  const [step, setStep] = useState<"intro" | "data" | "photos" | "success" | "locked">(startAtData ? "data" : "intro");
+  const [step, setStep] = useState<"intro" | "consent" | "data" | "photos" | "success" | "locked">(startAtData ? "consent" : "intro");
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
   const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
@@ -663,9 +665,32 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
     if (!form.getValues("name") && googleProfile.name) form.setValue("name", googleProfile.name);
   }, [googleProfile?.email, googleProfile?.name, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // El paciente acepta la autorización antes de dar sus datos. Al volver de Google se recupera esa aceptación.
+  const consentKey = `clinivista_consent_${clinicSlug ?? "default"}`;
   useEffect(() => {
-    if (googleReturn === "ok" && googleProfile && !token) setStep("data");
+    if (googleReturn === "ok" && googleProfile && !token) {
+      let saved: { consent?: boolean; marketing?: boolean } | null = null;
+      try { saved = JSON.parse(sessionStorage.getItem(consentKey) ?? "null"); } catch { saved = null; }
+      if (saved?.consent) {
+        form.setValue("consent", true, { shouldValidate: true });
+        form.setValue("marketingConsent", !!saved.marketing);
+        setStep("data");
+      } else {
+        setStep("consent");
+      }
+    }
   }, [googleReturn, googleProfile?.email, token]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Nunca se piden datos sin la autorización aceptada.
+  const consentAccepted = !!form.watch("consent");
+  useEffect(() => {
+    if (step === "data" && !consentAccepted) setStep("consent");
+  }, [step, consentAccepted]);
+
+  const goToData = () => { setStep(form.getValues("consent") ? "data" : "consent"); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const rememberConsent = () => {
+    try { sessionStorage.setItem(consentKey, JSON.stringify({ consent: !!form.getValues("consent"), marketing: !!form.getValues("marketingConsent") })); } catch { /* sin almacenamiento: se vuelve a pedir */ }
+  };
 
   // Cuando la clínica ya empezó a revisar la evaluación, el enlace del paciente solo permite enviar
   // información adicional (no cambiar lo ya enviado).
@@ -709,7 +734,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
         // confirmed; this summary only tells us a resumable draft exists.
         setResumeOffer(true);
       } else {
-        setStep("data");
+        setStep(l.consent ? "data" : "consent");
       }
       hydratedTokenRef.current = token;
     }
@@ -1243,9 +1268,9 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
         {/* Step indicator */}
         {step !== "success" && (
           <div className="mb-10 flex items-center gap-2 text-sm font-semibold justify-center">
-            {(["intro", "data", "photos"] as const).map((s, i) => {
-              const labels = [t.stepIntro, t.stepData, t.stepPhotos];
-              const stepIndex = ["intro", "data", "photos"].indexOf(step);
+            {(["intro", "consent", "data", "photos"] as const).map((s, i) => {
+              const labels = [t.stepIntro, consentText.stepLabel, t.stepData, t.stepPhotos];
+              const stepIndex = ["intro", "consent", "data", "photos"].indexOf(step);
               const isActive = s === step;
               const isDone = i < stepIndex;
               return (
@@ -1327,7 +1352,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
                 {t.pDisclaimer}
               </p>
 
-              <Button onClick={() => { setStep("data"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              <Button onClick={goToData}
                 className="w-full h-14 text-base font-bold rounded-xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 group">
                 {t.pBeginCTA}
                 <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -1336,11 +1361,63 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
           </div>
         )}
 
+        {/* ── STEP: CONSENT (lo primero: se autoriza antes de dar ningún dato) ── */}
+        {step === "consent" && (
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-500" data-testid="consent-step">
+            <div className="mb-6 flex items-center gap-3">
+              {(onBackToWelcome || !startAtData) && (
+                <button type="button" aria-label={t.pBack ?? "Volver"} onClick={() => (onBackToWelcome ? onBackToWelcome() : setStep("intro"))} className="w-10 h-10 rounded-full bg-white border border-[#E8E4DE] flex items-center justify-center hover:bg-[#F5F2EE] transition-colors text-muted-foreground">
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+              )}
+              <div>
+                <h2 className="text-2xl font-extrabold text-foreground tracking-tight">{consentText.title}</h2>
+                <p className="text-sm text-muted-foreground font-medium">{consentText.lead}</p>
+              </div>
+            </div>
+            <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm">
+              <div className="h-1 bg-gradient-to-r from-[#A78BFA] to-[#A78BFA]/30" />
+              <div className="p-6 md:p-8 space-y-4">
+                <SelfConsentDocument lang={lang as LangCode} clinicName={clinic?.name ?? ""} clinicLogo={clinic?.logoDataUrl} />
+                <ul className="space-y-2.5 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2.5 bg-[#F5F2EE] rounded-2xl p-3.5"><Check className="w-4 h-4 text-[#A78BFA] mt-0.5 shrink-0" />{t.pConsentLine1}</li>
+                  <li className="flex items-start gap-2.5 bg-[#F5F2EE] rounded-2xl p-3.5"><Check className="w-4 h-4 text-[#A78BFA] mt-0.5 shrink-0" />{t.pConsentLine2}</li>
+                </ul>
+                <div className="flex items-start gap-3 bg-primary/5 border border-primary/15 p-4 rounded-2xl">
+                  <Checkbox id="consent-main" checked={!!form.watch("consent")} onCheckedChange={(value) => form.setValue("consent", value === true, { shouldValidate: true })} className="mt-0.5 border-primary data-[state=checked]:bg-primary" data-testid="consent-main" />
+                  <div className="space-y-1">
+                    <label htmlFor="consent-main" className="text-sm font-medium text-foreground leading-snug cursor-pointer">{customSpecialty ? specialtyText.consent : t.pConsentCheckbox}</label>
+                    <p className="text-xs text-muted-foreground">
+                      <a href="/privacidad" target="_blank" rel="noreferrer" className="underline">{t.pPrivacyLink}</a>
+                      {" · "}
+                      <a href="/terminos" target="_blank" rel="noreferrer" className="underline">{t.pTermsLink}</a>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 bg-[#F5F2EE] border border-[#E8E4DE] p-4 rounded-2xl">
+                  <Checkbox id="consent-marketing" checked={!!form.watch("marketingConsent")} onCheckedChange={(value) => form.setValue("marketingConsent", value === true)} className="mt-0.5" data-testid="consent-marketing" />
+                  <label htmlFor="consent-marketing" className="text-sm font-medium text-muted-foreground leading-snug cursor-pointer">
+                    <span className="me-2 rounded-full bg-white px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground border border-[#E8E4DE]">{consentText.optional}</span>
+                    {t.pConsentMarketing}
+                  </label>
+                </div>
+                <p className="text-xs text-muted-foreground" data-testid="consent-no-data">{consentText.noDataYet}</p>
+                {!consentAccepted && <p role="status" className="text-sm font-semibold text-primary" data-testid="consent-need-check">{consentText.needCheck}</p>}
+              </div>
+            </div>
+            <Button type="button" onClick={() => { setStep("data"); window.scrollTo({ top: 0, behavior: "smooth" }); }} disabled={!consentAccepted} aria-disabled={!consentAccepted} data-testid="consent-continue"
+              className="mt-5 w-full h-14 text-base font-bold rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 group disabled:opacity-50">
+              {consentText.accept}
+              <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </div>
+        )}
+
         {/* ── STEP: DATA ── */}
         {step === "data" && (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
             <div className="mb-6 flex items-center gap-3">
-              <button onClick={() => (onBackToWelcome ? onBackToWelcome() : setStep("intro"))} className="w-10 h-10 rounded-full bg-white border border-[#E8E4DE] flex items-center justify-center hover:bg-[#F5F2EE] transition-colors text-muted-foreground hover:text-foreground shadow-sm">
+              <button onClick={() => { setStep("consent"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="w-10 h-10 rounded-full bg-white border border-[#E8E4DE] flex items-center justify-center hover:bg-[#F5F2EE] transition-colors text-muted-foreground hover:text-foreground shadow-sm">
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
@@ -1364,7 +1441,7 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
                         </p>
                       ) : (
                         <div className="space-y-2">
-                          <a href={`/api/portal/google/start?next=${encodeURIComponent(basePath)}`} data-testid="google-start"
+                          <a href={`/api/portal/google/start?next=${encodeURIComponent(basePath)}`} data-testid="google-start" onClick={rememberConsent}
                             className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-[#E8E4DE] bg-white text-sm font-bold text-foreground shadow-sm hover:bg-[#F5F2EE] transition-colors">
                             <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
                               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
@@ -1582,49 +1659,9 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
                 </div>
                 )}
 
-                {/* Consent */}
-                <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm">
-                  <div className="h-1 bg-gradient-to-r from-[#A78BFA] to-[#A78BFA]/30" />
-                  <div className="p-6 md:p-8 space-y-4">
-                    <h3 className="font-bold text-sm uppercase tracking-wider text-[#A78BFA]">{t.pConsentTitle}</h3>
-                    <SelfConsentDocument lang={lang as LangCode} clinicName={clinic?.name ?? ""} clinicLogo={clinic?.logoDataUrl} patientName={form.watch("name")} />
-                    <ul className="space-y-2.5 text-sm text-muted-foreground">
-                      <li className="flex items-start gap-2.5 bg-[#F5F2EE] rounded-2xl p-3.5">
-                        <Check className="w-4 h-4 text-[#A78BFA] mt-0.5 shrink-0" />{t.pConsentLine1}
-                      </li>
-                      <li className="flex items-start gap-2.5 bg-[#F5F2EE] rounded-2xl p-3.5">
-                        <Check className="w-4 h-4 text-[#A78BFA] mt-0.5 shrink-0" />{t.pConsentLine2}
-                      </li>
-                    </ul>
-                    <FormField control={form.control} name="consent" render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-start gap-3 bg-primary/5 border border-primary/15 p-4 rounded-2xl">
-                          <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} className="mt-0.5 border-primary data-[state=checked]:bg-primary" /></FormControl>
-                          <div className="space-y-1">
-                            <FormLabel className="text-sm font-medium text-foreground leading-snug cursor-pointer">
-                              {customSpecialty ? specialtyText.consent : t.pConsentCheckbox}
-                            </FormLabel>
-                            <p className="text-xs text-muted-foreground">
-                              <a href="/privacidad" target="_blank" rel="noreferrer" className="underline">{t.pPrivacyLink}</a>
-                              {" · "}
-                              <a href="/terminos" target="_blank" rel="noreferrer" className="underline">{t.pTermsLink}</a>
-                            </p>
-                            <FormMessage />
-                          </div>
-                        </div>
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="marketingConsent" render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-start gap-3 bg-[#F5F2EE] border border-[#E8E4DE] p-4 rounded-2xl">
-                          <FormControl><Checkbox checked={!!field.value} onCheckedChange={field.onChange} className="mt-0.5" /></FormControl>
-                          <FormLabel className="text-sm font-medium text-muted-foreground leading-snug cursor-pointer">
-                            {t.pConsentMarketing}
-                          </FormLabel>
-                        </div>
-                      </FormItem>
-                    )} />
-                  </div>
+                <div className="flex items-center justify-between gap-3 rounded-2xl bg-[#00A9A5]/10 px-4 py-3 text-sm font-semibold text-[#007f7c]" data-testid="consent-done-chip">
+                  <span className="flex items-center gap-2"><Check className="w-4 h-4" />{consentText.doneChip}</span>
+                  <button type="button" className="underline font-medium" onClick={() => { setStep("consent"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>{consentText.review}</button>
                 </div>
 
                 {duplicateError && (
