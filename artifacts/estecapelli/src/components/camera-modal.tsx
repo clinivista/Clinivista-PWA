@@ -23,6 +23,7 @@ interface CameraModalProps {
   guided?: boolean;
 }
 
+const STATUS_SAY: Record<Exclude<FitStatus, "ok">, SayKey> = { none: "nobody", closer: "closer", farther: "farther", left: "left", right: "right", up: "up", down: "down" };
 type GuideStage = "intro" | "loading" | "running" | "manual";
 /** Lado más largo (en píxeles) de la imagen que se analiza: chica, para que el análisis sea rápido. */
 const ANALYSIS_SIDE = 256;
@@ -58,7 +59,8 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
   const guideText = CAMERA_GUIDE_TEXT[lang];
   const [stage, setStage] = useState<GuideStage>("intro");
   const [fitStatus, setFitStatus] = useState<FitStatus>("none");
-  const [message, setMessage] = useState<SayKey | "unavailable" | null>(null);
+  const [message, setMessage] = useState<SayKey | "takeNow" | "unavailable" | null>(null);
+  const [watchReady, setWatchReady] = useState(false);
   const [count, setCount] = useState<number | null>(null);
   const [muted, setMuted] = useState(false);
   const [voiceMissing, setVoiceMissing] = useState(false);
@@ -66,8 +68,8 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
   const segmenterRef = useRef<Segmenter | null>(null);
   const shutterRef = useRef<() => void>(() => undefined);
   const mirrored = guided && facingMode === "user";
-  // Con la guía automática no se dibuja el rectángulo (solo el óvalo cuando corre): sin el rectángulo ni sus esquinas.
-  const ovalOnly = guided && stage !== "manual";
+  // Con la guía no se dibuja el rectángulo: solo el óvalo (también en modo manual): sin el rectángulo ni sus esquinas.
+  const ovalOnly = guided;
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   useEffect(() => {
@@ -216,6 +218,14 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
     audioRef.current?.say(latestRef.current.guideText[key]);
   };
 
+  // Modo manual: el paciente toma la foto, pero el óvalo sigue avisando (verde) cuando está bien encuadrado.
+  const startManual = async () => {
+    setStage("manual");
+    if (segmenterRef.current) { setWatchReady(true); return; }
+    const segmenter = await createSegmenter();
+    if (segmenter) { segmenterRef.current = segmenter; setWatchReady(true); }
+  };
+
   // Empezar la guía (un toque del paciente: así el navegador deja sonar la voz).
   const startGuide = async () => {
     const audio = audioRef.current ?? new GuideAudio(lang);
@@ -232,12 +242,14 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
       return;
     }
     segmenterRef.current = segmenter;
+    setWatchReady(true);
     setStage("running");
   };
 
   // Ciclo de análisis: mira un cuadro cada pocas décimas de segundo, dice qué hacer y toma la foto cuando corresponde.
   useEffect(() => {
-    if (!guided || stage !== "running" || permissionState !== "granted") return;
+    const watchOnly = stage === "manual";
+    if (!guided || permissionState !== "granted" || !(stage === "running" || (watchOnly && watchReady))) return;
     let stopped = false;
     let timer: number | undefined;
     let machine: Machine = newMachine();
@@ -263,6 +275,12 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
           if (stopped) return;
           if (mask) {
             const fit = analyzeHeadFit(mask.data, mask.width, mask.height, ovalForFrame(viewFrame.width, viewFrame.height), flip);
+            if (watchOnly) {
+              setFitStatus(fit.status);
+              setMessage(fit.status === "ok" ? "takeNow" : STATUS_SAY[fit.status]);
+              if (!stopped) timer = window.setTimeout(() => void tick(), ANALYSIS_EVERY_MS);
+              return;
+            }
             const out = step(machine, fit.status, performance.now());
             machine = out.machine;
             setFitStatus(fit.status);
@@ -285,7 +303,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
       if (timer) window.clearTimeout(timer);
       setCount(null);
     };
-  }, [guided, stage, permissionState]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [guided, stage, permissionState, watchReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleMute = () => {
     const audio = audioRef.current ?? new GuideAudio(lang);
@@ -387,13 +405,13 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
                 <div className="absolute -bottom-0.5 -left-0.5 w-6 h-6 border-b-2 border-l-2 border-white rounded-bl-2xl" />
                 <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 border-b-2 border-r-2 border-white rounded-br-2xl" />
               </>)}
-              {guided && stage === "running" && <GuideOval width={frame.width} height={frame.height} ok={fitStatus === "ok"} counting={count !== null} />}
+              {guided && stage !== "intro" && stage !== "loading" && <GuideOval width={frame.width} height={frame.height} ok={fitStatus === "ok"} counting={count !== null} />}
             </div>
           </div>
         )}
 
         {/* Guía automática: texto grande con lo mismo que dice la voz, y la cuenta regresiva */}
-        {permissionState === "granted" && guided && stage === "running" && message && message !== "unavailable" && (
+        {permissionState === "granted" && guided && (stage === "running" || stage === "manual") && message && message !== "unavailable" && (
           <div className="absolute top-3 inset-x-3 pointer-events-none flex justify-center">
             <p role="status" aria-live="polite" data-testid="guide-message" className={`max-w-md rounded-2xl px-5 py-3 text-center text-xl font-extrabold leading-snug shadow-lg ${fitStatus === "ok" ? "bg-green-600 text-white" : "bg-white text-slate-900"}`}>
               {guideText[message]}
@@ -432,7 +450,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
             <Button onClick={() => void startGuide()} className="h-16 min-w-[14rem] rounded-full bg-green-600 hover:bg-green-700 text-white text-xl font-extrabold" data-testid="guide-start">
               {guideText.start}
             </Button>
-            <button type="button" onClick={() => setStage("manual")} className="text-base font-semibold text-white/90 underline underline-offset-4 py-2" data-testid="guide-manual">
+            <button type="button" onClick={() => void startManual()} className="text-base font-semibold text-white/90 underline underline-offset-4 py-2" data-testid="guide-manual">
               {guideText.manual}
             </button>
           </div>

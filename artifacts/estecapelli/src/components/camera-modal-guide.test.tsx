@@ -111,13 +111,27 @@ describe("cámara con guía automática", () => {
     expect(onCapture).not.toHaveBeenCalled();
   });
 
+  it("in manual mode keeps the oval and turns it green when framed, without taking the photo by itself", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { onCapture } = renderModal();
+    await user.click(await screen.findByTestId("guide-manual"));
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    expect(screen.getByTestId("guide-oval")).toHaveAttribute("data-ok", "true");
+    expect(screen.getByTestId("guide-message")).toHaveTextContent("Ya puedes tomar la foto");
+    expect(screen.getByTestId("camera-frame").className).not.toContain("border-2");
+    await act(async () => { await vi.advanceTimersByTimeAsync(9000); });
+    expect(onCapture).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Tomar foto" }));
+    expect(onCapture).toHaveBeenCalled();
+  });
+
   it("falls back to the manual button, with a clear notice, when the guide cannot load", async () => {
     seg.create.mockResolvedValue(null);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { onCapture } = renderModal();
     await user.click(await screen.findByTestId("guide-start"));
     expect(await screen.findByTestId("guide-unavailable")).toHaveTextContent(/guía automática no está disponible/);
-    expect(screen.queryByTestId("guide-oval")).toBeNull();
+    expect(screen.getByTestId("guide-oval")).toHaveAttribute("data-ok", "false"); // el óvalo se mantiene, sin análisis
     await user.click(screen.getByRole("button", { name: "Tomar foto" }));
     expect(onCapture).toHaveBeenCalledWith("data:image/jpeg;base64,FOTO");
   });
@@ -127,7 +141,7 @@ describe("cámara con guía automática", () => {
     const { onCapture } = renderModal();
     await user.click(await screen.findByTestId("guide-manual"));
     expect(screen.queryByTestId("guide-intro")).toBeNull();
-    expect(seg.create).not.toHaveBeenCalled();
+    expect(seg.create).toHaveBeenCalled(); // en manual también se mira el encuadre (solo para el óvalo verde)
     await user.click(screen.getByRole("button", { name: "Tomar foto" }));
     expect(onCapture).toHaveBeenCalled();
   });
