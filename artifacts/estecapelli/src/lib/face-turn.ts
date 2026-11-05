@@ -1,7 +1,7 @@
 // Giro de la cabeza (MediaPipe Face Mesh, servido por la propia app desde /vendor/facemesh). Solo se carga en las vistas laterales.
 // Devuelve cuánto se desvió la punta de la nariz del centro de la cara, en proporción del ancho de la cara, sobre la imagen tal como
 // la entrega la cámara (sin espejo): positivo = la nariz se ve hacia la derecha de la imagen = el paciente giró hacia SU izquierda.
-// De frente vale ~0; con la cabeza girada ~45° vale ~0,3 (medido con las ilustraciones de referencia).
+// De frente vale ~0; con la cabeza girada ~45° vale ~0,6 (medido con las ilustraciones de referencia, reiniciando la malla en cada cuadro).
 
 type Landmark = { x: number; y: number; z: number };
 type MeshResults = { multiFaceLandmarks?: Landmark[][] };
@@ -10,6 +10,7 @@ type Mesh = {
   onResults(callback: (results: MeshResults) => void): void;
   initialize(): Promise<void>;
   send(input: { image: CanvasImageSource }): Promise<void>;
+  reset?(): void;
 };
 type Ctor = new (config: { locateFile: (file: string) => string }) => Mesh;
 
@@ -74,6 +75,8 @@ async function build(): Promise<FaceTurn | null> {
       async run(source) {
         try {
           latest = null;
+          // Sin reiniciar, la malla sigue la cara del cuadro anterior y en giros pronunciados el resultado deriva (medido: 0,33 vs 0,66 para la misma foto).
+          engine.reset?.();
           await engine.send({ image: source });
           const face = (latest as MeshResults | null)?.multiFaceLandmarks?.[0];
           return face ? turnFromLandmarks(face) : null;
