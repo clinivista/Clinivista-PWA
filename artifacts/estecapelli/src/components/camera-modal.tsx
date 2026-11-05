@@ -5,7 +5,7 @@ import { useLanguage } from "@/lib/language";
 import { CAMERA_TEXT, fillTools } from "@/lib/tools-i18n";
 import { cropRectForVideo, frameFor, parseRatio, type Size } from "@/lib/camera-crop";
 import { CAMERA_GUIDE_TEXT, guideTextFor, type GuideKind } from "@/lib/camera-guide-i18n";
-import { analyzeHeadFit, donorCropBox, isolateAtOval, ovalForFrame, type FitStatus } from "@/lib/head-fit";
+import { analyzeHeadFit, DONOR_OVAL_SCALE, donorCropBox, isolateAtOval, ovalForFrame, type FitStatus } from "@/lib/head-fit";
 import { newMachine, step, type Machine, type SayKey } from "@/lib/auto-capture";
 import { GuideAudio } from "@/lib/guide-audio";
 import { createSegmenter, type Segmenter } from "@/lib/selfie-segmenter";
@@ -310,7 +310,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
           const mask = await segmenter.run(canvas, width, height);
           if (stopped) return;
           if (mask) {
-            const oval = ovalForFrame(viewFrame.width, viewFrame.height);
+            const oval = ovalForFrame(viewFrame.width, viewFrame.height, guideKind === "back" ? DONOR_OVAL_SCALE : 1);
             // Con el espejo hay dos siluetas: se mira solo la del reflejo que está en el óvalo.
             const isolated = guideKind === "back" ? isolateAtOval(mask.data, mask.width, mask.height, oval) : null;
             const fit = analyzeHeadFit(isolated ?? mask.data, mask.width, mask.height, oval, flip);
@@ -463,7 +463,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
                 <div className="absolute -bottom-0.5 -left-0.5 w-6 h-6 border-b-2 border-l-2 border-white rounded-bl-2xl" />
                 <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 border-b-2 border-r-2 border-white rounded-br-2xl" />
               </>)}
-              {guided && stage !== "intro" && stage !== "loading" && <GuideOval width={frame.width} height={frame.height} ok={fitStatus === "ok"} counting={count !== null} />}
+              {guided && stage !== "intro" && stage !== "loading" && <GuideOval width={frame.width} height={frame.height} scale={guideKind === "back" ? DONOR_OVAL_SCALE : 1} ok={fitStatus === "ok"} counting={count !== null} />}
             </div>
           </div>
         )}
@@ -555,8 +555,8 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
 }
 
 /** Óvalo de referencia: se oscurece lo de afuera; es blanco punteado mientras se acomoda y verde sólido cuando encaja. */
-function GuideOval({ width, height, ok, counting }: { width: number; height: number; ok: boolean; counting: boolean }) {
-  const oval = ovalForFrame(width, height);
+function GuideOval({ width, height, scale, ok, counting }: { width: number; height: number; scale: number; ok: boolean; counting: boolean }) {
+  const oval = ovalForFrame(width, height, scale);
   const cx = oval.cx * width;
   const cy = oval.cy * height;
   const rx = oval.rx * width;
