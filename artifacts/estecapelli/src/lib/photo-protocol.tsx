@@ -22,6 +22,8 @@ export type PhotoProtocolView = {
   referenceVisual: ReactNode;
   /** Ilustración grande de cómo debe quedar la toma (solo las cinco vistas capilares). */
   guideImage?: string;
+  /** Animación corta (miniatura en una esquina de la cámara) que muestra el movimiento a hacer. */
+  guideAnimation?: string;
   /** Qué postura se le pide al paciente en la cámara guiada. */
   guideKind?: "front" | "top" | "right" | "left" | "back";
   /** La clínica pidió medir la lesión en esta foto con una moneda de referencia. */
@@ -63,11 +65,11 @@ export function getCapillaryPhotoProtocol(t: AppTranslations): PhotoProtocolView
     background: t.photoBackgroundPlain ?? defaults.background,
   };
   return [
-    { ...common, key: "frontal", title: t.photoFrontalTitle, description: t.photoFrontalDesc, tip: t.photoFrontalTip, color: "#00A9A5", orientation: "portrait", aspectRatio: "3:4", minimumWidth: 1200, minimumHeight: 1600, distance: t.photoDistanceFace ?? defaults.distance, referenceVisual: <Reference kind="front" />, guideKind: "front", guideImage: guideUrl("guia-1-frontal.png") },
-    { ...common, key: "vertex", title: t.photoVertexTitle, description: t.photoVertexDesc, tip: t.photoVertexTip, color: "#4F9CF9", orientation: "top-down", aspectRatio: "4:3", minimumWidth: 1600, minimumHeight: 1200, distance: t.photoDistanceTop ?? defaults.topDistance, referenceVisual: <Reference kind="top" />, guideKind: "top", guideImage: guideUrl("guia-2-superior.png") },
-    { ...common, key: "temporalRight", title: t.photoTRTitle, description: t.photoTRDesc, tip: t.photoTRTip, color: "#A78BFA", orientation: "portrait", aspectRatio: "4:3", minimumWidth: 1600, minimumHeight: 1200, distance: t.photoDistanceFace ?? defaults.distance, referenceVisual: <Reference kind="right" />, guideKind: "right", guideImage: guideUrl("guia-3-lado-derecho.png") },
-    { ...common, key: "temporalLeft", title: t.photoTLTitle, description: t.photoTLDesc, tip: t.photoTLTip, color: "#F59E0B", orientation: "portrait", aspectRatio: "4:3", minimumWidth: 1600, minimumHeight: 1200, distance: t.photoDistanceFace ?? defaults.distance, referenceVisual: <Reference kind="left" />, guideKind: "left", guideImage: guideUrl("guia-4-lado-izquierdo.png") },
-    { ...common, key: "donor", title: t.photoDonorTitle, description: t.photoDonorDesc, tip: t.photoDonorTip, color: "#10B981", orientation: "posterior", aspectRatio: "4:3", minimumWidth: 1600, minimumHeight: 1200, distance: t.photoDistanceBack ?? defaults.distance, referenceVisual: <Reference kind="back" />, guideKind: "back", guideImage: guideUrl("guia-5-zona-donante.png") },
+    { ...common, key: "frontal", title: t.photoFrontalTitle, description: t.photoFrontalDesc, tip: t.photoFrontalTip, color: "#00A9A5", orientation: "portrait", aspectRatio: "3:4", minimumWidth: 1200, minimumHeight: 1600, distance: t.photoDistanceFace ?? defaults.distance, referenceVisual: <Reference kind="front" />, guideKind: "front", guideImage: guideUrl("guia-1-frontal.png"), guideAnimation: guideUrl("anim-1-frontal.webp") },
+    { ...common, key: "vertex", title: t.photoVertexTitle, description: t.photoVertexDesc, tip: t.photoVertexTip, color: "#4F9CF9", orientation: "top-down", aspectRatio: "4:3", minimumWidth: 1600, minimumHeight: 1200, distance: t.photoDistanceTop ?? defaults.topDistance, referenceVisual: <Reference kind="top" />, guideKind: "top", guideImage: guideUrl("guia-2-superior.png"), guideAnimation: guideUrl("anim-2-superior.webp") },
+    { ...common, key: "temporalRight", title: t.photoTRTitle, description: t.photoTRDesc, tip: t.photoTRTip, color: "#A78BFA", orientation: "portrait", aspectRatio: "4:3", minimumWidth: 1600, minimumHeight: 1200, distance: t.photoDistanceFace ?? defaults.distance, referenceVisual: <Reference kind="right" />, guideKind: "right", guideImage: guideUrl("guia-3-lado-derecho.png"), guideAnimation: guideUrl("anim-3-lado-derecho.webp") },
+    { ...common, key: "temporalLeft", title: t.photoTLTitle, description: t.photoTLDesc, tip: t.photoTLTip, color: "#F59E0B", orientation: "portrait", aspectRatio: "4:3", minimumWidth: 1600, minimumHeight: 1200, distance: t.photoDistanceFace ?? defaults.distance, referenceVisual: <Reference kind="left" />, guideKind: "left", guideImage: guideUrl("guia-4-lado-izquierdo.png"), guideAnimation: guideUrl("anim-4-lado-izquierdo.webp") },
+    { ...common, key: "donor", title: t.photoDonorTitle, description: t.photoDonorDesc, tip: t.photoDonorTip, color: "#10B981", orientation: "posterior", aspectRatio: "4:3", minimumWidth: 1600, minimumHeight: 1200, distance: t.photoDistanceBack ?? defaults.distance, referenceVisual: <Reference kind="back" />, guideKind: "back", guideImage: guideUrl("guia-5-zona-donante.png"), guideAnimation: guideUrl("anim-5-zona-donante.webp") },
   ];
 }
 
