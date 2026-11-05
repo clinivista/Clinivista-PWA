@@ -392,7 +392,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
         />
 
         {/* Framing guide overlay: the photo is cropped to this frame */}
-        {permissionState === "granted" && frame.width > 0 && (
+        {permissionState === "granted" && frame.width > 0 && !(guided && (stage === "intro" || stage === "loading")) && (
           <div className="absolute inset-0 pointer-events-none">
             <div
               data-testid="camera-frame"
@@ -430,13 +430,13 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
           <p role="alert" data-testid="guide-unavailable" className="absolute top-3 inset-x-3 rounded-2xl bg-amber-100 px-4 py-3 text-center text-base font-semibold text-amber-900">{guideText.unavailable}</p>
         )}
         {permissionState === "granted" && guided && stage === "loading" && (
-          <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-3 text-white" data-testid="guide-loading">
+          <div className="absolute inset-0 z-10 bg-black flex flex-col items-center justify-center gap-3 text-white" data-testid="guide-loading">
             <Loader2 className="w-10 h-10 animate-spin" />
             <p className="text-xl font-bold">{guideText.loading}</p>
           </div>
         )}
         {permissionState === "granted" && guided && stage === "intro" && (
-          <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-5 px-6 text-center" data-testid="guide-intro">
+          <div className="absolute inset-0 z-10 bg-black overflow-y-auto flex flex-col items-center justify-center gap-5 px-6 py-4 text-center" data-testid="guide-intro">
             <Volume2 className="w-12 h-12 text-white" aria-hidden />
             <h2 className="text-2xl font-extrabold text-white">{guideText.introTitle}</h2>
             <ol className="flex flex-col gap-4 max-w-md text-start" data-testid="guide-steps">
