@@ -42,7 +42,7 @@ beforeEach(() => {
   seg.create.mockResolvedValue({ run: seg.run, close: seg.close });
   turn.create.mockReset();
   turn.run.mockReset();
-  turn.run.mockResolvedValue(0.3); // nariz hacia la derecha de la imagen (giro hacia la izquierda del paciente)
+  turn.run.mockResolvedValue(0.6); // nariz hacia la derecha de la imagen (giro hacia la izquierda del paciente)
   turn.create.mockResolvedValue({ run: turn.run });
   getUserMedia = vi.fn(async () => ({ getTracks: () => [{ stop }] }));
   Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia } });
@@ -131,7 +131,7 @@ describe("cámara con guía automática", () => {
   });
 
   it("side view: a head that looks to the camera or turns the wrong way is never captured, and is told to turn", async () => {
-    turn.run.mockResolvedValue(-0.3); // giró hacia el lado contrario para la vista del lado derecho
+    turn.run.mockResolvedValue(-0.6); // giró hacia el lado contrario para la vista del lado derecho
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { onCapture } = renderModal({ guideKind: "right" });
     await user.click(await screen.findByTestId("guide-start"));

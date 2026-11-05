@@ -4,14 +4,14 @@ import { turnFromLandmarks } from "./face-turn";
 
 describe("giro de la cabeza en las vistas laterales", () => {
   it("lado derecho: pide la nariz hacia la derecha de la imagen (el paciente gira hacia su izquierda)", () => {
-    expect(judgeTurn("right", 0.3, newTurnState(), 0).turned).toBe(true);
-    expect(judgeTurn("right", -0.3, newTurnState(), 0).turned).toBe(false); // giró hacia el lado contrario
+    expect(judgeTurn("right", 0.6, newTurnState(), 0).turned).toBe(true);
+    expect(judgeTurn("right", -0.6, newTurnState(), 0).turned).toBe(false); // giró hacia el lado contrario
     expect(judgeTurn("right", 0.02, newTurnState(), 0).turned).toBe(false); // de frente
   });
 
   it("lado izquierdo: lo contrario", () => {
-    expect(judgeTurn("left", -0.3, newTurnState(), 0).turned).toBe(true);
-    expect(judgeTurn("left", 0.3, newTurnState(), 0).turned).toBe(false);
+    expect(judgeTurn("left", -0.6, newTurnState(), 0).turned).toBe(true);
+    expect(judgeTurn("left", 0.6, newTurnState(), 0).turned).toBe(false);
   });
 
   it("uses hysteresis around the limit so it does not flicker", () => {
@@ -24,7 +24,7 @@ describe("giro de la cabeza en las vistas laterales", () => {
 
   it("keeps the turn for a few seconds when the face is lost (profile beyond the detector), never from the start", () => {
     expect(judgeTurn("right", null, newTurnState(), 0).turned).toBe(false);
-    const on = judgeTurn("right", 0.4, newTurnState(), 1000).state;
+    const on = judgeTurn("right", 0.6, newTurnState(), 1000).state;
     expect(judgeTurn("right", null, on, 1000 + LOST_FACE_MS - 1).turned).toBe(true);
     expect(judgeTurn("right", null, on, 1000 + LOST_FACE_MS + 1).turned).toBe(false);
   });

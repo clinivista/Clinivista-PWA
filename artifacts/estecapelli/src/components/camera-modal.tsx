@@ -237,7 +237,9 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
   const startManual = async () => {
     setStage("manual");
     if (segmenterRef.current) { setWatchReady(true); return; }
-    const [segmenter, faceTurn] = await Promise.all([createSegmenter(), turnSide ? createFaceTurn() : Promise.resolve(null)]);
+    const segmenter = await createSegmenter();
+    // Uno después del otro: los dos motores comparten un objeto global y, si se inician a la vez, se pisan y fallan.
+    const faceTurn = turnSide && segmenter ? await createFaceTurn() : null;
     faceTurnRef.current = faceTurn;
     if (segmenter && (!turnSide || faceTurn)) { segmenterRef.current = segmenter; setWatchReady(true); }
   };
@@ -251,9 +253,10 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
     audio.prime(latestRef.current.guideText.soundOn); // dentro del toque: así el navegador permite hablar después
     setVoiceMissing(!GuideAudio.canSpeak());
     setStage("loading");
-    const [segmenter, faceTurn] = await Promise.all([createSegmenter(), turnSide ? createFaceTurn() : Promise.resolve(null)]);
+    const segmenter = await createSegmenter();
+    const faceTurn = turnSide && segmenter ? await createFaceTurn() : null;
     faceTurnRef.current = faceTurn;
-    if (turnSide && !faceTurn) void faceTurnProblem().then(setDiagnosis);
+    if (turnSide && segmenter && !faceTurn) void faceTurnProblem().then(setDiagnosis);
     // Sin poder medir el giro no se toma la foto sola: una lateral que salga de frente no sirve.
     if (!segmenter || (turnSide && !faceTurn)) {
       setMessage("unavailable");

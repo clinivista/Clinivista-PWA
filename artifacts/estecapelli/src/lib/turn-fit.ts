@@ -7,8 +7,8 @@ export type TurnState = { on: boolean; turnedAt: number | null };
 export const newTurnState = (): TurnState => ({ on: false, turnedAt: null });
 
 /** Desvío de la nariz (proporción del ancho de la cara) para dar el giro por bueno / para perderlo. */
-export const TURN_ON = 0.24;
-export const TURN_OFF = 0.17;
+export const TURN_ON = 0.45;
+export const TURN_OFF = 0.35;
 /** Tiempo que se conserva el giro cuando el detector deja de ver la cara. */
 export const LOST_FACE_MS = 4000;
 
