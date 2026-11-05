@@ -18,11 +18,31 @@ describe("audio de la guía", () => {
     const audio = new GuideAudio("fr", false);
     audio.say("Rapprochez le téléphone");
     expect(spoken).toEqual([{ text: "Rapprochez le téléphone", lang: "fr-FR" }]);
-    expect(cancel).toHaveBeenCalled();
+    expect(cancel).not.toHaveBeenCalled();
     audio.setMuted(true);
     audio.say("no suena");
     expect(spoken).toHaveLength(1);
     expect(readMuted()).toBe(true);
+  });
+
+  it("primes inside the gesture and cuts a phrase that is still playing before the next one", () => {
+    vi.useFakeTimers();
+    const spoken: string[] = [];
+    const cancel = vi.fn();
+    const synth = { speaking: false, pending: false, cancel, resume: vi.fn(), getVoices: () => [], speak: (u: { text: string }) => spoken.push(u.text) };
+    vi.stubGlobal("SpeechSynthesisUtterance", class { lang = ""; voice = null; rate = 1; volume = 1; constructor(public text: string) {} });
+    Object.defineProperty(window, "speechSynthesis", { configurable: true, value: synth });
+    const audio = new GuideAudio("es", false);
+    expect(GuideAudio.canSpeak()).toBe(true);
+    audio.prime("Voz activada");
+    expect(spoken).toEqual(["Voz activada"]);
+    synth.speaking = true;
+    audio.say("Acerca el celular");
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(spoken).toHaveLength(1);
+    vi.advanceTimersByTime(100);
+    expect(spoken).toEqual(["Voz activada", "Acerca el celular"]);
+    vi.useRealTimers();
   });
 
   it("remembers the mute choice and never throws without audio support", () => {

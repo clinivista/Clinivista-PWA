@@ -49,19 +49,53 @@ export class GuideAudio {
     if (muted) this.stop();
   }
 
+  /** ¿Este navegador puede hablar? (Si no, la guía sigue con textos y pitidos.) */
+  static canSpeak(): boolean {
+    return typeof window !== "undefined" && "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined";
+  }
+
+  /** Utterances en curso: se guardan para que el navegador no las descarte (en Chrome pueden cortarse si se recolectan). */
+  private pending = new Set<SpeechSynthesisUtterance>();
+
+  private speakNow(text: string): void {
+    const synth = window.speechSynthesis;
+    const utterance = new SpeechSynthesisUtterance(text);
+    const tag = SPEECH_LANG[this.lang];
+    utterance.lang = tag;
+    const voice = synth.getVoices().find((item) => item.lang.toLowerCase().replace("_", "-").startsWith(tag.slice(0, 2).toLowerCase()));
+    if (voice) utterance.voice = voice;
+    utterance.rate = 0.92;
+    utterance.volume = 1;
+    const release = () => { this.pending.delete(utterance); };
+    utterance.onend = release;
+    utterance.onerror = release;
+    this.pending.add(utterance);
+    try { synth.resume(); } catch { /* algunos navegadores no lo implementan */ }
+    synth.speak(utterance);
+  }
+
+  /**
+   * Primera frase, dicha dentro del toque del paciente: iOS y Chrome solo dejan hablar después de una interacción.
+   * Sirve también de prueba para que el paciente oiga que la voz funciona.
+   */
+  prime(text: string): void {
+    if (this.muted || !GuideAudio.canSpeak()) return;
+    try {
+      this.speakNow(text);
+    } catch { /* sin voz */ }
+  }
+
   say(text: string): void {
-    if (this.muted || typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    if (this.muted || !GuideAudio.canSpeak()) return;
     try {
       const synth = window.speechSynthesis;
-      synth.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      const tag = SPEECH_LANG[this.lang];
-      utterance.lang = tag;
-      const voice = synth.getVoices().find((item) => item.lang.toLowerCase().startsWith(tag.slice(0, 2).toLowerCase()));
-      if (voice) utterance.voice = voice;
-      utterance.rate = 0.92;
-      utterance.volume = 1;
-      synth.speak(utterance);
+      // Se corta la frase anterior solo si sigue sonando; cancelar sin necesidad hace que algunos navegadores ignoren la nueva.
+      if (synth.speaking || synth.pending) {
+        synth.cancel();
+        window.setTimeout(() => { if (!this.muted) { try { this.speakNow(text); } catch { /* sin voz */ } } }, 90);
+        return;
+      }
+      this.speakNow(text);
     } catch { /* sin voz */ }
   }
 
@@ -86,6 +120,7 @@ export class GuideAudio {
   }
 
   stop(): void {
+    this.pending.clear();
     try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch { /* nada */ }
   }
 
