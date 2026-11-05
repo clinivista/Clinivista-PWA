@@ -93,6 +93,25 @@ describe("cámara con guía automática", () => {
     expect(screen.getByTestId("guide-message")).toHaveTextContent("Pon tu cara en el óvalo y baja la cabeza.");
   });
 
+  it("shows the big reference picture and the progress, and lets the patient hear the instruction again", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const spoken: string[] = [];
+    vi.stubGlobal("SpeechSynthesisUtterance", class { lang = ""; voice = null; rate = 1; volume = 1; constructor(public text: string) {} });
+    Object.defineProperty(window, "speechSynthesis", { configurable: true, value: { speaking: false, pending: false, cancel: vi.fn(), resume: vi.fn(), getVoices: () => [], speak: (u: { text: string }) => spoken.push(u.text) } });
+    renderModal({ guideKind: "right", guideImage: "/guides/guia-3-lado-derecho.png", progressLabel: "Foto 3 de 5" });
+    expect(await screen.findByTestId("guide-image")).toHaveAttribute("src", "/guides/guia-3-lado-derecho.png");
+    expect(screen.getByTestId("guide-image").className).toContain("object-contain");
+    expect(screen.getByTestId("camera-progress")).toHaveTextContent("Foto 3 de 5");
+    expect(screen.getByTestId("guide-step-4")).toHaveTextContent(/lado derecho/);
+    await user.click(screen.getByTestId("guide-start"));
+    await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    const before = spoken.length;
+    await user.click(screen.getByTestId("guide-repeat"));
+    await act(async () => { await vi.advanceTimersByTimeAsync(200); });
+    expect(spoken.length).toBeGreaterThan(before);
+    vi.unstubAllGlobals();
+  });
+
   it("guides, turns the oval green, counts down and takes the photo by itself", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { onCapture } = renderModal();
