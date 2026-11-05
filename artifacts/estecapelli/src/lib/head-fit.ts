@@ -8,15 +8,18 @@ export type Oval = { cx: number; cy: number; rx: number; ry: number };
 export const GUIDE_OVAL: Oval = { cx: 0.5, cy: 0.45, rx: 0.33, ry: 0.33 };
 
 /** Óvalo para un cuadro de ese tamaño: siempre con forma de cabeza (más alto que ancho), centrado un poco arriba. */
-export function ovalForFrame(width: number, height: number): Oval {
+export function ovalForFrame(width: number, height: number, scale = 1): Oval {
   if (width <= 0 || height <= 0) return GUIDE_OVAL;
   // En cuadros horizontales (vista superior, laterales) el óvalo se agranda: con el mismo tamaño quedaba muy pequeño.
   const wide = width > height;
   const ry = wide ? 0.44 : 0.33;
   const cy = wide ? 0.5 : 0.45;
   const rx = Math.min(0.46, (ry * height * 0.78) / width);
-  return { cx: 0.5, cy, rx, ry };
+  return { cx: 0.5, cy, rx: rx * scale, ry: ry * scale };
 }
+
+/** Zona donante: el reflejo de la nuca se ve pequeño y lejos, así que el óvalo es más chico (el paciente no tiene que acercar el celular). */
+export const DONOR_OVAL_SCALE = 0.58;
 
 /** Qué le falta a la persona (ya traducido a lo que debe hacer con el celular). */
 export type FitStatus = "none" | "closer" | "farther" | "left" | "right" | "up" | "down" | "turn" | "ok";

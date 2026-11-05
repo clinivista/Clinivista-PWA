@@ -13,10 +13,10 @@ import { CameraModal } from "./camera-modal";
 const W = 192;
 const H = 256;
 /** Persona bien encuadrada: cabeza que llena el óvalo, con cuello y hombros. */
-function wellFramed(cx = 0.5) {
+function wellFramed(cx = 0.5, scale = 1) {
   const mask = new Uint8Array(W * H);
-  const headW = 0.5;
-  const headH = 0.62;
+  const headW = 0.5 * scale;
+  const headH = 0.62 * scale;
   const cy = 0.45;
   for (let y = 0; y < H; y += 1) for (let x = 0; x < W; x += 1) {
     const px = x / W, py = y / H;
@@ -162,6 +162,7 @@ describe("cámara con guía automática", () => {
   });
 
   it("donor area: explains the posture first, gives time to take it, then guides the phone and takes the photo", async () => {
+    seg.run.mockImplementation(async () => wellFramed(0.5, 0.58)); // el óvalo de la zona donante es más chico
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { onCapture } = renderModal({ guideKind: "back" });
     expect(await screen.findByTestId("guide-step-4")).toHaveTextContent(/ponte de espaldas al espejo, mira la pantalla/);
