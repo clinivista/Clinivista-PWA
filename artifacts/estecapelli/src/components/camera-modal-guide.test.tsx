@@ -185,6 +185,20 @@ describe("cámara con guía automática", () => {
     expect(screen.getByTestId("guide-message")).toHaveTextContent("Mueve el celular un poco hacia tu izquierda.");
   });
 
+  it("donor area: when the reflection is not detected, the voice reminds the patient to tap the white button", async () => {
+    seg.run.mockImplementation(async () => ({ data: new Uint8Array(W * H), width: W, height: H }));
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { onCapture } = renderModal({ guideKind: "back", aspectRatio: "4:3" });
+    await user.click(await screen.findByTestId("guide-start"));
+    await act(async () => { await vi.advanceTimersByTimeAsync(7000); });
+    expect(screen.getByTestId("guide-message")).not.toHaveTextContent(/botón blanco/);
+    await act(async () => { await vi.advanceTimersByTimeAsync(10000); });
+    expect(screen.getByTestId("guide-message")).toHaveTextContent(/toca el botón blanco para tomar la foto/);
+    expect(onCapture).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Tomar foto" }));
+    expect(onCapture).toHaveBeenCalledWith("data:image/jpeg;base64,FOTO");
+  });
+
   it("guides, turns the oval green, counts down and takes the photo by itself", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { onCapture } = renderModal();
