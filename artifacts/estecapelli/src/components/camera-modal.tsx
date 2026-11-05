@@ -315,7 +315,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
           <X className="w-5 h-5" />
           Cancelar
         </button>
-        <span className="text-white font-semibold text-sm truncate max-w-[160px]">{title}</span>
+        <span aria-hidden className="flex-1" />
         {permissionState === "granted" && (
           <button
             onClick={handleFlipCamera}
@@ -326,6 +326,11 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
           </button>
         )}
         {permissionState !== "granted" && <div className="w-16" />}
+      </div>
+
+      {/* Nombre de la foto, bien visible */}
+      <div className="bg-black px-4 pb-3 pt-1 flex justify-center">
+        <h2 data-testid="camera-title" className="rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2 text-center text-2xl font-extrabold tracking-tight text-white shadow-lg">{title}</h2>
       </div>
 
       {/* Camera preview / error — large viewfinder: full width on mobile,
