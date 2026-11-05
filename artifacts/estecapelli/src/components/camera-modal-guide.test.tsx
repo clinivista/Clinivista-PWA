@@ -164,24 +164,24 @@ describe("cámara con guía automática", () => {
   it("donor area: explains the posture first, gives time to take it, then guides the phone and takes the photo", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { onCapture } = renderModal({ guideKind: "back" });
-    expect(await screen.findByTestId("guide-step-4")).toHaveTextContent(/hacia atrás de tu cabeza, con la cámara apuntando a tu nuca/);
+    expect(await screen.findByTestId("guide-step-4")).toHaveTextContent(/ponte de espaldas al espejo, mira la pantalla/);
     await user.click(screen.getByTestId("guide-start"));
     await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
-    expect(screen.getByTestId("guide-message")).toHaveTextContent(/lleva el celular hacia atrás de tu cabeza/);
+    expect(screen.getByTestId("guide-message")).toHaveTextContent(/espaldas a un espejo grande/);
     await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
-    expect(screen.getByTestId("guide-message")).toHaveTextContent(/lleva el celular hacia atrás de tu cabeza/); // sigue el tiempo de preparación
+    expect(screen.getByTestId("guide-message")).toHaveTextContent(/espaldas a un espejo grande/); // sigue el tiempo de preparación
     expect(onCapture).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(14000); });
     expect(onCapture).toHaveBeenCalledWith("data:image/jpeg;base64,FOTO");
   });
 
-  it("donor area: seen from behind, a head on the right of the image means moving the phone to the patient's right (no mirror)", async () => {
+  it("donor area: front camera shows a mirrored preview, so a reflection on the right of the image means moving the phone to the patient's left", async () => {
     seg.run.mockImplementation(async () => wellFramed(0.75));
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     renderModal({ guideKind: "back", aspectRatio: "4:3" });
     await user.click(await screen.findByTestId("guide-start"));
     await act(async () => { await vi.advanceTimersByTimeAsync(8500); });
-    expect(screen.getByTestId("guide-message")).toHaveTextContent("Mueve el celular un poco hacia tu derecha.");
+    expect(screen.getByTestId("guide-message")).toHaveTextContent("Mueve el celular un poco hacia tu izquierda.");
   });
 
   it("guides, turns the oval green, counts down and takes the photo by itself", async () => {

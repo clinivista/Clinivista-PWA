@@ -5,7 +5,7 @@ import { useLanguage } from "@/lib/language";
 import { CAMERA_TEXT, fillTools } from "@/lib/tools-i18n";
 import { cropRectForVideo, frameFor, parseRatio, type Size } from "@/lib/camera-crop";
 import { CAMERA_GUIDE_TEXT, guideTextFor, type GuideKind } from "@/lib/camera-guide-i18n";
-import { analyzeHeadFit, ovalForFrame, type FitStatus } from "@/lib/head-fit";
+import { analyzeHeadFit, donorCropBox, isolateAtOval, ovalForFrame, type FitStatus } from "@/lib/head-fit";
 import { newMachine, step, type Machine, type SayKey } from "@/lib/auto-capture";
 import { GuideAudio } from "@/lib/guide-audio";
 import { createSegmenter, type Segmenter } from "@/lib/selfie-segmenter";
@@ -84,6 +84,8 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
   // En las vistas laterales la foto solo se da por buena con la cabeza girada hacia el lado pedido.
   const turnSide = guideKind === "right" || guideKind === "left" ? guideKind : null;
   const shutterRef = useRef<() => void>(() => undefined);
+  // Zona donante: dónde está la cabeza reflejada (proporciones 0–1 del cuadro analizado) para recortar la foto.
+  const donorBoxRef = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
   const mirrored = guided && facingMode === "user";
   // Con la guía no se dibuja el rectángulo: solo el óvalo (también en modo manual): sin el rectángulo ni sus esquinas.
   const ovalOnly = guided;
@@ -200,7 +202,12 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
     if (!video) return;
 
     // Keep only what is inside the reference frame, at the camera's full resolution (a zoom-in).
-    const crop = cropRectForVideo(box, { width: video.videoWidth, height: video.videoHeight }, frame);
+    // Zona donante con espejo: se recorta solo la cabeza reflejada (sin la persona real que también sale en el espejo).
+    const donor = guideKind === "back" ? donorBoxRef.current : null;
+    const base = cropRectForVideo(box, { width: video.videoWidth, height: video.videoHeight }, frame, donor ? 0 : undefined);
+    const crop = donor && base
+      ? { sx: Math.round(base.sx + donor.x * base.sw), sy: Math.round(base.sy + donor.y * base.sh), sw: Math.max(1, Math.round(donor.w * base.sw)), sh: Math.max(1, Math.round(donor.h * base.sh)) }
+      : base;
     const canvas = document.createElement("canvas");
     canvas.width = crop ? crop.sw : video.videoWidth;
     canvas.height = crop ? crop.sh : video.videoHeight;
@@ -303,8 +310,11 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
           const mask = await segmenter.run(canvas, width, height);
           if (stopped) return;
           if (mask) {
-            // La cámara que mira la nuca ve a la persona desde atrás: ahí la derecha de la imagen es la derecha del paciente (no hay espejo).
-            const fit = analyzeHeadFit(mask.data, mask.width, mask.height, ovalForFrame(viewFrame.width, viewFrame.height), guideKind === "back" ? false : flip);
+            const oval = ovalForFrame(viewFrame.width, viewFrame.height);
+            // Con el espejo hay dos siluetas: se mira solo la del reflejo que está en el óvalo.
+            const isolated = guideKind === "back" ? isolateAtOval(mask.data, mask.width, mask.height, oval) : null;
+            const fit = analyzeHeadFit(isolated ?? mask.data, mask.width, mask.height, oval, flip);
+            if (guideKind === "back") donorBoxRef.current = fit.status === "ok" && isolated ? donorCropBox(isolated, mask.width, mask.height) : null;
             let status: FitStatus = fit.status;
             if (turnSide && status === "ok") {
               const ratio = faceTurnRef.current ? await faceTurnRef.current.run(canvas) : null;

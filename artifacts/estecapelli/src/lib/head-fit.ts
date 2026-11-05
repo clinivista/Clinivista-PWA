@@ -141,3 +141,65 @@ export function analyzeHeadFit(mask: ArrayLike<number>, w: number, h: number, ov
   if (offset >= OFFSET_OK) return result(move()!);
   return result("ok");
 }
+
+/**
+ * Con el espejo en la foto aparecen dos siluetas: la persona real (cerca, de frente o de lado) y su reflejo (más lejos, de espaldas).
+ * Deja solo la silueta que más se superpone con el óvalo (el reflejo que el paciente está encuadrando) y borra las demás.
+ * Devuelve null si ninguna silueta toca el óvalo.
+ */
+export function isolateAtOval(mask: ArrayLike<number>, w: number, h: number, oval: Oval): Uint8Array | null {
+  const label = new Int32Array(w * h);
+  const overlap = new Map<number, number>();
+  const sizes = new Map<number, number>();
+  let next = 0;
+  const inOval = (x: number, y: number) => {
+    const nx = ((x + 0.5) / w - oval.cx) / oval.rx;
+    const ny = ((y + 0.5) / h - oval.cy) / oval.ry;
+    return nx * nx + ny * ny <= 1;
+  };
+  const stack: number[] = [];
+  for (let start = 0; start < w * h; start += 1) {
+    if (mask[start] < PERSON_THRESHOLD || label[start] !== 0) continue;
+    next += 1;
+    label[start] = next;
+    stack.push(start);
+    let size = 0;
+    let inside = 0;
+    while (stack.length) {
+      const i = stack.pop()!;
+      const x = i % w;
+      const y = (i - x) / w;
+      size += 1;
+      if (inOval(x, y)) inside += 1;
+      if (x > 0 && mask[i - 1] >= PERSON_THRESHOLD && label[i - 1] === 0) { label[i - 1] = next; stack.push(i - 1); }
+      if (x < w - 1 && mask[i + 1] >= PERSON_THRESHOLD && label[i + 1] === 0) { label[i + 1] = next; stack.push(i + 1); }
+      if (y > 0 && mask[i - w] >= PERSON_THRESHOLD && label[i - w] === 0) { label[i - w] = next; stack.push(i - w); }
+      if (y < h - 1 && mask[i + w] >= PERSON_THRESHOLD && label[i + w] === 0) { label[i + w] = next; stack.push(i + w); }
+    }
+    sizes.set(next, size);
+    overlap.set(next, inside);
+  }
+  let best = 0;
+  let bestInside = 0;
+  for (const [id, inside] of overlap) if (inside > bestInside) { best = id; bestInside = inside; }
+  if (!best || bestInside < 4) return null;
+  const out = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i += 1) if (label[i] === best) out[i] = 255;
+  return out;
+}
+
+/**
+ * Recuadro para recortar la foto de la zona donante: la cabeza vista por detrás más la nuca, con un margen.
+ * Todo en proporciones 0–1 del cuadro. Recibe la máscara ya aislada (solo el reflejo).
+ */
+export function donorCropBox(mask: ArrayLike<number>, w: number, h: number): { x: number; y: number; w: number; h: number } | null {
+  const head = findHead(mask, w, h);
+  if (!head) return null;
+  const bw = head.x1 - head.x0 + 1;
+  const bh = head.y1 - head.y0 + 1;
+  const x0 = Math.max(0, head.x0 - bw * 0.14);
+  const x1 = Math.min(w, head.x1 + 1 + bw * 0.14);
+  const y0 = Math.max(0, head.y0 - bh * 0.1);
+  const y1 = Math.min(h, head.y1 + 1 + bh * 0.22); // incluye la nuca
+  return { x: x0 / w, y: y0 / h, w: (x1 - x0) / w, h: (y1 - y0) / h };
+}
