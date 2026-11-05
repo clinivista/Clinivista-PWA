@@ -316,6 +316,7 @@ function ActivePhotoCard({
           guided
           guideKind={view.guideKind ?? "front"}
           guideImage={view.guideImage}
+          guideAnimation={view.guideAnimation}
           progressLabel={photoOfLabel}
           onCapture={async (url) => { setCameraOpen(false); await onCameraCaptured(photoKey, url); }}
           onClose={() => setCameraOpen(false)}

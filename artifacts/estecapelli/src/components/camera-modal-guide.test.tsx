@@ -104,13 +104,16 @@ describe("cámara con guía automática", () => {
     const spoken: string[] = [];
     vi.stubGlobal("SpeechSynthesisUtterance", class { lang = ""; voice = null; rate = 1; volume = 1; constructor(public text: string) {} });
     Object.defineProperty(window, "speechSynthesis", { configurable: true, value: { speaking: false, pending: false, cancel: vi.fn(), resume: vi.fn(), getVoices: () => [], speak: (u: { text: string }) => spoken.push(u.text) } });
-    renderModal({ guideKind: "right", guideImage: "/guides/guia-3-lado-derecho.png", progressLabel: "Foto 3 de 5" });
+    renderModal({ guideKind: "right", guideImage: "/guides/guia-3-lado-derecho.png", guideAnimation: "/guides/anim-3-lado-derecho.webp", progressLabel: "Foto 3 de 5" });
     expect(await screen.findByTestId("guide-image")).toHaveAttribute("src", "/guides/guia-3-lado-derecho.png");
     expect(screen.getByTestId("guide-image").className).toContain("object-contain");
     expect(screen.getByTestId("camera-progress")).toHaveTextContent("Foto 3 de 5");
     expect(screen.getByTestId("guide-step-4")).toHaveTextContent(/lado derecho/);
+    expect(screen.queryByTestId("guide-thumb")).toBeNull(); // en el recuadro de inicio ya está la imagen grande
     await user.click(screen.getByTestId("guide-start"));
     await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
+    expect(screen.getByTestId("guide-thumb")).toHaveAttribute("src", "/guides/anim-3-lado-derecho.webp");
+    expect(screen.getByTestId("guide-thumb").className).toContain("pointer-events-none"); // no estorba ni recibe toques
     const before = spoken.length;
     await user.click(screen.getByTestId("guide-repeat"));
     await act(async () => { await vi.advanceTimersByTimeAsync(200); });

@@ -27,6 +27,8 @@ interface CameraModalProps {
   guideKind?: GuideKind;
   /** Ilustración de referencia que se muestra grande antes de la toma. */
   guideImage?: string;
+  /** Miniatura animada en una esquina mientras se toma la foto (no tapa ni recibe toques). */
+  guideAnimation?: string;
   /** "Foto 2 de 5". */
   progressLabel?: string;
 }
@@ -39,7 +41,7 @@ const ANALYSIS_EVERY_MS = 160;
 
 type PermissionState = "requesting" | "granted" | "denied" | "unsupported";
 
-export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, guided = false, guideKind = "front", guideImage, progressLabel }: CameraModalProps) {
+export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, guided = false, guideKind = "front", guideImage, guideAnimation, progressLabel }: CameraModalProps) {
   const { lang, t } = useLanguage();
   const cam = CAMERA_TEXT[lang];
   // El mensaje se arma con el idioma vigente sin reiniciar la cámara cuando cambia.
@@ -444,6 +446,11 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
           </div>
         )}
 
+        {/* Miniatura animada del movimiento: esquina inferior, sin recibir toques para no estorbar */}
+        {permissionState === "granted" && guided && guideAnimation && (stage === "running" || stage === "manual") && (
+          <img src={guideAnimation} alt="" aria-hidden data-testid="guide-thumb" className="absolute bottom-3 end-3 z-10 h-24 w-24 rounded-2xl bg-white/90 object-contain shadow-lg pointer-events-none select-none" />
+        )}
+
         {/* Guía automática: texto grande con lo mismo que dice la voz, y la cuenta regresiva */}
         {permissionState === "granted" && guided && (stage === "running" || stage === "manual") && message && message !== "unavailable" && (
           <div className="absolute top-3 inset-x-3 pointer-events-none flex justify-center">
@@ -458,7 +465,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
           </div>
         )}
         {permissionState === "granted" && guided && stage === "running" && voiceMissing && (
-          <p role="alert" data-testid="guide-no-voice" className="absolute bottom-3 inset-x-3 rounded-2xl bg-amber-100 px-4 py-3 text-center text-base font-semibold text-amber-900">{guideText.noVoice}</p>
+          <p role="alert" data-testid="guide-no-voice" className="absolute bottom-3 start-3 end-28 rounded-2xl bg-amber-100 px-4 py-3 text-center text-base font-semibold text-amber-900">{guideText.noVoice}</p>
         )}
         {permissionState === "granted" && guided && message === "unavailable" && (
           <p role="alert" data-testid="guide-unavailable" className="absolute top-3 inset-x-3 rounded-2xl bg-amber-100 px-4 py-3 text-center text-base font-semibold text-amber-900">{guideText.unavailable}</p>
