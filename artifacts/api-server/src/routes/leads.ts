@@ -60,12 +60,19 @@ async function leadSummary(lead: typeof leadsTable.$inferSelect, consult: Consul
 
 async function leadFull(lead: typeof leadsTable.$inferSelect, consult: Consult = { typeName: "", count: 1 }) {
   const { photos: _legacyPhotos, ...safe } = lead;
-  const photos = await getPhotoStatusesForLead(lead);
+  // Una sola foto por vista: la más reciente. Las repetidas (reemplazadas) no se muestran.
+  const newestPerView = new Map<string, Awaited<ReturnType<typeof getPhotoStatusesForLead>>[number]>();
+  for (const photo of await getPhotoStatusesForLead(lead)) {
+    if (!["draft", "confirmed"].includes(photo.status)) continue;
+    const kept = newestPerView.get(photo.key);
+    if (!kept || kept.createdAt.getTime() < photo.createdAt.getTime()) newestPerView.set(photo.key, photo);
+  }
+  const photos = [...newestPerView.values()].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
   return {
     ...safe,
     consultTypeName: consult.typeName,
     consultCount: consult.count,
-    photoCount: photos.filter((photo) => ["draft", "confirmed"].includes(photo.status)).length,
+    photoCount: photos.length,
     photos,
   };
 }
