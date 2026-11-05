@@ -1972,6 +1972,23 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
       await request(app).post("/api/portal/setup").send({ token: tokenFromMail(), password: "clave-nueva-22" }).expect(400);
     });
 
+    it("a newer mail does not kill the previous link: recent links keep working until one is used", async () => {
+      mailOn();
+      await createPatient();
+      await vi.waitFor(() => expect(sent).toHaveLength(1));
+      const first = tokenFromMail();
+      mailOn();
+      await request(app).post("/api/portal/forgot").send({ email: "prueba@example.com" }).expect(200);
+      await vi.waitFor(() => expect(sent).toHaveLength(1));
+      const second = tokenFromMail();
+      expect(second).not.toBe(first);
+      // el primer correo (el que el paciente suele abrir al final de su evaluación) sigue sirviendo
+      await request(app).post("/api/portal/setup").send({ token: first, password: "clave-segura-1" }).expect(200);
+      // ya se usó la clave: el otro enlace de ese momento también deja de servir
+      await request(app).post("/api/portal/setup").send({ token: second, password: "otra-clave-9" }).expect(400);
+      await login("prueba@example.com", "clave-segura-1").expect(200);
+    });
+
     it("mails and the WhatsApp message follow the patient's language; an invalid language falls back to Spanish", async () => {
       mailOn();
       const created = await request(app).post("/api/patients").send({ ...VALID_BODY, language: "fr" }).expect(201);

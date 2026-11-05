@@ -703,22 +703,23 @@ export default function Admin() {
                     </button>
                   </div>
 
-                  <ConsultationsStrip leadId={fullLead.id} onOpen={(id) => setSelectedLeadId(id)} />
-                  <PatientUpdatesCard leadId={fullLead.id} />
-                  <PhotoConsentCard leadId={fullLead.id} patientName={fullLead.name || ""} phone={fullLead.phone || ""} />
-
-                  <div className="shrink-0 px-5 md:px-8 py-2 bg-card border-b border-border flex justify-end">
-                    <Button
-                      variant="ghost"
-                      className="text-red-700 hover:text-red-800 hover:bg-red-50 gap-2 font-semibold rounded-xl h-11"
-                      onClick={() => setDeleteConfirmId(fullLead.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      {t.deleteRecord}
-                    </Button>
-                  </div>
-
                   <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-4 md:space-y-5">
+                    {/* Resumen del paciente: va dentro del desplazamiento (no fijo) para no quitar espacio al revisar fotos y diagnóstico */}
+                    <div className="space-y-3 [&>*]:mx-0! [&>*]:my-0!" data-testid="lead-summary">
+                      <ConsultationsStrip leadId={fullLead.id} onOpen={(id) => setSelectedLeadId(id)} />
+                      <PatientUpdatesCard leadId={fullLead.id} />
+                      <PhotoConsentCard leadId={fullLead.id} patientName={fullLead.name || ""} phone={fullLead.phone || ""} />
+                    </div>
+                    <div className="flex justify-end -mt-1">
+                      <Button
+                        variant="ghost"
+                        className="text-red-700 hover:text-red-800 hover:bg-red-50 gap-2 font-semibold rounded-xl h-11"
+                        onClick={() => setDeleteConfirmId(fullLead.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        {t.deleteRecord}
+                      </Button>
+                    </div>
                     {/* Status & Actions */}
                     <div className={`${cardClass} p-5 md:p-6 space-y-5`}>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
