@@ -36,8 +36,16 @@ function loadScript(): Promise<Ctor> {
   return scriptPromise;
 }
 
+// Se crea una sola vez y se reutiliza: cerrar y volver a abrir el motor (WebGL) en iPhone dejaba el video en negro en la segunda toma.
+let shared: Promise<Segmenter | null> | null = null;
+
 /** Devuelve null si el navegador no puede (sin WebGL, sin red para los archivos, etc.). Nunca lanza. */
-export async function createSegmenter(): Promise<Segmenter | null> {
+export function createSegmenter(): Promise<Segmenter | null> {
+  shared ??= buildSegmenter().then((segmenter) => { if (!segmenter) shared = null; return segmenter; });
+  return shared;
+}
+
+async function buildSegmenter(): Promise<Segmenter | null> {
   try {
     if (typeof document === "undefined") return null;
     const Segmentation = await loadScript();
@@ -69,7 +77,7 @@ export async function createSegmenter(): Promise<Segmenter | null> {
           return null;
         }
       },
-      close() { void engine.close().catch(() => undefined); },
+      close() { /* el motor se conserva para la próxima toma */ },
     };
   } catch {
     return null;
