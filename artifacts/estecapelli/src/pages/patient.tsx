@@ -314,7 +314,9 @@ function ActivePhotoCard({
           title={title}
           aspectRatio={aspectRatio}
           guided
-          guideKind={photoKey === "vertex" ? "top" : "front"}
+          guideKind={view.guideKind ?? "front"}
+          guideImage={view.guideImage}
+          progressLabel={photoOfLabel}
           onCapture={async (url) => { setCameraOpen(false); await onCameraCaptured(photoKey, url); }}
           onClose={() => setCameraOpen(false)}
           onError={(msg) => setCameraError(msg)}
@@ -345,7 +347,7 @@ function ActivePhotoCard({
           </button>
           {guideOpen && (
             <div className="flex items-start gap-4 px-6 pb-4">
-              <div className="w-16 h-16 shrink-0">{referenceVisual}</div>
+              {view.guideImage ? null : <div className="w-16 h-16 shrink-0">{referenceVisual}</div>}
               <div className="space-y-2 text-xs text-muted-foreground leading-relaxed font-medium">
                 <p>{tip}</p>
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px]">
@@ -355,6 +357,11 @@ function ActivePhotoCard({
                   <div><dt className="font-bold text-foreground">{extra.background}</dt><dd>{background}</dd></div>
                 </dl>
               </div>
+            </div>
+          )}
+          {view.guideImage && (
+            <div className="px-4 pb-4">
+              <img src={view.guideImage} alt={title} data-testid="photo-guide-image" className="w-full aspect-square object-contain rounded-2xl bg-white" />
             </div>
           )}
           {view.measure && <div className="px-6 pb-4"><MeasureProtocol /></div>}

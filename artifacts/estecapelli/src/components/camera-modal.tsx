@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/language";
 import { CAMERA_TEXT, fillTools } from "@/lib/tools-i18n";
 import { cropRectForVideo, frameFor, parseRatio, type Size } from "@/lib/camera-crop";
-import { CAMERA_GUIDE_TEXT, CAMERA_GUIDE_TOP } from "@/lib/camera-guide-i18n";
+import { CAMERA_GUIDE_TEXT, guideTextFor, type GuideKind } from "@/lib/camera-guide-i18n";
 import { analyzeHeadFit, ovalForFrame, type FitStatus } from "@/lib/head-fit";
 import { newMachine, step, type Machine, type SayKey } from "@/lib/auto-capture";
 import { GuideAudio } from "@/lib/guide-audio";
@@ -21,8 +21,12 @@ interface CameraModalProps {
   aspectRatio?: string;
   /** Guía automática: óvalo de referencia, voz y pitidos, y foto sola al encajar. Siempre queda el botón manual. */
   guided?: boolean;
-  /** "top": vista superior (vértex), donde se le pide mover la cabeza y no el celular. */
-  guideKind?: "front" | "top";
+  /** Qué vista es: cambia lo que se le pide al paciente (mover la cabeza, girarla, etc.). */
+  guideKind?: GuideKind;
+  /** Ilustración de referencia que se muestra grande antes de la toma. */
+  guideImage?: string;
+  /** "Foto 2 de 5". */
+  progressLabel?: string;
 }
 
 const STATUS_SAY: Record<Exclude<FitStatus, "ok">, SayKey> = { none: "nobody", closer: "closer", farther: "farther", left: "left", right: "right", up: "up", down: "down" };
@@ -33,7 +37,7 @@ const ANALYSIS_EVERY_MS = 160;
 
 type PermissionState = "requesting" | "granted" | "denied" | "unsupported";
 
-export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, guided = false, guideKind = "front" }: CameraModalProps) {
+export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, guided = false, guideKind = "front", guideImage, progressLabel }: CameraModalProps) {
   const { lang, t } = useLanguage();
   const cam = CAMERA_TEXT[lang];
   // El mensaje se arma con el idioma vigente sin reiniciar la cámara cuando cambia.
@@ -58,8 +62,8 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
   const [permissionState, setPermissionState] = useState<PermissionState>("requesting");
   // La guía automática parte con la cámara frontal (el paciente casi siempre se toma la foto solo).
   const [facingMode, setFacingMode] = useState<"environment" | "user">(guided ? "user" : "environment");
-  const guideText = guideKind === "top" ? { ...CAMERA_GUIDE_TEXT[lang], ...CAMERA_GUIDE_TOP[lang] } : CAMERA_GUIDE_TEXT[lang];
-  const introSteps = [...guideText.introBody.split("\n"), ...(guideKind === "top" ? [CAMERA_GUIDE_TOP[lang].introStep] : [])];
+  const { text: guideText, introStep } = guideTextFor(lang, guideKind);
+  const introSteps = [...guideText.introBody.split("\n"), ...(introStep ? [introStep] : [])];
   const [stage, setStage] = useState<GuideStage>("intro");
   const [fitStatus, setFitStatus] = useState<FitStatus>("none");
   const [message, setMessage] = useState<SayKey | "takeNow" | "unavailable" | null>(null);
@@ -308,6 +312,15 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
     };
   }, [guided, stage, permissionState, watchReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // "Escuchar de nuevo": vuelve a decir la última indicación (si la voz está silenciada, la activa para poder oírla).
+  const repeatInstruction = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.muted) { audio.setMuted(false); setMuted(false); }
+    const key = message && message !== "unavailable" ? message : null;
+    if (key) audio.say(guideText[key]);
+  };
+
   const toggleMute = () => {
     const audio = audioRef.current ?? new GuideAudio(lang);
     audioRef.current = audio;
@@ -350,7 +363,8 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
       </div>
 
       {/* Nombre de la foto, bien visible */}
-      <div className="bg-black px-4 pb-3 pt-1 flex justify-center">
+      <div className="bg-black px-4 pb-3 pt-1 flex flex-col items-center gap-1.5">
+        {progressLabel && <p data-testid="camera-progress" className="text-lg font-bold text-white/90">{progressLabel}</p>}
         <h2 data-testid="camera-title" className="rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2 text-center text-2xl font-extrabold tracking-tight text-white shadow-lg">{title}</h2>
       </div>
 
@@ -440,7 +454,11 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
         )}
         {permissionState === "granted" && guided && stage === "intro" && (
           <div className="absolute inset-0 z-10 bg-black overflow-y-auto flex flex-col items-center justify-center gap-5 px-6 py-4 text-center" data-testid="guide-intro">
-            <Volume2 className="w-12 h-12 text-white" aria-hidden />
+            {guideImage ? (
+              <img src={guideImage} alt={title} data-testid="guide-image" className="w-full max-w-sm aspect-square object-contain rounded-2xl bg-white" />
+            ) : (
+              <Volume2 className="w-12 h-12 text-white" aria-hidden />
+            )}
             <h2 className="text-2xl font-extrabold text-white">{guideText.introTitle}</h2>
             <ol className="flex flex-col gap-4 max-w-md text-start" data-testid="guide-steps">
               {introSteps.map((step, index) => (
@@ -463,6 +481,12 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
       {/* Shutter bar — large capture button for easy clicking/tapping */}
       {permissionState === "granted" && (
         <div className="relative bg-black/80 backdrop-blur-sm py-7 flex items-center justify-center">
+          {guided && stage === "running" && (
+            <button onClick={repeatInstruction} className="absolute end-4 flex flex-col items-center gap-1 text-white/90 hover:text-white text-xs font-semibold max-w-[5.5rem] text-center" data-testid="guide-repeat">
+              <RotateCcw className="w-7 h-7" />
+              {guideText.repeat}
+            </button>
+          )}
           {guided && stage === "running" && (
             <button onClick={toggleMute} className="absolute start-4 flex flex-col items-center gap-1 text-white/90 hover:text-white text-xs font-semibold" data-testid="guide-mute" aria-pressed={muted}>
               {muted ? <VolumeX className="w-7 h-7" /> : <Volume2 className="w-7 h-7" />}
