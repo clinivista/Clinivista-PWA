@@ -19,6 +19,7 @@ describe("camera guide texts", () => {
   it("asks the patient to turn the head toward the opposite side of the one being photographed", () => {
     expect(guideTextFor("es", "right").introStep).toMatch(/hacia tu izquierda para mostrar tu lado derecho/);
     expect(guideTextFor("es", "left").introStep).toMatch(/hacia tu derecha para mostrar tu lado izquierdo/);
-    expect(guideTextFor("es", "back").text.closer).toMatch(/cabeza/);
+    expect(guideTextFor("es", "back").text.closer).toMatch(/celular/); // en la zona donante se mueve el celular
+    expect(guideTextFor("es", "back").text.getReady).toMatch(/hacia atrás/);
   });
 });

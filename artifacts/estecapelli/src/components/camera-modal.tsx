@@ -38,6 +38,8 @@ type GuideStage = "intro" | "loading" | "running" | "manual";
 /** Lado más largo (en píxeles) de la imagen que se analiza: chica, para que el análisis sea rápido. */
 const ANALYSIS_SIDE = 256;
 const ANALYSIS_EVERY_MS = 160;
+/** Tiempo para colocarse antes de que la guía empiece a medir (zona donante). */
+const BACK_PREP_MS = 6000;
 
 type PermissionState = "requesting" | "granted" | "denied" | "unsupported";
 
@@ -70,7 +72,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
   const introSteps = [...guideText.introBody.split("\n"), ...(introStep ? [introStep] : [])];
   const [stage, setStage] = useState<GuideStage>("intro");
   const [fitStatus, setFitStatus] = useState<FitStatus>("none");
-  const [message, setMessage] = useState<SayKey | "takeNow" | "unavailable" | null>(null);
+  const [message, setMessage] = useState<SayKey | "takeNow" | "getReady" | "unavailable" | null>(null);
   const [watchReady, setWatchReady] = useState(false);
   const [diagnosis, setDiagnosis] = useState("");
   const [count, setCount] = useState<number | null>(null);
@@ -276,12 +278,16 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
     let timer: number | undefined;
     let machine: Machine = newMachine();
     let turnState = newTurnState();
+    // Zona donante: el paciente no ve la pantalla, así que primero se le explica la postura y se le da tiempo de tomarla.
+    const prepUntil = guideKind === "back" ? performance.now() + BACK_PREP_MS : 0;
+    if (prepUntil) { setMessage("getReady"); audioRef.current?.say(guideText.getReady); }
     const canvas = document.createElement("canvas");
     const tick = async () => {
       const video = videoRef.current;
       const segmenter = segmenterRef.current;
       const { box: viewBox, frame: viewFrame, mirrored: flip } = latestRef.current;
       if (stopped || !video || !segmenter) return;
+      if (performance.now() < prepUntil) { timer = window.setTimeout(() => void tick(), ANALYSIS_EVERY_MS); return; }
       if (video.paused) void video.play?.()?.catch(() => undefined); // si el iPhone detuvo el video, se vuelve a reproducir
       if (video.videoWidth > 0 && viewFrame.width > 0) {
         const crop = cropRectForVideo(viewBox, { width: video.videoWidth, height: video.videoHeight }, viewFrame, 0);
@@ -297,7 +303,8 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
           const mask = await segmenter.run(canvas, width, height);
           if (stopped) return;
           if (mask) {
-            const fit = analyzeHeadFit(mask.data, mask.width, mask.height, ovalForFrame(viewFrame.width, viewFrame.height), flip);
+            // La cámara que mira la nuca ve a la persona desde atrás: ahí la derecha de la imagen es la derecha del paciente (no hay espejo).
+            const fit = analyzeHeadFit(mask.data, mask.width, mask.height, ovalForFrame(viewFrame.width, viewFrame.height), guideKind === "back" ? false : flip);
             let status: FitStatus = fit.status;
             if (turnSide && status === "ok") {
               const ratio = faceTurnRef.current ? await faceTurnRef.current.run(canvas) : null;
