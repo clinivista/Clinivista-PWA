@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-label="Espejo, persona de espaldas y celular con la pantalla hacia ella">
+  <rect width="1200" height="1200" fill="#ffffff"/>
+  <!-- espejo -->
+  <rect x="150" y="110" width="900" height="70" rx="20" fill="#bfe3f2" stroke="#4a90b0" stroke-width="8"/>
+  <!-- reflejo (más lejos, de espaldas) -->
+  <g opacity="0.45" transform="translate(0,-8)">
+    <ellipse cx="600" cy="330" rx="95" ry="115" fill="#10B981"/>
+    <path d="M400 560Q400 430 600 430Q800 430 800 560Z" fill="#10B981"/>
+  </g>
+  <!-- persona de espaldas al espejo (vista desde arriba) -->
+  <path d="M380 1040Q380 880 600 880Q820 880 820 1040Z" fill="#6b7280"/>
+  <ellipse cx="600" cy="880" rx="105" ry="125" fill="#374151"/>
+  <!-- celular delante de la cara, pantalla hacia la persona -->
+  <rect x="520" y="660" width="160" height="110" rx="20" fill="#111827"/>
+  <rect x="535" y="675" width="130" height="80" rx="10" fill="#10B981" opacity="0.5"/>
+  <!-- la cámara frontal ve el espejo detrás de la persona -->
+  <path d="M600 640V250" stroke="#fbbf24" stroke-width="12" stroke-dasharray="26 18" fill="none"/>
+  <path d="M570 280L600 220L630 280Z" fill="#fbbf24"/>
+</svg>

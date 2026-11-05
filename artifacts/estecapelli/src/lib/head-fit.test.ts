@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analyzeHeadFit, findHead, GUIDE_OVAL, ovalForFrame } from "./head-fit";
+import { analyzeHeadFit, donorCropBox, findHead, GUIDE_OVAL, isolateAtOval, ovalForFrame } from "./head-fit";
 
 const W = 96;
 const H = 128;
@@ -71,5 +71,36 @@ describe("óvalo en cuadros horizontales", () => {
     const tall = ovalForFrame(300, 400);
     expect(wide.ry).toBeGreaterThan(tall.ry);
     expect(wide.ry).toBeGreaterThanOrEqual(0.44);
+  });
+});
+
+describe("zona donante frente al espejo", () => {
+  // La persona real (grande, a un costado) y su reflejo (en el óvalo) salen en la misma imagen.
+  function mirrorScene() {
+    const mask = new Uint8Array(W * H);
+    const blob = (cx: number, cy: number, rx: number, ry: number) => {
+      for (let y = 0; y < H; y += 1) for (let x = 0; x < W; x += 1) {
+        if (((x / W - cx) / rx) ** 2 + ((y / H - cy) / ry) ** 2 <= 1) mask[y * W + x] = 255;
+      }
+    };
+    blob(0.5, 0.42, 0.17, 0.2); // reflejo de la nuca, dentro del óvalo
+    blob(0.93, 0.7, 0.12, 0.28); // la persona real, pegada al borde
+    return mask;
+  }
+
+  it("keeps only the silhouette that sits in the oval", () => {
+    const only = isolateAtOval(mirrorScene(), W, H, GUIDE_OVAL)!;
+    expect(only[Math.floor(H * 0.42) * W + Math.floor(W * 0.5)]).toBe(255);
+    expect(only[Math.floor(H * 0.7) * W + Math.floor(W * 0.93)]).toBe(0);
+    expect(isolateAtOval(new Uint8Array(W * H), W, H, GUIDE_OVAL)).toBeNull();
+  });
+
+  it("crops around the reflected head only, never the second reflection", () => {
+    const only = isolateAtOval(mirrorScene(), W, H, GUIDE_OVAL)!;
+    const box = donorCropBox(only, W, H)!;
+    expect(box.x).toBeGreaterThan(0.2);
+    expect(box.x + box.w).toBeLessThan(0.8); // la otra silueta empieza en x ≈ 0.81
+    expect(box.y + box.h).toBeLessThanOrEqual(1);
+    expect(donorCropBox(new Uint8Array(W * H), W, H)).toBeNull();
   });
 });
