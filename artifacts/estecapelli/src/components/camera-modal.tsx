@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/language";
 import { CAMERA_TEXT, fillTools } from "@/lib/tools-i18n";
 import { cropRectForVideo, frameFor, parseRatio, type Size } from "@/lib/camera-crop";
-import { CAMERA_GUIDE_TEXT } from "@/lib/camera-guide-i18n";
+import { CAMERA_GUIDE_TEXT, CAMERA_GUIDE_TOP } from "@/lib/camera-guide-i18n";
 import { analyzeHeadFit, ovalForFrame, type FitStatus } from "@/lib/head-fit";
 import { newMachine, step, type Machine, type SayKey } from "@/lib/auto-capture";
 import { GuideAudio } from "@/lib/guide-audio";
@@ -21,6 +21,8 @@ interface CameraModalProps {
   aspectRatio?: string;
   /** Guía automática: óvalo de referencia, voz y pitidos, y foto sola al encajar. Siempre queda el botón manual. */
   guided?: boolean;
+  /** "top": vista superior (vértex), donde se le pide mover la cabeza y no el celular. */
+  guideKind?: "front" | "top";
 }
 
 const STATUS_SAY: Record<Exclude<FitStatus, "ok">, SayKey> = { none: "nobody", closer: "closer", farther: "farther", left: "left", right: "right", up: "up", down: "down" };
@@ -31,7 +33,7 @@ const ANALYSIS_EVERY_MS = 160;
 
 type PermissionState = "requesting" | "granted" | "denied" | "unsupported";
 
-export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, guided = false }: CameraModalProps) {
+export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, guided = false, guideKind = "front" }: CameraModalProps) {
   const { lang, t } = useLanguage();
   const cam = CAMERA_TEXT[lang];
   // El mensaje se arma con el idioma vigente sin reiniciar la cámara cuando cambia.
@@ -56,7 +58,8 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
   const [permissionState, setPermissionState] = useState<PermissionState>("requesting");
   // La guía automática parte con la cámara frontal (el paciente casi siempre se toma la foto solo).
   const [facingMode, setFacingMode] = useState<"environment" | "user">(guided ? "user" : "environment");
-  const guideText = CAMERA_GUIDE_TEXT[lang];
+  const guideText = guideKind === "top" ? { ...CAMERA_GUIDE_TEXT[lang], ...CAMERA_GUIDE_TOP[lang] } : CAMERA_GUIDE_TEXT[lang];
+  const introSteps = [...guideText.introBody.split("\n"), ...(guideKind === "top" ? [CAMERA_GUIDE_TOP[lang].introStep] : [])];
   const [stage, setStage] = useState<GuideStage>("intro");
   const [fitStatus, setFitStatus] = useState<FitStatus>("none");
   const [message, setMessage] = useState<SayKey | "takeNow" | "unavailable" | null>(null);
@@ -440,7 +443,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
             <Volume2 className="w-12 h-12 text-white" aria-hidden />
             <h2 className="text-2xl font-extrabold text-white">{guideText.introTitle}</h2>
             <ol className="flex flex-col gap-4 max-w-md text-start" data-testid="guide-steps">
-              {guideText.introBody.split("\n").map((step, index) => (
+              {introSteps.map((step, index) => (
                 <li key={index} className="flex items-start gap-3" data-testid={`guide-step-${index + 1}`}>
                   <span className="shrink-0 w-9 h-9 rounded-full bg-white text-black text-lg font-extrabold flex items-center justify-center" aria-hidden>{index + 1}</span>
                   <span className="text-lg leading-snug text-white">{step}</span>
