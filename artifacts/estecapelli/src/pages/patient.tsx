@@ -314,6 +314,7 @@ function ActivePhotoCard({
           title={title}
           aspectRatio={aspectRatio}
           guided
+          guideKind={photoKey === "vertex" ? "top" : "front"}
           onCapture={async (url) => { setCameraOpen(false); await onCameraCaptured(photoKey, url); }}
           onClose={() => setCameraOpen(false)}
           onError={(msg) => setCameraError(msg)}

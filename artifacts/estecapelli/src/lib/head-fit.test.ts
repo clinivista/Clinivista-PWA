@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analyzeHeadFit, findHead, GUIDE_OVAL } from "./head-fit";
+import { analyzeHeadFit, findHead, GUIDE_OVAL, ovalForFrame } from "./head-fit";
 
 const W = 96;
 const H = 128;
@@ -62,5 +62,14 @@ describe("analyzeHeadFit", () => {
   it("works without shoulders (top or back view): uses the head proportions", () => {
     const fit = analyzeHeadFit(person({ headH: 0.62, headW: 0.5, shoulders: false }), W, H);
     expect(fit.status).toBe("ok");
+  });
+});
+
+describe("óvalo en cuadros horizontales", () => {
+  it("is bigger for a landscape frame (top view) than for a portrait one", () => {
+    const wide = ovalForFrame(400, 300);
+    const tall = ovalForFrame(300, 400);
+    expect(wide.ry).toBeGreaterThan(tall.ry);
+    expect(wide.ry).toBeGreaterThanOrEqual(0.44);
   });
 });

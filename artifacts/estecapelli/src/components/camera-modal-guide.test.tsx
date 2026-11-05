@@ -83,6 +83,16 @@ describe("cámara con guía automática", () => {
     expect(screen.getByTestId("guide-no-voice")).toHaveTextContent(/no puede hablar/); // jsdom no trae speechSynthesis
   });
 
+  it("for the top view asks to move the head (not the phone) and adds a step to the intro", async () => {
+    seg.run.mockImplementation(async () => ({ data: new Uint8Array(W * H), width: W, height: H })); // nadie a la vista
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    renderModal({ guideKind: "top", aspectRatio: "4:3" });
+    expect(await screen.findByTestId("guide-step-4")).toHaveTextContent(/baja la cabeza hasta que el celular vea la coronilla/);
+    await user.click(screen.getByTestId("guide-start"));
+    await act(async () => { await vi.advanceTimersByTimeAsync(4000); });
+    expect(screen.getByTestId("guide-message")).toHaveTextContent("Pon tu cara en el óvalo y baja la cabeza.");
+  });
+
   it("guides, turns the oval green, counts down and takes the photo by itself", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { onCapture } = renderModal();
