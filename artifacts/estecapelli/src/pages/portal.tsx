@@ -1,3 +1,4 @@
+import { BookingContact } from "@/components/booking-contact";
 import { BrandLogo } from "@/components/brand-logo";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation, useSearch } from "wouter";
@@ -127,6 +128,7 @@ export default function Portal() {
                 <Link href={`/patient?token=${encodeURIComponent(item.editToken)}`}>{item.locked ? editText.extra : editText.edit}</Link>
               </Button>
             </div>
+            <BookingContact token={item.editToken} />
             <MyDataRequests token={item.editToken} />
             <DataRightsDialog token={item.editToken} />
             {item.results.length === 0 ? (

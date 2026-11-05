@@ -9,6 +9,7 @@ export type HelpBlock = Scope & (
   | { t: "p" | "note" | "tip" | "warn" | "h3"; text: string }
   | { t: "ul"; items: string[] }
   | { t: "legend"; items: string[]; caption?: string }
+  | { t: "img"; src: string; alt: string; caption?: string }
   | { t: "table"; head: string[]; rows: Array<string[] | { only: ManualSpecialty[]; cells: string[] }>; widths?: number[] });
 /** `key` identifica la sección para las referencias «{§clave}»; `titles` cambia el título según la especialidad. */
 export type HelpSection = Scope & { id: string; key?: string; title: string; titles?: Partial<Record<ManualSpecialty, string>>; blocks: HelpBlock[] };
@@ -48,6 +49,7 @@ export function manualFor(manual: HelpManual, specialty: ManualSpecialty): HelpM
             head: block.head.map(fix),
             rows: block.rows.flatMap((row) => Array.isArray(row) ? [row.map(fix)] : inScope(row, specialty) ? [row.cells.map(fix)] : []),
           };
+          case "img": return block;
           default: return { ...block, text: fix(block.text) };
         }
       }),

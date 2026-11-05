@@ -42,7 +42,7 @@ beforeAll(async () => {
       accepted_by_user_id text NOT NULL, accepted_by_name text NOT NULL DEFAULT '', accepted_by_email text NOT NULL DEFAULT '',
       accepted_by_role text NOT NULL DEFAULT '', ip text, user_agent text, accepted_at timestamptz NOT NULL DEFAULT now()
     );
-    CREATE TABLE clinic_profiles (center_id text PRIMARY KEY, country text NOT NULL DEFAULT 'CL', rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE clinic_profiles (center_id text PRIMARY KEY, country text NOT NULL DEFAULT 'CL', rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', whatsapp text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE user_profiles (user_id text PRIMARY KEY, rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', prefix text NOT NULL DEFAULT '', specialty text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE clinic_contract_invites (
       id text PRIMARY KEY, center_id text NOT NULL, user_id text NOT NULL, email text NOT NULL, token_hash text NOT NULL UNIQUE,

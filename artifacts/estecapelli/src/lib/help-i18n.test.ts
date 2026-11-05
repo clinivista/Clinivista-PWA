@@ -146,7 +146,7 @@ describe("manuales por especialidad", () => {
       const plan = staff.find((s) => s.key === "plan")!;
       const integ = staff.find((s) => s.key === "integrations")!;
       expect(plan.blocks.map((b) => b.t), code).toEqual(["p", "ul", "p", "p", "note"]);
-      expect(integ.blocks.map((b) => b.t), code).toEqual(["p", "ul", "note"]);
+      expect(integ.blocks.map((b) => b.t), code).toEqual(["p", "ul", "note", "p", "ul"]);
       const text = JSON.stringify([plan, integ]);
       for (const brand of ["Facebook", "Instagram", "LinkedIn", "TikTok", "YouTube", "Medilink", "AgendaPro", "Reservo", "Google Calendar", "WhatsApp"]) expect(text, `${code}/${brand}`).toContain(brand);
     }
@@ -154,5 +154,23 @@ describe("manuales por especialidad", () => {
     for (const label of ["Mi plan", "Ver plan y contrato", "Mi plan y contrato", "Comparar planes", "Revisar contrato", "Aceptar contrato"]) expect(es).toContain(label);
     const users = JSON.stringify((await loadManual("es", "capilar")).staff.find((s) => s.key === "users"));
     for (const label of ["RUT", "Pasaporte", "Dirección", "especialidad"]) expect(users).toContain(label);
+  });
+
+  it("el manual explica la guía por voz con las cinco imágenes (solo capilar), la zona donante con espejo y el link de agendamiento, en los nueve idiomas", async () => {
+    for (const code of LANGS) {
+      const capilar = (await loadManual(code, "capilar")).patient.find((s) => s.title && s.blocks.some((b) => b.t === "img"))!;
+      expect(capilar, code).toBeTruthy();
+      const images = capilar.blocks.filter((b) => b.t === "img");
+      expect(images, code).toHaveLength(5);
+      expect(images.map((b) => b.t === "img" && b.src)).toEqual(["frontal", "superior", "lado-derecho", "lado-izquierdo", "zona-donante"].map((n, i) => `guides/manual/guia-${i + 1}-${n}.webp`));
+      for (const sp of ["plastica", "dermatologia"] as const) {
+        expect(JSON.stringify((await loadManual(code, sp)).patient), `${code}/${sp}`).not.toContain("guides/manual/");
+      }
+      const staff = JSON.stringify((await loadManual(code, "capilar")).staff.find((s) => s.key === "integrations"));
+      expect(staff, code).toContain("https://");
+    }
+    const es = JSON.stringify((await loadManual("es", "capilar")).patient);
+    expect(es).toContain("espejo");
+    expect(es).toContain("Para agendar su hora puede hacerlo a través de:");
   });
 });

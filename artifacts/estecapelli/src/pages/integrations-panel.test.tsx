@@ -13,6 +13,8 @@ const CATALOG = [
 ];
 
 let requested: string[];
+let links: Record<string, string>;
+let putBodies: Array<{ url: string; body: string }>;
 let failWrites: boolean;
 let fetchSpy: ReturnType<typeof vi.spyOn>;
 
@@ -21,12 +23,22 @@ const json = (body: object, status = 200) => new Response(JSON.stringify(body), 
 beforeEach(() => {
   window.localStorage.clear();
   requested = [];
+  links = {};
+  putBodies = [];
   failWrites = false;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fetchSpy = vi.spyOn(globalThis as any, "fetch").mockImplementation(async (input, init) => {
     const url = String(input);
     const method = (init as RequestInit | undefined)?.method ?? "GET";
-    if (url.endsWith("/api/clinic/integrations")) return json({ catalog: CATALOG, requested });
+    if (url.endsWith("/api/clinic/integrations")) return json({ catalog: CATALOG, requested, links });
+    const link = url.match(new RegExp("/api/clinic/integrations/([^/]+)/link$"));
+    if (link) {
+      const url2 = JSON.parse(String((init as RequestInit).body)).url as string;
+      putBodies.push({ url: link[1]!, body: url2 });
+      if (!url2.startsWith("https://")) return json({ error: "x" }, 400);
+      links = url2 === "" ? {} : { ...links, [link[1]!]: url2 };
+      return json({ catalog: CATALOG, requested, links });
+    }
     const match = url.match(new RegExp("/api/clinic/integrations/([^/]+)/request$"));
     if (match) {
       if (failWrites) return json({ error: "x" }, 500);
@@ -106,5 +118,26 @@ describe("Integraciones disponibles — logos", () => {
       expect(logo).toBeInTheDocument();
       expect(logo.parentElement).toHaveClass("h-12", "w-24");
     }
+  });
+
+  it("Medilink, AgendaPro y Reservo tienen un espacio para el link de agendamiento; las demás no", async () => {
+    renderPanel();
+    for (const id of ["medilink", "agendapro", "reservo"]) expect(await screen.findByTestId(`integration-${id}-link`)).toBeInTheDocument();
+    expect(screen.queryByTestId("integration-facebook-link")).toBeNull();
+    expect(screen.queryByTestId("integration-whatsapp-link")).toBeNull();
+  });
+
+  it("guarda el link de Medilink y avisa; uno inseguro se rechaza", async () => {
+    const user = userEvent.setup();
+    renderPanel();
+    const box = within(await screen.findByTestId("integration-medilink-link"));
+    await user.type(box.getByRole("textbox"), "https://agenda.medilink.cl/clinica");
+    await user.click(box.getByRole("button", { name: "Guardar link" }));
+    expect(await screen.findByText("Link guardado")).toBeInTheDocument();
+    expect(putBodies.at(-1)).toEqual({ url: "medilink", body: "https://agenda.medilink.cl/clinica" });
+    await user.clear(box.getByRole("textbox"));
+    await user.type(box.getByRole("textbox"), "http://inseguro.cl");
+    await user.click(box.getByRole("button", { name: "Guardar link" }));
+    expect(await screen.findByText("Escribe un enlace válido que empiece con https://")).toBeInTheDocument();
   });
 });

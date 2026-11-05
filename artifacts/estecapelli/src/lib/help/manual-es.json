@@ -185,6 +185,91 @@
      ]
     },
     {
+     "t": "h3",
+     "text": "Guía por voz y toma automática",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "En las cinco tomas la aplicación te guía con una voz, con textos grandes en pantalla y con una pequeña animación en la esquina que muestra la postura. Primero verás un recuadro de inicio: sube el volumen y toca «Empezar la guía por voz». Después mueve el celular (o la cabeza, según indique la voz) hasta que el óvalo se ponga verde: ahí no te muevas y la foto se toma sola tras una cuenta regresiva de tres segundos. Si prefieres hacerlo tú, toca «Prefiero tomar la foto yo mismo»: el óvalo se pone verde igual cuando el encuadre es bueno y tú pulsas el botón blanco. «Escuchar de nuevo» repite la última indicación.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Foto 1 · Vista frontal: mira de frente a la cámara y ubica tu cabeza dentro del óvalo.",
+      "Foto 2 · Vértex (coronilla): baja la cabeza para mostrar la parte alta; la voz te indica cómo mover el celular.",
+      "Fotos 3 y 4 · Temporal derecha e izquierda: mantén el celular delante de ti y gira la cabeza hacia el lado que indica la voz; la foto no se toma hasta que el giro es suficiente.",
+      "Foto 5 · Zona donante: se toma frente a un espejo (mira el párrafo siguiente a las imágenes)."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-1-frontal.webp",
+     "alt": "Vista frontal",
+     "caption": "Vista frontal",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-2-superior.webp",
+     "alt": "Vértex (coronilla)",
+     "caption": "Vértex (coronilla)",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-3-lado-derecho.webp",
+     "alt": "Temporal derecha",
+     "caption": "Temporal derecha",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-4-lado-izquierdo.webp",
+     "alt": "Temporal izquierda",
+     "caption": "Temporal izquierda",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-5-zona-donante.webp",
+     "alt": "Zona donante frente al espejo",
+     "caption": "Zona donante frente al espejo",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Zona donante, con un espejo: ponte de espaldas a un espejo grande, sostén el celular con la pantalla hacia ti (cámara frontal) y mira la pantalla: verás el espejo detrás de ti. Mueve el celular hasta que el reflejo de tu nuca quede dentro del óvalo, que en esta foto es más pequeño. La aplicación recorta la foto para dejar solo la parte posterior de tu cabeza, sin tu otro reflejo. Si no logra detectar tu nuca, la voz te avisa que puedes tocar el botón blanco cuando la veas dentro del óvalo.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "Si el celular no permite la guía automática o no se escucha la voz, la aplicación te avisa y puedes tomar la foto tú mismo con el botón blanco: los textos en pantalla dicen lo mismo que la voz. Una persona que te acompañe puede ayudarte.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
      "t": "legend",
      "items": [
       "Volver: regresa a tus datos.",
@@ -338,6 +423,10 @@
       "Qué sigue: revisión del caso (hasta 24 horas hábiles), contacto por WhatsApp o correo y coordinación de tu consulta.",
       "Volver al Inicio."
      ]
+    },
+    {
+     "t": "p",
+     "text": "En la pantalla de confirmación, si tu clínica lo configuró, verás «Para agendar su hora puede hacerlo a través de:» con tres botones: llamar por teléfono, escribir por WhatsApp y agendar en línea. Solo aparece lo que la clínica haya completado. Lo mismo se ve en tu cuenta."
     }
    ],
    "key": "submit"
@@ -382,6 +471,10 @@
     {
      "t": "note",
      "text": "Nunca compartas tu clave. La clínica no te la pedirá por mensaje ni por teléfono."
+    },
+    {
+     "t": "tip",
+     "text": "El enlace para crear tu clave dura 7 días. Si recibiste más de un correo, sirven los últimos cinco enlaces; al crear tu clave quedan todos sin uso. Si ninguno funciona, pide uno nuevo con «Olvidé mi clave»."
     }
    ],
    "key": "account"
@@ -962,6 +1055,10 @@
      "only": [
       "dermatologia"
      ]
+    },
+    {
+     "t": "p",
+     "text": "Cada vista muestra una sola foto: si el paciente repitió una toma, queda la más reciente y las anteriores se reemplazan. El encabezado con el nombre y el teléfono queda fijo arriba; el resumen del paciente (consultas, novedades y autorización) se desplaza junto con la ficha, para no tapar las fotos."
     }
    ],
    "key": "ficha"
@@ -1511,6 +1608,18 @@
     {
      "t": "note",
      "text": "Pedir una integración solo registra el interés de tu clínica; no conecta nada por sí solo. Clinivista usa estas solicitudes para decidir cuáles conectar primero."
+    },
+    {
+     "t": "p",
+     "text": "En las tarjetas de Medilink, AgendaPro y Reservo hay un espacio «Link de agendamiento en línea»: pega ahí el enlace donde tus pacientes agendan (debe empezar con https://) y toca «Guardar link»; con el espacio vacío se quita. Si lo completas, el paciente verá, en su pantalla final y en su cuenta, «Para agendar su hora puede hacerlo a través de:» con tres botones: llamar, WhatsApp y agendar en línea."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "El teléfono y el WhatsApp salen de «Datos de la clínica» (los completa supra-control; el WhatsApp es opcional).",
+      "Si pones link en más de una tarjeta, el paciente ve uno solo, en este orden: Medilink, AgendaPro, Reservo.",
+      "Guardar el link no conecta la integración: solo le muestra el botón al paciente."
+     ]
     }
    ]
   },
@@ -1567,7 +1676,7 @@
    "blocks": [
     {
      "t": "p",
-     "text": "En la ficha del paciente, el recuadro «Autorización para fotografías» muestra si el paciente autorizó que la clínica tome y guarde sus fotos clínicas, y deja registrar la autorización de tres maneras."
+     "text": "En la ficha del paciente, el recuadro «Autorización para fotografías» muestra si el paciente autorizó que la clínica tome y guarde sus fotos clínicas, y deja registrar la autorización de tres maneras. Esa tarjeta solo ofrece enviar enlace, registrar documento o firmar en tableta mientras el paciente no haya autorizado: si se tomó las fotos por su cuenta, la autorización ya quedó registrada y esos botones se ocultan."
     },
     {
      "t": "ul",

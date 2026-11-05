@@ -370,8 +370,21 @@ export const clinicProfilesTable = pgTable("clinic_profiles", {
   rut: text("rut").notNull().default(""),
   address: text("address").notNull().default(""),
   phone: text("phone").notNull().default(""),
+  // WhatsApp de la clínica (opcional): el paciente lo ve para agendar su hora. Migración: sql0018.
+  whatsapp: text("whatsapp").notNull().default(""),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Link de agendamiento en línea que la clínica pone en «Integraciones disponibles» (Medilink, AgendaPro, Reservo).
+// El paciente lo ve en un botón «Agendar en línea». Migración: sql0018.
+export const clinicBookingLinksTable = pgTable("clinic_booking_links", {
+  centerId: text("center_id").notNull(),
+  integration: text("integration").notNull(),
+  url: text("url").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("clinic_booking_links_center_integration_idx").on(table.centerId, table.integration),
+]);
 
 // Datos personales del usuario de una clínica: RUT, domicilio, prefijo (Dr, Sra…) y especialidad (médicos).
 // El del representante legal rellena el contrato.

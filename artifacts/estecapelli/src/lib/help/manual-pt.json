@@ -185,6 +185,91 @@
      ]
     },
     {
+     "t": "h3",
+     "text": "Guia por voz e captura automática",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Nas cinco fotos o aplicativo guia você com uma voz, textos grandes na tela e uma pequena animação no canto que mostra a postura. Primeiro você verá uma tela inicial: aumente o volume e toque em «Iniciar o guia por voz». Depois mova o celular (ou a cabeça, conforme a voz indicar) até o oval ficar verde: fique parado e a foto é tirada sozinha após uma contagem regressiva de três segundos. Se preferir, toque em «Prefiro tirar a foto eu mesmo»: o oval também fica verde quando o enquadramento está bom e você aperta o botão branco. «Ouvir de novo» repete a última instrução.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Foto 1 · Vista frontal: olhe de frente para a câmera e coloque a cabeça dentro do oval.",
+      "Foto 2 · Vértex (coroa): abaixe a cabeça para mostrar o alto; a voz diz como mover o celular.",
+      "Fotos 3 e 4 · Temporal direita e esquerda: mantenha o celular à sua frente e gire a cabeça para o lado que a voz indicar; a foto só é tirada quando o giro é suficiente.",
+      "Foto 5 · Área doadora: é tirada diante de um espelho (veja o parágrafo depois das imagens)."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-1-frontal.webp",
+     "alt": "Vista frontal",
+     "caption": "Vista frontal",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-2-superior.webp",
+     "alt": "Vértex (coroa)",
+     "caption": "Vértex (coroa)",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-3-lado-derecho.webp",
+     "alt": "Temporal direita",
+     "caption": "Temporal direita",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-4-lado-izquierdo.webp",
+     "alt": "Temporal esquerda",
+     "caption": "Temporal esquerda",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-5-zona-donante.webp",
+     "alt": "Área doadora diante do espelho",
+     "caption": "Área doadora diante do espelho",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Área doadora, com um espelho: fique de costas para um espelho grande, segure o celular com a tela voltada para você (câmera frontal) e olhe a tela: você verá o espelho atrás de você. Mova o celular até o reflexo da sua nuca ficar dentro do oval, que nesta foto é menor. O aplicativo recorta a foto para deixar só a parte de trás da cabeça, sem o seu outro reflexo. Se não conseguir detectar a nuca, a voz avisa que você pode tocar o botão branco quando a vir dentro do oval.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "Se o celular não permitir o guia automático ou a voz não for ouvida, o aplicativo avisa e você pode tirar a foto com o botão branco: os textos na tela dizem o mesmo que a voz. Alguém que esteja com você pode ajudar.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
      "t": "legend",
      "items": [
       "Voltar: retorna aos seus dados.",
@@ -338,6 +423,10 @@
       "O que vem a seguir: revisão do caso (até 24 horas úteis), contato por WhatsApp ou e-mail e agendamento da sua consulta.",
       "Voltar ao Início."
      ]
+    },
+    {
+     "t": "p",
+     "text": "Na tela de confirmação, se a sua clínica configurou, você verá «Para agendar sua consulta, você pode usar:» com três botões: ligar, escrever pelo WhatsApp e agendar online. Só aparece o que a clínica preencheu. O mesmo aparece na sua conta."
     }
    ],
    "key": "submit"
@@ -382,6 +471,10 @@
     {
      "t": "note",
      "text": "Nunca compartilhe a sua senha. A clínica não a pedirá por mensagem nem por telefone."
+    },
+    {
+     "t": "tip",
+     "text": "O link para criar sua senha dura 7 dias. Se você recebeu mais de um e-mail, os últimos cinco links funcionam; ao criar a senha todos deixam de valer. Se nenhum funcionar, peça um novo em «Esqueci minha senha»."
     }
    ],
    "key": "account"
@@ -962,6 +1055,10 @@
      "only": [
       "dermatologia"
      ]
+    },
+    {
+     "t": "p",
+     "text": "Cada vista mostra uma única foto: se o paciente repetiu uma foto, fica a mais recente e as anteriores são substituídas. O cabeçalho com nome e telefone fica fixo no alto; o resumo do paciente (consultas, novidades e autorização) rola junto com a ficha, para não cobrir as fotos."
     }
    ],
    "key": "ficha"
@@ -1511,6 +1608,18 @@
     {
      "t": "note",
      "text": "Pedir uma integração apenas registra o interesse da sua clínica; não conecta nada por si só. A Clinivista usa esses pedidos para decidir quais conectar primeiro."
+    },
+    {
+     "t": "p",
+     "text": "Nos cartões Medilink, AgendaPro e Reservo há um campo «Link de agendamento online»: cole o link onde seus pacientes agendam (deve começar com https://) e toque em «Salvar link»; vazio, ele é removido. Se preencher, o paciente verá, na tela final e na conta dele, «Para agendar sua consulta, você pode usar:» com três botões: ligar, WhatsApp e agendar online."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "O telefone e o WhatsApp vêm de «Dados da clínica» (preenchidos pelo supra-controle; o WhatsApp é opcional).",
+      "Se você puser link em mais de um cartão, o paciente vê só um, nesta ordem: Medilink, AgendaPro, Reservo.",
+      "Salvar o link não conecta a integração: apenas mostra o botão ao paciente."
+     ]
     }
    ]
   },
@@ -1567,7 +1676,7 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Na ficha do paciente, o quadro «Autorização para fotografias» mostra se o paciente autorizou a clínica a tirar e guardar suas fotos clínicas e permite registrar a autorização de três maneiras."
+     "text": "Na ficha do paciente, o quadro «Autorização para fotografias» mostra se o paciente autorizou a clínica a tirar e guardar suas fotos clínicas e permite registrar a autorização de três maneiras. Esse cartão só oferece enviar link, registrar documento ou assinar no tablet enquanto o paciente não tiver autorizado: se ele tirou as fotos por conta própria, a autorização já está registrada e esses botões ficam ocultos."
     },
     {
      "t": "ul",

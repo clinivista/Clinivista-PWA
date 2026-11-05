@@ -39,7 +39,7 @@ app.use("/api", patientsRouter);
 
 beforeAll(async () => {
   await pglite.exec(`
-    CREATE TABLE IF NOT EXISTS clinic_profiles (center_id text PRIMARY KEY, country text NOT NULL DEFAULT 'CL', rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE IF NOT EXISTS clinic_profiles (center_id text PRIMARY KEY, country text NOT NULL DEFAULT 'CL', rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', whatsapp text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE IF NOT EXISTS user_profiles (user_id text PRIMARY KEY, rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', prefix text NOT NULL DEFAULT '', specialty text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE IF NOT EXISTS clinical_centers (
       id text PRIMARY KEY, name text NOT NULL, slug text NOT NULL UNIQUE,
@@ -916,7 +916,7 @@ describe("datos de la clínica (RUT, dirección y teléfono)", () => {
     await create({ name: "Clínica Sin Datos", ...CLINIC, phone: "" }).expect(400);
     await create({ name: "Clínica Sin Datos", ...CLINIC, phone: "abc" }).expect(400);
     const demo = await create({ name: "Clínica Demostración", ...CLINIC, rut: "00000000-0" }).expect(201);
-    expect(demo.body.profile).toEqual({ country: "CL", rut: "00.000.000-0", address: "Av. Demo 123, Santiago", phone: "+56 2 2345 6789" });
+    expect(demo.body.profile).toEqual({ country: "CL", rut: "00.000.000-0", address: "Av. Demo 123, Santiago", phone: "+56 2 2345 6789", whatsapp: "" });
     const real = await create({ name: "Clínica Real", ...CLINIC, rut: "76.543.210-3" });
     expect([201, 400]).toContain(real.status);
   });
@@ -932,7 +932,7 @@ describe("datos de la clínica (RUT, dirección y teléfono)", () => {
   it("las clínicas existentes (sin datos) se pueden completar y corregir; supra-control las ve en la lista", async () => {
     await seedClinic("clinic-a");
     const before = await request(app).get("/api/director/centers/clinic-a/profile").set("Cookie", director()).expect(200);
-    expect(before.body).toEqual({ country: "CL", rut: "", address: "", phone: "" });
+    expect(before.body).toEqual({ country: "CL", rut: "", address: "", phone: "", whatsapp: "" });
     await request(app).put("/api/director/centers/clinic-a/profile").set("Cookie", director()).send({ ...CLINIC, rut: "11.111.111-2" }).expect(400);
     const saved = await request(app).put("/api/director/centers/clinic-a/profile").set("Cookie", director()).send({ ...CLINIC, rut: "00000000-0" }).expect(200);
     expect(saved.body.rut).toBe("00.000.000-0");
@@ -993,5 +993,18 @@ describe("país de la clínica: RUT en Chile, pasaporte en los demás países", 
     await put({ ...CLINIC, country: "BR", rut: "00000000-0" }).expect(200);
     expect((await request(app).get("/api/director/centers/clinic-a/profile").set("Cookie", director())).body.country).toBe("BR");
     await put({ ...CLINIC, country: "BR", rut: "cd12" }).expect(400);
+  });
+});
+
+describe("WhatsApp de la clínica (datos de la clínica)", () => {
+  it("es opcional, se guarda con el resto de los datos y se puede quitar", async () => {
+    const cookie = `clinivista_session=${directorSession()}`;
+    await pglite.exec(`INSERT INTO clinical_centers (id, name, slug, active) VALUES ('wa-clinic', 'Clínica WA', 'clinica-wa', true);`);
+    const base = { country: "CL", rut: "12.345.678-5", address: "Av. Siempre Viva 123", phone: "+56 2 2345 6789" };
+    const saved = await request(app).put("/api/director/centers/wa-clinic/profile").set("Cookie", cookie).send({ ...base, whatsapp: "+56 9 8765 4321" }).expect(200);
+    expect(saved.body.whatsapp).toBe("+56 9 8765 4321");
+    expect((await request(app).put("/api/director/centers/wa-clinic/profile").set("Cookie", cookie).send(base).expect(200)).body.whatsapp).toBe("+56 9 8765 4321"); // sin enviarlo, no cambia
+    expect((await request(app).put("/api/director/centers/wa-clinic/profile").set("Cookie", cookie).send({ ...base, whatsapp: "" }).expect(200)).body.whatsapp).toBe("");
+    await request(app).put("/api/director/centers/wa-clinic/profile").set("Cookie", cookie).send({ ...base, whatsapp: "abc" }).expect(400);
   });
 });

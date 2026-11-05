@@ -185,6 +185,91 @@
      ]
     },
     {
+     "t": "h3",
+     "text": "Guidage vocal et prise automatique",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Pour les cinq photos, l'application vous guide par une voix, de grands textes à l'écran et une petite animation dans le coin qui montre la posture. Vous verrez d'abord un écran de départ : montez le volume et touchez « Démarrer le guidage vocal ». Ensuite, bougez le téléphone (ou la tête, selon la voix) jusqu'à ce que l'ovale devienne vert : ne bougez plus et la photo se prend toute seule après un compte à rebours de trois secondes. Si vous préférez, touchez « Je préfère prendre la photo moi-même » : l'ovale devient vert aussi quand le cadrage est bon et vous appuyez sur le bouton blanc. « Réécouter » répète la dernière consigne.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Photo 1 · Vue de face : regardez la caméra et placez la tête dans l'ovale.",
+      "Photo 2 · Vertex (sommet) : baissez la tête pour montrer le haut ; la voix indique comment bouger le téléphone.",
+      "Photos 3 et 4 · Temporal droit et gauche : gardez le téléphone devant vous et tournez la tête du côté indiqué par la voix ; la photo n'est prise que lorsque la rotation est suffisante.",
+      "Photo 5 · Zone donneuse : elle se prend devant un miroir (voir le paragraphe après les images)."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-1-frontal.webp",
+     "alt": "Vue de face",
+     "caption": "Vue de face",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-2-superior.webp",
+     "alt": "Vertex (sommet)",
+     "caption": "Vertex (sommet)",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-3-lado-derecho.webp",
+     "alt": "Temporal droit",
+     "caption": "Temporal droit",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-4-lado-izquierdo.webp",
+     "alt": "Temporal gauche",
+     "caption": "Temporal gauche",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-5-zona-donante.webp",
+     "alt": "Zone donneuse devant le miroir",
+     "caption": "Zone donneuse devant le miroir",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Zone donneuse, avec un miroir : tournez le dos à un grand miroir, tenez le téléphone écran vers vous (caméra frontale) et regardez l'écran : vous verrez le miroir derrière vous. Bougez le téléphone jusqu'à ce que le reflet de votre nuque soit dans l'ovale, plus petit pour cette photo. L'application recadre la photo pour ne garder que l'arrière de la tête, sans votre autre reflet. Si elle ne détecte pas la nuque, la voix vous dit que vous pouvez toucher le bouton blanc quand vous la voyez dans l'ovale.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "Si le téléphone ne permet pas le guidage automatique ou si la voix ne s'entend pas, l'application vous le signale et vous pouvez prendre la photo vous-même avec le bouton blanc : les textes à l'écran disent la même chose que la voix. Une personne qui vous accompagne peut vous aider.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
      "t": "legend",
      "items": [
       "Retour : revient à vos données.",
@@ -338,6 +423,10 @@
       "Et ensuite : examen de votre cas (jusqu'à 24 heures ouvrées), contact par WhatsApp ou par e-mail et organisation de votre consultation.",
       "Retour à l'Accueil."
      ]
+    },
+    {
+     "t": "p",
+     "text": "Sur l'écran de confirmation, si votre clinique l'a configuré, vous verrez « Pour prendre rendez-vous, vous pouvez utiliser : » avec trois boutons : appeler, écrire sur WhatsApp et réserver en ligne. Seul ce que la clinique a renseigné s'affiche. La même chose apparaît dans votre compte."
     }
    ],
    "key": "submit"
@@ -382,6 +471,10 @@
     {
      "t": "note",
      "text": "Ne communiquez jamais votre mot de passe. La clinique ne vous le demandera ni par message ni par téléphone."
+    },
+    {
+     "t": "tip",
+     "text": "Le lien pour créer votre mot de passe dure 7 jours. Si vous avez reçu plusieurs e-mails, les cinq derniers liens fonctionnent ; une fois le mot de passe créé, tous sont invalidés. Si aucun ne fonctionne, demandez-en un nouveau avec « Mot de passe oublié »."
     }
    ],
    "key": "account"
@@ -962,6 +1055,10 @@
      "only": [
       "dermatologia"
      ]
+    },
+    {
+     "t": "p",
+     "text": "Chaque vue affiche une seule photo : si le patient a refait une prise, la plus récente reste et les précédentes sont remplacées. L'en-tête avec le nom et le téléphone reste fixe en haut ; le résumé du patient (consultations, nouveautés et autorisation) défile avec la fiche pour ne pas cacher les photos."
     }
    ],
    "key": "ficha"
@@ -1511,6 +1608,18 @@
     {
      "t": "note",
      "text": "Demander une intégration enregistre seulement l'intérêt de votre clinique ; cela ne connecte rien en soi. Clinivista s'appuie sur ces demandes pour décider lesquelles connecter en premier."
+    },
+    {
+     "t": "p",
+     "text": "Les cartes Medilink, AgendaPro et Reservo ont un champ « Lien de prise de rendez-vous en ligne » : collez le lien où vos patients réservent (il doit commencer par https://) et touchez « Enregistrer le lien » ; vide, il est supprimé. Si vous le renseignez, le patient verra, sur l'écran final et dans son compte, « Pour prendre rendez-vous, vous pouvez utiliser : » avec trois boutons : appeler, WhatsApp et réserver en ligne."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Le téléphone et le WhatsApp viennent de « Données de la clinique » (renseignés par le supra-contrôle ; le WhatsApp est facultatif).",
+      "Si vous mettez un lien sur plusieurs cartes, le patient n'en voit qu'un, dans cet ordre : Medilink, AgendaPro, Reservo.",
+      "Enregistrer le lien ne connecte pas l'intégration : il affiche seulement le bouton au patient."
+     ]
     }
    ]
   },
@@ -1567,7 +1676,7 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Dans le dossier du patient, l'encadré « Autorisation pour les photographies » indique si le patient a autorisé la clinique à prendre et conserver ses photos cliniques, et permet d'enregistrer l'autorisation de trois façons."
+     "text": "Dans le dossier du patient, l'encadré « Autorisation pour les photographies » indique si le patient a autorisé la clinique à prendre et conserver ses photos cliniques, et permet d'enregistrer l'autorisation de trois façons. Cette carte ne propose d'envoyer un lien, d'enregistrer un document ou de signer sur tablette que tant que le patient n'a pas autorisé : s'il a pris les photos lui-même, l'autorisation est déjà enregistrée et ces boutons sont masqués."
     },
     {
      "t": "ul",

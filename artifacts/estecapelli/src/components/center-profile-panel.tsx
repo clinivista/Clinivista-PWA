@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { COUNTRIES, documentKind, documentProblem } from "@/lib/profile-fields";
 
-type Profile = { country: string; rut: string; address: string; phone: string };
+type Profile = { country: string; rut: string; address: string; phone: string; whatsapp: string };
 
 /** Supra-control: país, RUT (o pasaporte fuera de Chile), dirección y teléfono de la clínica. Van en el contrato; se pueden completar y corregir. Solo español. */
 export function CenterProfilePanel({ centerId }: { centerId: string }) {
@@ -23,16 +23,16 @@ export function CenterProfilePanel({ centerId }: { centerId: string }) {
       return (await response.json()) as Profile;
     },
   });
-  const [draft, setDraft] = useState<Profile>({ country: "CL", rut: "", address: "", phone: "" });
+  const [draft, setDraft] = useState<Profile>({ country: "CL", rut: "", address: "", phone: "", whatsapp: "" });
   const [busy, setBusy] = useState(false);
-  useEffect(() => { if (data && typeof data.country === "string") setDraft(data); }, [data]);
+  useEffect(() => { if (data && typeof data.country === "string") setDraft({ ...data, whatsapp: data.whatsapp ?? "" }); }, [data]);
   if (!data || typeof data.country !== "string") return null;
 
   const passport = documentKind(draft.country) === "pasaporte";
   const missing = !data.rut || !data.address || !data.phone;
   const problem = documentProblem(draft.rut, draft.country);
   const valid = !problem && draft.address.trim() !== "" && draft.phone.trim() !== "";
-  const dirty = draft.country !== data.country || draft.rut !== data.rut || draft.address !== data.address || draft.phone !== data.phone;
+  const dirty = draft.country !== data.country || draft.rut !== data.rut || draft.address !== data.address || draft.phone !== data.phone || draft.whatsapp !== (data.whatsapp ?? "");
 
   const save = async () => {
     setBusy(true);
@@ -76,6 +76,11 @@ export function CenterProfilePanel({ centerId }: { centerId: string }) {
         <div className="flex flex-col gap-1">
           <label htmlFor={`profile-phone-${centerId}`} className="text-xs font-bold text-slate-600">Teléfono *</label>
           <Input id={`profile-phone-${centerId}`} type="tel" autoComplete="off" maxLength={30} placeholder="+56 2 2345 6789" className="h-10 rounded-full" value={draft.phone} onChange={(event) => setDraft((prev) => ({ ...prev, phone: event.target.value }))} />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor={`profile-whatsapp-${centerId}`} className="text-xs font-bold text-slate-600">WhatsApp</label>
+          <Input id={`profile-whatsapp-${centerId}`} type="tel" autoComplete="off" maxLength={30} placeholder="+56 9 8765 4321" className="h-10 rounded-full" value={draft.whatsapp} onChange={(event) => setDraft((prev) => ({ ...prev, whatsapp: event.target.value }))} />
+          <p className="text-xs text-muted-foreground">Opcional. Los pacientes lo ven para agendar su hora.</p>
         </div>
       </div>
       <p className="text-xs text-muted-foreground">{passport ? "Fuera de Chile la clínica y su gente se identifican con pasaporte." : "En Chile se identifica con RUT; para demostraciones sirve 00000000-0."} Estos datos rellenan el contrato.</p>
