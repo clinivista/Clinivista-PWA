@@ -19,7 +19,7 @@ export function ovalForFrame(width: number, height: number, scale = 1): Oval {
 }
 
 /** Zona donante: el reflejo de la nuca se ve pequeño y lejos, así que el óvalo es más chico (el paciente no tiene que acercar el celular). */
-export const DONOR_OVAL_SCALE = 0.58;
+export const DONOR_OVAL_SCALE = 0.38;
 
 /** Qué le falta a la persona (ya traducido a lo que debe hacer con el celular). */
 export type FitStatus = "none" | "closer" | "farther" | "left" | "right" | "up" | "down" | "turn" | "ok";

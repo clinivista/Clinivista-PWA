@@ -109,8 +109,8 @@ describe("óvalo de la zona donante", () => {
   it("is smaller than the normal oval but keeps its centre", () => {
     const normal = ovalForFrame(400, 300);
     const small = ovalForFrame(400, 300, DONOR_OVAL_SCALE);
-    expect(small.rx).toBeLessThan(normal.rx * 0.7);
-    expect(small.ry).toBeLessThan(normal.ry * 0.7);
+    expect(small.rx).toBeLessThan(normal.rx * 0.5);
+    expect(small.ry).toBeLessThan(normal.ry * 0.5);
     expect(small.cx).toBe(normal.cx);
     expect(small.cy).toBe(normal.cy);
   });
