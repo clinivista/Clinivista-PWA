@@ -9,6 +9,8 @@ import { analyzeHeadFit, ovalForFrame, type FitStatus } from "@/lib/head-fit";
 import { newMachine, step, type Machine, type SayKey } from "@/lib/auto-capture";
 import { GuideAudio } from "@/lib/guide-audio";
 import { createSegmenter, type Segmenter } from "@/lib/selfie-segmenter";
+import { createFaceTurn, type FaceTurn } from "@/lib/face-turn";
+import { judgeTurn, newTurnState } from "@/lib/turn-fit";
 
 interface CameraModalProps {
   onCapture: (dataUrl: string) => void;
@@ -29,7 +31,7 @@ interface CameraModalProps {
   progressLabel?: string;
 }
 
-const STATUS_SAY: Record<Exclude<FitStatus, "ok">, SayKey> = { none: "nobody", closer: "closer", farther: "farther", left: "left", right: "right", up: "up", down: "down" };
+const STATUS_SAY: Record<Exclude<FitStatus, "ok">, SayKey> = { none: "nobody", closer: "closer", farther: "farther", left: "left", right: "right", up: "up", down: "down", turn: "turn" };
 type GuideStage = "intro" | "loading" | "running" | "manual";
 /** Lado más largo (en píxeles) de la imagen que se analiza: chica, para que el análisis sea rápido. */
 const ANALYSIS_SIDE = 256;
@@ -73,6 +75,9 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
   const [voiceMissing, setVoiceMissing] = useState(false);
   const audioRef = useRef<GuideAudio | null>(null);
   const segmenterRef = useRef<Segmenter | null>(null);
+  const faceTurnRef = useRef<FaceTurn | null>(null);
+  // En las vistas laterales la foto solo se da por buena con la cabeza girada hacia el lado pedido.
+  const turnSide = guideKind === "right" || guideKind === "left" ? guideKind : null;
   const shutterRef = useRef<() => void>(() => undefined);
   const mirrored = guided && facingMode === "user";
   // Con la guía no se dibuja el rectángulo: solo el óvalo (también en modo manual): sin el rectángulo ni sus esquinas.
@@ -229,8 +234,9 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
   const startManual = async () => {
     setStage("manual");
     if (segmenterRef.current) { setWatchReady(true); return; }
-    const segmenter = await createSegmenter();
-    if (segmenter) { segmenterRef.current = segmenter; setWatchReady(true); }
+    const [segmenter, faceTurn] = await Promise.all([createSegmenter(), turnSide ? createFaceTurn() : Promise.resolve(null)]);
+    faceTurnRef.current = faceTurn;
+    if (segmenter && (!turnSide || faceTurn)) { segmenterRef.current = segmenter; setWatchReady(true); }
   };
 
   // Empezar la guía (un toque del paciente: así el navegador deja sonar la voz).
@@ -242,8 +248,10 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
     audio.prime(latestRef.current.guideText.soundOn); // dentro del toque: así el navegador permite hablar después
     setVoiceMissing(!GuideAudio.canSpeak());
     setStage("loading");
-    const segmenter = await createSegmenter();
-    if (!segmenter) {
+    const [segmenter, faceTurn] = await Promise.all([createSegmenter(), turnSide ? createFaceTurn() : Promise.resolve(null)]);
+    faceTurnRef.current = faceTurn;
+    // Sin poder medir el giro no se toma la foto sola: una lateral que salga de frente no sirve.
+    if (!segmenter || (turnSide && !faceTurn)) {
       setMessage("unavailable");
       setStage("manual");
       return;
@@ -260,6 +268,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
     let stopped = false;
     let timer: number | undefined;
     let machine: Machine = newMachine();
+    let turnState = newTurnState();
     const canvas = document.createElement("canvas");
     const tick = async () => {
       const video = videoRef.current;
@@ -282,15 +291,23 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
           if (stopped) return;
           if (mask) {
             const fit = analyzeHeadFit(mask.data, mask.width, mask.height, ovalForFrame(viewFrame.width, viewFrame.height), flip);
+            let status: FitStatus = fit.status;
+            if (turnSide && status === "ok") {
+              const ratio = faceTurnRef.current ? await faceTurnRef.current.run(canvas) : null;
+              if (stopped) return;
+              const judged = judgeTurn(turnSide, ratio, turnState, performance.now());
+              turnState = judged.state;
+              if (!judged.turned) status = "turn";
+            }
             if (watchOnly) {
-              setFitStatus(fit.status);
-              setMessage(fit.status === "ok" ? "takeNow" : STATUS_SAY[fit.status]);
+              setFitStatus(status);
+              setMessage(status === "ok" ? "takeNow" : STATUS_SAY[status]);
               if (!stopped) timer = window.setTimeout(() => void tick(), ANALYSIS_EVERY_MS);
               return;
             }
-            const out = step(machine, fit.status, performance.now());
+            const out = step(machine, status, performance.now());
             machine = out.machine;
-            setFitStatus(fit.status);
+            setFitStatus(status);
             setCount(machine.phase === "countdown" && machine.count > 0 ? 4 - machine.count : null);
             if (out.say) speak(out.say, out.beep);
             else if (out.beep) audioRef.current?.beep(out.beep);

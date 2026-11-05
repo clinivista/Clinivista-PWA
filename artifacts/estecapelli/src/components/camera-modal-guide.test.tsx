@@ -4,6 +4,8 @@ import userEvent from "@testing-library/user-event";
 
 const seg = vi.hoisted(() => ({ create: vi.fn(), run: vi.fn(), close: vi.fn() }));
 vi.mock("@/lib/selfie-segmenter", () => ({ createSegmenter: seg.create }));
+const turn = vi.hoisted(() => ({ create: vi.fn(), run: vi.fn() }));
+vi.mock("@/lib/face-turn", () => ({ createFaceTurn: turn.create }));
 
 import { LanguageProvider } from "@/lib/language";
 import { CameraModal } from "./camera-modal";
@@ -38,6 +40,10 @@ beforeEach(() => {
   seg.close.mockReset();
   seg.run.mockImplementation(async () => wellFramed());
   seg.create.mockResolvedValue({ run: seg.run, close: seg.close });
+  turn.create.mockReset();
+  turn.run.mockReset();
+  turn.run.mockResolvedValue(0.3); // nariz hacia la derecha de la imagen (giro hacia la izquierda del paciente)
+  turn.create.mockResolvedValue({ run: turn.run });
   getUserMedia = vi.fn(async () => ({ getTracks: () => [{ stop }] }));
   Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia } });
   Object.defineProperty(HTMLVideoElement.prototype, "videoWidth", { configurable: true, get: () => 1280 });
@@ -110,6 +116,45 @@ describe("cámara con guía automática", () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(200); });
     expect(spoken.length).toBeGreaterThan(before);
     vi.unstubAllGlobals();
+  });
+
+  it("side view: takes the photo only when the head is turned to the right side", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { onCapture } = renderModal({ guideKind: "right" });
+    await user.click(await screen.findByTestId("guide-start"));
+    await act(async () => { await vi.advanceTimersByTimeAsync(9000); });
+    expect(turn.run).toHaveBeenCalled();
+    expect(onCapture).toHaveBeenCalledWith("data:image/jpeg;base64,FOTO");
+  });
+
+  it("side view: a head that looks to the camera or turns the wrong way is never captured, and is told to turn", async () => {
+    turn.run.mockResolvedValue(-0.3); // giró hacia el lado contrario para la vista del lado derecho
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { onCapture } = renderModal({ guideKind: "right" });
+    await user.click(await screen.findByTestId("guide-start"));
+    await act(async () => { await vi.advanceTimersByTimeAsync(9000); });
+    expect(onCapture).not.toHaveBeenCalled();
+    expect(screen.getByTestId("guide-oval")).toHaveAttribute("data-ok", "false");
+    expect(screen.getByTestId("guide-message")).toHaveTextContent("Gira un poco la cabeza hacia tu izquierda, sin mover el celular.");
+  });
+
+  it("left side view asks to turn toward the patient's right", async () => {
+    turn.run.mockResolvedValue(0.02); // de frente
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    renderModal({ guideKind: "left" });
+    await user.click(await screen.findByTestId("guide-start"));
+    await act(async () => { await vi.advanceTimersByTimeAsync(2500); });
+    expect(screen.getByTestId("guide-message")).toHaveTextContent("Gira un poco la cabeza hacia tu derecha, sin mover el celular.");
+  });
+
+  it("side view: if the turn cannot be measured the photo is not taken by itself", async () => {
+    turn.create.mockResolvedValue(null);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { onCapture } = renderModal({ guideKind: "left" });
+    await user.click(await screen.findByTestId("guide-start"));
+    expect(await screen.findByTestId("guide-unavailable")).toBeInTheDocument();
+    await act(async () => { await vi.advanceTimersByTimeAsync(9000); });
+    expect(onCapture).not.toHaveBeenCalled();
   });
 
   it("guides, turns the oval green, counts down and takes the photo by itself", async () => {

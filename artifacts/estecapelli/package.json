@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
+    "@mediapipe/face_mesh": "^0.4.1633559619",
     "@mediapipe/selfie_segmentation": "^0.1.1675465747",
     "@playwright/test": "^1.62.1",
     "@radix-ui/react-accordion": "^1.2.4",

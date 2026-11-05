@@ -3,7 +3,7 @@ import type { FitStatus } from "./head-fit";
 // Máquina de la captura automática: dice qué hacer mientras la persona se acomoda, detecta que se quedó quieta dentro del óvalo,
 // cuenta 3-2-1 y dispara. Es una función pura (recibe la hora) para poder probarla sin cámara.
 
-export type SayKey = "nobody" | "closer" | "farther" | "left" | "right" | "up" | "down" | "hold" | "n3" | "n2" | "n1" | "moved" | "taken";
+export type SayKey = "nobody" | "closer" | "farther" | "left" | "right" | "up" | "down" | "turn" | "hold" | "n3" | "n2" | "n1" | "moved" | "taken";
 export type Beep = "lock" | "tick" | "lost" | "shutter";
 
 export type Machine = {
@@ -35,7 +35,7 @@ const NONE_MS = 1500;
 
 export const newMachine = (): Machine => ({ phase: "guiding", okSince: null, badSince: null, count: 0, countStart: 0, lastSay: null, noneSince: null });
 
-const INSTRUCTION: Record<Exclude<FitStatus, "ok">, SayKey> = { none: "nobody", closer: "closer", farther: "farther", left: "left", right: "right", up: "up", down: "down" };
+const INSTRUCTION: Record<Exclude<FitStatus, "ok">, SayKey> = { none: "nobody", closer: "closer", farther: "farther", left: "left", right: "right", up: "up", down: "down", turn: "turn" };
 
 export function step(machine: Machine, fit: FitStatus, now: number): StepOutput {
   if (machine.phase === "done") return { machine };

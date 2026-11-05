@@ -22,3 +22,19 @@ if (!existsSync(join(target, "selfie_segmentation.tflite")) || copied < 6) {
   process.exit(1);
 }
 console.log(`Segmentador listo: ${copied} archivos en public/vendor/selfie`);
+
+// Malla facial (MediaPipe): solo se usa en las vistas laterales para comprobar hacia dónde gira la cabeza. Se descarga solo al abrir esas vistas.
+const meshSource = dirname(require.resolve("@mediapipe/face_mesh/package.json"));
+const meshTarget = join(here, "..", "public", "vendor", "facemesh");
+mkdirSync(meshTarget, { recursive: true });
+let meshCopied = 0;
+for (const file of readdirSync(meshSource)) {
+  if (!/^face_mesh.*\.(js|binarypb|wasm|data)$/.test(file)) continue;
+  cpSync(join(meshSource, file), join(meshTarget, file));
+  meshCopied += 1;
+}
+if (!existsSync(join(meshTarget, "face_mesh.binarypb")) || meshCopied < 8) {
+  console.error("No se pudieron copiar los archivos de la malla facial (@mediapipe/face_mesh).");
+  process.exit(1);
+}
+console.log(`Malla facial lista: ${meshCopied} archivos en public/vendor/facemesh`);

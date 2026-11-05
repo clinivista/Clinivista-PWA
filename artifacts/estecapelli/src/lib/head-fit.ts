@@ -19,7 +19,7 @@ export function ovalForFrame(width: number, height: number): Oval {
 }
 
 /** Qué le falta a la persona (ya traducido a lo que debe hacer con el celular). */
-export type FitStatus = "none" | "closer" | "farther" | "left" | "right" | "up" | "down" | "ok";
+export type FitStatus = "none" | "closer" | "farther" | "left" | "right" | "up" | "down" | "turn" | "ok";
 
 export type FitResult = {
   status: FitStatus;
