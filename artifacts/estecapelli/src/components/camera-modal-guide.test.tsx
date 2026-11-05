@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 const seg = vi.hoisted(() => ({ create: vi.fn(), run: vi.fn(), close: vi.fn() }));
 vi.mock("@/lib/selfie-segmenter", () => ({ createSegmenter: seg.create }));
 const turn = vi.hoisted(() => ({ create: vi.fn(), run: vi.fn() }));
-vi.mock("@/lib/face-turn", () => ({ createFaceTurn: turn.create }));
+vi.mock("@/lib/face-turn", () => ({ createFaceTurn: turn.create, faceTurnProblem: async () => "js 404 · pb 404" }));
 
 import { LanguageProvider } from "@/lib/language";
 import { CameraModal } from "./camera-modal";
@@ -156,6 +156,7 @@ describe("cámara con guía automática", () => {
     const { onCapture } = renderModal({ guideKind: "left" });
     await user.click(await screen.findByTestId("guide-start"));
     expect(await screen.findByTestId("guide-unavailable")).toBeInTheDocument();
+    expect(await screen.findByTestId("guide-diagnosis")).toHaveTextContent("js 404");
     await act(async () => { await vi.advanceTimersByTimeAsync(9000); });
     expect(onCapture).not.toHaveBeenCalled();
   });
