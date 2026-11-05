@@ -76,7 +76,8 @@ describe("cámara con guía automática", () => {
     renderModal();
     expect(await screen.findByTestId("guide-step-2")).toHaveTextContent(/botón de silencio/);
     expect(screen.getByTestId("guide-step-3")).toHaveTextContent(/ahí comenzaré a hablarte/);
-    expect(screen.getByTestId("camera-frame").className).not.toContain("border-2"); // sin rectángulo tampoco en el recuadro de inicio
+    expect(screen.queryByTestId("camera-frame")).toBeNull(); // fondo liso en el inicio: ningún marco rectangular
+    expect(screen.getByTestId("guide-intro").className).toContain("bg-black");
     await user.click(screen.getByTestId("guide-start"));
     await act(async () => { await vi.advanceTimersByTimeAsync(300); });
     expect(screen.getByTestId("guide-no-voice")).toHaveTextContent(/no puede hablar/); // jsdom no trae speechSynthesis
