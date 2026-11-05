@@ -40,6 +40,8 @@ const ANALYSIS_SIDE = 256;
 const ANALYSIS_EVERY_MS = 160;
 /** Tiempo para colocarse antes de que la guía empiece a medir (zona donante). */
 const BACK_PREP_MS = 6000;
+/** Zona donante: cada cuánto la voz recuerda el botón blanco mientras no se detecta bien la nuca. */
+const TAP_HINT_EVERY_MS = 9000;
 
 type PermissionState = "requesting" | "granted" | "denied" | "unsupported";
 
@@ -72,7 +74,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
   const introSteps = [...guideText.introBody.split("\n"), ...(introStep ? [introStep] : [])];
   const [stage, setStage] = useState<GuideStage>("intro");
   const [fitStatus, setFitStatus] = useState<FitStatus>("none");
-  const [message, setMessage] = useState<SayKey | "takeNow" | "getReady" | "unavailable" | null>(null);
+  const [message, setMessage] = useState<SayKey | "takeNow" | "tap" | "getReady" | "unavailable" | null>(null);
   const [watchReady, setWatchReady] = useState(false);
   const [diagnosis, setDiagnosis] = useState("");
   const [count, setCount] = useState<number | null>(null);
@@ -203,7 +205,10 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
 
     // Keep only what is inside the reference frame, at the camera's full resolution (a zoom-in).
     // Zona donante con espejo: se recorta solo la cabeza reflejada (sin la persona real que también sale en el espejo).
-    const donor = guideKind === "back" ? donorBoxRef.current : null;
+    // Si la nuca no se detectó, se recorta alrededor del óvalo (ahí la puso el paciente).
+    const donorOval = ovalForFrame(frame.width, frame.height, DONOR_OVAL_SCALE);
+    const aroundOval = { x: Math.max(0, donorOval.cx - donorOval.rx * 1.5), y: Math.max(0, donorOval.cy - donorOval.ry * 1.3), w: Math.min(1, donorOval.rx * 3), h: Math.min(1, donorOval.ry * 2.8) };
+    const donor = guideKind === "back" ? (donorBoxRef.current ?? aroundOval) : null;
     const base = cropRectForVideo(box, { width: video.videoWidth, height: video.videoHeight }, frame, donor ? 0 : undefined);
     const crop = donor && base
       ? { sx: Math.round(base.sx + donor.x * base.sw), sy: Math.round(base.sy + donor.y * base.sh), sw: Math.max(1, Math.round(donor.w * base.sw)), sh: Math.max(1, Math.round(donor.h * base.sh)) }
@@ -285,6 +290,8 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
     let timer: number | undefined;
     let machine: Machine = newMachine();
     let turnState = newTurnState();
+    let lastTapHint = performance.now() + BACK_PREP_MS;
+    let tapHoldUntil = 0;
     // Zona donante: el paciente no ve la pantalla, así que primero se le explica la postura y se le da tiempo de tomarla.
     const prepUntil = guideKind === "back" ? performance.now() + BACK_PREP_MS : 0;
     if (prepUntil) { setMessage("getReady"); audioRef.current?.say(guideText.getReady); }
@@ -328,6 +335,19 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
               setFitStatus(status);
               setMessage(status === "ok" ? "takeNow" : STATUS_SAY[status]);
               if (!stopped) timer = window.setTimeout(() => void tick(), ANALYSIS_EVERY_MS);
+              return;
+            }
+            // Zona donante: si la nuca no se logra detectar, la voz recuerda que puede tomar la foto con el botón blanco.
+            if (guideKind === "back" && status !== "ok" && performance.now() < tapHoldUntil) {
+              timer = window.setTimeout(() => void tick(), ANALYSIS_EVERY_MS);
+              return;
+            }
+            if (guideKind === "back" && status !== "ok" && performance.now() - lastTapHint > TAP_HINT_EVERY_MS) {
+              lastTapHint = performance.now();
+              tapHoldUntil = lastTapHint + 4500; // el aviso se queda en pantalla y la voz termina de decirlo
+              setMessage("tap");
+              audioRef.current?.say(latestRef.current.guideText.tap);
+              timer = window.setTimeout(() => void tick(), ANALYSIS_EVERY_MS);
               return;
             }
             const out = step(machine, status, performance.now());
