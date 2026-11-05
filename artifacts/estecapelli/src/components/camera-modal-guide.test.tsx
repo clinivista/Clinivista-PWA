@@ -162,7 +162,7 @@ describe("cámara con guía automática", () => {
   });
 
   it("donor area: explains the posture first, gives time to take it, then guides the phone and takes the photo", async () => {
-    seg.run.mockImplementation(async () => wellFramed(0.5, 0.58)); // el óvalo de la zona donante es más chico
+    seg.run.mockImplementation(async () => wellFramed(0.5, 0.38)); // el óvalo de la zona donante es más chico
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { onCapture } = renderModal({ guideKind: "back" });
     expect(await screen.findByTestId("guide-step-4")).toHaveTextContent(/ponte de espaldas al espejo, mira la pantalla/);
