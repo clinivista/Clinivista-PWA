@@ -71,12 +71,23 @@ describe("cámara con guía automática", () => {
     expect(screen.getByRole("button", { name: "Tomar foto" })).toBeInTheDocument(); // el botón manual siempre está
   });
 
+  it("explains the silent switch in the intro, and warns when the browser cannot speak", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    renderModal();
+    expect(await screen.findByTestId("guide-tip")).toHaveTextContent(/no esté en silencio/);
+    await user.click(screen.getByTestId("guide-start"));
+    await act(async () => { await vi.advanceTimersByTimeAsync(300); });
+    expect(screen.getByTestId("guide-no-voice")).toHaveTextContent(/no puede hablar/); // jsdom no trae speechSynthesis
+  });
+
   it("guides, turns the oval green, counts down and takes the photo by itself", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { onCapture } = renderModal();
     await user.click(await screen.findByTestId("guide-start"));
     await act(async () => { await vi.advanceTimersByTimeAsync(1500); });
     expect(screen.getByTestId("guide-oval")).toHaveAttribute("data-ok", "true");
+    expect(screen.getByTestId("camera-frame").className).not.toContain("border-2");
+    expect(screen.getByTestId("camera-frame").querySelectorAll(".rounded-tl-2xl")).toHaveLength(0);
     expect(screen.getByTestId("guide-message")).toHaveTextContent("Perfecto. No te muevas.");
     await act(async () => { await vi.advanceTimersByTimeAsync(2800); });
     expect(screen.getByTestId("guide-count")).toBeInTheDocument();

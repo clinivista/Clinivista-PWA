@@ -61,10 +61,13 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
   const [message, setMessage] = useState<SayKey | "unavailable" | null>(null);
   const [count, setCount] = useState<number | null>(null);
   const [muted, setMuted] = useState(false);
+  const [voiceMissing, setVoiceMissing] = useState(false);
   const audioRef = useRef<GuideAudio | null>(null);
   const segmenterRef = useRef<Segmenter | null>(null);
   const shutterRef = useRef<() => void>(() => undefined);
   const mirrored = guided && facingMode === "user";
+  // Con la guía en marcha solo se ve el óvalo: sin el rectángulo ni sus esquinas.
+  const ovalOnly = guided && stage === "running";
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   useEffect(() => {
@@ -217,6 +220,8 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
     audioRef.current = audio;
     setMuted(audio.muted);
     audio.unlock();
+    audio.prime(latestRef.current.guideText.soundOn); // dentro del toque: así el navegador permite hablar después
+    setVoiceMissing(!GuideAudio.canSpeak());
     setStage("loading");
     const segmenter = await createSegmenter();
     if (!segmenter) {
@@ -365,13 +370,15 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
           <div className="absolute inset-0 pointer-events-none">
             <div
               data-testid="camera-frame"
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-2 border-white/60 rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]"
+              className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.45)] ${ovalOnly ? "" : "border-2 border-white/60"}`}
               style={{ width: frame.width, height: frame.height }}
             >
-              <div className="absolute -top-0.5 -left-0.5 w-6 h-6 border-t-2 border-l-2 border-white rounded-tl-2xl" />
-              <div className="absolute -top-0.5 -right-0.5 w-6 h-6 border-t-2 border-r-2 border-white rounded-tr-2xl" />
-              <div className="absolute -bottom-0.5 -left-0.5 w-6 h-6 border-b-2 border-l-2 border-white rounded-bl-2xl" />
-              <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 border-b-2 border-r-2 border-white rounded-br-2xl" />
+              {!ovalOnly && (<>
+                <div className="absolute -top-0.5 -left-0.5 w-6 h-6 border-t-2 border-l-2 border-white rounded-tl-2xl" />
+                <div className="absolute -top-0.5 -right-0.5 w-6 h-6 border-t-2 border-r-2 border-white rounded-tr-2xl" />
+                <div className="absolute -bottom-0.5 -left-0.5 w-6 h-6 border-b-2 border-l-2 border-white rounded-bl-2xl" />
+                <div className="absolute -bottom-0.5 -right-0.5 w-6 h-6 border-b-2 border-r-2 border-white rounded-br-2xl" />
+              </>)}
               {guided && stage === "running" && <GuideOval width={frame.width} height={frame.height} ok={fitStatus === "ok"} counting={count !== null} />}
             </div>
           </div>
@@ -390,6 +397,9 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
             <span data-testid="guide-count" className="text-[8rem] leading-none font-black text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.7)]">{count}</span>
           </div>
         )}
+        {permissionState === "granted" && guided && stage === "running" && voiceMissing && (
+          <p role="alert" data-testid="guide-no-voice" className="absolute bottom-3 inset-x-3 rounded-2xl bg-amber-100 px-4 py-3 text-center text-base font-semibold text-amber-900">{guideText.noVoice}</p>
+        )}
         {permissionState === "granted" && guided && message === "unavailable" && (
           <p role="alert" data-testid="guide-unavailable" className="absolute top-3 inset-x-3 rounded-2xl bg-amber-100 px-4 py-3 text-center text-base font-semibold text-amber-900">{guideText.unavailable}</p>
         )}
@@ -404,6 +414,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
             <Volume2 className="w-14 h-14 text-white" aria-hidden />
             <h2 className="text-2xl font-extrabold text-white">{guideText.introTitle}</h2>
             <p className="text-lg leading-relaxed text-white/90 max-w-md">{guideText.introBody}</p>
+            <p className="text-base leading-relaxed text-amber-200 max-w-md" data-testid="guide-tip">{guideText.introTip}</p>
             <Button onClick={() => void startGuide()} className="h-16 min-w-[14rem] rounded-full bg-green-600 hover:bg-green-700 text-white text-xl font-extrabold" data-testid="guide-start">
               {guideText.start}
             </Button>
