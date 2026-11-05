@@ -281,13 +281,17 @@ export function PhotoConsentCard({ leadId, patientName, phone }: { leadId: strin
   const current = currentConsent(data.consents);
   const label = !current ? x.none : current.status === "granted" ? x.granted : current.status === "pending" ? x.pending : current.status === "declined" ? x.rejected : x.revoked;
   const tone = current?.status === "granted" ? "border-emerald-200 bg-emerald-50/60" : "border-amber-200 bg-amber-50/60";
+  // Con la autorización ya otorgada (por ejemplo, la dio el propio paciente al registrarse) no hace falta pedirla de nuevo:
+  // solo quedan visibles el estado y, si se necesita, revocarla. Enviar enlace, registrar documento y firmar en tableta
+  // son para cuando es la clínica la que toma las fotos sin autorización previa.
+  const granted = current?.status === "granted";
   const fileUrl = (id: string) => `${base}/${encodeURIComponent(id)}/file`;
 
   return (
-    <section className={`mx-5 md:mx-8 my-3 rounded-2xl border p-4 text-sm space-y-3 ${tone}`} data-testid="photo-consent">
+    <section className={`mx-5 md:mx-8 my-3 rounded-2xl border ${granted ? "p-3 space-y-1.5" : "p-4 space-y-3"} text-sm ${tone}`} data-testid="photo-consent">
       <div>
         <h3 className="font-bold text-foreground flex items-center gap-2"><Camera className="w-4 h-4" />{x.title}</h3>
-        <p className="text-xs text-muted-foreground mt-0.5">{x.subtitle}</p>
+        {!granted && <p className="text-xs text-muted-foreground mt-0.5">{x.subtitle}</p>}
       </div>
       <p className="font-semibold" data-testid="photo-consent-status">{label}</p>
       {current && current.status === "granted" && (
@@ -298,9 +302,13 @@ export function PhotoConsentCard({ leadId, patientName, phone }: { leadId: strin
       )}
       {current?.hasFile && <a className="text-xs text-primary underline" href={fileUrl(current.id)} target="_blank" rel="noreferrer">{x.viewFile}</a>}
       <div className="flex flex-wrap gap-2">
-        <Button size="sm" variant="outline" className="rounded-xl" onClick={() => setDialog("link")}><Link2 className="w-3.5 h-3.5 me-1.5" />{x.actLink}</Button>
-        <Button size="sm" variant="outline" className="rounded-xl" onClick={() => setDialog("doc")}><FileSignature className="w-3.5 h-3.5 me-1.5" />{x.actDoc}</Button>
-        <Button size="sm" variant="outline" className="rounded-xl" onClick={() => setDialog("tablet")}><PenLine className="w-3.5 h-3.5 me-1.5" />{x.actTablet}</Button>
+        {!granted && (
+          <>
+            <Button size="sm" variant="outline" className="rounded-xl" onClick={() => setDialog("link")}><Link2 className="w-3.5 h-3.5 me-1.5" />{x.actLink}</Button>
+            <Button size="sm" variant="outline" className="rounded-xl" onClick={() => setDialog("doc")}><FileSignature className="w-3.5 h-3.5 me-1.5" />{x.actDoc}</Button>
+            <Button size="sm" variant="outline" className="rounded-xl" onClick={() => setDialog("tablet")}><PenLine className="w-3.5 h-3.5 me-1.5" />{x.actTablet}</Button>
+          </>
+        )}
         {current?.status === "granted" && <Button size="sm" variant="ghost" className="rounded-xl text-red-700" onClick={() => revoke(current.id)}>{x.revoke}</Button>}
         {data.consents.length > 1 && <Button size="sm" variant="ghost" className="rounded-xl" onClick={() => setShowHistory((value) => !value)}>{x.history}</Button>}
       </div>

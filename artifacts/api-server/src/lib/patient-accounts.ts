@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { isEvaluationLocked } from "./patient-edits";
-import { and, eq, inArray, isNull, ne } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import {
   db, leadsTable, patientAccountsTable, resultDeliveriesTable, hashPassword, verifyPassword, normalizeEmail, type Lead,
 } from "@workspace/db";
@@ -78,10 +78,18 @@ export function resetThrottleForTests() {
 }
 
 // ---- accounts ----
+/** Cuántos enlaces recientes de la misma cuenta siguen sirviendo a la vez (cada correo nuevo ya no deja sin efecto al anterior). */
+const LIVE_TOKENS = 5;
+
 async function issueToken(accountId: string, ttlMs: number): Promise<string> {
   const token = crypto.randomBytes(32).toString("hex");
+  const [current] = await db.select({ tokenHash: patientAccountsTable.tokenHash, tokenExpiresAt: patientAccountsTable.tokenExpiresAt })
+    .from(patientAccountsTable).where(eq(patientAccountsTable.id, accountId));
+  // Los hash (64 caracteres hexadecimales) se guardan juntos separados por coma, del más nuevo al más viejo.
+  const alive = current?.tokenExpiresAt && current.tokenExpiresAt.getTime() > Date.now() ? (current.tokenHash ?? "").split(",").filter((hash) => /^[0-9a-f]{64}$/.test(hash)) : [];
+  const hashes = [sha256(token), ...alive].slice(0, LIVE_TOKENS).join(",");
   await db.update(patientAccountsTable)
-    .set({ tokenHash: sha256(token), tokenExpiresAt: new Date(Date.now() + ttlMs), updatedAt: new Date() })
+    .set({ tokenHash: hashes, tokenExpiresAt: new Date(Date.now() + ttlMs), updatedAt: new Date() })
     .where(eq(patientAccountsTable.id, accountId));
   return token;
 }
@@ -176,7 +184,7 @@ export function checkPassword(password: unknown): string {
 export async function setPasswordWithToken(token: unknown, password: unknown): Promise<string> {
   const clean = checkPassword(password);
   if (typeof token !== "string" || !/^[0-9a-f]{64}$/.test(token)) throw new AccountError("Este enlace ya no es válido. Pide uno nuevo.");
-  const [account] = await db.select().from(patientAccountsTable).where(eq(patientAccountsTable.tokenHash, sha256(token)));
+  const [account] = await db.select().from(patientAccountsTable).where(sql`position(${sha256(token)} in coalesce(${patientAccountsTable.tokenHash}, '')) > 0`);
   if (!account || !account.tokenExpiresAt || account.tokenExpiresAt.getTime() < Date.now()) {
     throw new AccountError("Este enlace ya no es válido. Pide uno nuevo.");
   }

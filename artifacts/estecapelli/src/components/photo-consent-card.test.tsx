@@ -98,6 +98,10 @@ describe("Autorización para fotografías (clínica)", () => {
     expect(screen.getByText(/Registrada por Ana Admin/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ver archivo" })).toHaveAttribute("href", "/api/leads/lead-1/photo-consent/c1/file");
     expect(screen.getByRole("button", { name: "Revocar" })).toBeInTheDocument();
+    // con la autorización ya otorgada no se ofrece pedirla de nuevo
+    expect(screen.queryByRole("button", { name: /Enviar enlace/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Registrar documento firmado/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Firmar en tableta/ })).toBeNull();
   });
 
   it("elige la autorización vigente por encima de las pendientes o revocadas", () => {
