@@ -1330,6 +1330,25 @@ describe("Fases del proceso: captura del personal después de la pre-evaluación
     await request(app).get("/api/leads").expect(401);
   });
 
+  it("la ficha de la clínica muestra una sola foto por vista aunque el paciente la repita", async () => {
+    const lead = await createPatient({ documentId: "22.222.222-2", phone: "+56944444444", email: "repite@example.com" });
+    const jpeg = Buffer.from(
+      "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AVN//2Q==",
+      "base64",
+    );
+    let lastId = "";
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const draft = await request(app).post(`/api/patients/${lead.token}/photos`)
+        .set("Content-Type", "image/jpeg").set("x-photo-key", "frontal").set("x-photo-source", "upload").send(jpeg).expect(201);
+      lastId = draft.body.id;
+      if (attempt < 3) await request(app).post(`/api/patients/${lead.token}/photos/${lastId}/confirm`).expect(200);
+    }
+    const detail = (await request(app).get(`/api/leads/${lead.id}`).set("Cookie", staff()).expect(200)).body as { photoCount: number; photos: Array<{ id: string; key: string }> };
+    expect(detail.photos.filter((photo) => photo.key === "frontal")).toHaveLength(1);
+    expect(detail.photos[0].id).toBe(lastId);
+    expect(detail.photoCount).toBe(1);
+  });
+
   describe("video por vista (plan Oro)", () => {
     // Contenedores mínimos con la cabecera real de cada formato (no son videos reproducibles, pero sí detectables).
     const MP4 = Buffer.concat([Buffer.from([0, 0, 0, 0x18]), Buffer.from("ftypisom", "latin1"), Buffer.alloc(4000, 7)]);
