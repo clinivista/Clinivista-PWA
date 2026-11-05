@@ -48,6 +48,7 @@ import { isCenterActive } from "../lib/centers";
 import { assertCanAddPatient, sendIfPlanLimit } from "../lib/plan-limits";
 import { channelProblem } from "../lib/clinic-channels";
 import { clinicIdentity, findCenterBySlug } from "../lib/clinic-identity";
+import { clinicContact } from "../lib/clinic-contact";
 import { cleanIntake, getSpecialty } from "../lib/specialties";
 import { changedFields, recordPatientUpdate } from "../lib/patient-edits";
 import { ALLOWED_IMAGE_TYPES, MAX_PHOTO_BYTES, parseImageRequest, parseOptionalPixelDimension } from "../lib/image-upload";
@@ -367,6 +368,18 @@ router.get("/patients/:token/clinic", async (req, res): Promise<void> => {
     return;
   }
   res.json(await clinicIdentity(lead.centerId));
+});
+
+// Cómo agendar su hora en esta clínica: teléfono, WhatsApp y link de agendamiento (lo que la clínica haya puesto).
+router.get("/patients/:token/contact", async (req, res): Promise<void> => {
+  const params = GetPatientParams.safeParse(req.params);
+  const lead = params.success ? await findLeadByToken(params.data.token) : undefined;
+  if (!lead) {
+    res.status(404).json({ error: "Este enlace ya no está disponible." });
+    return;
+  }
+  res.set("Cache-Control", "private, no-store");
+  res.json(await clinicContact(lead.centerId ?? DEFAULT_CENTER_ID));
 });
 
 // The photos this patient must take (the clinic's configured pre-evaluación).

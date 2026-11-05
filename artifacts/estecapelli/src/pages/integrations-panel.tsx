@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Check, Loader2, MessageCircle, Share2, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { BOOKING_TEXT } from "@/lib/booking-i18n";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/lib/language";
 import { INTEGRATIONS_TEXT, INTEGRATION_CATEGORIES, INTEGRATION_NAMES, type IntegrationCategory } from "@/lib/integrations-i18n";
 
-type Catalog = { catalog: Array<{ id: string; category: string }>; requested: string[] };
+type Catalog = { catalog: Array<{ id: string; category: string }>; requested: string[]; links?: Record<string, string> };
+const BOOKING_IDS = ["medilink", "agendapro", "reservo"];
 
 const CATEGORY_ICON: Record<IntegrationCategory, LucideIcon> = { redes: Share2, agenda: CalendarDays, mensajeria: MessageCircle };
 const KEY = ["/api/clinic/integrations"];
@@ -26,6 +29,43 @@ const INTEGRATION_LOGOS: Record<string, string> = {
   youtube: `${import.meta.env.BASE_URL}integrations/youtube.png`,
   whatsapp: `${import.meta.env.BASE_URL}integrations/whatsapp.png`,
 };
+
+// Espacio para pegar el link de agendamiento en línea (Medilink, AgendaPro, Reservo): el paciente lo ve junto al teléfono y al WhatsApp.
+function BookingLinkField({ id, saved, onSaved }: { id: string; saved: string; onSaved: (data: Catalog) => void }) {
+  const { lang } = useLanguage();
+  const b = BOOKING_TEXT[lang];
+  const { toast } = useToast();
+  const [value, setValue] = useState(saved);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => setValue(saved), [saved]);
+  const save = async () => {
+    setBusy(true);
+    try {
+      const response = await fetch(`/api/clinic/integrations/${encodeURIComponent(id)}/link`, { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: value }) });
+      const body = (await response.json().catch(() => null)) as (Catalog & { error?: string }) | null;
+      if (response.status === 400) { toast({ variant: "destructive", title: b.linkInvalid }); return; }
+      if (!response.ok || !body) throw new Error();
+      onSaved(body);
+      toast({ title: value.trim() === "" ? b.linkRemoved : b.linkSaved });
+    } catch {
+      toast({ variant: "destructive", title: INTEGRATIONS_TEXT[lang].cantSave, description: INTEGRATIONS_TEXT[lang].tryAgain });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="flex flex-col gap-1.5 rounded-2xl bg-[#F5F2EE] p-3" data-testid={`integration-${id}-link`}>
+      <label htmlFor={`link-${id}`} className="text-sm font-bold text-foreground">{b.linkLabel}</label>
+      <p className="text-xs text-muted-foreground">{b.linkHint}</p>
+      <div className="flex gap-2">
+        <Input id={`link-${id}`} type="url" inputMode="url" autoCapitalize="none" autoCorrect="off" maxLength={300} dir="ltr" placeholder={b.linkPlaceholder} className="h-10 min-w-0 flex-1 rounded-full bg-white" value={value} onChange={(event) => setValue(event.target.value)} />
+        <Button type="button" className="h-10 shrink-0 rounded-full font-bold" disabled={busy || value.trim() === saved} onClick={() => void save()}>
+          {busy && <Loader2 className="w-4 h-4 me-1.5 animate-spin" />}{b.linkSave}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export function IntegrationsPanel() {
   const { lang } = useLanguage();
@@ -105,6 +145,7 @@ export function IntegrationsPanel() {
                           </span>
                         )}
                       </div>
+                      {BOOKING_IDS.includes(item.id) && <BookingLinkField id={item.id} saved={data.links?.[item.id] ?? ""} onSaved={(body) => queryClient.setQueryData(KEY, body)} />}
                       {isRequested && <p className="text-xs text-muted-foreground">{x.requestedNote}</p>}
                       <Button
                         variant={isRequested ? "outline" : "default"}

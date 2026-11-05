@@ -185,6 +185,91 @@
      ]
     },
     {
+     "t": "h3",
+     "text": "Guida vocale e scatto automatico",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Per tutte e cinque le foto l'app ti guida con una voce, testi grandi sullo schermo e una piccola animazione nell'angolo che mostra la postura. Prima vedrai una schermata iniziale: alza il volume e tocca «Avvia la guida vocale». Poi muovi il telefono (o la testa, come dice la voce) finché l'ovale diventa verde: resta fermo e la foto si scatta da sola dopo un conto alla rovescia di tre secondi. Se preferisci, tocca «Preferisco scattare la foto da solo»: l'ovale diventa verde anche quando l'inquadratura è buona e tu premi il pulsante bianco. «Riascolta» ripete l'ultima indicazione.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Foto 1 · Vista frontale: guarda dritto la fotocamera e metti la testa nell'ovale.",
+      "Foto 2 · Vertice (sommità): abbassa la testa per mostrare la parte alta; la voce ti dice come muovere il telefono.",
+      "Foto 3 e 4 · Temporale destra e sinistra: tieni il telefono davanti a te e gira la testa verso il lato indicato dalla voce; la foto non viene scattata finché la rotazione non basta.",
+      "Foto 5 · Zona donatrice: si scatta davanti a uno specchio (vedi il paragrafo dopo le immagini)."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-1-frontal.webp",
+     "alt": "Vista frontale",
+     "caption": "Vista frontale",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-2-superior.webp",
+     "alt": "Vertice (sommità)",
+     "caption": "Vertice (sommità)",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-3-lado-derecho.webp",
+     "alt": "Temporale destra",
+     "caption": "Temporale destra",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-4-lado-izquierdo.webp",
+     "alt": "Temporale sinistra",
+     "caption": "Temporale sinistra",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-5-zona-donante.webp",
+     "alt": "Zona donatrice davanti allo specchio",
+     "caption": "Zona donatrice davanti allo specchio",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Zona donatrice, con uno specchio: mettiti di spalle a un grande specchio, tieni il telefono con lo schermo verso di te (fotocamera frontale) e guarda lo schermo: vedrai lo specchio dietro di te. Muovi il telefono finché il riflesso della nuca è dentro l'ovale, più piccolo in questa foto. L'app ritaglia la foto lasciando solo la parte posteriore della testa, senza l'altro tuo riflesso. Se non riesce a rilevare la nuca, la voce ti avvisa che puoi toccare il pulsante bianco quando la vedi dentro l'ovale.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "Se il telefono non consente la guida automatica o la voce non si sente, l'app te lo segnala e puoi scattare la foto da solo con il pulsante bianco: i testi sullo schermo dicono lo stesso della voce. Una persona che ti accompagna può aiutarti.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
      "t": "legend",
      "items": [
       "Indietro: torna ai tuoi dati.",
@@ -338,6 +423,10 @@
       "Cosa succede dopo: revisione del caso (fino a 24 giorni lavorativi), contatto via WhatsApp o e-mail e organizzazione della tua visita.",
       "Torna alla home."
      ]
+    },
+    {
+     "t": "p",
+     "text": "Nella schermata di conferma, se la tua clinica l'ha configurato, vedrai «Per prenotare la visita puoi usare:» con tre pulsanti: chiamare, scrivere su WhatsApp e prenotare online. Compare solo ciò che la clinica ha compilato. Lo stesso si vede nel tuo account."
     }
    ],
    "key": "submit"
@@ -382,6 +471,10 @@
     {
      "t": "note",
      "text": "Non condividere mai la tua password. La clinica non te la chiederà né per messaggio né per telefono."
+    },
+    {
+     "t": "tip",
+     "text": "Il link per creare la password dura 7 giorni. Se hai ricevuto più e-mail, funzionano gli ultimi cinque link; creata la password, tutti smettono di valere. Se nessuno funziona, chiedine uno nuovo con «Ho dimenticato la password»."
     }
    ],
    "key": "account"
@@ -962,6 +1055,10 @@
      "only": [
       "dermatologia"
      ]
+    },
+    {
+     "t": "p",
+     "text": "Ogni vista mostra una sola foto: se il paziente ha ripetuto uno scatto, resta il più recente e i precedenti vengono sostituiti. L'intestazione con nome e telefono resta fissa in alto; il riepilogo del paziente (consulti, novità e autorizzazione) scorre con la scheda per non coprire le foto."
     }
    ],
    "key": "ficha"
@@ -1511,6 +1608,18 @@
     {
      "t": "note",
      "text": "Richiedere un'integrazione registra soltanto l'interesse della tua clinica; non collega nulla da sola. Clinivista usa queste richieste per decidere quali collegare per prime."
+    },
+    {
+     "t": "p",
+     "text": "Le schede di Medilink, AgendaPro e Reservo hanno un campo «Link di prenotazione online»: incolla il link dove i tuoi pazienti prenotano (deve iniziare con https://) e tocca «Salva link»; se è vuoto viene rimosso. Se lo compili, il paziente vedrà, nella schermata finale e nel suo account, «Per prenotare la visita puoi usare:» con tre pulsanti: chiamare, WhatsApp e prenotare online."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Il telefono e il WhatsApp provengono da «Dati della clinica» (compilati dal supra-controllo; il WhatsApp è facoltativo).",
+      "Se inserisci un link in più di una scheda, il paziente ne vede uno solo, in quest'ordine: Medilink, AgendaPro, Reservo.",
+      "Salvare il link non collega l'integrazione: mostra solo il pulsante al paziente."
+     ]
     }
    ]
   },
@@ -1567,7 +1676,7 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Nella scheda del paziente, il riquadro «Autorizzazione per le fotografie» mostra se il paziente ha autorizzato la clinica a scattare e conservare le sue foto cliniche e permette di registrare l'autorizzazione in tre modi."
+     "text": "Nella scheda del paziente, il riquadro «Autorizzazione per le fotografie» mostra se il paziente ha autorizzato la clinica a scattare e conservare le sue foto cliniche e permette di registrare l'autorizzazione in tre modi. Quella scheda offre di inviare un link, registrare un documento o firmare su tablet solo finché il paziente non ha autorizzato: se ha scattato le foto da solo, l'autorizzazione è già registrata e quei pulsanti sono nascosti."
     },
     {
      "t": "ul",

@@ -15,7 +15,8 @@ vi.mock("@workspace/db", async () => {
 import * as mockedDb from "@workspace/db";
 import clinicIntegrationsRouter from "./clinic-integrations";
 import { createSession } from "../lib/sessions";
-import { INTEGRATION_CATALOG, integrationRequestsOf } from "../lib/integrations";
+import { INTEGRATION_CATALOG, integrationRequestsOf, parseBookingUrl } from "../lib/integrations";
+import { clinicContact } from "../lib/clinic-contact";
 
 const pglite = (mockedDb as unknown as { __pglite: { exec(sql: string): Promise<unknown> } }).__pglite;
 
@@ -31,11 +32,14 @@ beforeAll(async () => {
       requested_by_name text NOT NULL DEFAULT '', requested_by_email text NOT NULL DEFAULT '', created_at timestamptz NOT NULL DEFAULT now()
     );
     CREATE UNIQUE INDEX integration_requests_center_integration_idx ON integration_requests (center_id, integration);
+    CREATE TABLE clinic_booking_links (center_id text NOT NULL, integration text NOT NULL, url text NOT NULL, updated_at timestamptz NOT NULL DEFAULT now());
+    CREATE UNIQUE INDEX clinic_booking_links_center_integration_idx ON clinic_booking_links (center_id, integration);
+    CREATE TABLE clinic_profiles (center_id text PRIMARY KEY, country text NOT NULL DEFAULT 'CL', rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', whatsapp text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
   `);
 });
 
 beforeEach(async () => {
-  await pglite.exec(`TRUNCATE users, integration_requests;`);
+  await pglite.exec(`TRUNCATE users, integration_requests, clinic_booking_links, clinic_profiles;`);
   await pglite.exec(`
     INSERT INTO users (id, email, email_normalized, password_hash, name, role, center_id) VALUES
       ('admin-a', 'ana@x.cl', 'ana@x.cl', 'x', 'Ana Admin', 'administrativo', 'clinic-a'),
@@ -109,5 +113,36 @@ describe("integraciones de la clínica", () => {
     } finally {
       await pglite.exec(`ALTER TABLE integration_requests_old RENAME TO integration_requests;`);
     }
+  });
+});
+
+describe("link de agendamiento en línea", () => {
+  it("la clínica guarda, cambia y quita el link; cada clínica ve solo el suyo", async () => {
+    const saved = await request(app).put("/api/clinic/integrations/medilink/link").set("Cookie", asAdminA()).send({ url: "agenda.medilink.cl/clinica-a" }).expect(200);
+    expect(saved.body.links).toEqual({ medilink: "https://agenda.medilink.cl/clinica-a" });
+    await request(app).put("/api/clinic/integrations/medilink/link").set("Cookie", asAdminA()).send({ url: "https://agenda.medilink.cl/otro" }).expect(200);
+    expect((await request(app).get("/api/clinic/integrations").set("Cookie", asAdminA()).expect(200)).body.links).toEqual({ medilink: "https://agenda.medilink.cl/otro" });
+    expect((await request(app).get("/api/clinic/integrations").set("Cookie", cookie("med-b", "medico", "clinic-b")).expect(200)).body.links).toEqual({});
+    const removed = await request(app).put("/api/clinic/integrations/medilink/link").set("Cookie", asAdminA()).send({ url: "" }).expect(200);
+    expect(removed.body.links).toEqual({});
+  });
+
+  it("rechaza enlaces inseguros o inválidos y las integraciones que no agendan", async () => {
+    for (const url of ["http://agenda.cl/x", "javascript:alert(1)", "no es un enlace", "https://localhost"]) {
+      await request(app).put("/api/clinic/integrations/reservo/link").set("Cookie", asAdminA()).send({ url }).expect(400);
+    }
+    await request(app).put("/api/clinic/integrations/facebook/link").set("Cookie", asAdminA()).send({ url: "https://a.cl" }).expect(404);
+    await request(app).put("/api/clinic/integrations/reservo/link").send({ url: "https://a.cl" }).expect(401);
+    expect(parseBookingUrl("  https://agendapro.com/c/abc  ")).toBe("https://agendapro.com/c/abc");
+  });
+
+  it("el paciente recibe teléfono, WhatsApp y el link (Medilink antes que AgendaPro y Reservo)", async () => {
+    expect(await clinicContact("clinic-a")).toEqual({ phone: "", whatsapp: "", bookingUrl: "", bookingName: "" });
+    await pglite.exec(`INSERT INTO clinic_profiles (center_id, phone, whatsapp) VALUES ('clinic-a', '+56 2 2345 6789', '+56 9 8765 4321');`);
+    await request(app).put("/api/clinic/integrations/reservo/link").set("Cookie", asAdminA()).send({ url: "https://reservo.cl/a" }).expect(200);
+    expect((await clinicContact("clinic-a")).bookingName).toBe("reservo");
+    await request(app).put("/api/clinic/integrations/medilink/link").set("Cookie", asAdminA()).send({ url: "https://medilink.cl/a" }).expect(200);
+    expect(await clinicContact("clinic-a")).toEqual({ phone: "+56 2 2345 6789", whatsapp: "+56 9 8765 4321", bookingUrl: "https://medilink.cl/a", bookingName: "medilink" });
+    expect(await clinicContact("clinic-b")).toEqual({ phone: "", whatsapp: "", bookingUrl: "", bookingName: "" });
   });
 });

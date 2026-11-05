@@ -36,9 +36,9 @@ export const isCountry = (value: unknown): value is string => typeof value === "
 export const documentKind = (country: string): "rut" | "pasaporte" => (country === "CL" ? "rut" : "pasaporte");
 
 export type UserProfile = { rut: string; address: string; prefix: string; specialty: string };
-export type ClinicProfile = { country: string; rut: string; address: string; phone: string };
+export type ClinicProfile = { country: string; rut: string; address: string; phone: string; whatsapp: string };
 export const EMPTY_USER_PROFILE: UserProfile = { rut: "", address: "", prefix: "", specialty: "" };
-export const EMPTY_CLINIC_PROFILE: ClinicProfile = { country: DEFAULT_COUNTRY, rut: "", address: "", phone: "" };
+export const EMPTY_CLINIC_PROFILE: ClinicProfile = { country: DEFAULT_COUNTRY, rut: "", address: "", phone: "", whatsapp: "" };
 
 const MAX_ADDRESS = 200;
 export const PROFILE_KEYS = ["rut", "address", "prefix", "specialty"] as const;
@@ -125,6 +125,12 @@ export function parseClinicProfile(source: Source, options: { require: boolean }
     if (phone === "") return { error: "El teléfono de la clínica es obligatorio." };
     value.phone = phone;
   }
+  // WhatsApp: opcional; vacío lo quita.
+  if (body.whatsapp !== undefined) {
+    const whatsapp = parseUserPhone(body.whatsapp);
+    if (whatsapp === null) return { error: "Escribe un WhatsApp válido (solo números, +, espacios, guiones o paréntesis)." };
+    value.whatsapp = whatsapp;
+  }
   return { value };
 }
 
@@ -157,7 +163,7 @@ export async function saveUserProfile(userId: string, value: Partial<UserProfile
 export async function clinicProfileOf(centerId: string): Promise<ClinicProfile> {
   try {
     const [row] = await db.select().from(clinicProfilesTable).where(eq(clinicProfilesTable.centerId, centerId));
-    return row ? { country: row.country, rut: row.rut, address: row.address, phone: row.phone } : EMPTY_CLINIC_PROFILE;
+    return row ? { country: row.country, rut: row.rut, address: row.address, phone: row.phone, whatsapp: row.whatsapp } : EMPTY_CLINIC_PROFILE;
   } catch (error) {
     logger.warn({ err: error }, "clinic_profiles unavailable");
     return EMPTY_CLINIC_PROFILE;
@@ -169,7 +175,7 @@ export async function clinicProfilesOf(centerIds: string[]): Promise<Map<string,
   if (centerIds.length === 0) return map;
   try {
     const rows = await db.select().from(clinicProfilesTable).where(inArray(clinicProfilesTable.centerId, centerIds));
-    for (const row of rows) map.set(row.centerId, { country: row.country, rut: row.rut, address: row.address, phone: row.phone });
+    for (const row of rows) map.set(row.centerId, { country: row.country, rut: row.rut, address: row.address, phone: row.phone, whatsapp: row.whatsapp });
   } catch (error) {
     logger.warn({ err: error }, "clinic_profiles unavailable");
   }

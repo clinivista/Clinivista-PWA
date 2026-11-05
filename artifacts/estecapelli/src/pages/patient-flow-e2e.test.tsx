@@ -19,6 +19,7 @@ import { LanguageProvider } from "@/lib/language";
 import { Toaster } from "@/components/ui/toaster";
 import PatientFlow from "./patient";
 
+vi.mock("@/components/booking-contact", () => ({ BookingContact: () => null }));
 vi.mock("@/components/photo-editor", () => ({
   PhotoEditor: ({ onDiscardAdjustment }: { onDiscardAdjustment: () => void }) => (
     <section aria-label="Editor técnico simulado">

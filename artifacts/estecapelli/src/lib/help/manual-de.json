@@ -185,6 +185,91 @@
      ]
     },
     {
+     "t": "h3",
+     "text": "Sprachführung und automatische Aufnahme",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Bei allen fünf Aufnahmen führt Sie die App mit einer Stimme, großen Texten auf dem Bildschirm und einer kleinen Animation in der Ecke, die die Haltung zeigt. Zuerst sehen Sie einen Startbildschirm: Stellen Sie die Lautstärke hoch und tippen Sie auf „Sprachführung starten“. Bewegen Sie dann das Handy (oder den Kopf, wie die Stimme sagt), bis das Oval grün wird: Bleiben Sie ruhig, das Foto wird nach einem Countdown von drei Sekunden automatisch aufgenommen. Wenn Sie es lieber selbst tun, tippen Sie auf „Ich nehme das Foto lieber selbst auf“: Das Oval wird bei gutem Bildausschnitt ebenfalls grün und Sie drücken den weißen Knopf. „Nochmal anhören“ wiederholt die letzte Anweisung.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Foto 1 · Vorderansicht: Schauen Sie geradeaus in die Kamera und bringen Sie den Kopf in das Oval.",
+      "Foto 2 · Vertex (Scheitel): Neigen Sie den Kopf, um den oberen Bereich zu zeigen; die Stimme sagt, wie Sie das Handy bewegen.",
+      "Fotos 3 und 4 · Rechte und linke Schläfe: Halten Sie das Handy vor sich und drehen Sie den Kopf zu der Seite, die die Stimme nennt; das Foto wird erst aufgenommen, wenn die Drehung ausreicht.",
+      "Foto 5 · Spenderbereich: wird vor einem Spiegel aufgenommen (siehe Absatz nach den Bildern)."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-1-frontal.webp",
+     "alt": "Vorderansicht",
+     "caption": "Vorderansicht",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-2-superior.webp",
+     "alt": "Vertex (Scheitel)",
+     "caption": "Vertex (Scheitel)",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-3-lado-derecho.webp",
+     "alt": "Rechte Schläfe",
+     "caption": "Rechte Schläfe",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-4-lado-izquierdo.webp",
+     "alt": "Linke Schläfe",
+     "caption": "Linke Schläfe",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-5-zona-donante.webp",
+     "alt": "Spenderbereich vor dem Spiegel",
+     "caption": "Spenderbereich vor dem Spiegel",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Spenderbereich mit Spiegel: Stellen Sie sich mit dem Rücken zu einem großen Spiegel, halten Sie das Handy mit dem Bildschirm zu sich (Frontkamera) und schauen Sie auf den Bildschirm: Sie sehen den Spiegel hinter sich. Bewegen Sie das Handy, bis das Spiegelbild Ihres Hinterkopfs im Oval ist, das bei diesem Foto kleiner ist. Die App schneidet das Foto so zu, dass nur der Hinterkopf bleibt, ohne Ihr anderes Spiegelbild. Erkennt sie den Hinterkopf nicht, sagt die Stimme, dass Sie den weißen Knopf tippen können, wenn Sie ihn im Oval sehen.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "Erlaubt das Handy die automatische Führung nicht oder ist die Stimme nicht zu hören, weist die App darauf hin und Sie können das Foto selbst mit dem weißen Knopf aufnehmen: Die Texte auf dem Bildschirm sagen dasselbe wie die Stimme. Eine Person, die Sie begleitet, kann helfen.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
      "t": "legend",
      "items": [
       "Zurück: führt zu Ihren Daten zurück.",
@@ -338,6 +423,10 @@
       "Wie es weitergeht: Prüfung Ihres Falls (bis zu 24 Werktage), Kontaktaufnahme per WhatsApp oder E-Mail und Vereinbarung Ihrer Konsultation.",
       "Zurück zur Startseite."
      ]
+    },
+    {
+     "t": "p",
+     "text": "Auf dem Bestätigungsbildschirm sehen Sie, wenn Ihre Klinik es eingerichtet hat, „Einen Termin können Sie so vereinbaren:“ mit drei Schaltflächen: anrufen, per WhatsApp schreiben und online buchen. Es erscheint nur, was die Klinik ausgefüllt hat. Dasselbe sehen Sie in Ihrem Konto."
     }
    ],
    "key": "submit"
@@ -382,6 +471,10 @@
     {
      "t": "note",
      "text": "Geben Sie Ihr Passwort niemals weiter. Die Klinik fragt Sie weder per Nachricht noch telefonisch danach."
+    },
+    {
+     "t": "tip",
+     "text": "Der Link zum Erstellen Ihres Passworts gilt 7 Tage. Haben Sie mehrere E-Mails erhalten, funktionieren die letzten fünf Links; nach dem Erstellen des Passworts sind alle ungültig. Funktioniert keiner, fordern Sie mit „Passwort vergessen“ einen neuen an."
     }
    ],
    "key": "account"
@@ -962,6 +1055,10 @@
      "only": [
       "dermatologia"
      ]
+    },
+    {
+     "t": "p",
+     "text": "Jede Ansicht zeigt nur ein Foto: Hat der Patient eine Aufnahme wiederholt, bleibt die neueste und die früheren werden ersetzt. Die Kopfzeile mit Name und Telefon bleibt oben fixiert; die Patientenübersicht (Konsultationen, Neuigkeiten und Einwilligung) scrollt mit der Akte, damit sie die Fotos nicht verdeckt."
     }
    ],
    "key": "ficha"
@@ -1511,6 +1608,18 @@
     {
      "t": "note",
      "text": "Eine Integration anzufragen, hält nur das Interesse Ihrer Klinik fest; es verbindet nichts von selbst. Clinivista nutzt diese Anfragen, um zu entscheiden, welche zuerst angebunden werden."
+    },
+    {
+     "t": "p",
+     "text": "Die Karten von Medilink, AgendaPro und Reservo haben ein Feld „Link zur Online-Terminbuchung“: Fügen Sie den Link ein, über den Ihre Patienten buchen (muss mit https:// beginnen), und tippen Sie auf „Link speichern“; leer entfernt er ihn. Wenn Sie ihn ausfüllen, sieht der Patient auf dem Abschlussbildschirm und in seinem Konto „Einen Termin können Sie so vereinbaren:“ mit drei Schaltflächen: anrufen, WhatsApp und online buchen."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Telefon und WhatsApp stammen aus „Klinikdaten“ (von der Supra-Kontrolle ausgefüllt; WhatsApp ist optional).",
+      "Tragen Sie bei mehr als einer Karte einen Link ein, sieht der Patient nur einen, in dieser Reihenfolge: Medilink, AgendaPro, Reservo.",
+      "Das Speichern des Links verbindet die Integration nicht: Es zeigt dem Patienten nur die Schaltfläche."
+     ]
     }
    ]
   },
@@ -1567,7 +1676,7 @@
    "blocks": [
     {
      "t": "p",
-     "text": "In der Patientenakte zeigt das Feld „Einwilligung zu Fotos“, ob der Patient der Klinik erlaubt hat, klinische Fotos aufzunehmen und zu speichern, und erlaubt die Erfassung auf drei Wegen."
+     "text": "In der Patientenakte zeigt das Feld „Einwilligung zu Fotos“, ob der Patient der Klinik erlaubt hat, klinische Fotos aufzunehmen und zu speichern, und erlaubt die Erfassung auf drei Wegen. Diese Karte bietet Link senden, Dokument registrieren oder Unterschrift am Tablet nur an, solange der Patient nicht eingewilligt hat: Hat er die Fotos selbst gemacht, ist die Einwilligung bereits erfasst und diese Schaltflächen sind ausgeblendet."
     },
     {
      "t": "ul",

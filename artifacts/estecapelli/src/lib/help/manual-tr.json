@@ -185,6 +185,91 @@
      ]
     },
     {
+     "t": "h3",
+     "text": "Sesli rehber ve otomatik çekim",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Beş çekimin hepsinde uygulama sizi bir sesle, ekranda büyük yazılarla ve köşede duruşu gösteren küçük bir animasyonla yönlendirir. Önce bir başlangıç ekranı görürsünüz: sesi açın ve «Sesli rehberi başlat»a dokunun. Sonra oval yeşile dönene kadar telefonu (veya sesin söylediği gibi başınızı) hareket ettirin: kıpırdamayın, üç saniyelik geri sayımdan sonra fotoğraf kendiliğinden çekilir. İsterseniz «Fotoğrafı kendim çekmeyi tercih ederim»e dokunun: çerçeve iyi olduğunda oval yine yeşile döner ve beyaz düğmeye siz basarsınız. «Tekrar dinle» son talimatı yineler.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Fotoğraf 1 · Önden görünüm: kameraya doğru bakın ve başınızı ovalin içine yerleştirin.",
+      "Fotoğraf 2 · Vertex (tepe): üst bölgeyi göstermek için başınızı eğin; ses telefonu nasıl hareket ettireceğinizi söyler.",
+      "Fotoğraf 3 ve 4 · Sağ ve sol şakak: telefonu önünüzde tutun ve başınızı sesin söylediği yöne çevirin; dönüş yeterli olana kadar fotoğraf çekilmez.",
+      "Fotoğraf 5 · Donör bölge: aynanın önünde çekilir (görsellerden sonraki paragrafa bakın)."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-1-frontal.webp",
+     "alt": "Önden görünüm",
+     "caption": "Önden görünüm",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-2-superior.webp",
+     "alt": "Vertex (tepe)",
+     "caption": "Vertex (tepe)",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-3-lado-derecho.webp",
+     "alt": "Sağ şakak",
+     "caption": "Sağ şakak",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-4-lado-izquierdo.webp",
+     "alt": "Sol şakak",
+     "caption": "Sol şakak",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-5-zona-donante.webp",
+     "alt": "Aynanın önünde donör bölge",
+     "caption": "Aynanın önünde donör bölge",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Aynalı donör bölge: büyük bir aynaya sırtınızı dönün, telefonu ekran size bakacak şekilde (ön kamera) tutun ve ekrana bakın: arkanızdaki aynayı göreceksiniz. Ensenizin yansıması, bu fotoğrafta daha küçük olan ovalin içine girene kadar telefonu hareket ettirin. Uygulama fotoğrafı yalnızca başınızın arka kısmı kalacak şekilde, diğer yansımanız olmadan kırpar. Enseyi algılayamazsa ses, ovalin içinde gördüğünüzde beyaz düğmeye dokunabileceğinizi söyler.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "Telefon otomatik rehbere izin vermezse veya ses duyulmazsa uygulama sizi uyarır ve fotoğrafı beyaz düğmeyle kendiniz çekebilirsiniz: ekrandaki yazılar sesle aynı şeyi söyler. Yanınızdaki biri size yardım edebilir.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
      "t": "legend",
      "items": [
       "Geri: bilgilerine döner.",
@@ -338,6 +423,10 @@
       "Sırada ne var: vakanın incelenmesi (en fazla 24 iş saati), WhatsApp veya e-postayla iletişim ve muayenenin planlanması.",
       "Başlangıca dön."
      ]
+    },
+    {
+     "t": "p",
+     "text": "Onay ekranında, kliniğiniz ayarladıysa «Randevu almak için şunları kullanabilirsiniz:» ve üç düğme görürsünüz: ara, WhatsApp'tan yaz ve çevrim içi randevu al. Yalnızca klinik tarafından doldurulanlar görünür. Aynısı hesabınızda da görünür."
     }
    ],
    "key": "submit"
@@ -382,6 +471,10 @@
     {
      "t": "note",
      "text": "Şifreni kimseyle paylaşma. Klinik şifreni mesajla veya telefonla asla istemez."
+    },
+    {
+     "t": "tip",
+     "text": "Şifre oluşturma bağlantısı 7 gün geçerlidir. Birden fazla e-posta aldıysanız son beş bağlantı çalışır; şifreyi oluşturunca hepsi geçersiz olur. Hiçbiri çalışmazsa «Şifremi unuttum» ile yenisini isteyin."
     }
    ],
    "key": "account"
@@ -962,6 +1055,10 @@
      "only": [
       "dermatologia"
      ]
+    },
+    {
+     "t": "p",
+     "text": "Her görünümde tek bir fotoğraf gösterilir: hasta bir çekimi tekrarladıysa en yenisi kalır, öncekiler değiştirilir. Ad ve telefonun olduğu başlık üstte sabit kalır; hasta özeti (muayeneler, yenilikler ve izin) fotoğrafları kapatmasın diye dosyayla birlikte kayar."
     }
    ],
    "key": "ficha"
@@ -1511,6 +1608,18 @@
     {
      "t": "note",
      "text": "Bir entegrasyon istemek yalnızca kliniğinin ilgisini kaydeder; kendi başına hiçbir şeyi bağlamaz. Clinivista bu istekleri hangilerini önce bağlayacağına karar vermek için kullanır."
+    },
+    {
+     "t": "p",
+     "text": "Medilink, AgendaPro ve Reservo kartlarında «Çevrim içi randevu bağlantısı» alanı vardır: hastalarınızın randevu aldığı bağlantıyı yapıştırın (https:// ile başlamalıdır) ve «Bağlantıyı kaydet»e dokunun; boş bırakırsanız kaldırılır. Doldurursanız hasta son ekranında ve hesabında «Randevu almak için şunları kullanabilirsiniz:» ve üç düğme görür: ara, WhatsApp ve çevrim içi randevu."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Telefon ve WhatsApp «Klinik bilgileri»nden gelir (supra-kontrol doldurur; WhatsApp isteğe bağlıdır).",
+      "Birden fazla karta bağlantı koyarsanız hasta yalnızca birini görür, şu sırayla: Medilink, AgendaPro, Reservo.",
+      "Bağlantıyı kaydetmek entegrasyonu bağlamaz: yalnızca hastaya düğmeyi gösterir."
+     ]
     }
    ]
   },
@@ -1567,7 +1676,7 @@
    "blocks": [
     {
      "t": "p",
-     "text": "Hasta dosyasındaki «Fotoğraf izni» kutusu, hastanın kliniğin klinik fotoğraflarını çekmesine ve saklamasına izin verip vermediğini gösterir ve izni üç yolla kaydetmenizi sağlar."
+     "text": "Hasta dosyasındaki «Fotoğraf izni» kutusu, hastanın kliniğin klinik fotoğraflarını çekmesine ve saklamasına izin verip vermediğini gösterir ve izni üç yolla kaydetmenizi sağlar. Bu kart, hasta izin vermediği sürece yalnızca bağlantı gönderme, belge kaydetme veya tablette imzalama sunar: fotoğrafları kendi başına çektiyse izin zaten kayıtlıdır ve bu düğmeler gizlenir."
     },
     {
      "t": "ul",

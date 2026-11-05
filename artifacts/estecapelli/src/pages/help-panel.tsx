@@ -30,6 +30,12 @@ export function Block({ block }: { block: HelpBlock }) {
         {block.caption && <p className="mt-2 text-xs italic text-muted-foreground">{block.caption}</p>}
       </div>
     );
+    case "img": return (
+      <figure className="mx-auto w-full max-w-xs">
+        <img src={`${import.meta.env.BASE_URL}${block.src}`} alt={block.alt} loading="lazy" className="w-full rounded-2xl border border-[#E8E4DE] bg-white" />
+        {block.caption && <figcaption className="mt-1 text-center text-xs font-semibold text-muted-foreground">{block.caption}</figcaption>}
+      </figure>
+    );
     case "table": return (
       <div className="overflow-x-auto rounded-2xl border border-[#E8E4DE]">
         <table className="w-full text-sm">
@@ -41,7 +47,7 @@ export function Block({ block }: { block: HelpBlock }) {
   }
 }
 
-export const sectionText = (s: HelpSection) => [s.title, ...s.blocks.flatMap((b) => "text" in b ? [b.text] : "items" in b ? b.items : "rows" in b ? [...b.head, ...b.rows.flatMap((row) => Array.isArray(row) ? row : row.cells)] : [])].join(" ").toLowerCase();
+export const sectionText = (s: HelpSection) => [s.title, ...s.blocks.flatMap((b) => "text" in b ? [b.text] : "items" in b ? b.items : b.t === "img" ? [b.alt] : "rows" in b ? [...b.head, ...b.rows.flatMap((row) => Array.isArray(row) ? row : row.cells)] : [])].join(" ").toLowerCase();
 
 /** La especialidad de la clínica decide qué manual se muestra; si no es una conocida, el de capilar. */
 export const manualSpecialty = (specialty: string | undefined): ManualSpecialty =>

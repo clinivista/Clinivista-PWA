@@ -185,6 +185,91 @@
      ]
     },
     {
+     "t": "h3",
+     "text": "Voice guide and automatic capture",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "For all five shots the app guides you with a voice, large on-screen text and a small animation in the corner showing the posture. First you will see a start screen: turn the volume up and tap “Start the voice guide”. Then move the phone (or your head, as the voice says) until the oval turns green: hold still and the photo is taken by itself after a three-second countdown. If you prefer to do it yourself, tap “I prefer to take the photo myself”: the oval still turns green when the framing is good and you press the white button. “Listen again” repeats the last instruction.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Photo 1 · Front view: look straight at the camera and place your head inside the oval.",
+      "Photo 2 · Vertex (crown): lower your head to show the top; the voice tells you how to move the phone.",
+      "Photos 3 and 4 · Right and left temporal: keep the phone in front of you and turn your head to the side the voice says; the photo is not taken until the turn is enough.",
+      "Photo 5 · Donor area: taken in front of a mirror (see the paragraph after the images)."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-1-frontal.webp",
+     "alt": "Front view",
+     "caption": "Front view",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-2-superior.webp",
+     "alt": "Vertex (crown)",
+     "caption": "Vertex (crown)",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-3-lado-derecho.webp",
+     "alt": "Right temporal",
+     "caption": "Right temporal",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-4-lado-izquierdo.webp",
+     "alt": "Left temporal",
+     "caption": "Left temporal",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "img",
+     "src": "guides/manual/guia-5-zona-donante.webp",
+     "alt": "Donor area in front of the mirror",
+     "caption": "Donor area in front of the mirror",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Donor area, with a mirror: stand with your back to a large mirror, hold the phone with the screen facing you (front camera) and look at the screen: you will see the mirror behind you. Move the phone until the reflection of the back of your head is inside the oval, which is smaller in this photo. The app crops the photo to keep only the back of your head, without your other reflection. If it cannot detect the back of your head, the voice tells you that you can tap the white button when you see it inside the oval.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "tip",
+     "text": "If the phone does not allow the automatic guide or you cannot hear the voice, the app tells you and you can take the photo yourself with the white button: the on-screen texts say the same as the voice. Someone with you can help.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
      "t": "legend",
      "items": [
       "Back: returns to your details.",
@@ -338,6 +423,10 @@
       "What happens next: review of your case (up to 24 business hours), contact by WhatsApp or email and scheduling of your appointment.",
       "Back to Home."
      ]
+    },
+    {
+     "t": "p",
+     "text": "On the confirmation screen, if your clinic has set it up, you will see “To book your appointment you can use any of these:” with three buttons: call, message on WhatsApp and book online. Only what the clinic has filled in is shown. The same appears in your account."
     }
    ],
    "key": "submit"
@@ -382,6 +471,10 @@
     {
      "t": "note",
      "text": "Never share your password. The clinic will not ask you for it by message or by phone."
+    },
+    {
+     "t": "tip",
+     "text": "The link to create your password lasts 7 days. If you received more than one email, the last five links work; when you create your password all of them stop working. If none works, ask for a new one with “I forgot my password”."
     }
    ],
    "key": "account"
@@ -962,6 +1055,10 @@
      "only": [
       "dermatologia"
      ]
+    },
+    {
+     "t": "p",
+     "text": "Each view shows a single photo: if the patient retook a shot, the most recent one stays and the earlier ones are replaced. The header with the name and phone stays fixed at the top; the patient summary (consultations, updates and authorization) scrolls with the record so it does not cover the photos."
     }
    ],
    "key": "ficha"
@@ -1511,6 +1608,18 @@
     {
      "t": "note",
      "text": "Requesting an integration only records your clinic's interest; it does not connect anything by itself. Clinivista uses these requests to decide which ones to connect first."
+    },
+    {
+     "t": "p",
+     "text": "The Medilink, AgendaPro and Reservo cards have an “Online booking link” field: paste the link where your patients book (it must start with https://) and tap “Save link”; leaving it empty removes it. If you fill it in, the patient will see, on the final screen and in their account, “To book your appointment you can use any of these:” with three buttons: call, WhatsApp and book online."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "The phone and WhatsApp come from “Clinic details” (filled in by supra-control; WhatsApp is optional).",
+      "If you add a link on more than one card, the patient sees only one, in this order: Medilink, AgendaPro, Reservo.",
+      "Saving the link does not connect the integration: it only shows the button to the patient."
+     ]
     }
    ]
   },
@@ -1567,7 +1676,7 @@
    "blocks": [
     {
      "t": "p",
-     "text": "In the patient's record, the “Photograph authorization” box shows whether the patient authorized the clinic to take and store their clinical photos, and lets you record the authorization in three ways."
+     "text": "In the patient's record, the “Photograph authorization” box shows whether the patient authorized the clinic to take and store their clinical photos, and lets you record the authorization in three ways. That card only offers to send a link, register a document or sign on a tablet while the patient has not authorized: if they took the photos on their own, the authorization is already recorded and those buttons are hidden."
     },
     {
      "t": "ul",

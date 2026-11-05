@@ -51,6 +51,7 @@ import { getConfiguredPhotoProtocol, type PhotoProtocolView } from "@/lib/photo-
 import { formatBytes, reviewPhotoTechnicalQuality, type TechnicalPhotoReview } from "@/lib/photo-quality";
 import { BrandLogo } from "@/components/brand-logo";
 import { ClinicBadge } from "@/components/clinic-badge";
+import { BookingContact } from "@/components/booking-contact";
 
 async function dataUrlToFile(dataUrl: string, name: string): Promise<File> {
   const response = await fetch(dataUrl);
@@ -1885,6 +1886,8 @@ export default function PatientFlow({ clinicSlug, startAtData = false, onBackToW
                   ))}
                 </div>
               </div>
+
+              {token && <div className="mb-8"><BookingContact token={token} /></div>}
 
               <div className="mb-8 rounded-2xl border border-primary/20 bg-primary/5 p-5 text-left" data-testid="success-account-box">
                 <h3 className="mb-2 font-bold text-foreground">{accountText.successTitle}</h3>

@@ -7,6 +7,7 @@ const api = vi.hoisted(() => ({
   login: vi.fn(), forgot: vi.fn(), logout: vi.fn(), setup: vi.fn(), invalidate: vi.fn(), reset: vi.fn(), navigate: vi.fn(), search: "",
 }));
 
+vi.mock("@/components/booking-contact", () => ({ BookingContact: () => null }));
 vi.mock("@workspace/api-client-react", () => ({
   getGetPortalMeQueryKey: () => ["/api/portal/me"],
   getGetPortalOptionsQueryKey: () => ["/api/portal/options"],
