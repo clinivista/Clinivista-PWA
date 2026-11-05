@@ -9,7 +9,7 @@ import { analyzeHeadFit, ovalForFrame, type FitStatus } from "@/lib/head-fit";
 import { newMachine, step, type Machine, type SayKey } from "@/lib/auto-capture";
 import { GuideAudio } from "@/lib/guide-audio";
 import { createSegmenter, type Segmenter } from "@/lib/selfie-segmenter";
-import { createFaceTurn, type FaceTurn } from "@/lib/face-turn";
+import { createFaceTurn, faceTurnProblem, type FaceTurn } from "@/lib/face-turn";
 import { judgeTurn, newTurnState } from "@/lib/turn-fit";
 
 interface CameraModalProps {
@@ -72,6 +72,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
   const [fitStatus, setFitStatus] = useState<FitStatus>("none");
   const [message, setMessage] = useState<SayKey | "takeNow" | "unavailable" | null>(null);
   const [watchReady, setWatchReady] = useState(false);
+  const [diagnosis, setDiagnosis] = useState("");
   const [count, setCount] = useState<number | null>(null);
   const [muted, setMuted] = useState(false);
   const [voiceMissing, setVoiceMissing] = useState(false);
@@ -252,6 +253,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
     setStage("loading");
     const [segmenter, faceTurn] = await Promise.all([createSegmenter(), turnSide ? createFaceTurn() : Promise.resolve(null)]);
     faceTurnRef.current = faceTurn;
+    if (turnSide && !faceTurn) void faceTurnProblem().then(setDiagnosis);
     // Sin poder medir el giro no se toma la foto sola: una lateral que salga de frente no sirve.
     if (!segmenter || (turnSide && !faceTurn)) {
       setMessage("unavailable");
@@ -468,7 +470,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
           <p role="alert" data-testid="guide-no-voice" className="absolute bottom-3 start-3 end-28 rounded-2xl bg-amber-100 px-4 py-3 text-center text-base font-semibold text-amber-900">{guideText.noVoice}</p>
         )}
         {permissionState === "granted" && guided && message === "unavailable" && (
-          <p role="alert" data-testid="guide-unavailable" className="absolute top-3 inset-x-3 rounded-2xl bg-amber-100 px-4 py-3 text-center text-base font-semibold text-amber-900">{guideText.unavailable}</p>
+          <p role="alert" data-testid="guide-unavailable" className="absolute top-3 inset-x-3 rounded-2xl bg-amber-100 px-4 py-3 text-center text-base font-semibold text-amber-900">{guideText.unavailable}{diagnosis && <span data-testid="guide-diagnosis" className="mt-1 block text-xs font-medium opacity-80">{diagnosis}</span>}</p>
         )}
         {permissionState === "granted" && guided && stage === "loading" && (
           <div className="absolute inset-0 z-10 bg-black flex flex-col items-center justify-center gap-3 text-white" data-testid="guide-loading">
