@@ -74,7 +74,9 @@ describe("cámara con guía automática", () => {
   it("explains the silent switch in the intro, and warns when the browser cannot speak", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     renderModal();
-    expect(await screen.findByTestId("guide-tip")).toHaveTextContent(/no esté en silencio/);
+    expect(await screen.findByTestId("guide-step-2")).toHaveTextContent(/botón de silencio/);
+    expect(screen.getByTestId("guide-step-3")).toHaveTextContent(/ahí comenzaré a hablarte/);
+    expect(screen.getByTestId("camera-frame").className).not.toContain("border-2"); // sin rectángulo tampoco en el recuadro de inicio
     await user.click(screen.getByTestId("guide-start"));
     await act(async () => { await vi.advanceTimersByTimeAsync(300); });
     expect(screen.getByTestId("guide-no-voice")).toHaveTextContent(/no puede hablar/); // jsdom no trae speechSynthesis

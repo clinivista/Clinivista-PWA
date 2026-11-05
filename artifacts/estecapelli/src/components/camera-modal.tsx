@@ -66,8 +66,8 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
   const segmenterRef = useRef<Segmenter | null>(null);
   const shutterRef = useRef<() => void>(() => undefined);
   const mirrored = guided && facingMode === "user";
-  // Con la guía en marcha solo se ve el óvalo: sin el rectángulo ni sus esquinas.
-  const ovalOnly = guided && stage === "running";
+  // Con la guía automática no se dibuja el rectángulo (solo el óvalo cuando corre): sin el rectángulo ni sus esquinas.
+  const ovalOnly = guided && stage !== "manual";
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   useEffect(() => {
@@ -135,6 +135,8 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        // En iPhone el video a veces queda negro si no se pide reproducirlo de forma explícita.
+        void videoRef.current.play?.()?.catch(() => undefined);
       }
       setPermissionState("granted");
     } catch (err: unknown) {
@@ -245,6 +247,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
       const segmenter = segmenterRef.current;
       const { box: viewBox, frame: viewFrame, mirrored: flip } = latestRef.current;
       if (stopped || !video || !segmenter) return;
+      if (video.paused) void video.play?.()?.catch(() => undefined); // si el iPhone detuvo el video, se vuelve a reproducir
       if (video.videoWidth > 0 && viewFrame.width > 0) {
         const crop = cropRectForVideo(viewBox, { width: video.videoWidth, height: video.videoHeight }, viewFrame, 0);
         const ratio = viewFrame.width / viewFrame.height;
@@ -411,10 +414,16 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
         )}
         {permissionState === "granted" && guided && stage === "intro" && (
           <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-5 px-6 text-center" data-testid="guide-intro">
-            <Volume2 className="w-14 h-14 text-white" aria-hidden />
+            <Volume2 className="w-12 h-12 text-white" aria-hidden />
             <h2 className="text-2xl font-extrabold text-white">{guideText.introTitle}</h2>
-            <p className="text-lg leading-relaxed text-white/90 max-w-md">{guideText.introBody}</p>
-            <p className="text-base leading-relaxed text-amber-200 max-w-md" data-testid="guide-tip">{guideText.introTip}</p>
+            <ol className="flex flex-col gap-4 max-w-md text-start" data-testid="guide-steps">
+              {guideText.introBody.split("\n").map((step, index) => (
+                <li key={index} className="flex items-start gap-3" data-testid={`guide-step-${index + 1}`}>
+                  <span className="shrink-0 w-9 h-9 rounded-full bg-white text-black text-lg font-extrabold flex items-center justify-center" aria-hidden>{index + 1}</span>
+                  <span className="text-lg leading-snug text-white">{step}</span>
+                </li>
+              ))}
+            </ol>
             <Button onClick={() => void startGuide()} className="h-16 min-w-[14rem] rounded-full bg-green-600 hover:bg-green-700 text-white text-xl font-extrabold" data-testid="guide-start">
               {guideText.start}
             </Button>
