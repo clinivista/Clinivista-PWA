@@ -19,7 +19,7 @@ export function ovalForFrame(width: number, height: number, scale = 1): Oval {
 }
 
 /** Zona donante: el reflejo de la nuca se ve pequeño y lejos, así que el óvalo es más chico (el paciente no tiene que acercar el celular). */
-export const DONOR_OVAL_SCALE = 0.38;
+export const DONOR_OVAL_SCALE = 0.46;
 
 /** Qué le falta a la persona (ya traducido a lo que debe hacer con el celular). */
 export type FitStatus = "none" | "closer" | "farther" | "left" | "right" | "up" | "down" | "turn" | "ok";
@@ -118,10 +118,27 @@ export function findHead(mask: ArrayLike<number>, w: number, h: number): { x0: n
   return { x0, x1, y0: top, y1: headBottom };
 }
 
-export function analyzeHeadFit(mask: ArrayLike<number>, w: number, h: number, oval: Oval = GUIDE_OVAL, mirrored = false): FitResult {
+/** Tolerancias más amplias para la zona donante: el reflejo de la nuca se ve pequeño y con poco contraste. */
+export const DONOR_TUNE = { sizeMin: 0.55, sizeMax: 1.5, offsetOk: 0.24, offsetBig: 0.4, minShare: 0.004, presence: 70 } as const;
+
+/** Vuelve nítida la silueta: lo que el segmentador da como "algo de persona" (≥ presence) pasa a persona segura. */
+export function sharpenMask(mask: ArrayLike<number>, presence: number): Uint8Array {
+  const out = new Uint8Array(mask.length);
+  for (let i = 0; i < mask.length; i += 1) if (mask[i] >= presence) out[i] = 255;
+  return out;
+}
+
+export type FitTune = { sizeMin: number; sizeMax: number; offsetOk: number; offsetBig: number; minShare: number };
+
+export function analyzeHeadFit(mask: ArrayLike<number>, w: number, h: number, oval: Oval = GUIDE_OVAL, mirrored = false, tune?: FitTune): FitResult {
+  const sizeMin = tune?.sizeMin ?? SIZE_OK_MIN;
+  const sizeMax = tune?.sizeMax ?? SIZE_OK_MAX;
+  const offsetOk = tune?.offsetOk ?? OFFSET_OK;
+  const offsetBig = tune?.offsetBig ?? OFFSET_BIG;
+  const minShare = tune?.minShare ?? MIN_PERSON_SHARE;
   let person = 0;
   for (let i = 0; i < w * h; i += 1) if (mask[i] >= PERSON_THRESHOLD) person += 1;
-  if (person / (w * h) < MIN_PERSON_SHARE) return { status: "none", head: null, sizeRatio: 0 };
+  if (person / (w * h) < minShare) return { status: "none", head: null, sizeRatio: 0 };
   const box = findHead(mask, w, h);
   if (!box) return { status: "none", head: null, sizeRatio: 0 };
 
@@ -138,10 +155,10 @@ export function analyzeHeadFit(mask: ArrayLike<number>, w: number, h: number, ov
   };
   // El celular se mueve hacia donde se ve la cabeza: si la cabeza se ve a la derecha del óvalo, el celular va a la derecha.
   const offset = Math.max(Math.abs(dx), Math.abs(dy));
-  if (offset >= OFFSET_BIG) return result(move()!);
-  if (sizeRatio > SIZE_OK_MAX) return result("farther");
-  if (sizeRatio < SIZE_OK_MIN) return result("closer");
-  if (offset >= OFFSET_OK) return result(move()!);
+  if (offset >= offsetBig) return result(move()!);
+  if (sizeRatio > sizeMax) return result("farther");
+  if (sizeRatio < sizeMin) return result("closer");
+  if (offset >= offsetOk) return result(move()!);
   return result("ok");
 }
 

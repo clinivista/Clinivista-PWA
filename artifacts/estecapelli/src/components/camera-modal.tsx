@@ -5,7 +5,7 @@ import { useLanguage } from "@/lib/language";
 import { CAMERA_TEXT, fillTools } from "@/lib/tools-i18n";
 import { cropRectForVideo, frameFor, parseRatio, type Size } from "@/lib/camera-crop";
 import { CAMERA_GUIDE_TEXT, guideTextFor, type GuideKind } from "@/lib/camera-guide-i18n";
-import { analyzeHeadFit, DONOR_OVAL_SCALE, donorCropBox, isolateAtOval, ovalForFrame, type FitStatus } from "@/lib/head-fit";
+import { analyzeHeadFit, DONOR_OVAL_SCALE, DONOR_TUNE, sharpenMask, donorCropBox, isolateAtOval, ovalForFrame, type FitStatus } from "@/lib/head-fit";
 import { newMachine, step, type Machine, type SayKey } from "@/lib/auto-capture";
 import { GuideAudio } from "@/lib/guide-audio";
 import { createSegmenter, type Segmenter } from "@/lib/selfie-segmenter";
@@ -312,8 +312,9 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
           if (mask) {
             const oval = ovalForFrame(viewFrame.width, viewFrame.height, guideKind === "back" ? DONOR_OVAL_SCALE : 1);
             // Con el espejo hay dos siluetas: se mira solo la del reflejo que está en el óvalo.
-            const isolated = guideKind === "back" ? isolateAtOval(mask.data, mask.width, mask.height, oval) : null;
-            const fit = analyzeHeadFit(isolated ?? mask.data, mask.width, mask.height, oval, flip);
+            const sharp = guideKind === "back" ? sharpenMask(mask.data, DONOR_TUNE.presence) : null;
+            const isolated = sharp ? isolateAtOval(sharp, mask.width, mask.height, oval) : null;
+            const fit = analyzeHeadFit(sharp ? (isolated ?? new Uint8Array(mask.width * mask.height)) : mask.data, mask.width, mask.height, oval, flip, guideKind === "back" ? DONOR_TUNE : undefined);
             if (guideKind === "back") donorBoxRef.current = fit.status === "ok" && isolated ? donorCropBox(isolated, mask.width, mask.height) : null;
             let status: FitStatus = fit.status;
             if (turnSide && status === "ok") {

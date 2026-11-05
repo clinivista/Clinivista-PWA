@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analyzeHeadFit, DONOR_OVAL_SCALE, donorCropBox, findHead, GUIDE_OVAL, isolateAtOval, ovalForFrame } from "./head-fit";
+import { analyzeHeadFit, DONOR_OVAL_SCALE, DONOR_TUNE, sharpenMask, donorCropBox, findHead, GUIDE_OVAL, isolateAtOval, ovalForFrame } from "./head-fit";
 
 const W = 96;
 const H = 128;
@@ -113,5 +113,15 @@ describe("óvalo de la zona donante", () => {
     expect(small.ry).toBeLessThan(normal.ry * 0.5);
     expect(small.cx).toBe(normal.cx);
     expect(small.cy).toBe(normal.cy);
+  });
+});
+
+describe("zona donante: detección más tolerante", () => {
+  it("accepts a small, faint reflection that the normal check would reject", () => {
+    const oval = ovalForFrame(W, H, DONOR_OVAL_SCALE);
+    const faint = person({ cx: 0.5, cy: 0.45, headW: 0.16, headH: 0.2, shoulders: false }).map((v) => (v ? 100 : 0));
+    expect(analyzeHeadFit(faint, W, H, oval).status).toBe("none"); // 100 < 128: la silueta no cuenta
+    const sharp = sharpenMask(faint, DONOR_TUNE.presence);
+    expect(analyzeHeadFit(sharp, W, H, oval, false, DONOR_TUNE).status).toBe("ok");
   });
 });
