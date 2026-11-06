@@ -3438,7 +3438,7 @@ components:
       properties:
         type:
           type: string
-          enum: [pen, line, arrow, ellipse, text]
+          enum: [pen, line, arrow, ellipse, text, scale, ruler, angle, area, marker, guide]
         color: {type: string}
         width: {type: number}
         points:

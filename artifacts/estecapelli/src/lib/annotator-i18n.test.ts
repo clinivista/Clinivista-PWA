@@ -16,3 +16,14 @@ describe("herramienta de dibujo en los nueve idiomas", () => {
     expect(ANNOTATOR_TEXT.fr.title("Vue de face")).toBe("Annoter : Vue de face");
   });
 });
+
+import { MEASURE_TOOLS_TEXT } from "./measure-tools-i18n";
+describe("textos de las herramientas de medición en 9 idiomas", () => {
+  it("todos los idiomas tienen cada texto, y la escala lleva su marcador {mm}", () => {
+    expect(Object.keys(MEASURE_TOOLS_TEXT)).toHaveLength(9);
+    for (const [lang, text] of Object.entries(MEASURE_TOOLS_TEXT)) {
+      for (const [key, value] of Object.entries(text)) expect(value, `${lang}.${key}`).toBeTruthy();
+      expect(text.legendScale, lang).toContain("{mm}");
+    }
+  });
+});

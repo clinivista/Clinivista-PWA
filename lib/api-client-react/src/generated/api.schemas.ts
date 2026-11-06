@@ -750,6 +750,12 @@ export const DiagnosisStrokeType = {
   arrow: 'arrow',
   ellipse: 'ellipse',
   text: 'text',
+  scale: 'scale',
+  ruler: 'ruler',
+  angle: 'angle',
+  area: 'area',
+  marker: 'marker',
+  guide: 'guide',
 } as const;
 
 export interface DiagnosisStroke {

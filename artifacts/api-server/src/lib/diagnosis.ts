@@ -27,7 +27,17 @@ export class DiagnosisError extends Error {
 export type Stroke =
   | { type: "pen"; color: string; width: number; points: Array<[number, number]> }
   | { type: "line" | "arrow" | "ellipse"; color: string; width: number; points: [[number, number], [number, number]] }
-  | { type: "text"; color: string; width: number; points: [[number, number]]; text: string };
+  | { type: "text"; color: string; width: number; points: [[number, number]]; text: string }
+  // Mediciones: «scale» (2 puntos; text = mm reales), «ruler» (2), «angle» (3), «area» (3 a 60), «marker» (1; text = nota opcional), «guide» (1; text = grid | midline | planes).
+  | { type: "scale"; color: string; width: number; points: [[number, number], [number, number]]; text: string }
+  | { type: "ruler"; color: string; width: number; points: [[number, number], [number, number]] }
+  | { type: "angle"; color: string; width: number; points: [[number, number], [number, number], [number, number]] }
+  | { type: "area"; color: string; width: number; points: Array<[number, number]> }
+  | { type: "marker"; color: string; width: number; points: [[number, number]]; text: string }
+  | { type: "guide"; color: string; width: number; points: [[number, number]]; text: string };
+
+const MAX_AREA_POINTS = 60;
+const GUIDE_KINDS = ["grid", "midline", "planes"];
 
 const COLOR = /^#[0-9a-fA-F]{6}$/;
 const unit = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1;
@@ -49,6 +59,18 @@ export function parseStrokes(raw: unknown): Stroke[] | null {
     } else if ((type === "line" || type === "arrow" || type === "ellipse") && points.length === 2) {
       strokes.push({ type, color, width, points: points as [[number, number], [number, number]] });
     } else if (type === "text" && points.length === 1 && typeof text === "string" && text.trim() && text.length <= 200) {
+      strokes.push({ type, color, width, points: points as [[number, number]], text });
+    } else if (type === "scale" && points.length === 2 && typeof text === "string" && Number.isFinite(Number(text)) && Number(text) > 0 && Number(text) <= 10000) {
+      strokes.push({ type, color, width, points: points as [[number, number], [number, number]], text });
+    } else if (type === "ruler" && points.length === 2) {
+      strokes.push({ type, color, width, points: points as [[number, number], [number, number]] });
+    } else if (type === "angle" && points.length === 3) {
+      strokes.push({ type, color, width, points: points as [[number, number], [number, number], [number, number]] });
+    } else if (type === "area" && points.length >= 3 && points.length <= MAX_AREA_POINTS) {
+      strokes.push({ type, color, width, points: points as Array<[number, number]> });
+    } else if (type === "marker" && points.length === 1 && (text === undefined || (typeof text === "string" && text.length <= 200))) {
+      strokes.push({ type, color, width, points: points as [[number, number]], text: typeof text === "string" ? text : "" });
+    } else if (type === "guide" && points.length === 1 && typeof text === "string" && GUIDE_KINDS.includes(text)) {
       strokes.push({ type, color, width, points: points as [[number, number]], text });
     } else {
       return null;
