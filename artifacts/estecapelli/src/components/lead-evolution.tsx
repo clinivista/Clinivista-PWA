@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { FileText, ImageOff, Loader2, Mail, Maximize2, Pencil } from "lucide-react";
+import { Columns2, FileText, ImageOff, Loader2, Mail, Maximize2, Pencil } from "lucide-react";
 import { useGetLeadEvolution, useSendLeadEvolution, type EvolutionCell, type EvolutionZone } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/lib/language";
 import { DATE_LOCALES, phaseName, viewLabel } from "@/lib/phases-i18n";
 import { EVOLUTION_UI } from "@/lib/evolution-i18n";
+import { COMPARE_TEXT } from "@/lib/compare-i18n";
+import { PhotoCompare } from "@/components/photo-compare";
 
 const EMAIL = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]{2,}$/;
 
@@ -27,6 +29,7 @@ export function LeadEvolution({ leadId, onExpand }: { leadId: string; onExpand: 
   const [selected, setSelected] = useState<string | null>(null);
   const [scope, setScope] = useState<"all" | "one">("all");
   const [email, setEmail] = useState<string | null>(null);
+  const [comparing, setComparing] = useState(false);
 
   const zones = data?.zones ?? [];
   const zone: EvolutionZone | undefined = zones.find((candidate) => candidate.key === selected) ?? zones[0];
@@ -71,6 +74,14 @@ export function LeadEvolution({ leadId, onExpand }: { leadId: string; onExpand: 
               </Button>
             ))}
           </div>
+
+          {zone.cells.length >= 2 && (
+            <div>
+              <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => setComparing(true)} data-testid="evolution-compare">
+                <Columns2 className="w-4 h-4 me-1.5" />{COMPARE_TEXT[lang].open}
+              </Button>
+            </div>
+          )}
 
           <div className="flex gap-3 overflow-x-auto pb-2 snap-x" role="list" aria-label={u.phasesAria}>
             {data.phases.map((phase) => {
@@ -130,6 +141,17 @@ export function LeadEvolution({ leadId, onExpand }: { leadId: string; onExpand: 
               {!data.emailConfigured && <p className="text-xs text-amber-700">{u.emailNotConfigured}</p>}
             </div>
           </div>
+          {comparing && (
+            <PhotoCompare
+              leadId={leadId}
+              items={zone.cells.map((cell) => ({
+                id: cell.photoId,
+                label: phaseName({ key: cell.phaseKey, name: data.phases.find((phase) => phase.key === cell.phaseKey)?.name ?? cell.phaseKey }, lang),
+                date: cell.createdAt ? new Date(cell.createdAt).toLocaleDateString(DATE_LOCALES[lang]) : undefined,
+              }))}
+              onClose={() => setComparing(false)}
+            />
+          )}
         </>
       )}
     </section>
