@@ -758,6 +758,9 @@ export const DiagnosisStrokeType = {
   guide: 'guide',
   density: 'density',
   class: 'class',
+  face: 'face',
+  hairline: 'hairline',
+  graft: 'graft',
 } as const;
 
 export interface DiagnosisStroke {

@@ -3,7 +3,7 @@
 // la entrega la cámara (sin espejo): positivo = la nariz se ve hacia la derecha de la imagen = el paciente giró hacia SU izquierda.
 // De frente vale ~0; con la cabeza girada ~45° vale ~0,6 (medido con las ilustraciones de referencia, reiniciando la malla en cada cuadro).
 
-type Landmark = { x: number; y: number; z: number };
+export type Landmark = { x: number; y: number; z: number };
 type MeshResults = { multiFaceLandmarks?: Landmark[][] };
 type Mesh = {
   setOptions(options: Record<string, unknown>): void;
@@ -14,7 +14,11 @@ type Mesh = {
 };
 type Ctor = new (config: { locateFile: (file: string) => string }) => Mesh;
 
-export type FaceTurn = { run(source: CanvasImageSource): Promise<number | null> };
+export type FaceTurn = {
+  run(source: CanvasImageSource): Promise<number | null>;
+  /** Los puntos de la malla de la cara (sin giro ni filtros), o null si no hay cara. Nunca lanza. */
+  landmarks?(source: CanvasImageSource): Promise<Landmark[] | null>;
+};
 
 const base = () => `${import.meta.env.BASE_URL ?? "/"}vendor/facemesh/`;
 const NOSE_TIP = 1;
@@ -30,6 +34,22 @@ export function turnFromLandmarks(landmarks: Landmark[]): number | null {
   const width = Math.abs(b.x - a.x);
   if (width < 0.02) return null;
   return (nose.x - (a.x + b.x) / 2) / width;
+}
+
+/** Giro máximo (en proporción del ancho de la cara) para que las guías de frente sirvan: ~0,12 son unos 10° de giro. */
+export const MAX_GUIDE_TURN = 0.12;
+const average = (a: Landmark, b: Landmark): [number, number] => [(a.x + b.x) / 2, (a.y + b.y) / 2];
+export type FaceGuide = { ok: true; points: Array<[number, number]> } | { ok: false; reason: "none" | "turned" };
+/** Los cinco puntos del trazo «face» (ojo, ojo, entrecejo, base de la nariz, mentón) desde la malla; rechaza caras de lado. */
+export function faceGuideFromLandmarks(landmarks: Landmark[] | null): FaceGuide {
+  if (!landmarks || landmarks.length < 468) return { ok: false, reason: "none" };
+  const turn = turnFromLandmarks(landmarks);
+  if (turn === null) return { ok: false, reason: "none" };
+  if (Math.abs(turn) > MAX_GUIDE_TURN) return { ok: false, reason: "turned" };
+  const clamp = (v: number) => Math.min(1, Math.max(0, v));
+  const at = (i: number): [number, number] => [clamp(landmarks[i].x), clamp(landmarks[i].y)];
+  const eye = (a: number, b: number): [number, number] => { const m = average(landmarks[a], landmarks[b]); return [clamp(m[0]), clamp(m[1])]; };
+  return { ok: true, points: [eye(33, 133), eye(362, 263), at(9), at(2), at(152)] };
 }
 
 let scriptPromise: Promise<Ctor> | null = null;
@@ -71,7 +91,18 @@ async function build(): Promise<FaceTurn | null> {
     let latest: MeshResults | null = null;
     engine.onResults((results) => { latest = results; });
     await engine.initialize();
+    const detect = async (source: CanvasImageSource): Promise<Landmark[] | null> => {
+      try {
+        latest = null;
+        engine.reset?.();
+        await engine.send({ image: source });
+        return (latest as MeshResults | null)?.multiFaceLandmarks?.[0] ?? null;
+      } catch {
+        return null;
+      }
+    };
     return {
+      landmarks: detect,
       async run(source) {
         try {
           latest = null;

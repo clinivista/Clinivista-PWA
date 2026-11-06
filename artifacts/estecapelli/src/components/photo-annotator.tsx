@@ -1,17 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUpRight, Circle, Eraser, Grid3x3, Hand, Hexagon, Loader2, Maximize, MapPin, Minus, Pencil, Plus, Redo2, Ruler, Scaling, SeparatorVertical, TriangleRight, Type, Undo2, X, AlignJustify, ScanLine, Sparkles, Square, Waypoints } from "lucide-react";
+import { ArrowUpRight, Circle, Eraser, Grid3x3, Hand, Hexagon, Loader2, Maximize, MapPin, Minus, Pencil, Plus, Redo2, Ruler, Scaling, SeparatorVertical, TriangleRight, Type, Undo2, X, AlignJustify, ScanLine, Sparkles, Spline, Square, Waypoints, ScanFace, Calculator } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/language";
 import { ANNOTATOR_TEXT } from "@/lib/annotator-i18n";
 import { MEASURE_TOOLS_TEXT } from "@/lib/measure-tools-i18n";
 import { EDITOR_UI_TEXT, type EditorUiText } from "@/lib/editor-ui-i18n";
+import { HAIR_PLAN_TEXT } from "@/lib/hair-plan-i18n";
+import { GRAFT_DEFAULTS, GRAFT_KEYS, GRAFT_RANGES, fitHairline, graftPrefill, graftText, parseGraft, planSummary, type GraftKey } from "@/lib/hair-plan";
+import { createFaceTurn, faceGuideFromLandmarks } from "@/lib/face-turn";
 import {
-  CLASSIFICATIONS, CLASS_NAMES, classificationLabel as classLabel, GUIDE_KINDS, PALETTE, WIDTHS, clamp01, mmPerPixel, setClassification, tapDensity, describeMeasures, drawStrokes, formatArea, formatAngle, formatLength, hitsStroke, simplify, strokeToJson,
+  CLASSIFICATIONS, CLASS_NAMES, classificationLabel as classLabel, GUIDE_KINDS, PALETTE, WIDTHS, clamp01, mmPerPixel, setClassification, tapDensity, describeMeasures, drawStrokes, formatArea, formatAngle, formatLength, hitsStroke, polygonStats, simplify, strokeToJson,
   type GuideKind, type Pt, type Stroke, type StrokeType,
 } from "@/lib/annotation";
 import { FIT, MAX_ZOOM, MIN_ZOOM, ZOOM_STEP, clampView, zoomAt, type View } from "@/lib/zoom-view";
 
-type Tool = Exclude<StrokeType, "guide" | "class"> | "eraser" | "pan";
+type Tool = Exclude<StrokeType, "guide" | "class" | "face" | "graft"> | "eraser" | "pan";
 type TabId = "draw" | "measure" | "hair" | "view";
 
 const DRAW_TOOLS: Array<{ tool: Tool; icon: typeof Pencil }> = [
@@ -61,7 +64,9 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   const a = ANNOTATOR_TEXT[lang];
   const m = MEASURE_TOOLS_TEXT[lang];
   const u = EDITOR_UI_TEXT[lang];
+  const h = HAIR_PLAN_TEXT[lang];
   const isHair = specialty === "capilar";
+  const hasFaceGuides = isHair || specialty === "plastica";
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
@@ -84,12 +89,17 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   const [pending, setPending] = useState<Pt[]>([]);
   const [hover, setHover] = useState<Pt | null>(null);
   const [scaleAt, setScaleAt] = useState<{ points: [Pt, Pt]; value: string } | null>(null);
+  // Guías faciales automáticas: detección en curso y último aviso.
+  const [faceBusy, setFaceBusy] = useState(false);
+  const [faceMsg, setFaceMsg] = useState("");
+  const [graftFilled, setGraftFilled] = useState(false);
   const [box, setBox] = useState({ width: 0, height: 0 });
   const [view, setView] = useState<View>(FIT);
   const viewRef = useRef<View>(FIT);
   viewRef.current = view;
   const boxRef = useRef(box);
   boxRef.current = box;
+  const strokesRef = useRef<Stroke[]>(initialStrokes);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const gesture = useRef<{ kind: "pinch"; dist: number; view: View; mid: { x: number; y: number } } | { kind: "pan"; start: { x: number; y: number }; view: View } | null>(null);
   const dragging = useRef(false);
@@ -187,6 +197,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     if (box.width) setView((prev) => clampView(prev, box, viewport()));
   }, [box]);
 
+  strokesRef.current = strokes;
   const change = (next: Stroke[]) => {
     setPast((prev) => [...prev, strokes]);
     setFuture([]);
@@ -252,7 +263,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
       eraseAt(pt);
       return;
     }
-    setDraft({ type: tool, color, width, points: tool === "pen" ? [pt] : [pt, pt], ...(tool === "ruler" && preset ? { text: preset } : {}) });
+    setDraft({ type: tool, color, width, points: tool === "pen" || tool === "hairline" ? [pt] : [pt, pt], ...(tool === "ruler" && preset ? { text: preset } : {}) });
   };
 
   const eraseAt = (pt: Pt) => {
@@ -294,7 +305,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     }
     setDraft((prev) => {
       if (!prev) return prev;
-      return prev.type === "pen"
+      return prev.type === "pen" || prev.type === "hairline"
         ? { ...prev, points: [...prev.points, pt] }
         : { ...prev, points: [prev.points[0], pt] };
     });
@@ -311,13 +322,18 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     if (!dragging.current) return;
     dragging.current = false;
     if (!draft) return;
-    const finished = draft.type === "pen" ? { ...draft, points: simplify(draft.points) } : draft;
+    const finished = draft.type === "pen" ? { ...draft, points: simplify(draft.points) } : draft.type === "hairline" ? { ...draft, points: fitHairline(draft.points, simplify) } : draft;
     setDraft(null);
     const [a, b] = [finished.points[0], finished.points[finished.points.length - 1]];
     // Un toque sin arrastrar solo cuenta como punto con el lápiz.
     if (finished.type !== "pen" && Math.hypot(a[0] - b[0], a[1] - b[1]) < 0.005) return;
     // La escala necesita su medida real antes de guardarse.
     if (finished.type === "scale") { setScaleAt({ points: [finished.points[0], finished.points[1]], value: "" }); return; }
+    if (finished.type === "hairline") {
+      // Hay una sola línea frontal por foto: la nueva reemplaza a la anterior.
+      if (finished.points.length >= 2) change([...strokes.filter((stroke) => stroke.type !== "hairline"), finished]);
+      return;
+    }
     commit(finished);
   };
 
@@ -364,6 +380,49 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     change(exists ? strokes.filter((stroke) => !(stroke.type === "guide" && stroke.text === kind)) : [...strokes, { type: "guide", color, width: WIDTHS[0].value, points: [[0.5, 0.5]], text: kind }]);
   };
 
+  const toggleFace = async () => {
+    if (strokes.some((stroke) => stroke.type === "face")) {
+      change(strokes.filter((stroke) => stroke.type !== "face"));
+      setFaceMsg("");
+      return;
+    }
+    if (!image || faceBusy) return;
+    setFaceBusy(true);
+    setFaceMsg("");
+    try {
+      const engine = await createFaceTurn();
+      const guide = faceGuideFromLandmarks(engine?.landmarks ? await engine.landmarks(image) : null);
+      if (!guide.ok) { setFaceMsg(guide.reason === "turned" ? h.faceTurned : h.faceNone); return; }
+      // La detección tarda: se parte de los trazos de ahora, no de los de cuando se pulsó.
+      const base = strokesRef.current;
+      setPast((prev) => [...prev, base]);
+      setFuture([]);
+      setStrokes([...base.filter((stroke) => stroke.type !== "face"), { type: "face", color, width: WIDTHS[0].value, points: guide.points }]);
+      setFaceMsg(h.faceHint);
+    } finally {
+      setFaceBusy(false);
+    }
+  };
+
+  const graftStroke = strokes.find((stroke) => stroke.type === "graft");
+  const graftParams = parseGraft(graftStroke?.text);
+  const addGraft = () => {
+    const size = { width: image?.naturalWidth ?? 1, height: image?.naturalHeight ?? 1 };
+    const k = mmPerPixel(strokes, size);
+    const names = { recipient: Object.values(EDITOR_UI_TEXT).map((text) => text.recipient), donor: Object.values(EDITOR_UI_TEXT).map((text) => text.donor) };
+    const filled = graftPrefill(strokes, names, (points) => (k === null ? null : (polygonStats(points, size).areaPx * k * k) / 100));
+    setGraftFilled(Object.keys(filled).length > 0);
+    change([...strokes.filter((stroke) => stroke.type !== "graft"), { type: "graft", color, width, points: [[0.5, 0.94]], text: graftText({ ...GRAFT_DEFAULTS, ...filled }) }]);
+  };
+  const setGraftValue = (key: GraftKey, input: HTMLInputElement) => {
+    const value = Number(input.value.replace(",", "."));
+    const [min, max] = GRAFT_RANGES[key];
+    // Un valor fuera de rango no se guarda y el campo vuelve al valor vigente.
+    if (input.value.trim() === "" || !Number.isFinite(value) || value < min || value > max) { input.value = String(graftParams[key]); return; }
+    if (!graftStroke || value === graftParams[key]) return;
+    change(strokes.map((stroke) => (stroke === graftStroke ? { ...stroke, text: graftText({ ...graftParams, [key]: value }) } : stroke)));
+  };
+
   const setMarkerNote = (strokeIndex: number, note: string) => {
     if ((strokes[strokeIndex]?.text ?? "") === note) return;
     change(strokes.map((stroke, index) => index === strokeIndex ? { ...stroke, text: note.slice(0, 200) } : stroke));
@@ -374,6 +433,8 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     setTextAt(null);
   };
 
+  const sizeNow = { width: image?.naturalWidth ?? 1, height: image?.naturalHeight ?? 1 };
+  const plan = planSummary(strokes, sizeNow, mmPerPixel(strokes, sizeNow));
   const legend = describeMeasures(strokes, { width: image?.naturalWidth ?? 1, height: image?.naturalHeight ?? 1 });
   const scaleLabel = String(strokes.filter((stroke) => stroke.type === "scale").at(-1)?.text ?? "");
 
@@ -442,12 +503,14 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
               const text = u[name];
               return toolButton(name, icon, text, tool === value && (value === "density" || preset === text), () => pickTool(value, value === "density" ? "" : text));
             })}
+            {tab === "hair" && toolButton("designLine", Spline, h.designLine, tool === "hairline", () => pickTool("hairline"))}
             {tab === "view" && (
               <>
                 {GUIDE_KINDS.map((kind) => {
                   const name = { grid: m.guideGrid, midline: m.guideMidline, planes: m.guidePlanes }[kind];
                   return toolButton(kind, GUIDE_ICON[kind], name, strokes.some((stroke) => stroke.type === "guide" && stroke.text === kind), () => toggleGuide(kind));
                 })}
+                {hasFaceGuides && toolButton("face", ScanFace, faceBusy ? h.faceBusy : h.faceGuides, strokes.some((stroke) => stroke.type === "face"), () => void toggleFace())}
                 {isHair && toolButton("enhance", Sparkles, u.enhance, enhance, () => setEnhance((prev) => !prev))}
                 {toolButton("pan", Hand, a.pan, tool === "pan", () => pickTool("pan"))}
               </>
@@ -477,6 +540,30 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
                 </div>
               ))}
               <p className="text-[11px] text-white/60">{u.classHint}</p>
+            </div>
+          )}
+          {tab === "hair" && (
+            <div className="flex min-w-[15rem] flex-col gap-1.5" role="group" aria-label={h.graftTitle} data-testid="graft-form">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-white/70">{h.graftTitle}</span>
+                {graftStroke
+                  ? <Button type="button" size="sm" variant="secondary" className="h-7 rounded-full" onClick={() => change(strokes.filter((stroke) => stroke.type !== "graft"))}>{h.removeGraft}</Button>
+                  : <Button type="button" size="sm" className="h-7 rounded-full" onClick={addGraft}><Calculator className="me-1 h-3.5 w-3.5" />{h.addGraft}</Button>}
+              </div>
+              {graftStroke && (
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+                  {GRAFT_KEYS.map((key) => (
+                    <label key={key} className="flex flex-col text-[10px] text-white/70">
+                      {h[key]}
+                      <input key={`${key}-${graftStroke.text}`} inputMode="decimal" defaultValue={graftParams[key]} aria-label={h[key]}
+                        onBlur={(event) => setGraftValue(key, event.target)}
+                        onKeyDown={(event) => { if (event.key === "Enter") (event.target as HTMLInputElement).blur(); }}
+                        className="mt-0.5 w-full rounded bg-white/10 px-2 py-1 text-xs text-white" />
+                    </label>
+                  ))}
+                </div>
+              )}
+              {graftStroke && graftFilled && <p className="text-[11px] text-white/60">{h.prefilled}</p>}
             </div>
           )}
         </div>
@@ -540,6 +627,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
 
       <div className="px-4 pt-1 pb-2 text-white/90 text-xs flex flex-col gap-1.5 max-h-40 overflow-y-auto" data-testid="measure-panel">
         {enhance && <p className="font-semibold text-amber-300" data-testid="enhance-note">{u.viewOnly}</p>}
+        {tool === "hairline" && <p data-testid="tool-hint" className="font-semibold text-white">{h.hintDesign}</p>}
         {(tool === "scale" || tool === "ruler" || tool === "angle" || tool === "area" || tool === "marker" || tool === "density") && (
           <p data-testid="tool-hint" className="font-semibold text-white">
             {tool === "density" ? (hasScale ? u.hintDensity : u.needScale) : preset && tool === "area" ? u.hintZone : preset && tool === "ruler" ? u.hintLine : { scale: m.hintScale, ruler: m.hintRuler, angle: m.hintAngle, area: m.hintArea, marker: m.hintMarker }[tool]}
@@ -547,6 +635,27 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
               <Button type="button" size="sm" className="ms-2 h-7 rounded-full" onClick={finishArea}>{m.finishArea}</Button>
             )}
           </p>
+        )}
+        {faceBusy && <p className="font-semibold text-white" role="status">{h.faceBusy}</p>}
+        {faceMsg && !faceBusy && <p className="text-amber-300" role="status" data-testid="face-msg">{faceMsg}</p>}
+        {(plan.face || plan.hairline || plan.graft || strokes.some((stroke) => stroke.type === "hairline")) && (
+          <div data-testid="plan-legend">
+            <p className="font-bold text-white">{h.planTitle}</p>
+            <ul className="mt-1 flex flex-col gap-0.5">
+              {plan.face && plan.face.middleMm !== null && plan.face.lowerMm !== null && plan.face.suggestedMm !== null && (
+                <li>{h.middleThird}: <b>{formatLength(plan.face.middleMm)}</b> · {h.lowerThird}: <b>{formatLength(plan.face.lowerMm)}</b> · {h.suggested}: <b>{formatLength(plan.face.suggestedMm)}</b></li>
+              )}
+              {strokes.some((stroke) => stroke.type === "hairline") && !plan.face && <li className="text-amber-300">{h.needFace}</li>}
+              {plan.hairline && (
+                <li>{h.lineHeight}: <b>{plan.hairline.heightMm === null ? "—" : formatLength(plan.hairline.heightMm)}</b>{plan.hairline.ratio !== null && <span className="text-white/70"> · {h.ratio.replace("{x}", String(plan.hairline.ratio))}</span>}</li>
+              )}
+              {plan.graft && (
+                <li data-testid="graft-result">{h.needed}: <b>{plan.graft.needed} {h.fu}</b> · {h.available}: <b>{plan.graft.available} {h.fu}</b>{plan.graft.coveragePct !== null && <> · {h.coverage}: <b className={plan.graft.coveragePct < 100 ? "text-amber-300" : ""}>{plan.graft.coveragePct}%</b></>}</li>
+              )}
+            </ul>
+            {plan.hairline && plan.face && <p className="mt-1 text-white/70">{h.mirrorNote}</p>}
+            {plan.graft && <p className="mt-1 text-white/70">{h.graftNote}</p>}
+          </div>
         )}
         {classCode && <p className="font-bold text-white" data-testid="class-legend">{u.classification}: {classLabel(classCode)}</p>}
         {legend.measures.length > 0 && (
