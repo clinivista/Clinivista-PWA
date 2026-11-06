@@ -1666,6 +1666,30 @@
   },
   {
    "id": "2.18",
+   "title": "Clinic details (legal representative)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "The legal representative sees “Clinic details” in the menu, where they keep the clinic's contact details up to date. The rest of the staff do not see it."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Details you can update: address, phone, WhatsApp and company email. Address and phone are required; WhatsApp and email are optional.",
+      "The phone and WhatsApp are shown to patients to book their appointment, together with the booking link from “Available integrations”.",
+      "Locked details: clinic name, country and RUT (or passport). Only support can change them from supra-control; to correct them, write to support from Help.",
+      "Press “Save changes”: the button turns on only when there is something to save and the details are valid."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "The address and phone also appear in the clinic's service contract."
+    }
+   ],
+   "key": "clinicdata"
+  },
+  {
+   "id": "2.19",
    "key": "video",
    "title": "Video per photo (Gold plan)",
    "blocks": [
@@ -1684,7 +1708,7 @@
    ]
   },
   {
-   "id": "2.19",
+   "id": "2.20",
    "key": "integrations",
    "title": "Available integrations",
    "blocks": [
@@ -1719,7 +1743,7 @@
    ]
   },
   {
-   "id": "2.20",
+   "id": "2.21",
    "title": "Patient data and requests",
    "blocks": [
     {
@@ -1742,7 +1766,7 @@
    "key": "privacy"
   },
   {
-   "id": "2.21",
+   "id": "2.22",
    "title": "Patient updates: changes and additional submissions",
    "blocks": [
     {
@@ -1766,7 +1790,7 @@
    "key": "patientupdates"
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "title": "Photograph authorization (link, document or tablet)",
    "blocks": [
     {
@@ -1790,7 +1814,7 @@
    "key": "photoconsent"
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "title": "Using it from the phone",
    "blocks": [
     {
@@ -1825,7 +1849,7 @@
    "key": "phone"
   },
   {
-   "id": "2.24",
+   "id": "2.25",
    "key": "support",
    "title": "Support tickets",
    "blocks": [
@@ -1849,7 +1873,7 @@
    ]
   },
   {
-   "id": "2.25",
+   "id": "2.26",
    "title": "Tips and troubleshooting",
    "blocks": [
     {

@@ -229,7 +229,7 @@
     },
     {
      "t": "p",
-     "text": "En «Datos de la clínica» defines el país, el RUT (o el pasaporte, fuera de Chile), la dirección y el teléfono de la clínica, y opcionalmente su número de WhatsApp. El teléfono y el WhatsApp también se muestran al paciente («Para agendar su hora puede hacerlo a través de…», con botones para llamar y escribir por WhatsApp, junto al link de agendamiento que la clínica ponga en «Integraciones disponibles»). Los datos van en el contrato de servicio y se pueden completar y corregir cuando haga falta. Mientras falte alguno, la tarjeta muestra «Faltan datos» y el contrato no se puede enviar ni aceptar."
+     "text": "En «Datos de la clínica» defines el país, el RUT (o el pasaporte, fuera de Chile), la dirección y el teléfono de la clínica, y opcionalmente su número de WhatsApp. El teléfono y el WhatsApp también se muestran al paciente («Para agendar su hora puede hacerlo a través de…», con botones para llamar y escribir por WhatsApp, junto al link de agendamiento que la clínica ponga en «Integraciones disponibles»). Desde ahí también puedes completar el correo de la empresa. El representante legal de la clínica puede actualizar por su cuenta la dirección, el teléfono, el WhatsApp y el correo desde «Datos de la clínica» en su menú; el país y el RUT (o pasaporte) solo los cambia soporte, aquí. Los datos van en el contrato de servicio y se pueden completar y corregir cuando haga falta. Mientras falte alguno, la tarjeta muestra «Faltan datos» y el contrato no se puede enviar ni aceptar."
     },
     {
      "t": "h3",

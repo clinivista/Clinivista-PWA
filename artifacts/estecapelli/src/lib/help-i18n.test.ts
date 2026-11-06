@@ -196,4 +196,16 @@ describe("manuales por especialidad", () => {
     expect(es).toContain("Vista giratoria");
     expect(JSON.stringify((await loadManual("es", "dermatologia")).staff)).not.toContain("Vista giratoria");
   });
+
+  it("el manual explica «Datos de la clínica» del representante legal en los nueve idiomas, para todas las especialidades", async () => {
+    for (const code of LANGS) {
+      for (const sp of ["capilar", "plastica", "dermatologia"] as const) {
+        const section = (await loadManual(code, sp)).staff.find((item) => item.key === "clinicdata");
+        expect(section, `${code}/${sp}`).toBeDefined();
+        expect(section!.blocks.map((b) => b.t), `${code}/${sp}`).toEqual(["p", "ul", "note"]);
+      }
+    }
+    const es = JSON.stringify((await loadManual("es", "capilar")).staff.find((item) => item.key === "clinicdata"));
+    expect(es).toContain("Solo soporte puede cambiarlos");
+  });
 });

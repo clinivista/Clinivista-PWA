@@ -1666,6 +1666,30 @@
   },
   {
    "id": "2.18",
+   "title": "Données de la clinique (représentant légal)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Le représentant légal voit dans le menu la rubrique « Données de la clinique », où il tient à jour les coordonnées de la clinique. Le reste de l'équipe ne la voit pas."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Données que vous pouvez mettre à jour : adresse, téléphone, WhatsApp et e-mail de l'entreprise. L'adresse et le téléphone sont obligatoires ; WhatsApp et l'e-mail sont facultatifs.",
+      "Le téléphone et WhatsApp sont montrés aux patients pour prendre rendez-vous, avec le lien de réservation de « Intégrations disponibles ».",
+      "Données verrouillées : nom de la clinique, pays et RUT (ou passeport). Seul le support peut les modifier depuis la supra-administration ; pour les corriger, écrivez au support depuis l'Aide.",
+      "Touchez « Enregistrer les modifications » : le bouton ne s'active que lorsqu'il y a quelque chose à enregistrer et que les données sont valides."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "L'adresse et le téléphone figurent aussi dans le contrat de service de la clinique."
+    }
+   ],
+   "key": "clinicdata"
+  },
+  {
+   "id": "2.19",
    "key": "video",
    "title": "Vidéo par photo (forfait Or)",
    "blocks": [
@@ -1684,7 +1708,7 @@
    ]
   },
   {
-   "id": "2.19",
+   "id": "2.20",
    "key": "integrations",
    "title": "Intégrations disponibles",
    "blocks": [
@@ -1719,7 +1743,7 @@
    ]
   },
   {
-   "id": "2.20",
+   "id": "2.21",
    "title": "Données des patients et demandes",
    "blocks": [
     {
@@ -1742,7 +1766,7 @@
    "key": "privacy"
   },
   {
-   "id": "2.21",
+   "id": "2.22",
    "title": "Nouveautés du patient : modifications et envois complémentaires",
    "blocks": [
     {
@@ -1766,7 +1790,7 @@
    "key": "patientupdates"
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "title": "Autorisation pour les photographies (lien, document ou tablette)",
    "blocks": [
     {
@@ -1790,7 +1814,7 @@
    "key": "photoconsent"
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "title": "Utilisation depuis le téléphone",
    "blocks": [
     {
@@ -1825,7 +1849,7 @@
    "key": "phone"
   },
   {
-   "id": "2.24",
+   "id": "2.25",
    "key": "support",
    "title": "Tickets d'assistance",
    "blocks": [
@@ -1849,7 +1873,7 @@
    ]
   },
   {
-   "id": "2.25",
+   "id": "2.26",
    "title": "Conseils et dépannage",
    "blocks": [
     {

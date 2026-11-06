@@ -34,7 +34,7 @@ beforeAll(async () => {
     CREATE UNIQUE INDEX integration_requests_center_integration_idx ON integration_requests (center_id, integration);
     CREATE TABLE clinic_booking_links (center_id text NOT NULL, integration text NOT NULL, url text NOT NULL, updated_at timestamptz NOT NULL DEFAULT now());
     CREATE UNIQUE INDEX clinic_booking_links_center_integration_idx ON clinic_booking_links (center_id, integration);
-    CREATE TABLE clinic_profiles (center_id text PRIMARY KEY, country text NOT NULL DEFAULT 'CL', rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', whatsapp text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE clinic_profiles (center_id text PRIMARY KEY, country text NOT NULL DEFAULT 'CL', rut text NOT NULL DEFAULT '', address text NOT NULL DEFAULT '', phone text NOT NULL DEFAULT '', whatsapp text NOT NULL DEFAULT '', email text NOT NULL DEFAULT '', updated_at timestamptz NOT NULL DEFAULT now());
   `);
 });
 
