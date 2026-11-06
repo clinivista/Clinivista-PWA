@@ -363,6 +363,10 @@
     {
      "t": "tip",
      "text": "Se preferir não usar a câmera naquele momento, «Enviar outra foto» permite escolher uma imagem da sua galeria. O arquivo original é conservado sem redução."
+    },
+    {
+     "t": "p",
+     "text": "Em um canto da câmera você verá o isotipo da Clinivista: indica que a foto está sendo tirada dentro do aplicativo. Só aparece na tela; não fica desenhado na foto."
     }
    ],
    "key": "photos",
@@ -1059,6 +1063,20 @@
     {
      "t": "p",
      "text": "Cada vista mostra uma única foto: se o paciente repetiu uma foto, fica a mais recente e as anteriores são substituídas. O cabeçalho com nome e telefone fica fixo no alto; o resumo do paciente (consultas, novidades e autorização) rola junto com a ficha, para não cobrir as fotos."
+    },
+    {
+     "t": "h3",
+     "text": "Vista giratória",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "A «Vista giratória» aparece acima das fotos quando há pelo menos duas das vistas têmpora esquerda, frontal, têmpora direita e zona doadora. Arraste a foto, use as setas ou «Girar sozinha» para percorrê-las em ordem ao redor da cabeça; a vista superior abre com seu próprio botão. É um percurso pelas fotos, não um modelo 3D medido, e não serve para medir.",
+     "only": [
+      "capilar"
+     ]
     }
    ],
    "key": "ficha"
@@ -1188,6 +1206,22 @@
     {
      "t": "p",
      "text": "Acima das fases aparece o quadro «Evolução das medidas»: reúne as medidas da mesma foto (pelo nome) ao longo das fases e compara cada uma com a anterior. Uma mudança só é indicada como aumento ou diminuição se superar a margem de erro combinada das duas medidas; caso contrário diz «sem mudança clara»."
+    },
+    {
+     "t": "h3",
+     "text": "Câmera da Clinivista para a equipe"
+    },
+    {
+     "t": "p",
+     "text": "Ao tocar em «Tirar foto», tanto na ficha quanto no link «Continuar no celular», abre-se a câmera da Clinivista. Em um canto da pré-visualização você verá o isotipo da Clinivista: indica que a foto está sendo tirada dentro do aplicativo (não fica gravado na imagem). Começa com a câmera traseira e o botão de virar muda para a frontal."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Vistas capilares (frontal, superior e as duas laterais): oval de referência, voz que indica como se mover e foto automática quando encaixa. O botão «Guia: ativada / desativada» no alto liga ou desliga esses recursos; o ajuste é lembrado nesse dispositivo.",
+      "Zona doadora e qualquer outra fotografia (lesões, cirurgia plástica, vistas adicionadas pela clínica): moldura com a proporção da foto e o isotipo, sem oval nem voz. Tire a foto com o botão branco.",
+      "Se o navegador não fornecer a câmera, «Tirar foto» usa a câmera normal do celular; essas fotos não mostram o isotipo na pré-visualização."
+     ]
     }
    ],
    "key": "phases"
@@ -1267,6 +1301,50 @@
       "Afastar.",
       "Aproximar.",
       "Ajustar à tela: volta à visão completa."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "O editor por abas: desenho, medição e guias"
+    },
+    {
+     "t": "p",
+     "text": "As ferramentas do editor estão agrupadas em abas: «Desenho» (lápis, linha, seta, círculo, texto, borracha), «Medição», «Capilar» (apenas em clínicas capilares) e «Vista» (guias, realce e mover). Desfazer, refazer e o zoom ficam sempre no alto. As medições são estimativas sobre a foto: só valem se a referência estiver no mesmo plano e à mesma distância do que foi medido."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Escala: marque na foto algo de comprimento conhecido (uma régua ou uma moeda) e digite sua medida real em milímetros. Sem escala não há medidas em mm nem em cm².",
+      "Régua e Ângulo: a régua mede uma distância arrastando entre dois pontos; o ângulo é medido tocando em três pontos (o segundo é o vértice).",
+      "Área: toque nos pontos do contorno e pressione «Terminar área» (ou toque no primeiro ponto) para ver os cm² e o perímetro.",
+      "Marcador deixa marcadores numerados com uma nota opcional e, em «Vista», ativam-se as guias de grade, linha média e planos horizontais. Tudo aparece na legenda abaixo da foto e é salvo como desenho, sem alterar a foto original."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Ferramentas capilares",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Em clínicas capilares, a aba «Capilar» adiciona ferramentas para a consulta. As que medem precisam de uma escala definida na aba «Medição».",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Zona doadora e Zona receptora: contorne a zona e pressione «Terminar área»; a legenda mostra seu nome e os cm².",
+      "Linha frontal, Têmpora direita e Têmpora esquerda: arraste entre dois pontos para medir essa distância; a legenda a mostra com seu nome.",
+      "Densidade (1 cm²): toque para colocar um quadro de 1 cm² e toque em cada folículo dentro dele; a legenda indica a contagem e os folículos por cm². Toque em um ponto para removê-lo.",
+      "Classificação: escolha o grau Norwood (I a VII, com IIIv) ou Ludwig (I a III); fica escrito na foto. Há só uma por foto: toque de novo para removê-la.",
+      "Realçar couro cabeludo (aba «Vista»): aumenta o contraste apenas para ver melhor. É somente visualização e não é salvo na imagem."
+     ],
+     "only": [
+      "capilar"
      ]
     },
     {
@@ -1404,6 +1482,23 @@
      "t": "legend",
      "items": [],
      "caption": "Foto ampliada."
+    },
+    {
+     "t": "h3",
+     "text": "Comparar duas fotos com zoom e transparência"
+    },
+    {
+     "t": "p",
+     "text": "Quando uma zona tem foto em pelo menos duas fases, o botão «Comparar com zoom e transparência» abre uma tela cheia para comparar duas delas. Por padrão começa com a primeira e a última; você pode escolher outras fases em «Antes» e «Depois». É só uma vista: as fotos originais não são modificadas."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Sobreposta: a foto «Depois» sobre a de «Antes», com um controle de transparência.",
+      "Lado a lado: as duas fotos com um único zoom e deslocamento; se você aproxima ou move uma, a outra acompanha (roda do mouse, pinça no celular ou botões + e −).",
+      "Cortina: uma linha deslizante separa «Antes» e «Depois». «Ajustar» volta à vista completa.",
+      "É uma comparação visual: só vale se as fotos tiverem o mesmo ângulo, distância e luz. Não é uma medição."
+     ]
     },
     {
      "t": "h3",

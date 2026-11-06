@@ -363,6 +363,10 @@
     {
      "t": "tip",
      "text": "If you prefer not to use the camera at that moment, «Upload another photo» lets you choose an image from your gallery. The original file is kept without being reduced."
+    },
+    {
+     "t": "p",
+     "text": "In a corner of the camera you will see the Clinivista isotype: it shows that the photo is being taken inside the app. It is only visible on screen; it is not drawn on the photo."
     }
    ],
    "key": "photos",
@@ -1059,6 +1063,20 @@
     {
      "t": "p",
      "text": "Each view shows a single photo: if the patient retook a shot, the most recent one stays and the earlier ones are replaced. The header with the name and phone stays fixed at the top; the patient summary (consultations, updates and authorization) scrolls with the record so it does not cover the photos."
+    },
+    {
+     "t": "h3",
+     "text": "Turntable view",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "The “Turntable view” appears above the photos when there are at least two of these views: left temple, frontal, right temple and donor zone. Drag the photo, use the arrows or “Auto-rotate” to go through them in order around the head; the top view opens with its own button. It is a walk-through of the photos, not a measured 3D model, and it is not for measuring.",
+     "only": [
+      "capilar"
+     ]
     }
    ],
    "key": "ficha"
@@ -1188,6 +1206,22 @@
     {
      "t": "p",
      "text": "Above the phases, the «Measurement trend» box gathers the measurements of the same photo (by name) across phases and compares each with the previous one. A change is only shown as an increase or decrease if it exceeds the combined margin of error of both measurements; otherwise it says «no clear change»."
+    },
+    {
+     "t": "h3",
+     "text": "Clinivista camera for staff"
+    },
+    {
+     "t": "p",
+     "text": "When you press “Take photo”, both in the patient record and in the “Continue on the phone” link, the Clinivista camera opens. In a corner of the preview you will see the Clinivista isotype: it shows the photo is being taken inside the app (it is not recorded in the image). It starts with the rear camera, and the flip button switches to the front one."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Hair views (frontal, top and the two sides): reference oval, a voice that tells you how to move, and an automatic photo when it fits. The “Guide: on / off” button at the top turns them off or on; the setting is remembered on that device.",
+      "Donor zone and any other photo (lesions, plastic surgery, views added by the clinic): a frame with the photo's proportions and the isotype, with no oval or voice. Take the photo with the white button.",
+      "If the browser does not provide the camera, “Take photo” uses the phone's normal camera; those photos do not show the isotype in the preview."
+     ]
     }
    ],
    "key": "phases"
@@ -1267,6 +1301,50 @@
       "Zoom out.",
       "Zoom in.",
       "Fit to screen: returns to the full view."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "The tabbed editor: drawing, measuring and guides"
+    },
+    {
+     "t": "p",
+     "text": "The editor's tools are grouped in tabs: “Draw” (pen, line, arrow, circle, text, eraser), “Measure”, “Hair” (hair clinics only) and “View” (guides, enhance and move). Undo, redo and zoom always stay at the top. Measurements are estimates on the photo: they are valid only if the reference is on the same plane and at the same distance as what is measured."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Scale: mark something of known length on the photo (a ruler or a coin) and type its real size in millimetres. Without a scale there are no measurements in mm or cm².",
+      "Ruler and Angle: the ruler measures a distance by dragging between two points; the angle is measured by tapping three points (the second is the vertex).",
+      "Area: tap the points around the outline and press “Finish area” (or tap the first point) to see the cm² and the perimeter.",
+      "Marker leaves numbered markers with an optional note, and in “View” you can turn on the grid, midline and horizontal-plane guides. Everything appears in the legend under the photo and is saved as a drawing, without altering the original photo."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Hair tools",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "In hair clinics, the “Hair” tab adds tools for the consultation. Those that measure need a scale set in the “Measure” tab.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Donor zone and Recipient zone: outline the zone and press “Finish area”; the legend shows its name and the cm².",
+      "Frontal line, Right temple and Left temple: drag between two points to measure that distance; the legend shows it with its name.",
+      "Density (1 cm²): tap to place a 1 cm² box and tap each follicle inside it; the legend shows the count and the follicles per cm². Tap a dot to remove it.",
+      "Classification: choose the Norwood grade (I to VII, with IIIv) or Ludwig (I to III); it is written on the photo. There is only one per photo: tap it again to remove it.",
+      "Enhance scalp (“View” tab): raises the contrast only to see better. It is view-only and is not saved in the image."
+     ],
+     "only": [
+      "capilar"
      ]
     },
     {
@@ -1404,6 +1482,23 @@
      "t": "legend",
      "items": [],
      "caption": "Enlarged photo."
+    },
+    {
+     "t": "h3",
+     "text": "Compare two photos with zoom and transparency"
+    },
+    {
+     "t": "p",
+     "text": "When a zone has a photo in at least two phases, the “Compare with zoom and transparency” button opens a full-screen view to compare two of them. By default it starts with the first and the last; you can pick other phases in “Before” and “After”. It is only a view: the original photos are not modified."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Overlay: the “After” photo over the “Before” one, with a transparency control.",
+      "Side by side: both photos with a single zoom and pan; if you zoom or move one, the other follows (mouse wheel, pinch on the phone, or the + and − buttons).",
+      "Slider: a draggable line separates “Before” and “After”. “Fit” returns to the full view.",
+      "It is a visual comparison: only valid if the photos have the same angle, distance and light. It is not a measurement."
+     ]
     },
     {
      "t": "h3",
