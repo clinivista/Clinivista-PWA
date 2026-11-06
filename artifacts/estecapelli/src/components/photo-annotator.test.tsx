@@ -3,6 +3,9 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import userEvent from "@testing-library/user-event";
 import { LanguageProvider } from "@/lib/language";
 import { PhotoAnnotator } from "./photo-annotator";
+import { faceGuideFromLandmarks } from "@/lib/face-turn";
+import { proposedHairline } from "@/lib/hair-design";
+import { faceGeometry } from "@/lib/hair-plan";
 
 // La malla facial no corre en jsdom: se simula con los puntos de una cara de frente (o de lado, o ninguna).
 const mesh = vi.hoisted(() => ({ landmarks: null as Array<{ x: number; y: number; z: number }> | null }));
@@ -295,5 +298,40 @@ describe("herramientas de medición del editor de fotos", () => {
     await user.click(screen.getByRole("tab", { name: "Medición" }));
     expect(screen.getByRole("button", { name: "Ocultar herramientas" })).toBeInTheDocument();
     expect(screen.getByRole("tabpanel")).not.toHaveClass("hidden");
+  });
+
+  it("las clínicas capilares abren en su pestaña; «Proponer diseño» dibuja línea, zona y escala, y los puntos se corrigen arrastrando", async () => {
+    const user = userEvent.setup();
+    mesh.landmarks = faceMesh();
+    const { canvas, onSave } = await open("capilar");
+    expect(screen.getByRole("tab", { name: "Capilar" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByTestId("tool-hint")).toHaveTextContent("Arrastra los puntos blancos");
+
+    mesh.landmarks = faceMesh(0.62);
+    await user.click(screen.getByRole("button", { name: "Proponer diseño" }));
+    expect(await screen.findByTestId("face-msg")).toHaveTextContent("no está de frente");
+
+    mesh.landmarks = faceMesh();
+    await user.click(screen.getByRole("button", { name: "Proponer diseño" }));
+    expect(await screen.findByTestId("auto-scale")).toHaveTextContent("63 mm");
+    expect(screen.getByTestId("plan-legend")).toHaveTextContent("Línea frontal diseñada");
+    expect(screen.getByTestId("graft-result")).toHaveTextContent(/Necesarias: \d+ UF/);
+    expect(screen.getByText(/Marca la zona donante/)).toBeInTheDocument();
+    expect(screen.getByTestId("measure-legend")).toHaveTextContent(/Zona receptora · .* cm²/);
+
+    // Arrastrar el punto central de la línea frontal cambia su altura en la leyenda; deshacer la devuelve.
+    const g = faceGeometry(faceGuideFromLandmarks(faceMesh()).ok ? (faceGuideFromLandmarks(faceMesh()) as { points: Array<[number, number]> }).points : [], { width: 1200, height: 1600 })!;
+    const center = proposedHairline(g, { width: 1200, height: 1600 })[4];
+    const heightText = () => screen.getByTestId("plan-legend").textContent ?? "";
+    const before = heightText();
+    drag(canvas, [center[0] * 400, center[1] * 400], [center[0] * 400, center[1] * 400 - 40]);
+    expect(heightText()).not.toBe(before);
+    await user.click(screen.getByRole("button", { name: "Deshacer" }));
+    expect(heightText()).toBe(before);
+
+    HTMLCanvasElement.prototype.toDataURL = () => "data:image/jpeg;base64,AAAA";
+    await user.click(screen.getByRole("button", { name: "Guardar dibujo" }));
+    const saved = onSave.mock.calls[0][0] as Array<{ type: string }>;
+    expect(saved.map((stroke) => stroke.type).sort()).toEqual(["area", "face", "graft", "hairline", "scale"]);
   });
 });

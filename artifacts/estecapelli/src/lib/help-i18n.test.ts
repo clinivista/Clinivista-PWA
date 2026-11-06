@@ -215,6 +215,7 @@ describe("manuales por especialidad", () => {
       const text = JSON.stringify(diagnosis);
       expect(text, code).toContain("MediaPipe Face Mesh");
       expect(text, code).toContain("180");
+      expect(text, code).toMatch(/63 ?(mm|مم|毫米)/);
       const hairBullets = diagnosis.blocks.filter((b) => b.t === "ul").map((b) => (b.t === "ul" ? b.items.length : 0));
       expect(hairBullets, code).toContain(4);
       // Las clínicas no capilares solo ven la línea de guías faciales (plástica), no la calculadora de injertos.

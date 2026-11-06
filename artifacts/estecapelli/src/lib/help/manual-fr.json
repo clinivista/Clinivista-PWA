@@ -1382,6 +1382,13 @@
     },
     {
      "t": "p",
+     "text": "Proposer un tracé (tracé assisté) : d'un geste, l'application détecte le visage et propose sur la photo de face la ligne frontale (symétrique, à la hauteur suggérée et plus basse vers les tempes), la zone receveuse (entre cette ligne et environ 0,9 tiers moyen plus haut), les repères du visage et l'échelle, estimée avec la distance entre les pupilles (63 mm ; si vous marquez une référence réelle, c'est elle qui prime). Elle en déduit la surface receveuse et l'estimation des greffons. Ensuite, « Ajuster les points » permet de faire glisser les points blancs de la ligne et des zones, et tout est recalculé au relâchement. La zone donneuse n'est pas visible sur la photo de face : marquez-la à part ou indiquez sa surface. C'est une proposition de départ que le médecin corrige ; l'échelle par les pupilles a une erreur de l'ordre de 5 à 8 % et la photo est plane.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
      "text": "Dans l'onglet « Vue », « Repères du visage » détecte le visage sur l'appareil (la photo n'est envoyée à aucun tiers) et dessine l'axe du visage et les trois tiers sur la photo de face ; avec une échelle ils affichent leur longueur en mm. Appuyez à nouveau pour les retirer.",
      "only": [
       "plastica"
