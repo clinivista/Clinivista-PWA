@@ -7,7 +7,7 @@ vi.mock("@/lib/face-turn", () => ({ createFaceTurn: vi.fn(async () => ({ run: as
 
 import { LanguageProvider } from "@/lib/language";
 import { ClinicCamera } from "./clinic-camera";
-import { readGuidePref, usesAppCamera } from "@/lib/clinic-camera";
+import { clinicAspectFor, clinicGuideFor, readGuidePref } from "@/lib/clinic-camera";
 
 let getUserMedia: ReturnType<typeof vi.fn>;
 
@@ -54,7 +54,20 @@ describe("cámara de la clínica", () => {
     expect(await screen.findByTestId("camera-frame")).toBeInTheDocument();
     expect(screen.queryByTestId("camera-guide-toggle")).toBeNull();
     expect(screen.queryByTestId("guide-intro")).toBeNull();
-    expect(usesAppCamera("donor")).toBe(true);
-    expect(usesAppCamera("lesion-1")).toBe(false);
+  });
+
+  it("una vista propia de la clínica usa la cámara de la app sin óvalo, con isotipo y marco 4:3", async () => {
+    renderCamera("vista-k3j2h1");
+    expect(await screen.findByTestId("camera-frame")).toBeInTheDocument();
+    expect(screen.queryByTestId("camera-guide-toggle")).toBeNull();
+    expect(screen.queryByTestId("guide-intro")).toBeNull();
+    expect(await screen.findByAltText("")).toBeInTheDocument();
+    expect(clinicAspectFor("vista-k3j2h1")).toBe("4:3");
+  });
+
+  it("reconoce las vistas de las fases siguientes («<fase>-frontal») y no confunde vistas de otras especialidades", () => {
+    for (const key of ["frontal", "control-1-frontal", "postoperatorio-vertex", "mes-3-temporalRight", "control-2-temporalLeft"]) expect(clinicGuideFor(key)).not.toBeNull();
+    for (const key of ["preoperatorio-donor", "plasticFront", "dermClose", "vista-k3j2h1", "fase-ab12-frontales"]) expect(clinicGuideFor(key)).toBeNull();
+    expect(clinicAspectFor("preoperatorio-donor")).toBe("4:3");
   });
 });

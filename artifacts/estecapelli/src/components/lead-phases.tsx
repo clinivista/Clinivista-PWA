@@ -25,7 +25,7 @@ import { VideoRecorder } from "@/components/video-recorder";
 import { VIDEO_TEXT } from "@/lib/video-i18n";
 import { uploadVideo, type RecordedVideo } from "@/lib/video-capture";
 import { ClinicCamera } from "@/components/clinic-camera";
-import { dataUrlToFile, usesAppCamera } from "@/lib/clinic-camera";
+import { dataUrlToFile } from "@/lib/clinic-camera";
 
 const videoUrl = (leadId: string, photoId: string) => `/api/leads/${encodeURIComponent(leadId)}/videos/${encodeURIComponent(photoId)}`;
 
@@ -258,7 +258,7 @@ function PhotoViewSlot({ leadId, phase, view, disabled, onExpand }: {
               onChange={(event) => upload(event.target.files?.[0], "upload", event.target)}
             />
             <Button type="button" size="sm" variant="outline" className="rounded-full h-8 px-3 text-xs" disabled={busy}
-              onClick={() => (usesAppCamera(view.key) && !appCameraFailed ? setCameraOpen(true) : cameraRef.current?.click())}>
+              onClick={() => (!appCameraFailed ? setCameraOpen(true) : cameraRef.current?.click())}>
               <Camera className="w-3.5 h-3.5 me-1.5" />{view.photo ? p.repeat : p.takePhoto}
             </Button>
             <Button type="button" size="sm" variant="outline" className="rounded-full h-8 px-3 text-xs" disabled={busy}

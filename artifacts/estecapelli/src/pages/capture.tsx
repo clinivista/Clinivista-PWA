@@ -10,7 +10,7 @@ import { VideoRecorder } from "@/components/video-recorder";
 import { VIDEO_TEXT } from "@/lib/video-i18n";
 import { uploadVideo, type RecordedVideo } from "@/lib/video-capture";
 import { ClinicCamera } from "@/components/clinic-camera";
-import { dataUrlToFile, usesAppCamera } from "@/lib/clinic-camera";
+import { dataUrlToFile } from "@/lib/clinic-camera";
 
 type CaptureView = { id: string; key: string; label: string; required: boolean; video?: boolean; taken: boolean };
 type CaptureInfo = { clinicName: string; expiresAt: string; phase: { key: string; name: string }; views: CaptureView[] };
@@ -145,7 +145,7 @@ export default function Capture() {
               <span className="min-w-0 flex-1 font-bold break-words">{label}{!view.required && c.optional}</span>
               <Button type="button" className="rounded-xl shrink-0" variant={view.taken ? "outline" : "default"} disabled={busyId !== null}
                 data-testid={`capture-${view.key}`}
-                onClick={() => { if (view.video) { setRecordingView(view); return; } if (usesAppCamera(view.key) && !appCameraFailed) { setCameraView(view); return; } pending.current = view.id; inputRef.current?.click(); }}>
+                onClick={() => { if (view.video) { setRecordingView(view); return; } if (!appCameraFailed) { setCameraView(view); return; } pending.current = view.id; inputRef.current?.click(); }}>
                 {busyId === view.id ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />{c.saving}</> : view.video ? (view.taken ? v.recordAgain : v.record) : view.taken ? c.retake : c.take}
               </Button>
             </li>

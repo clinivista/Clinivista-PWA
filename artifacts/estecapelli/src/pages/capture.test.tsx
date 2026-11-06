@@ -3,6 +3,11 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 vi.mock("wouter", () => ({ useParams: () => ({ token: "tok-abc" }) }));
+// La cámara de la app necesita el celular: aquí se simula una toma.
+vi.mock("@/components/clinic-camera", () => ({
+  ClinicCamera: ({ viewKey, onCapture }: { viewKey: string; onCapture: (url: string) => void }) => <button type="button" onClick={() => onCapture("data:image/jpeg;base64,AAAA")}>Disparar {viewKey}</button>,
+}));
+vi.mock("@/lib/clinic-camera", () => ({ dataUrlToFile: async (_url: string, name: string) => new File([new Uint8Array(10)], name, { type: "image/jpeg" }) }));
 import Capture from "./capture";
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
@@ -31,8 +36,7 @@ describe("Captura desde el celular", () => {
     expect(screen.getByText(/0 de 2 fotos/)).toBeInTheDocument();
 
     await userEvent.click(screen.getByTestId("capture-control-1-frontal"));
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
-    await userEvent.upload(input, new File([new Uint8Array(10)], "f.jpg", { type: "image/jpeg" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Disparar control-1-frontal" }));
     await waitFor(() => expect(screen.getByText(/1 de 2 fotos/)).toBeInTheDocument());
     expect(calls.some((c) => c.url === "/api/capture/tok-abc/views/v1/photo" && c.method === "POST")).toBe(true);
 

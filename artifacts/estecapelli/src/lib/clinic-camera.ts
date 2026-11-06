@@ -5,7 +5,7 @@ type ClinicGuide = { guideKind: GuideKind; image: string; animation: string; asp
 
 const guideUrl = (name: string) => `${import.meta.env.BASE_URL ?? "/"}guides/${name}`;
 
-// Vistas capilares con guía. La zona donante usa el método del espejo, pensado para que el paciente se la tome solo:
+// Todas las fotos de la clínica se toman con la cámara de Clinivista (isotipo y marco). Las vistas capilares llevan además óvalo y voz. La zona donante usa el método del espejo, pensado para que el paciente se la tome solo:
 // la clínica la fotografía de frente a la nuca, así que va sin óvalo (solo marco 4:3 e isotipo).
 const GUIDES: Record<string, ClinicGuide> = {
   frontal: { guideKind: "front", image: "guia-1-frontal.png", animation: "anim-1-frontal.webp", aspectRatio: "3:4" },
@@ -15,16 +15,20 @@ const GUIDES: Record<string, ClinicGuide> = {
 };
 const PLAIN_ASPECT: Record<string, string> = { donor: "4:3" };
 
-/** Vistas que se toman con la cámara de Clinivista; el resto (lesiones, cirugía plástica, vistas propias) sigue con la cámara nativa. */
-export const usesAppCamera = (viewKey: string) => viewKey in GUIDES || viewKey in PLAIN_ASPECT;
+/**
+ * Las vistas de las fases siguientes a la primera se guardan como «<fase>-frontal», «<fase>-donor»…, así que se
+ * reconoce la vista por el final de la clave. Las vistas que la clínica agregó (clave al azar) no coinciden con ninguna.
+ */
+const baseKey = (viewKey: string) => [...Object.keys(GUIDES), ...Object.keys(PLAIN_ASPECT)].find((key) => viewKey === key || viewKey.endsWith(`-${key}`));
 
 export function clinicGuideFor(viewKey: string) {
-  const guide = GUIDES[viewKey];
+  const guide = GUIDES[baseKey(viewKey) ?? ""];
   return guide
     ? { guideKind: guide.guideKind, guideImage: guideUrl(guide.image), guideAnimation: guideUrl(guide.animation), aspectRatio: guide.aspectRatio }
     : null;
 }
-export const clinicAspectFor = (viewKey: string) => GUIDES[viewKey]?.aspectRatio ?? PLAIN_ASPECT[viewKey];
+/** Marco de la foto: el de la vista capilar reconocida y 4:3 para cualquier otra (lesiones, cirugía plástica, vistas propias). */
+export const clinicAspectFor = (viewKey: string) => { const key = baseKey(viewKey); return key ? GUIDES[key]?.aspectRatio ?? PLAIN_ASPECT[key] : "4:3"; };
 
 const PREF_KEY = "clinivista.clinicCameraGuide";
 /** Óvalo y voz de la clínica: activados salvo que el personal los haya apagado en este dispositivo. */
