@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, X, RotateCcw, AlertCircle, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/brand-logo";
+import { CLINIC_CAMERA_TEXT } from "@/lib/clinic-camera-i18n";
 import { useLanguage } from "@/lib/language";
 import { CAMERA_TEXT, fillTools } from "@/lib/tools-i18n";
 import { cropRectForVideo, frameFor, parseRatio, type Size } from "@/lib/camera-crop";
@@ -31,6 +33,10 @@ interface CameraModalProps {
   guideAnimation?: string;
   /** "Foto 2 de 5". */
   progressLabel?: string;
+  /** Cámara con la que parte (la guía del paciente parte con la frontal; el personal, con la trasera). */
+  facing?: "environment" | "user";
+  /** Interruptor de óvalo y voz en la cabecera (cámara de la clínica). */
+  guideToggle?: { on: boolean; onChange: () => void };
 }
 
 const STATUS_SAY: Record<Exclude<FitStatus, "ok">, SayKey> = { none: "nobody", closer: "closer", farther: "farther", left: "left", right: "right", up: "up", down: "down", turn: "turn" };
@@ -45,7 +51,7 @@ const TAP_HINT_EVERY_MS = 9000;
 
 type PermissionState = "requesting" | "granted" | "denied" | "unsupported";
 
-export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, guided = false, guideKind = "front", guideImage, guideAnimation, progressLabel }: CameraModalProps) {
+export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, guided = false, guideKind = "front", guideImage, guideAnimation, progressLabel, facing, guideToggle }: CameraModalProps) {
   const { lang, t } = useLanguage();
   const cam = CAMERA_TEXT[lang];
   // El mensaje se arma con el idioma vigente sin reiniciar la cámara cuando cambia.
@@ -69,7 +75,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
 
   const [permissionState, setPermissionState] = useState<PermissionState>("requesting");
   // La guía automática parte con la cámara frontal (el paciente casi siempre se toma la foto solo).
-  const [facingMode, setFacingMode] = useState<"environment" | "user">(guided ? "user" : "environment");
+  const [facingMode, setFacingMode] = useState<"environment" | "user">(facing ?? (guided ? "user" : "environment"));
   const { text: guideText, introStep } = guideTextFor(lang, guideKind);
   const introSteps = [...guideText.introBody.split("\n"), ...(introStep ? [introStep] : [])];
   const [stage, setStage] = useState<GuideStage>("intro");
@@ -412,6 +418,17 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
           Cancelar
         </button>
         <span aria-hidden className="flex-1" />
+        {guideToggle && (
+          <button
+            type="button"
+            onClick={guideToggle.onChange}
+            aria-pressed={guideToggle.on}
+            data-testid="camera-guide-toggle"
+            className={`me-4 rounded-full px-3 py-1 text-xs font-bold transition-colors ${guideToggle.on ? "bg-green-600 text-white" : "bg-white/15 text-white/80"}`}
+          >
+            {guideToggle.on ? CLINIC_CAMERA_TEXT[lang].guideOn : CLINIC_CAMERA_TEXT[lang].guideOff}
+          </button>
+        )}
         {permissionState === "granted" && (
           <button
             onClick={handleFlipCamera}
@@ -489,6 +506,11 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
           </div>
         )}
 
+        {/* Isotipo de Clinivista: distingue esta cámara de una cámara normal. Solo en pantalla: no se graba en la foto. */}
+        {permissionState === "granted" && (
+          <BrandLogo className="pointer-events-none absolute bottom-3 start-3 z-20 h-9 w-8 opacity-90 drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]" alt="" />
+        )}
+
         {/* Miniatura animada del movimiento: esquina inferior, sin recibir toques para no estorbar */}
         {permissionState === "granted" && guided && guideAnimation && (stage === "running" || stage === "manual") && (
           <img src={guideAnimation} alt="" aria-hidden data-testid="guide-thumb" className="absolute bottom-3 end-3 z-10 h-24 w-24 rounded-2xl bg-white/90 object-contain shadow-lg pointer-events-none select-none" />
@@ -508,7 +530,7 @@ export function CameraModal({ onCapture, onClose, onError, title, aspectRatio, g
           </div>
         )}
         {permissionState === "granted" && guided && stage === "running" && voiceMissing && (
-          <p role="alert" data-testid="guide-no-voice" className="absolute bottom-3 start-3 end-28 rounded-2xl bg-amber-100 px-4 py-3 text-center text-base font-semibold text-amber-900">{guideText.noVoice}</p>
+          <p role="alert" data-testid="guide-no-voice" className="absolute bottom-3 start-14 end-28 rounded-2xl bg-amber-100 px-4 py-3 text-center text-base font-semibold text-amber-900">{guideText.noVoice}</p>
         )}
         {permissionState === "granted" && guided && message === "unavailable" && (
           <p role="alert" data-testid="guide-unavailable" className="absolute top-3 inset-x-3 rounded-2xl bg-amber-100 px-4 py-3 text-center text-base font-semibold text-amber-900">{guideText.unavailable}{diagnosis && <span data-testid="guide-diagnosis" className="mt-1 block text-xs font-medium opacity-80">{diagnosis}</span>}</p>

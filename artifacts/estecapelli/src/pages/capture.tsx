@@ -9,6 +9,8 @@ import { CAPTURE_TEXT } from "@/lib/capture-i18n";
 import { VideoRecorder } from "@/components/video-recorder";
 import { VIDEO_TEXT } from "@/lib/video-i18n";
 import { uploadVideo, type RecordedVideo } from "@/lib/video-capture";
+import { ClinicCamera } from "@/components/clinic-camera";
+import { dataUrlToFile, usesAppCamera } from "@/lib/clinic-camera";
 
 type CaptureView = { id: string; key: string; label: string; required: boolean; video?: boolean; taken: boolean };
 type CaptureInfo = { clinicName: string; expiresAt: string; phase: { key: string; name: string }; views: CaptureView[] };
@@ -45,6 +47,8 @@ export default function Capture() {
   const pending = useRef<string | null>(null);
   const v = VIDEO_TEXT[lang];
   const [recordingView, setRecordingView] = useState<CaptureView | null>(null);
+  const [cameraView, setCameraView] = useState<CaptureView | null>(null);
+  const [appCameraFailed, setAppCameraFailed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -54,8 +58,8 @@ export default function Capture() {
   }, [token]);
   useEffect(() => { void load(); }, [load]);
 
-  const upload = async (file: File | undefined) => {
-    const viewId = pending.current;
+  const upload = async (file: File | undefined, forView?: string) => {
+    const viewId = forView ?? pending.current;
     if (!file || !viewId) return;
     setBusyId(viewId);
     setError("");
@@ -141,7 +145,7 @@ export default function Capture() {
               <span className="min-w-0 flex-1 font-bold break-words">{label}{!view.required && c.optional}</span>
               <Button type="button" className="rounded-xl shrink-0" variant={view.taken ? "outline" : "default"} disabled={busyId !== null}
                 data-testid={`capture-${view.key}`}
-                onClick={() => { if (view.video) { setRecordingView(view); return; } pending.current = view.id; inputRef.current?.click(); }}>
+                onClick={() => { if (view.video) { setRecordingView(view); return; } if (usesAppCamera(view.key) && !appCameraFailed) { setCameraView(view); return; } pending.current = view.id; inputRef.current?.click(); }}>
                 {busyId === view.id ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />{c.saving}</> : view.video ? (view.taken ? v.recordAgain : v.record) : view.taken ? c.retake : c.take}
               </Button>
             </li>
@@ -149,6 +153,15 @@ export default function Capture() {
         })}
       </ul>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      {cameraView && (
+        <ClinicCamera
+          viewKey={cameraView.key}
+          title={viewLabel(cameraView, info.phase.key, lang, t)}
+          onClose={() => setCameraView(null)}
+          onCapture={async (url) => { const target = cameraView; setCameraView(null); await upload(await dataUrlToFile(url, `camera-${target.key}.jpg`), target.id); }}
+          onError={() => setAppCameraFailed(true)}
+        />
+      )}
       {recordingView && (
         <VideoRecorder title={v.recorderTitle(viewLabel(recordingView, info.phase.key, lang, t))} busy={busyId !== null}
           onClose={() => setRecordingView(null)} onUse={(video) => void saveVideo(recordingView, video)} />
