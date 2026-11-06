@@ -1666,6 +1666,30 @@
   },
   {
    "id": "2.18",
+   "title": "Klinikdaten (gesetzlicher Vertreter)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Der gesetzliche Vertreter sieht im Menü den Bereich „Klinikdaten“, in dem er die Kontaktdaten der Klinik aktuell hält. Das übrige Team sieht ihn nicht."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Daten, die Sie aktualisieren können: Adresse, Telefon, WhatsApp und Firmen-E-Mail. Adresse und Telefon sind Pflicht; WhatsApp und E-Mail sind optional.",
+      "Telefon und WhatsApp werden den Patienten zur Terminbuchung angezeigt, zusammen mit dem Buchungslink aus „Verfügbare Integrationen“.",
+      "Gesperrte Daten: Klinikname, Land und RUT (oder Reisepass). Nur der Support kann sie in der Supra-Kontrolle ändern; zur Korrektur schreiben Sie dem Support über die Hilfe.",
+      "Drücken Sie „Änderungen speichern“: Die Taste wird nur aktiv, wenn es etwas zu speichern gibt und die Daten gültig sind."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Adresse und Telefon erscheinen auch im Dienstleistungsvertrag der Klinik."
+    }
+   ],
+   "key": "clinicdata"
+  },
+  {
+   "id": "2.19",
    "key": "video",
    "title": "Video pro Foto (Gold-Tarif)",
    "blocks": [
@@ -1684,7 +1708,7 @@
    ]
   },
   {
-   "id": "2.19",
+   "id": "2.20",
    "key": "integrations",
    "title": "Verfügbare Integrationen",
    "blocks": [
@@ -1719,7 +1743,7 @@
    ]
   },
   {
-   "id": "2.20",
+   "id": "2.21",
    "title": "Patientendaten und Anfragen",
    "blocks": [
     {
@@ -1742,7 +1766,7 @@
    "key": "privacy"
   },
   {
-   "id": "2.21",
+   "id": "2.22",
    "title": "Neuigkeiten des Patienten: Änderungen und zusätzliche Sendungen",
    "blocks": [
     {
@@ -1766,7 +1790,7 @@
    "key": "patientupdates"
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "title": "Einwilligung zu Fotos (Link, Dokument oder Tablet)",
    "blocks": [
     {
@@ -1790,7 +1814,7 @@
    "key": "photoconsent"
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "title": "Nutzung auf dem Smartphone",
    "blocks": [
     {
@@ -1825,7 +1849,7 @@
    "key": "phone"
   },
   {
-   "id": "2.24",
+   "id": "2.25",
    "key": "support",
    "title": "Support-Tickets",
    "blocks": [
@@ -1849,7 +1873,7 @@
    ]
   },
   {
-   "id": "2.25",
+   "id": "2.26",
    "title": "Tipps und Fehlerbehebung",
    "blocks": [
     {

@@ -36,9 +36,9 @@ export const isCountry = (value: unknown): value is string => typeof value === "
 export const documentKind = (country: string): "rut" | "pasaporte" => (country === "CL" ? "rut" : "pasaporte");
 
 export type UserProfile = { rut: string; address: string; prefix: string; specialty: string };
-export type ClinicProfile = { country: string; rut: string; address: string; phone: string; whatsapp: string };
+export type ClinicProfile = { country: string; rut: string; address: string; phone: string; whatsapp: string; email: string };
 export const EMPTY_USER_PROFILE: UserProfile = { rut: "", address: "", prefix: "", specialty: "" };
-export const EMPTY_CLINIC_PROFILE: ClinicProfile = { country: DEFAULT_COUNTRY, rut: "", address: "", phone: "", whatsapp: "" };
+export const EMPTY_CLINIC_PROFILE: ClinicProfile = { country: DEFAULT_COUNTRY, rut: "", address: "", phone: "", whatsapp: "", email: "" };
 
 const MAX_ADDRESS = 200;
 export const PROFILE_KEYS = ["rut", "address", "prefix", "specialty"] as const;
@@ -131,8 +131,28 @@ export function parseClinicProfile(source: Source, options: { require: boolean }
     if (whatsapp === null) return { error: "Escribe un WhatsApp válido (solo números, +, espacios, guiones o paréntesis)." };
     value.whatsapp = whatsapp;
   }
+  // Correo de la empresa: opcional; vacío lo quita.
+  if (body.email !== undefined) {
+    const email = parseClinicEmail(body.email);
+    if ("error" in email) return email;
+    value.email = email.value;
+  }
   return { value };
 }
+
+const CLINIC_EMAIL = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]{2,}$/;
+function parseClinicEmail(value: unknown): { value: string } | { error: string } {
+  if (value === null) return { value: "" };
+  if (typeof value !== "string") return { error: "Escribe un correo válido." };
+  const email = value.trim();
+  if (email === "") return { value: "" };
+  if (email.length > 120 || !CLINIC_EMAIL.test(email)) return { error: "Escribe un correo válido para la clínica." };
+  return { value: email };
+}
+
+/** Campos que el representante legal puede cambiar de su clínica; país y RUT (o pasaporte) solo los cambia soporte. */
+export const LEGAL_REP_FIELDS = ["address", "phone", "whatsapp", "email"] as const;
+export const SUPPORT_ONLY_FIELDS = ["country", "rut"] as const;
 
 export const hasProfileKeys = (source: Source) => PROFILE_KEYS.some((key) => (source ?? {})[key] !== undefined);
 
@@ -163,7 +183,7 @@ export async function saveUserProfile(userId: string, value: Partial<UserProfile
 export async function clinicProfileOf(centerId: string): Promise<ClinicProfile> {
   try {
     const [row] = await db.select().from(clinicProfilesTable).where(eq(clinicProfilesTable.centerId, centerId));
-    return row ? { country: row.country, rut: row.rut, address: row.address, phone: row.phone, whatsapp: row.whatsapp } : EMPTY_CLINIC_PROFILE;
+    return row ? { country: row.country, rut: row.rut, address: row.address, phone: row.phone, whatsapp: row.whatsapp, email: row.email } : EMPTY_CLINIC_PROFILE;
   } catch (error) {
     logger.warn({ err: error }, "clinic_profiles unavailable");
     return EMPTY_CLINIC_PROFILE;
@@ -175,7 +195,7 @@ export async function clinicProfilesOf(centerIds: string[]): Promise<Map<string,
   if (centerIds.length === 0) return map;
   try {
     const rows = await db.select().from(clinicProfilesTable).where(inArray(clinicProfilesTable.centerId, centerIds));
-    for (const row of rows) map.set(row.centerId, { country: row.country, rut: row.rut, address: row.address, phone: row.phone, whatsapp: row.whatsapp });
+    for (const row of rows) map.set(row.centerId, { country: row.country, rut: row.rut, address: row.address, phone: row.phone, whatsapp: row.whatsapp, email: row.email });
   } catch (error) {
     logger.warn({ err: error }, "clinic_profiles unavailable");
   }

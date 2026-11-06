@@ -372,6 +372,8 @@ export const clinicProfilesTable = pgTable("clinic_profiles", {
   phone: text("phone").notNull().default(""),
   // WhatsApp de la clínica (opcional): el paciente lo ve para agendar su hora. Migración: sql0018.
   whatsapp: text("whatsapp").notNull().default(""),
+  // Correo de la empresa (opcional): lo completa el representante legal o soporte. Migración: sql0019.
+  email: text("email").notNull().default(""),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

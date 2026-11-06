@@ -1666,6 +1666,30 @@
   },
   {
    "id": "2.18",
+   "title": "Dati della clinica (rappresentante legale)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "Il rappresentante legale vede nel menu la voce «Dati della clinica», dove tiene aggiornati i recapiti della clinica. Il resto del personale non la vede."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Dati che puoi aggiornare: indirizzo, telefono, WhatsApp ed e-mail dell'azienda. Indirizzo e telefono sono obbligatori; WhatsApp ed e-mail sono facoltativi.",
+      "Il telefono e WhatsApp vengono mostrati ai pazienti per prenotare, insieme al link di prenotazione di «Integrazioni disponibili».",
+      "Dati bloccati: nome della clinica, paese e RUT (o passaporto). Solo il supporto può cambiarli dalla supra-gestione; per correggerli, scrivi al supporto dall'Aiuto.",
+      "Premi «Salva le modifiche»: il pulsante si attiva solo quando c'è qualcosa da salvare e i dati sono validi."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "L'indirizzo e il telefono compaiono anche nel contratto di servizio della clinica."
+    }
+   ],
+   "key": "clinicdata"
+  },
+  {
+   "id": "2.19",
    "key": "video",
    "title": "Video per foto (piano Oro)",
    "blocks": [
@@ -1684,7 +1708,7 @@
    ]
   },
   {
-   "id": "2.19",
+   "id": "2.20",
    "key": "integrations",
    "title": "Integrazioni disponibili",
    "blocks": [
@@ -1719,7 +1743,7 @@
    ]
   },
   {
-   "id": "2.20",
+   "id": "2.21",
    "title": "Dati dei pazienti e richieste",
    "blocks": [
     {
@@ -1742,7 +1766,7 @@
    "key": "privacy"
   },
   {
-   "id": "2.21",
+   "id": "2.22",
    "title": "Novità del paziente: modifiche e invii aggiuntivi",
    "blocks": [
     {
@@ -1766,7 +1790,7 @@
    "key": "patientupdates"
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "title": "Autorizzazione per le fotografie (link, documento o tablet)",
    "blocks": [
     {
@@ -1790,7 +1814,7 @@
    "key": "photoconsent"
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "title": "Uso da telefono",
    "blocks": [
     {
@@ -1825,7 +1849,7 @@
    "key": "phone"
   },
   {
-   "id": "2.24",
+   "id": "2.25",
    "key": "support",
    "title": "Ticket di supporto",
    "blocks": [
@@ -1849,7 +1873,7 @@
    ]
   },
   {
-   "id": "2.25",
+   "id": "2.26",
    "title": "Consigli e risoluzione dei problemi",
    "blocks": [
     {

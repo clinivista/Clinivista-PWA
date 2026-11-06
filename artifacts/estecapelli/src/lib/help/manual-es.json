@@ -1666,6 +1666,30 @@
   },
   {
    "id": "2.18",
+   "title": "Datos de la clínica (representante legal)",
+   "blocks": [
+    {
+     "t": "p",
+     "text": "El representante legal ve en el menú el apartado «Datos de la clínica», donde mantiene al día cómo contactar a la clínica. El resto del personal no lo ve."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Datos que puedes actualizar: dirección, teléfono, WhatsApp y correo de la empresa. La dirección y el teléfono son obligatorios; el WhatsApp y el correo son opcionales.",
+      "El teléfono y el WhatsApp se muestran a los pacientes para agendar su hora, junto con el link de agendamiento de «Integraciones disponibles».",
+      "Datos bloqueados: nombre de la clínica, país y RUT (o pasaporte). Solo soporte puede cambiarlos desde supra-control; si necesitas corregirlos, escribe a soporte desde Ayuda.",
+      "Pulsa «Guardar cambios»: el botón se activa solo cuando hay algo que guardar y los datos son válidos."
+     ]
+    },
+    {
+     "t": "note",
+     "text": "La dirección y el teléfono también aparecen en el contrato de servicio de la clínica."
+    }
+   ],
+   "key": "clinicdata"
+  },
+  {
+   "id": "2.19",
    "key": "video",
    "title": "Video por fotografía (plan Oro)",
    "blocks": [
@@ -1684,7 +1708,7 @@
    ]
   },
   {
-   "id": "2.19",
+   "id": "2.20",
    "key": "integrations",
    "title": "Integraciones disponibles",
    "blocks": [
@@ -1719,7 +1743,7 @@
    ]
   },
   {
-   "id": "2.20",
+   "id": "2.21",
    "title": "Datos de pacientes y solicitudes",
    "blocks": [
     {
@@ -1742,7 +1766,7 @@
    "key": "privacy"
   },
   {
-   "id": "2.21",
+   "id": "2.22",
    "title": "Novedades del paciente: cambios y envíos adicionales",
    "blocks": [
     {
@@ -1766,7 +1790,7 @@
    "key": "patientupdates"
   },
   {
-   "id": "2.22",
+   "id": "2.23",
    "title": "Autorización para fotografías (enlace, documento o tableta)",
    "blocks": [
     {
@@ -1790,7 +1814,7 @@
    "key": "photoconsent"
   },
   {
-   "id": "2.23",
+   "id": "2.24",
    "title": "Uso desde el teléfono",
    "blocks": [
     {
@@ -1825,7 +1849,7 @@
    "key": "phone"
   },
   {
-   "id": "2.24",
+   "id": "2.25",
    "key": "support",
    "title": "Tickets de soporte",
    "blocks": [
@@ -1849,7 +1873,7 @@
    ]
   },
   {
-   "id": "2.25",
+   "id": "2.26",
    "title": "Consejos y solución de problemas",
    "blocks": [
     {
