@@ -81,7 +81,7 @@ describe("medición sobre la foto", () => {
 
   it("mide con los ejes de la foto, no con las proporciones: horizontal y vertical valen distinto", () => {
     const { measures } = describeMeasures([scale, { type: "ruler", color: "#fff", width: 0.003, points: [[0, 0], [1, 0]] }, { type: "ruler", color: "#fff", width: 0.003, points: [[0, 0], [0, 1]] }], size);
-    expect(measures).toEqual([{ kind: "ruler", index: 1, mm: 100 }, { kind: "ruler", index: 2, mm: 50 }]);
+    expect(measures).toEqual([{ kind: "ruler", index: 1, mm: 100, name: "" }, { kind: "ruler", index: 2, mm: 50, name: "" }]);
   });
 
   it("sin escala no inventa medidas en mm, pero el ángulo sí se calcula", () => {
@@ -90,7 +90,7 @@ describe("medición sobre la foto", () => {
       { type: "angle", color: "#fff", width: 0.003, points: [[0.5, 0], [0, 0], [0, 0.5]] },
     ], { width: 100, height: 100 });
     expect(scaleMm).toBeNull();
-    expect(measures[0]).toEqual({ kind: "ruler", index: 1, mm: null });
+    expect(measures[0]).toEqual({ kind: "ruler", index: 1, mm: null, name: "" });
     expect(measures[1]).toMatchObject({ kind: "angle", degrees: 90 });
   });
 

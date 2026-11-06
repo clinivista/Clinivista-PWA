@@ -1,39 +1,55 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUpRight, Circle, Eraser, Grid3x3, Hand, Hexagon, Loader2, Maximize, MapPin, Minus, Pencil, Plus, Redo2, Ruler, Scaling, SeparatorVertical, TriangleRight, Type, Undo2, X, AlignJustify } from "lucide-react";
+import { ArrowUpRight, Circle, Eraser, Grid3x3, Hand, Hexagon, Loader2, Maximize, MapPin, Minus, Pencil, Plus, Redo2, Ruler, Scaling, SeparatorVertical, TriangleRight, Type, Undo2, X, AlignJustify, ScanLine, Sparkles, Square, Waypoints } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/language";
 import { ANNOTATOR_TEXT } from "@/lib/annotator-i18n";
 import { MEASURE_TOOLS_TEXT } from "@/lib/measure-tools-i18n";
+import { EDITOR_UI_TEXT, type EditorUiText } from "@/lib/editor-ui-i18n";
 import {
-  GUIDE_KINDS, PALETTE, WIDTHS, clamp01, describeMeasures, drawStrokes, formatArea, formatAngle, formatLength, hitsStroke, simplify, strokeToJson,
+  CLASSIFICATIONS, CLASS_NAMES, classificationLabel as classLabel, GUIDE_KINDS, PALETTE, WIDTHS, clamp01, mmPerPixel, setClassification, tapDensity, describeMeasures, drawStrokes, formatArea, formatAngle, formatLength, hitsStroke, simplify, strokeToJson,
   type GuideKind, type Pt, type Stroke, type StrokeType,
 } from "@/lib/annotation";
 import { FIT, MAX_ZOOM, MIN_ZOOM, ZOOM_STEP, clampView, zoomAt, type View } from "@/lib/zoom-view";
 
-type Tool = Exclude<StrokeType, "guide"> | "eraser" | "pan";
+type Tool = Exclude<StrokeType, "guide" | "class"> | "eraser" | "pan";
+type TabId = "draw" | "measure" | "hair" | "view";
 
-const TOOLS: Array<{ tool: Tool; icon: typeof Pencil }> = [
+const DRAW_TOOLS: Array<{ tool: Tool; icon: typeof Pencil }> = [
   { tool: "pen", icon: Pencil },
   { tool: "line", icon: Minus },
   { tool: "arrow", icon: ArrowUpRight },
   { tool: "ellipse", icon: Circle },
   { tool: "text", icon: Type },
+  { tool: "eraser", icon: Eraser },
+  { tool: "pan", icon: Hand },
+];
+const MEASURE_TOOLS: Array<{ tool: Tool; icon: typeof Pencil }> = [
   { tool: "scale", icon: Scaling },
   { tool: "ruler", icon: Ruler },
   { tool: "angle", icon: TriangleRight },
   { tool: "area", icon: Hexagon },
   { tool: "marker", icon: MapPin },
-  { tool: "eraser", icon: Eraser },
-  { tool: "pan", icon: Hand },
+];
+// Capilar: zonas y líneas son un área o una regla con nombre; la densidad tiene su propio trazo.
+const HAIR_TOOLS: Array<{ name: keyof EditorUiText; tool: Tool; icon: typeof Pencil }> = [
+  { name: "donor", tool: "area", icon: Hexagon },
+  { name: "recipient", tool: "area", icon: Square },
+  { name: "hairline", tool: "ruler", icon: Ruler },
+  { name: "templeR", tool: "ruler", icon: Waypoints },
+  { name: "templeL", tool: "ruler", icon: Waypoints },
+  { name: "density", tool: "density", icon: ScanLine },
 ];
 
 const MAX_EXPORT_SIDE = 2400;
+const ENHANCE_FILTER = "contrast(1.3) brightness(1.08) saturate(1.2)";
 const GUIDE_ICON: Record<GuideKind, typeof Grid3x3> = { grid: Grid3x3, midline: SeparatorVertical, planes: AlignJustify };
 const MEASURE_TOOL_KEYS = ["scale", "ruler", "angle", "area", "marker"] as const;
+const TAB_DEFAULT_TOOL: Record<TabId, Tool | null> = { draw: "pen", measure: "ruler", hair: null, view: null };
 
 // Editor de dibujo del médico. Nunca toca la foto del paciente: guarda los
 // trazos (vectores) y una imagen compuesta aparte.
-export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave, onClose }: {
+export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave, onClose, specialty }: {
+  specialty?: string;
   photoUrl: string;
   label: string;
   initialStrokes: Stroke[];
@@ -44,6 +60,8 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   const { lang } = useLanguage();
   const a = ANNOTATOR_TEXT[lang];
   const m = MEASURE_TOOLS_TEXT[lang];
+  const u = EDITOR_UI_TEXT[lang];
+  const isHair = specialty === "capilar";
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
@@ -53,6 +71,11 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   const [past, setPast] = useState<Stroke[][]>([]);
   const [future, setFuture] = useState<Stroke[][]>([]);
   const [tool, setTool] = useState<Tool>("pen");
+  const [tab, setTab] = useState<TabId>("draw");
+  // Nombre de la zona o línea capilar en curso (vacío = medición común).
+  const [preset, setPreset] = useState("");
+  // Realce de cuero cabelludo: solo se aplica a la vista, nunca a la imagen guardada.
+  const [enhance, setEnhance] = useState(false);
   const [color, setColor] = useState<string>(PALETTE[0]);
   const [width, setWidth] = useState<number>(WIDTHS[1].value);
   const [draft, setDraft] = useState<Stroke | null>(null);
@@ -103,15 +126,17 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     canvas.height = Math.min(4096, Math.round(box.height * ratio));
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    if (enhance) ctx.filter = ENHANCE_FILTER;
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    ctx.filter = "none";
     const inProgress: Stroke[] = [];
     if (draft) inProgress.push(draft);
-    if (pending.length > 0 && (tool === "angle" || tool === "area")) inProgress.push({ type: tool, color, width, points: hover ? [...pending, hover] : pending });
+    if (pending.length > 0 && (tool === "angle" || tool === "area")) inProgress.push({ type: tool, color, width, points: hover ? [...pending, hover] : pending, ...(preset ? { text: preset } : {}) });
     drawStrokes(ctx, [...strokes, ...inProgress], canvas.width, canvas.height);
-  }, [image, box, strokes, draft, view.zoom, pending, hover, tool, color, width]);
+  }, [image, box, strokes, draft, view.zoom, pending, hover, tool, color, width, enhance]);
 
   // Al cambiar de herramienta se descarta lo que estaba a medias.
-  useEffect(() => { setPending([]); setHover(null); setScaleAt(null); }, [tool]);
+  useEffect(() => { setPending([]); setHover(null); setScaleAt(null); }, [tool, preset]);
 
   const pointOf = useCallback((event: React.PointerEvent): Pt => {
     const rect = canvasRef.current!.getBoundingClientRect();
@@ -200,6 +225,11 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
       setTextAt({ pt, value: "" });
       return;
     }
+    if (tool === "density") {
+      const next = tapDensity(strokes, pt, { width: image.naturalWidth, height: image.naturalHeight }, { color, width });
+      if (next) change(next);
+      return;
+    }
     if (tool === "marker") {
       commit({ type: "marker", color, width, points: [pt], text: "" });
       return;
@@ -211,7 +241,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
       }
       const next = [...pending, pt];
       if (tool === "angle" && next.length === 3) { commit({ type: "angle", color, width, points: next }); setPending([]); setHover(null); return; }
-      if (tool === "area" && next.length >= 60) { commit({ type: "area", color, width, points: next }); setPending([]); setHover(null); return; }
+      if (tool === "area" && next.length >= 60) { commit({ type: "area", color, width, points: next, ...(preset ? { text: preset } : {}) }); setPending([]); setHover(null); return; }
       setPending(next);
       return;
     }
@@ -222,7 +252,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
       eraseAt(pt);
       return;
     }
-    setDraft({ type: tool, color, width, points: tool === "pen" ? [pt] : [pt, pt] });
+    setDraft({ type: tool, color, width, points: tool === "pen" ? [pt] : [pt, pt], ...(tool === "ruler" && preset ? { text: preset } : {}) });
   };
 
   const eraseAt = (pt: Pt) => {
@@ -305,7 +335,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   };
 
   const finishArea = () => {
-    if (pending.length >= 3) commit({ type: "area", color, width, points: pending });
+    if (pending.length >= 3) commit({ type: "area", color, width, points: pending, ...(preset ? { text: preset } : {}) });
     setPending([]);
     setHover(null);
   };
@@ -318,6 +348,16 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     }
     setScaleAt(null);
   };
+
+  const pickTool = (next: Tool, name = "") => { setTool(next); setPreset(name); };
+  const pickTab = (next: TabId) => {
+    setTab(next);
+    const first = TAB_DEFAULT_TOOL[next];
+    if (first) pickTool(first);
+    else if (next === "hair") pickTool("area", u.donor);
+  };
+  const classCode = strokes.find((stroke) => stroke.type === "class")?.text ?? "";
+  const hasScale = mmPerPixel(strokes, { width: image?.naturalWidth ?? 1, height: image?.naturalHeight ?? 1 }) !== null;
 
   const toggleGuide = (kind: GuideKind) => {
     const exists = strokes.some((stroke) => stroke.type === "guide" && stroke.text === kind);
@@ -350,58 +390,96 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     onSave(strokeToJson(strokes), out.toDataURL("image/jpeg", 0.9));
   };
 
+  const toolText = (value: Tool) =>
+    (MEASURE_TOOL_KEYS as readonly string[]).includes(value) ? m[value as (typeof MEASURE_TOOL_KEYS)[number]] : (a[value as keyof typeof a & ("pen" | "line" | "arrow" | "ellipse" | "text" | "eraser" | "pan")] as string);
+  const toolButton = (key: string, Icon: typeof Pencil, text: string, active: boolean, onClick: () => void) => (
+    <button key={key} type="button" aria-pressed={active} aria-label={text} title={text} onClick={onClick}
+      className={`flex w-[4.25rem] shrink-0 flex-col items-center gap-1 rounded-xl px-1 py-2 text-[11px] font-semibold leading-tight transition-colors ${active ? "bg-white text-neutral-900 shadow" : "text-white/80 hover:bg-white/10"}`}>
+      <Icon className="h-5 w-5" /><span className="max-w-full text-center">{text}</span>
+    </button>
+  );
+  const chip = (key: string, text: string, active: boolean, onClick: () => void, name?: string) => (
+    <button key={key} type="button" aria-pressed={active} aria-label={name} onClick={onClick}
+      className={`h-8 min-w-9 rounded-full px-3 text-xs font-bold transition-colors ${active ? "bg-white text-neutral-900" : "bg-white/10 text-white hover:bg-white/20"}`}>{text}</button>
+  );
+  const roundBtn = "h-9 w-9 rounded-full text-white hover:bg-white/10 disabled:opacity-30";
+  const tabs: Array<{ id: TabId; text: string }> = [
+    { id: "draw", text: u.tabDraw }, { id: "measure", text: u.tabMeasure },
+    ...(isHair ? [{ id: "hair" as TabId, text: u.tabHair }] : []), { id: "view", text: u.tabView },
+  ];
+
   return (
     <div role="dialog" aria-modal="true" aria-label={a.title(label)} className="fixed inset-0 z-[70] bg-neutral-950 flex flex-col">
-      <div className="flex items-center justify-between gap-2 px-4 py-3 text-white">
-        <h2 className="font-bold truncate">{a.title(label)}</h2>
+      <div className="flex items-center gap-2 px-3 py-2 text-white">
+        <h2 className="min-w-0 flex-1 truncate font-bold">{a.title(label)}</h2>
+        <div className="flex items-center gap-0.5 rounded-full bg-white/10 p-0.5" role="group" aria-label={u.history}>
+          <Button type="button" size="icon" variant="ghost" className={roundBtn} aria-label={a.undo} disabled={!past.length} onClick={undo}><Undo2 className="w-4 h-4" /></Button>
+          <Button type="button" size="icon" variant="ghost" className={roundBtn} aria-label={a.redo} disabled={!future.length} onClick={redoLast}><Redo2 className="w-4 h-4" /></Button>
+        </div>
+        <div className="flex items-center gap-0.5 rounded-full bg-white/10 p-0.5" role="group" aria-label={u.zoom}>
+          <Button type="button" size="icon" variant="ghost" className={roundBtn} aria-label={a.zoomOut} disabled={view.zoom <= MIN_ZOOM} onClick={() => zoomBy(1 / ZOOM_STEP)}><Minus className="w-4 h-4" /></Button>
+          <span className="w-10 text-center text-xs tabular-nums" aria-live="polite" data-testid="zoom-level">{Math.round(view.zoom * 100)}%</span>
+          <Button type="button" size="icon" variant="ghost" className={roundBtn} aria-label={a.zoomIn} disabled={view.zoom >= MAX_ZOOM} onClick={() => zoomBy(ZOOM_STEP)}><Plus className="w-4 h-4" /></Button>
+          <Button type="button" size="icon" variant="ghost" className={roundBtn} aria-label={a.zoomReset} disabled={view.zoom === 1} onClick={() => setView(FIT)}><Maximize className="w-4 h-4" /></Button>
+        </div>
         <Button type="button" variant="ghost" size="icon" className="text-white hover:bg-white/10" onClick={onClose} aria-label={a.closeNoSave}>
           <X className="w-5 h-5" />
         </Button>
       </div>
 
-      <div className="px-3 pb-2 flex flex-wrap items-center gap-2" role="toolbar" aria-label={a.toolbar}>
-        {TOOLS.map(({ tool: value, icon: Icon }) => {
-          const text = (MEASURE_TOOL_KEYS as readonly string[]).includes(value) ? m[value as (typeof MEASURE_TOOL_KEYS)[number]] : a[value as keyof typeof a & ("pen" | "line" | "arrow" | "ellipse" | "text" | "eraser" | "pan")] as string;
-          return (
-          <Button key={value} type="button" size="sm" variant={tool === value ? "default" : "secondary"} className="rounded-full h-9"
-            aria-pressed={tool === value} aria-label={text} onClick={() => setTool(value)}>
-            <Icon className="w-4 h-4 sm:mr-1.5" /><span className="hidden sm:inline">{text}</span>
-          </Button>
-          );
-        })}
-        <span className="w-px h-6 bg-white/20 mx-1" />
-        {PALETTE.map((value) => (
-          <button key={value} type="button" aria-label={a.color(value)} aria-pressed={color === value}
-            onClick={() => setColor(value)}
-            className={`w-7 h-7 rounded-full border-2 ${color === value ? "border-white scale-110" : "border-white/30"}`}
-            style={{ background: value }} />
-        ))}
-        <span className="w-px h-6 bg-white/20 mx-1" />
-        {WIDTHS.map(({ value }, index) => (
-          <Button key={value} type="button" size="sm" variant={width === value ? "default" : "secondary"} className="rounded-full h-9 px-3"
-            aria-pressed={width === value} onClick={() => setWidth(value)}>{[a.thin, a.medium, a.thick][index]}</Button>
-        ))}
-        <span className="w-px h-6 bg-white/20 mx-1" />
-        <span className="flex items-center gap-1" role="group" aria-label={m.guides}>
-          {GUIDE_KINDS.map((kind) => {
-            const Icon = GUIDE_ICON[kind];
-            const name = { grid: m.guideGrid, midline: m.guideMidline, planes: m.guidePlanes }[kind];
-            const on = strokes.some((stroke) => stroke.type === "guide" && stroke.text === kind);
-            return (
-              <Button key={kind} type="button" size="icon" variant={on ? "default" : "secondary"} className="rounded-full h-9 w-9" aria-label={name} title={name} aria-pressed={on} onClick={() => toggleGuide(kind)}>
-                <Icon className="w-4 h-4" />
-              </Button>
-            );
-          })}
-        </span>
-        <span className="w-px h-6 bg-white/20 mx-1" />
-        <Button type="button" size="icon" variant="secondary" className="rounded-full h-9 w-9" aria-label={a.zoomOut} disabled={view.zoom <= MIN_ZOOM} onClick={() => zoomBy(1 / ZOOM_STEP)}><Minus className="w-4 h-4" /></Button>
-        <span className="text-white text-xs tabular-nums w-10 text-center" aria-live="polite" data-testid="zoom-level">{Math.round(view.zoom * 100)}%</span>
-        <Button type="button" size="icon" variant="secondary" className="rounded-full h-9 w-9" aria-label={a.zoomIn} disabled={view.zoom >= MAX_ZOOM} onClick={() => zoomBy(ZOOM_STEP)}><Plus className="w-4 h-4" /></Button>
-        <Button type="button" size="icon" variant="secondary" className="rounded-full h-9 w-9" aria-label={a.zoomReset} disabled={view.zoom === 1} onClick={() => setView(FIT)}><Maximize className="w-4 h-4" /></Button>
-        <span className="w-px h-6 bg-white/20 mx-1" />
-        <Button type="button" size="icon" variant="secondary" className="rounded-full h-9 w-9" aria-label={a.undo} disabled={!past.length} onClick={undo}><Undo2 className="w-4 h-4" /></Button>
-        <Button type="button" size="icon" variant="secondary" className="rounded-full h-9 w-9" aria-label={a.redo} disabled={!future.length} onClick={redoLast}><Redo2 className="w-4 h-4" /></Button>
+      <div className="mx-3 mb-2 rounded-2xl border border-white/10 bg-white/5 p-2" role="toolbar" aria-label={a.toolbar}>
+        <div className="flex gap-1 overflow-x-auto" role="tablist" aria-label={u.toolsOf}>
+          {tabs.map(({ id, text }) => (
+            <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => pickTab(id)}
+              className={`h-8 shrink-0 rounded-full px-4 text-xs font-bold transition-colors ${tab === id ? "bg-white text-neutral-900" : "text-white/70 hover:bg-white/10 hover:text-white"}`}>{text}</button>
+          ))}
+        </div>
+        <div className="mt-2 flex flex-wrap items-start gap-x-4 gap-y-2" role="tabpanel">
+          <div className="flex gap-1 overflow-x-auto">
+            {tab === "draw" && DRAW_TOOLS.map(({ tool: value, icon }) => toolButton(value, icon, toolText(value), tool === value, () => pickTool(value)))}
+            {tab === "measure" && MEASURE_TOOLS.map(({ tool: value, icon }) => toolButton(value, icon, toolText(value), tool === value, () => pickTool(value)))}
+            {tab === "hair" && HAIR_TOOLS.map(({ name, tool: value, icon }) => {
+              const text = u[name];
+              return toolButton(name, icon, text, tool === value && (value === "density" || preset === text), () => pickTool(value, value === "density" ? "" : text));
+            })}
+            {tab === "view" && (
+              <>
+                {GUIDE_KINDS.map((kind) => {
+                  const name = { grid: m.guideGrid, midline: m.guideMidline, planes: m.guidePlanes }[kind];
+                  return toolButton(kind, GUIDE_ICON[kind], name, strokes.some((stroke) => stroke.type === "guide" && stroke.text === kind), () => toggleGuide(kind));
+                })}
+                {isHair && toolButton("enhance", Sparkles, u.enhance, enhance, () => setEnhance((prev) => !prev))}
+                {toolButton("pan", Hand, a.pan, tool === "pan", () => pickTool("pan"))}
+              </>
+            )}
+          </div>
+          {tab !== "view" && (
+            <div className="flex flex-col gap-2" role="group" aria-label={u.style}>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {PALETTE.map((value) => (
+                  <button key={value} type="button" aria-label={a.color(value)} aria-pressed={color === value}
+                    onClick={() => setColor(value)}
+                    className={`h-6 w-6 rounded-full border-2 transition-transform ${color === value ? "scale-110 border-white" : "border-white/30"}`}
+                    style={{ background: value }} />
+                ))}
+              </div>
+              <div className="flex gap-1">
+                {WIDTHS.map(({ value }, index) => chip(String(value), [a.thin, a.medium, a.thick][index], width === value, () => setWidth(value)))}
+              </div>
+            </div>
+          )}
+          {tab === "hair" && (
+            <div className="flex flex-col gap-1.5" role="group" aria-label={u.classification}>
+              {(["norwood", "ludwig"] as const).map((scaleKey) => (
+                <div key={scaleKey} className="flex flex-wrap items-center gap-1">
+                  <span className="w-16 text-xs font-bold text-white/70">{CLASS_NAMES[scaleKey]}</span>
+                  {CLASSIFICATIONS[scaleKey].map((grade) => chip(`${scaleKey}:${grade}`, grade, classCode === `${scaleKey}:${grade}`, () => change(setClassification(strokes, `${scaleKey}:${grade}`, { color, width })), `${CLASS_NAMES[scaleKey]} ${grade}`))}
+                </div>
+              ))}
+              <p className="text-[11px] text-white/60">{u.classHint}</p>
+            </div>
+          )}
+        </div>
       </div>
 
       <div ref={wrapRef} className="flex-1 min-h-0 overflow-hidden px-3 flex items-center justify-center touch-none">
@@ -423,6 +501,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerUp}
             />
+            {enhance && <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold text-amber-300">{u.viewOnly}</span>}
             {scaleAt && (
               <div className="absolute z-10 flex items-center gap-1 rounded-lg bg-white/95 p-1.5 shadow" style={{ left: `${Math.min(((scaleAt.points[0][0] + scaleAt.points[1][0]) / 2) * 100, 55)}%`, top: `${((scaleAt.points[0][1] + scaleAt.points[1][1]) / 2) * 100}%` }}>
                 <input
@@ -460,23 +539,26 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
       </div>
 
       <div className="px-4 pt-1 pb-2 text-white/90 text-xs flex flex-col gap-1.5 max-h-40 overflow-y-auto" data-testid="measure-panel">
-        {(tool === "scale" || tool === "ruler" || tool === "angle" || tool === "area" || tool === "marker") && (
+        {enhance && <p className="font-semibold text-amber-300" data-testid="enhance-note">{u.viewOnly}</p>}
+        {(tool === "scale" || tool === "ruler" || tool === "angle" || tool === "area" || tool === "marker" || tool === "density") && (
           <p data-testid="tool-hint" className="font-semibold text-white">
-            {{ scale: m.hintScale, ruler: m.hintRuler, angle: m.hintAngle, area: m.hintArea, marker: m.hintMarker }[tool]}
+            {tool === "density" ? (hasScale ? u.hintDensity : u.needScale) : preset && tool === "area" ? u.hintZone : preset && tool === "ruler" ? u.hintLine : { scale: m.hintScale, ruler: m.hintRuler, angle: m.hintAngle, area: m.hintArea, marker: m.hintMarker }[tool]}
             {tool === "area" && pending.length >= 3 && (
               <Button type="button" size="sm" className="ms-2 h-7 rounded-full" onClick={finishArea}>{m.finishArea}</Button>
             )}
           </p>
         )}
+        {classCode && <p className="font-bold text-white" data-testid="class-legend">{u.classification}: {classLabel(classCode)}</p>}
         {legend.measures.length > 0 && (
           <div data-testid="measure-legend">
             <p className="font-bold text-white">{m.legend}{legend.scaleMm !== null && <span className="ms-2 font-normal text-white/80">{m.legendScale.replace("{mm}", scaleLabel)}</span>}</p>
             <ul className="mt-1 flex flex-col gap-1">
               {legend.measures.map((item) => (
                 <li key={`${item.kind}-${item.index}-${item.kind === "marker" ? item.note : ""}`} className="flex items-center gap-2">
-                  {item.kind === "ruler" && <span><b>R{item.index}</b> · {item.mm === null ? "—" : formatLength(item.mm)}</span>}
+                  {item.kind === "ruler" && <span><b>{item.name || `R${item.index}`}</b> · {item.mm === null ? "—" : formatLength(item.mm)}</span>}
                   {item.kind === "angle" && <span><b>A{item.index}</b> · {formatAngle(item.degrees)}</span>}
-                  {item.kind === "area" && <span><b>Z{item.index}</b> · {item.mm2 === null ? "—" : formatArea(item.mm2)}{item.perimeterMm !== null && <span className="text-white/70"> · {m.perimeter} {formatLength(item.perimeterMm)}</span>}</span>}
+                  {item.kind === "area" && <span><b>{item.name || `Z${item.index}`}</b> · {item.mm2 === null ? "—" : formatArea(item.mm2)}{item.perimeterMm !== null && <span className="text-white/70"> · {m.perimeter} {formatLength(item.perimeterMm)}</span>}</span>}
+                  {item.kind === "density" && <span><b>D{item.index}</b> · {item.count} {u.count}{item.perCm2 !== null && <span> · <b>{item.perCm2}</b>{u.perCm2}</span>}</span>}
                   {item.kind === "marker" && (
                     <>
                       <b className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[11px] text-black">{item.index}</b>

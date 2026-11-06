@@ -3,9 +3,30 @@
 // y se redibujan nítidos a cualquier tamaño.
 
 export type Pt = [number, number];
-export type StrokeType = "pen" | "line" | "arrow" | "ellipse" | "text" | "scale" | "ruler" | "angle" | "area" | "marker" | "guide";
+export type StrokeType = "pen" | "line" | "arrow" | "ellipse" | "text" | "scale" | "ruler" | "angle" | "area" | "marker" | "guide" | "density" | "class";
 /** Herramientas de medición: se dibujan como vectores y su valor se calcula al dibujar, con la escala vigente. */
-export const MEASURE_TYPES: ReadonlyArray<StrokeType> = ["scale", "ruler", "angle", "area", "marker", "guide"];
+export const MEASURE_TYPES: ReadonlyArray<StrokeType> = ["scale", "ruler", "angle", "area", "marker", "guide", "density", "class"];
+
+/**
+ * Capilar. «density»: cuadro de 1 cm² (necesita escala) con puntos de conteo; `points[0]` es el centro del cuadro y el resto, los puntos contados.
+ * «class»: clasificación de la alopecia (`text` = «norwood:IIIv» o «ludwig:II»), que se dibuja en la esquina de la foto.
+ */
+export const MAX_DENSITY_DOTS = 300;
+export const CLASSIFICATIONS = { norwood: ["I", "II", "III", "IIIv", "IV", "V", "VI", "VII"], ludwig: ["I", "II", "III"] } as const;
+export type ClassificationScale = keyof typeof CLASSIFICATIONS;
+export const CLASS_NAMES: Record<ClassificationScale, string> = { norwood: "Norwood", ludwig: "Ludwig" };
+/** «norwood:IIIv» → «Norwood IIIv»; null si no es una clasificación válida. */
+export function classificationLabel(code: string | undefined): string | null {
+  const [scale, grade] = (code ?? "").split(":");
+  if (scale !== "norwood" && scale !== "ludwig") return null;
+  return (CLASSIFICATIONS[scale] as readonly string[]).includes(grade) ? `${CLASS_NAMES[scale]} ${grade}` : null;
+}
+/** Lado, en píxeles de la foto, de un cuadro de 1 cm² con la escala vigente (null si no hay escala). */
+export const densityBoxPx = (mmPerPx: number | null) => (mmPerPx ? 10 / mmPerPx : null);
+/** ¿El punto cae dentro del cuadro de densidad que tiene su centro en `center`? */
+export function insideDensityBox(p: Pt, center: Pt, boxPx: number, size: Size): boolean {
+  return Math.abs((p[0] - center[0]) * size.width) <= boxPx / 2 && Math.abs((p[1] - center[1]) * size.height) <= boxPx / 2;
+}
 /** Guías de la foto (en `text`): cuadrícula en tercios, línea media y planos horizontales. */
 export const GUIDE_KINDS = ["grid", "midline", "planes"] as const;
 export type GuideKind = (typeof GUIDE_KINDS)[number];
@@ -33,7 +54,7 @@ export function strokeToJson(strokes: Stroke[]) {
     color: stroke.color,
     width: stroke.width,
     points: stroke.points.map(([x, y]) => [round(x), round(y)]),
-    ...(stroke.text !== undefined && ["text", "scale", "marker", "guide"].includes(stroke.type) ? { text: stroke.text } : {}),
+    ...(stroke.text !== undefined && ["text", "scale", "marker", "guide", "class", "ruler", "area"].includes(stroke.type) ? { text: stroke.text } : {}),
   }));
 }
 
@@ -73,7 +94,8 @@ export function hitsStroke(stroke: Stroke, p: Pt, aspect: number, tolerance = 0.
     if (pts.length === 1) return Math.hypot(q[0] - pts[0][0], q[1] - pts[0][1]) <= slack;
     return pts.slice(1).some((pt, i) => distanceToSegment(q, pts[i], pt) <= slack);
   }
-  if (stroke.type === "guide") return false; // las guías se activan y desactivan con su botón
+  if (stroke.type === "guide" || stroke.type === "class") return false;
+  if (stroke.type === "density") return pts.slice(1).some((pt) => Math.hypot(q[0] - pt[0], q[1] - pt[1]) <= slack) && false; // los puntos se corrigen tocándolos con la herramienta de conteo // las guías se activan y desactivan con su botón
   if (stroke.type === "line" || stroke.type === "arrow" || stroke.type === "scale" || stroke.type === "ruler") return distanceToSegment(q, pts[0], pts[1]) <= slack;
   if (stroke.type === "angle") return pts.slice(1).some((pt, i) => distanceToSegment(q, pts[i], pt) <= slack);
   if (stroke.type === "area") return pts.some((pt, i) => distanceToSegment(q, pt, pts[(i + 1) % pts.length]) <= slack);
@@ -113,7 +135,7 @@ function label(ctx: Ctx, text: string, x: number, y: number, size: number, color
 
 const LABEL_SIZE = 0.022;
 
-function drawMeasure(ctx: Ctx, stroke: Stroke, pts: Pt[], side: number, k: number | null, numbers: Record<"ruler" | "angle" | "area" | "marker", number>, size: Size) {
+function drawMeasure(ctx: Ctx, stroke: Stroke, pts: Pt[], side: number, k: number | null, numbers: Record<"ruler" | "angle" | "area" | "marker" | "density", number>, size: Size) {
   const fontSize = Math.max(12, LABEL_SIZE * side);
   const tick = Math.max(6, stroke.width * side * 3);
   const tickAt = (a: Pt, b: Pt) => {
@@ -148,7 +170,7 @@ function drawMeasure(ctx: Ctx, stroke: Stroke, pts: Pt[], side: number, k: numbe
     } else {
       numbers.ruler += 1;
       const mm = k === null ? null : Math.hypot(pts[1][0] - pts[0][0], pts[1][1] - pts[0][1]) * k;
-      label(ctx, `R${numbers.ruler}${mm === null ? "" : ` · ${formatLength(mm)}`}`, mid[0], mid[1] - fontSize, fontSize, stroke.color);
+      label(ctx, `${stroke.text || `R${numbers.ruler}`}${mm === null ? "" : ` · ${formatLength(mm)}`}`, mid[0], mid[1] - fontSize, fontSize, stroke.color);
     }
     return;
   }
@@ -180,7 +202,37 @@ function drawMeasure(ctx: Ctx, stroke: Stroke, pts: Pt[], side: number, k: numbe
       const { areaPx } = polygonStats(stroke.points, size);
       const cx = pts.reduce((sum, pt) => sum + pt[0], 0) / pts.length;
       const cy = pts.reduce((sum, pt) => sum + pt[1], 0) / pts.length;
-      label(ctx, `Z${numbers.area}${k === null ? "" : ` · ${formatArea(areaPx * k * k)}`}`, cx, cy, fontSize, stroke.color);
+      label(ctx, `${stroke.text || `Z${numbers.area}`}${k === null ? "" : ` · ${formatArea(areaPx * k * k)}`}`, cx, cy, fontSize, stroke.color);
+    }
+    return;
+  }
+  if (stroke.type === "class") {
+    const name = classificationLabel(stroke.text);
+    if (name) {
+      label(ctx, name, pts[0][0], pts[0][1], fontSize * 1.3, stroke.color);
+    }
+    return;
+  }
+  if (stroke.type === "density") {
+    numbers.density += 1;
+    const box = densityBoxPx(k);
+    if (box !== null && pts.length >= 1) {
+      const half = box / 2;
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0] - half, pts[0][1] - half);
+      ctx.lineTo(pts[0][0] + half, pts[0][1] - half);
+      ctx.lineTo(pts[0][0] + half, pts[0][1] + half);
+      ctx.lineTo(pts[0][0] - half, pts[0][1] + half);
+      ctx.closePath();
+      ctx.stroke();
+      const dot = Math.max(3, side * 0.0035);
+      for (const pt of pts.slice(1)) {
+        ctx.beginPath();
+        ctx.arc(pt[0], pt[1], dot, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      const count = stroke.points.slice(1).filter((p) => insideDensityBox(p, stroke.points[0], box, size)).length;
+      label(ctx, `D${numbers.density} · ${count}/cm²`, pts[0][0], pts[0][1] - half - fontSize * 0.8, fontSize, stroke.color);
     }
     return;
   }
@@ -201,7 +253,7 @@ export function drawStrokes(ctx: Ctx, strokes: Stroke[], width: number, height: 
   const size: Size = { width, height };
   const k = mmPerPixel(strokes, size);
   const measured = describeMeasures(strokes, size).measures;
-  const numbers = { ruler: 0, angle: 0, area: 0, marker: 0 };
+  const numbers = { ruler: 0, angle: 0, area: 0, marker: 0, density: 0 };
   void measured;
   for (const stroke of strokes) {
     ctx.save();
@@ -303,31 +355,63 @@ export const formatArea = (mm2: number) => (mm2 < 100 ? `${trim(mm2, 1)} mm²` :
 export const formatAngle = (degrees: number) => `${trim(degrees, 1)}°`;
 
 export type Measure =
-  | { kind: "ruler"; index: number; mm: number | null }
+  | { kind: "ruler"; index: number; mm: number | null; name: string }
   | { kind: "angle"; index: number; degrees: number }
-  | { kind: "area"; index: number; mm2: number | null; perimeterMm: number | null }
+  | { kind: "area"; index: number; mm2: number | null; perimeterMm: number | null; name: string }
+  | { kind: "density"; index: number; count: number; perCm2: number | null }
   | { kind: "marker"; index: number; note: string; strokeIndex: number };
 
 /** Todas las mediciones de la foto, numeradas en el orden en que se dibujaron (para la leyenda y las etiquetas). */
 export function describeMeasures(strokes: Stroke[], size: Size): { scaleMm: number | null; measures: Measure[] } {
   const k = mmPerPixel(strokes, size);
-  const counts = { ruler: 0, angle: 0, area: 0, marker: 0 };
+  const counts = { ruler: 0, angle: 0, area: 0, marker: 0, density: 0 };
   const measures: Measure[] = [];
   strokes.forEach((stroke, strokeIndex) => {
     if (stroke.type === "ruler" && stroke.points.length >= 2) {
       counts.ruler += 1;
-      measures.push({ kind: "ruler", index: counts.ruler, mm: k === null ? null : dist(stroke.points[0], stroke.points[1], size) * k });
+      measures.push({ kind: "ruler", index: counts.ruler, mm: k === null ? null : dist(stroke.points[0], stroke.points[1], size) * k, name: stroke.text ?? "" });
     } else if (stroke.type === "angle" && stroke.points.length >= 3) {
       counts.angle += 1;
       measures.push({ kind: "angle", index: counts.angle, degrees: angleDegrees(stroke.points[0], stroke.points[1], stroke.points[2], size) });
     } else if (stroke.type === "area" && stroke.points.length >= 3) {
       counts.area += 1;
       const { areaPx, perimeterPx } = polygonStats(stroke.points, size);
-      measures.push({ kind: "area", index: counts.area, mm2: k === null ? null : areaPx * k * k, perimeterMm: k === null ? null : perimeterPx * k });
+      measures.push({ kind: "area", index: counts.area, mm2: k === null ? null : areaPx * k * k, perimeterMm: k === null ? null : perimeterPx * k, name: stroke.text ?? "" });
+    } else if (stroke.type === "density" && stroke.points.length >= 1) {
+      counts.density += 1;
+      const box = densityBoxPx(k);
+      const count = box === null ? stroke.points.length - 1 : stroke.points.slice(1).filter((dot) => insideDensityBox(dot, stroke.points[0], box, size)).length;
+      measures.push({ kind: "density", index: counts.density, count, perCm2: box === null ? null : count });
     } else if (stroke.type === "marker") {
       counts.marker += 1;
       measures.push({ kind: "marker", index: counts.marker, note: stroke.text ?? "", strokeIndex });
     }
   });
   return { scaleMm: k, measures };
+}
+
+/**
+ * Toque con la herramienta de densidad. Dentro de un cuadro existente agrega un punto contado (o quita el que se tocó);
+ * fuera de todos, coloca un cuadro nuevo de 1 cm². Devuelve null si falta la escala o el cuadro ya está lleno.
+ */
+export function tapDensity(strokes: Stroke[], pt: Pt, size: Size, style: { color: string; width: number }): Stroke[] | null {
+  const box = densityBoxPx(mmPerPixel(strokes, size));
+  if (box === null) return null;
+  for (let i = strokes.length - 1; i >= 0; i -= 1) {
+    const item = strokes[i];
+    if (item.type !== "density" || !insideDensityBox(pt, item.points[0], box, size)) continue;
+    const dots = item.points.slice(1);
+    const near = dots.findIndex((dot) => Math.hypot((dot[0] - pt[0]) * size.width, (dot[1] - pt[1]) * size.height) <= box * 0.06);
+    if (near < 0 && dots.length >= MAX_DENSITY_DOTS) return null;
+    const next = near >= 0 ? dots.filter((_, index) => index !== near) : [...dots, pt];
+    return strokes.map((other, index) => (index === i ? { ...item, points: [item.points[0], ...next] } : other));
+  }
+  return [...strokes, { type: "density", color: style.color, width: style.width, points: [pt] }];
+}
+
+/** Pone, cambia o quita (si es la misma) la clasificación de la foto; hay una sola por foto. */
+export function setClassification(strokes: Stroke[], code: string, style: { color: string; width: number }): Stroke[] {
+  const same = strokes.some((item) => item.type === "class" && item.text === code);
+  const rest = strokes.filter((item) => item.type !== "class");
+  return same ? rest : [...rest, { type: "class", color: style.color, width: style.width, points: [[0.14, 0.05]], text: code }];
 }

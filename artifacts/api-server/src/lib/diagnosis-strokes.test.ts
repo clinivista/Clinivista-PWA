@@ -38,4 +38,24 @@ describe("parseStrokes: mediciones y guías", () => {
   it("sigue aceptando los trazos de siempre", () => {
     expect(parseStrokes([{ type: "pen", ...base, points: [[0, 0], [0.5, 0.5]] }, { type: "text", ...base, points: [[0.1, 0.1]], text: "nota" }])).toHaveLength(2);
   });
+
+  it("acepta lo capilar: zonas y líneas con nombre, cuadro de densidad con puntos y clasificación", () => {
+    const parsed = parseStrokes([
+      { type: "area", ...base, points: [[0.1, 0.1], [0.4, 0.1], [0.4, 0.4]], text: "Zona donante" },
+      { type: "ruler", ...base, points: [[0.1, 0.1], [0.4, 0.1]], text: "Línea frontal" },
+      { type: "density", ...base, points: [[0.5, 0.5], [0.5, 0.5], [0.51, 0.5]] },
+      { type: "class", ...base, points: [[0.14, 0.05]], text: "norwood:IIIv" },
+    ]);
+    expect(parsed).toHaveLength(4);
+    expect(parsed![0]).toMatchObject({ type: "area", text: "Zona donante" });
+  });
+
+  it("rechaza lo capilar mal formado: nombre largo, demasiados puntos, grados que no existen", () => {
+    expect(parseStrokes([{ type: "area", ...base, points: [[0, 0], [1, 0], [1, 1]], text: "x".repeat(41) }])).toBeNull();
+    expect(parseStrokes([{ type: "ruler", ...base, points: [[0, 0], [1, 0]], text: "x".repeat(41) }])).toBeNull();
+    expect(parseStrokes([{ type: "density", ...base, points: Array.from({ length: 302 }, () => [0.5, 0.5]) }])).toBeNull();
+    expect(parseStrokes([{ type: "density", ...base, points: [] }])).toBeNull();
+    expect(parseStrokes([{ type: "class", ...base, points: [[0.1, 0.1]], text: "norwood:IX" }])).toBeNull();
+    expect(parseStrokes([{ type: "class", ...base, points: [[0.1, 0.1]] }])).toBeNull();
+  });
 });

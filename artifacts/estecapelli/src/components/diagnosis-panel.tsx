@@ -117,7 +117,7 @@ const whenIn = (lang: keyof typeof DATE_LOCALES) => (iso: string | null | undefi
 // Fase de diagnóstico: el médico dibuja sobre las fotos que tomó el paciente
 // (la original nunca se toca), escribe la respuesta y cierra el diagnóstico.
 // Cerrado queda en solo lectura; se puede reabrir y queda registrado.
-export function DiagnosisPanel({ leadId, onExpand, lead }: { leadId: string; onExpand: (url: string) => void; lead?: DiagnosisLeadData }) {
+export function DiagnosisPanel({ leadId, onExpand, lead, specialty }: { leadId: string; onExpand: (url: string) => void; lead?: DiagnosisLeadData; specialty?: string }) {
   const { toast } = useToast();
   const { lang, t } = useLanguage();
   const p = PHASES_TEXT[lang];
@@ -322,6 +322,7 @@ export function DiagnosisPanel({ leadId, onExpand, lead }: { leadId: string; onE
           photoUrl={photoUrl(marking)}
           label={labelOf(marking)}
           initialStrokes={marking.strokes as Stroke[]}
+          specialty={specialty}
           saving={markup.isPending}
           onClose={() => setMarking(null)}
           onSave={(strokes, image) => markup.mutate({ id: leadId, photoId: marking.photoId, data: { image, strokes } }, {
