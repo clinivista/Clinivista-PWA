@@ -310,6 +310,12 @@ describe("herramientas de medición del editor de fotos", () => {
     await user.click(screen.getByRole("button", { name: "Proponer diseño" }));
     expect(await screen.findByTestId("face-msg")).toHaveTextContent("no está de frente");
 
+    const down = faceMesh();
+    down[152] = { x: 0.5, y: 0.553, z: 0 };
+    mesh.landmarks = down;
+    await user.click(screen.getByRole("button", { name: "Proponer diseño" }));
+    expect(await screen.findByText(/agachado o levantado/)).toBeInTheDocument();
+
     mesh.landmarks = faceMesh();
     await user.click(screen.getByRole("button", { name: "Proponer diseño" }));
     expect(await screen.findByTestId("auto-scale")).toHaveTextContent("63 mm");
@@ -327,6 +333,14 @@ describe("herramientas de medición del editor de fotos", () => {
     expect(heightText()).not.toBe(before);
     await user.click(screen.getByRole("button", { name: "Deshacer" }));
     expect(heightText()).toBe(before);
+    // La zona receptora comparte los puntos de la línea frontal: al mover uno, el otro lo sigue (el contorno sigue continuo).
+    drag(canvas, [center[0] * 400, center[1] * 400], [center[0] * 400, center[1] * 400 - 40]);
+    HTMLCanvasElement.prototype.toDataURL = () => "data:image/jpeg;base64,AAAA";
+    await user.click(screen.getByRole("button", { name: "Guardar dibujo" }));
+    const moved = onSave.mock.calls.at(-1)![0] as Array<{ type: string; points: number[][] }>;
+    const top = moved.find((stroke) => stroke.type === "hairline")!.points[4];
+    expect(moved.find((stroke) => stroke.type === "area")!.points.some((p) => Math.abs(p[0] - top[0]) < 1e-3 && Math.abs(p[1] - top[1]) < 1e-3)).toBe(true);
+    await user.click(screen.getByRole("button", { name: "Deshacer" }));
 
     HTMLCanvasElement.prototype.toDataURL = () => "data:image/jpeg;base64,AAAA";
     await user.click(screen.getByRole("button", { name: "Guardar dibujo" }));

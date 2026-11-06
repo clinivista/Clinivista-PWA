@@ -43,6 +43,8 @@ export function faceGeometry(points: Pt[], size: Size): FaceGeometry | null {
   const lowerPx = along(subnasale, menton, up);
   // Un orden imposible (la nariz fuera del tramo entrecejo–mentón) significa que los puntos no son una cara.
   if (middlePx <= 0 || lowerPx <= 0) return null;
+  // Y una cara agachada o levantada (un tercio casi nulo) tampoco sirve para proponer nada.
+  if (lowerPx / middlePx < 0.4 || lowerPx / middlePx > 2.5) return null;
   const suggestedPx = middlePx;
   const suggested: Pt = [glabella[0] + up[0] * suggestedPx, glabella[1] + up[1] * suggestedPx];
   return { eyeA, eyeB, glabella, subnasale, menton, up, across, middlePx, lowerPx, suggestedPx, suggested };

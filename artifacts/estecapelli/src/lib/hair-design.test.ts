@@ -8,6 +8,19 @@ const size = { width: 1000, height: 1000 };
 const FACE: Pt[] = [[0.4, 0.38], [0.6, 0.38], [0.5, 0.4], [0.5, 0.55], [0.5, 0.7]];
 const options = { recipientNames: ["Zona receptora", "Recipient zone"], recipientName: "Zona receptora", style: { color: "#ef4444", width: 0.006 } };
 
+// ¿El polígono se cruza consigo mismo? (aristas no contiguas que se intersectan)
+const crosses = (poly: Pt[]) => {
+  const cross = (o: Pt, a: Pt, b: Pt) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const hit = (a: Pt, b: Pt, c: Pt, d: Pt) => cross(a, b, c) * cross(a, b, d) < 0 && cross(c, d, a) * cross(c, d, b) < 0;
+  for (let i = 0; i < poly.length; i += 1) {
+    for (let j = i + 2; j < poly.length; j += 1) {
+      if (i === 0 && j === poly.length - 1) continue;
+      if (hit(poly[i], poly[(i + 1) % poly.length], poly[j], poly[(j + 1) % poly.length])) return true;
+    }
+  }
+  return false;
+};
+
 describe("diseño asistido", () => {
   const g = faceGeometry(FACE, size)!;
 
@@ -25,6 +38,21 @@ describe("diseño asistido", () => {
     expect(zone.length).toBeGreaterThanOrEqual(12);
     for (const [x, y] of zone) { expect(x).toBeGreaterThanOrEqual(0); expect(x).toBeLessThanOrEqual(1); expect(y).toBeGreaterThanOrEqual(0); expect(y).toBeLessThanOrEqual(1); }
     expect(Math.min(...zone.map((p) => p[1]))).toBeLessThan(Math.min(...proposedHairline(g, size).map((p) => p[1])));
+  });
+
+  it("la zona receptora es un contorno continuo, sin cruces, también con la cabeza inclinada o la foto en otra proporción", () => {
+    expect(crosses(proposedRecipient(g, size))).toBe(false);
+    const tilted: Pt[] = [[0.4, 0.4], [0.6, 0.38], [0.55, 0.4], [0.5, 0.55], [0.45, 0.7]];
+    for (const dims of [size, { width: 1200, height: 1600 }]) {
+      const tg = faceGeometry(tilted, dims)!;
+      expect(crosses(proposedRecipient(tg, dims))).toBe(false);
+    }
+  });
+
+  it("no propone nada con una cara agachada o levantada (el tercio inferior casi desaparece)", () => {
+    const down: Pt[] = [[0.4, 0.38], [0.6, 0.38], [0.5, 0.4], [0.5, 0.55], [0.5, 0.553]];
+    expect(faceGeometry(down, size)).toBeNull();
+    expect(proposeDesign([], down, size, options)).toBeNull();
   });
 
   it("propone guías, línea, zona, escala por pupilas e injertos, y reemplaza lo propuesto antes", () => {

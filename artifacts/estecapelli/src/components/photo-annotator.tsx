@@ -44,6 +44,7 @@ const HAIR_TOOLS: Array<{ name: keyof EditorUiText; tool: Tool; icon: typeof Pen
   { name: "density", tool: "density", icon: ScanLine },
 ];
 
+const samePoint = (a: Pt, b: Pt) => Math.abs(a[0] - b[0]) < 1e-4 && Math.abs(a[1] - b[1]) < 1e-4;
 const isEditable = (stroke: Stroke) => stroke.type === "hairline" || stroke.type === "area";
 const MAX_EXPORT_SIDE = 2400;
 const ENHANCE_FILTER = "contrast(1.3) brightness(1.08) saturate(1.2)";
@@ -109,7 +110,8 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const gesture = useRef<{ kind: "pinch"; dist: number; view: View; mid: { x: number; y: number } } | { kind: "pan"; start: { x: number; y: number }; view: View } | null>(null);
   const dragging = useRef(false);
-  const handle = useRef<{ i: number; j: number } | null>(null);
+  // Puntos que se mueven juntos: el de la línea frontal y el de la zona receptora que coinciden con él.
+  const handle = useRef<Array<{ i: number; j: number }> | null>(null);
   const erasedInDrag = useRef(false);
 
   useEffect(() => {
@@ -156,9 +158,13 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     // Con «Ajustar puntos» se ven las asas de la línea frontal y de las zonas (solo en pantalla, no en la imagen guardada).
     if (tool === "adjust") {
       const radius = (7 * canvas.width) / box.width;
+      const drawn: Pt[] = [];
       for (const stroke of strokes) {
         if (!isEditable(stroke)) continue;
         for (const p of stroke.points) {
+          // Un solo asa por lugar: la zona receptora comparte los puntos de la línea frontal.
+          if (drawn.some((q) => samePoint(p, q))) continue;
+          drawn.push(p);
           ctx.beginPath();
           ctx.arc(p[0] * canvas.width, p[1] * canvas.height, radius, 0, Math.PI * 2);
           ctx.fillStyle = "#ffffff";
@@ -272,7 +278,8 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
       const hit = best as { i: number; j: number; d: number } | null;
       if (hit) {
         (event.target as Element).setPointerCapture?.(event.pointerId);
-        handle.current = { i: hit.i, j: hit.j };
+        const grabbed = strokes[hit.i].points[hit.j];
+        handle.current = strokes.flatMap((item, i) => (isEditable(item) ? item.points.flatMap((p, j) => (samePoint(p, grabbed) ? [{ i, j }] : [])) : []));
         dragging.current = true;
         setPast((prev) => [...prev, strokes]);
         setFuture([]);
@@ -347,8 +354,11 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     }
     const pt = pointOf(event);
     if (handle.current) {
-      const { i, j } = handle.current;
-      setStrokes((prev) => prev.map((item, index) => (index === i ? { ...item, points: item.points.map((p, k) => (k === j ? pt : p)) } : item)));
+      const targets = handle.current;
+      setStrokes((prev) => prev.map((item, index) => {
+        const mine = targets.filter((target) => target.i === index);
+        return mine.length ? { ...item, points: item.points.map((p, k) => (mine.some((target) => target.j === k) ? pt : p)) } : item;
+      }));
       return;
     }
     if (tool === "eraser") {
@@ -446,7 +456,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     try {
       const engine = await createFaceTurn();
       const guide = faceGuideFromLandmarks(engine?.landmarks ? await engine.landmarks(image) : null);
-      if (!guide.ok) { setFaceMsg(guide.reason === "turned" ? h.faceTurned : h.faceNone); return null; }
+      if (!guide.ok) { setFaceMsg(guide.reason === "turned" ? h.faceTurned : guide.reason === "tilted" ? h.faceTilted : h.faceNone); return null; }
       return guide.points;
     } finally {
       setFaceBusy(false);

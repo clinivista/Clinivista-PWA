@@ -38,14 +38,21 @@ export function turnFromLandmarks(landmarks: Landmark[]): number | null {
 
 /** Giro máximo (en proporción del ancho de la cara) para que las guías de frente sirvan: ~0,12 son unos 10° de giro. */
 export const MAX_GUIDE_TURN = 0.12;
+/** Proporción plausible entre el tercio inferior y el medio (en una cara de frente ronda 1–1,5). */
+export const MIN_THIRDS_RATIO = 0.5;
+export const MAX_THIRDS_RATIO = 2;
 const average = (a: Landmark, b: Landmark): [number, number] => [(a.x + b.x) / 2, (a.y + b.y) / 2];
-export type FaceGuide = { ok: true; points: Array<[number, number]> } | { ok: false; reason: "none" | "turned" };
+export type FaceGuide = { ok: true; points: Array<[number, number]> } | { ok: false; reason: "none" | "turned" | "tilted" };
 /** Los cinco puntos del trazo «face» (ojo, ojo, entrecejo, base de la nariz, mentón) desde la malla; rechaza caras de lado. */
 export function faceGuideFromLandmarks(landmarks: Landmark[] | null): FaceGuide {
   if (!landmarks || landmarks.length < 468) return { ok: false, reason: "none" };
   const turn = turnFromLandmarks(landmarks);
   if (turn === null) return { ok: false, reason: "none" };
   if (Math.abs(turn) > MAX_GUIDE_TURN) return { ok: false, reason: "turned" };
+  // Cabeza agachada o levantada: el giro lateral sale ~0, pero los tercios quedan desproporcionados (el inferior casi desaparece).
+  const d = (a: number, b: number) => Math.hypot(landmarks[a].x - landmarks[b].x, landmarks[a].y - landmarks[b].y);
+  const ratio = d(2, 152) / Math.max(1e-6, d(9, 2));
+  if (ratio < MIN_THIRDS_RATIO || ratio > MAX_THIRDS_RATIO) return { ok: false, reason: "tilted" };
   const clamp = (v: number) => Math.min(1, Math.max(0, v));
   const at = (i: number): [number, number] => [clamp(landmarks[i].x), clamp(landmarks[i].y)];
   const eye = (a: number, b: number): [number, number] => { const m = average(landmarks[a], landmarks[b]); return [clamp(m[0]), clamp(m[1])]; };

@@ -94,6 +94,11 @@ describe("guías faciales desde la malla", () => {
     expect(guide.ok && guide.points[0][0]).toBeCloseTo(0.42);
     expect(guide.ok && guide.points[2]).toEqual([0.5, 0.42]);
   });
+  it("rechaza la cabeza agachada o levantada aunque no esté girada", () => {
+    const down = mesh();
+    down[152] = { x: 0.5, y: 0.553, z: 0 };
+    expect(faceGuideFromLandmarks(down)).toEqual({ ok: false, reason: "tilted" });
+  });
   it("rechaza la cara de lado y la falta de cara", () => {
     expect(faceGuideFromLandmarks(mesh(0.6))).toEqual({ ok: false, reason: "turned" });
     expect(faceGuideFromLandmarks(null)).toEqual({ ok: false, reason: "none" });
