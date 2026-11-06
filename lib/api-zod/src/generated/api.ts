@@ -479,7 +479,7 @@ export const GetLeadDiagnosisResponse = zod.object({
   "hasAnnotation": zod.boolean(),
   "annotationUpdatedAt": zod.coerce.date().nullish(),
   "strokes": zod.array(zod.object({
-  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text']),
+  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text', 'scale', 'ruler', 'angle', 'area', 'marker', 'guide']),
   "color": zod.string(),
   "width": zod.number(),
   "points": zod.array(zod.array(zod.number())),
@@ -523,7 +523,7 @@ export const SaveLeadDiagnosisResponse = zod.object({
   "hasAnnotation": zod.boolean(),
   "annotationUpdatedAt": zod.coerce.date().nullish(),
   "strokes": zod.array(zod.object({
-  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text']),
+  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text', 'scale', 'ruler', 'angle', 'area', 'marker', 'guide']),
   "color": zod.string(),
   "width": zod.number(),
   "points": zod.array(zod.array(zod.number())),
@@ -742,7 +742,7 @@ export const CloseLeadDiagnosisResponse = zod.object({
   "hasAnnotation": zod.boolean(),
   "annotationUpdatedAt": zod.coerce.date().nullish(),
   "strokes": zod.array(zod.object({
-  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text']),
+  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text', 'scale', 'ruler', 'angle', 'area', 'marker', 'guide']),
   "color": zod.string(),
   "width": zod.number(),
   "points": zod.array(zod.array(zod.number())),
@@ -782,7 +782,7 @@ export const ReopenLeadDiagnosisResponse = zod.object({
   "hasAnnotation": zod.boolean(),
   "annotationUpdatedAt": zod.coerce.date().nullish(),
   "strokes": zod.array(zod.object({
-  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text']),
+  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text', 'scale', 'ruler', 'angle', 'area', 'marker', 'guide']),
   "color": zod.string(),
   "width": zod.number(),
   "points": zod.array(zod.array(zod.number())),
@@ -808,7 +808,7 @@ export const SaveLeadPhotoAnnotationParams = zod.object({
 export const SaveLeadPhotoAnnotationBody = zod.object({
   "image": zod.string().describe('The marked-up photo as a data URL (JPEG, PNG or WebP)'),
   "strokes": zod.array(zod.object({
-  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text']),
+  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text', 'scale', 'ruler', 'angle', 'area', 'marker', 'guide']),
   "color": zod.string(),
   "width": zod.number(),
   "points": zod.array(zod.array(zod.number())),
@@ -834,7 +834,7 @@ export const SaveLeadPhotoAnnotationResponse = zod.object({
   "hasAnnotation": zod.boolean(),
   "annotationUpdatedAt": zod.coerce.date().nullish(),
   "strokes": zod.array(zod.object({
-  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text']),
+  "type": zod.enum(['pen', 'line', 'arrow', 'ellipse', 'text', 'scale', 'ruler', 'angle', 'area', 'marker', 'guide']),
   "color": zod.string(),
   "width": zod.number(),
   "points": zod.array(zod.array(zod.number())),

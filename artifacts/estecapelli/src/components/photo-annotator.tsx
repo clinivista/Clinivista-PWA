@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUpRight, Circle, Eraser, Hand, Loader2, Maximize, Minus, Pencil, Plus, Redo2, Type, Undo2, X } from "lucide-react";
+import { ArrowUpRight, Circle, Eraser, Grid3x3, Hand, Hexagon, Loader2, Maximize, MapPin, Minus, Pencil, Plus, Redo2, Ruler, Scaling, SeparatorVertical, TriangleRight, Type, Undo2, X, AlignJustify } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/language";
 import { ANNOTATOR_TEXT } from "@/lib/annotator-i18n";
+import { MEASURE_TOOLS_TEXT } from "@/lib/measure-tools-i18n";
 import {
-  PALETTE, WIDTHS, clamp01, drawStrokes, hitsStroke, simplify, strokeToJson,
-  type Pt, type Stroke, type StrokeType,
+  GUIDE_KINDS, PALETTE, WIDTHS, clamp01, describeMeasures, drawStrokes, formatArea, formatAngle, formatLength, hitsStroke, simplify, strokeToJson,
+  type GuideKind, type Pt, type Stroke, type StrokeType,
 } from "@/lib/annotation";
 import { FIT, MAX_ZOOM, MIN_ZOOM, ZOOM_STEP, clampView, zoomAt, type View } from "@/lib/zoom-view";
 
-type Tool = StrokeType | "eraser" | "pan";
+type Tool = Exclude<StrokeType, "guide"> | "eraser" | "pan";
 
 const TOOLS: Array<{ tool: Tool; icon: typeof Pencil }> = [
   { tool: "pen", icon: Pencil },
@@ -17,11 +18,18 @@ const TOOLS: Array<{ tool: Tool; icon: typeof Pencil }> = [
   { tool: "arrow", icon: ArrowUpRight },
   { tool: "ellipse", icon: Circle },
   { tool: "text", icon: Type },
+  { tool: "scale", icon: Scaling },
+  { tool: "ruler", icon: Ruler },
+  { tool: "angle", icon: TriangleRight },
+  { tool: "area", icon: Hexagon },
+  { tool: "marker", icon: MapPin },
   { tool: "eraser", icon: Eraser },
   { tool: "pan", icon: Hand },
 ];
 
 const MAX_EXPORT_SIDE = 2400;
+const GUIDE_ICON: Record<GuideKind, typeof Grid3x3> = { grid: Grid3x3, midline: SeparatorVertical, planes: AlignJustify };
+const MEASURE_TOOL_KEYS = ["scale", "ruler", "angle", "area", "marker"] as const;
 
 // Editor de dibujo del médico. Nunca toca la foto del paciente: guarda los
 // trazos (vectores) y una imagen compuesta aparte.
@@ -35,6 +43,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
 }) {
   const { lang } = useLanguage();
   const a = ANNOTATOR_TEXT[lang];
+  const m = MEASURE_TOOLS_TEXT[lang];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
@@ -48,6 +57,10 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   const [width, setWidth] = useState<number>(WIDTHS[1].value);
   const [draft, setDraft] = useState<Stroke | null>(null);
   const [textAt, setTextAt] = useState<{ pt: Pt; value: string } | null>(null);
+  // Medición: puntos ya tocados de un ángulo o un área en curso, el punto bajo el cursor y la escala esperando su medida real.
+  const [pending, setPending] = useState<Pt[]>([]);
+  const [hover, setHover] = useState<Pt | null>(null);
+  const [scaleAt, setScaleAt] = useState<{ points: [Pt, Pt]; value: string } | null>(null);
   const [box, setBox] = useState({ width: 0, height: 0 });
   const [view, setView] = useState<View>(FIT);
   const viewRef = useRef<View>(FIT);
@@ -91,8 +104,14 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-    drawStrokes(ctx, draft ? [...strokes, draft] : strokes, canvas.width, canvas.height);
-  }, [image, box, strokes, draft, view.zoom]);
+    const inProgress: Stroke[] = [];
+    if (draft) inProgress.push(draft);
+    if (pending.length > 0 && (tool === "angle" || tool === "area")) inProgress.push({ type: tool, color, width, points: hover ? [...pending, hover] : pending });
+    drawStrokes(ctx, [...strokes, ...inProgress], canvas.width, canvas.height);
+  }, [image, box, strokes, draft, view.zoom, pending, hover, tool, color, width]);
+
+  // Al cambiar de herramienta se descarta lo que estaba a medias.
+  useEffect(() => { setPending([]); setHover(null); setScaleAt(null); }, [tool]);
 
   const pointOf = useCallback((event: React.PointerEvent): Pt => {
     const rect = canvasRef.current!.getBoundingClientRect();
@@ -181,6 +200,21 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
       setTextAt({ pt, value: "" });
       return;
     }
+    if (tool === "marker") {
+      commit({ type: "marker", color, width, points: [pt], text: "" });
+      return;
+    }
+    if (tool === "angle" || tool === "area") {
+      if (tool === "area" && pending.length >= 3 && Math.hypot((pt[0] - pending[0][0]) * (image?.naturalWidth ?? 1), (pt[1] - pending[0][1]) * (image?.naturalHeight ?? 1)) < 0.03 * Math.max(image?.naturalWidth ?? 1, image?.naturalHeight ?? 1)) {
+        finishArea();
+        return;
+      }
+      const next = [...pending, pt];
+      if (tool === "angle" && next.length === 3) { commit({ type: "angle", color, width, points: next }); setPending([]); setHover(null); return; }
+      if (tool === "area" && next.length >= 60) { commit({ type: "area", color, width, points: next }); setPending([]); setHover(null); return; }
+      setPending(next);
+      return;
+    }
     (event.target as Element).setPointerCapture?.(event.pointerId);
     dragging.current = true;
     erasedInDrag.current = false;
@@ -219,7 +253,10 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
       setView(clampView({ ...g.view, x: g.view.x + event.clientX - g.start.x, y: g.view.y + event.clientY - g.start.y }, box, viewport()));
       return;
     }
-    if (!dragging.current) return;
+    if (!dragging.current) {
+      if (pending.length > 0) setHover(pointOf(event));
+      return;
+    }
     const pt = pointOf(event);
     if (tool === "eraser") {
       eraseAt(pt);
@@ -249,6 +286,8 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     const [a, b] = [finished.points[0], finished.points[finished.points.length - 1]];
     // Un toque sin arrastrar solo cuenta como punto con el lápiz.
     if (finished.type !== "pen" && Math.hypot(a[0] - b[0], a[1] - b[1]) < 0.005) return;
+    // La escala necesita su medida real antes de guardarse.
+    if (finished.type === "scale") { setScaleAt({ points: [finished.points[0], finished.points[1]], value: "" }); return; }
     commit(finished);
   };
 
@@ -265,10 +304,38 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     setFuture(future.slice(0, -1));
   };
 
+  const finishArea = () => {
+    if (pending.length >= 3) commit({ type: "area", color, width, points: pending });
+    setPending([]);
+    setHover(null);
+  };
+
+  const confirmScale = () => {
+    const mm = Number(scaleAt?.value.replace(",", "."));
+    if (scaleAt && Number.isFinite(mm) && mm > 0 && mm <= 10000) {
+      // Una sola escala vale: la nueva reemplaza a la anterior.
+      change([...strokes.filter((stroke) => stroke.type !== "scale"), { type: "scale", color, width, points: scaleAt.points, text: String(Math.round(mm * 100) / 100) }]);
+    }
+    setScaleAt(null);
+  };
+
+  const toggleGuide = (kind: GuideKind) => {
+    const exists = strokes.some((stroke) => stroke.type === "guide" && stroke.text === kind);
+    change(exists ? strokes.filter((stroke) => !(stroke.type === "guide" && stroke.text === kind)) : [...strokes, { type: "guide", color, width: WIDTHS[0].value, points: [[0.5, 0.5]], text: kind }]);
+  };
+
+  const setMarkerNote = (strokeIndex: number, note: string) => {
+    if ((strokes[strokeIndex]?.text ?? "") === note) return;
+    change(strokes.map((stroke, index) => index === strokeIndex ? { ...stroke, text: note.slice(0, 200) } : stroke));
+  };
+
   const confirmText = () => {
     if (textAt && textAt.value.trim()) commit({ type: "text", color, width, points: [textAt.pt], text: textAt.value.trim().slice(0, 200) });
     setTextAt(null);
   };
+
+  const legend = describeMeasures(strokes, { width: image?.naturalWidth ?? 1, height: image?.naturalHeight ?? 1 });
+  const scaleLabel = String(strokes.filter((stroke) => stroke.type === "scale").at(-1)?.text ?? "");
 
   const handleSave = () => {
     if (!image) return;
@@ -294,7 +361,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
 
       <div className="px-3 pb-2 flex flex-wrap items-center gap-2" role="toolbar" aria-label={a.toolbar}>
         {TOOLS.map(({ tool: value, icon: Icon }) => {
-          const text = a[value];
+          const text = (MEASURE_TOOL_KEYS as readonly string[]).includes(value) ? m[value as (typeof MEASURE_TOOL_KEYS)[number]] : a[value as keyof typeof a & ("pen" | "line" | "arrow" | "ellipse" | "text" | "eraser" | "pan")] as string;
           return (
           <Button key={value} type="button" size="sm" variant={tool === value ? "default" : "secondary"} className="rounded-full h-9"
             aria-pressed={tool === value} aria-label={text} onClick={() => setTool(value)}>
@@ -314,6 +381,19 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
           <Button key={value} type="button" size="sm" variant={width === value ? "default" : "secondary"} className="rounded-full h-9 px-3"
             aria-pressed={width === value} onClick={() => setWidth(value)}>{[a.thin, a.medium, a.thick][index]}</Button>
         ))}
+        <span className="w-px h-6 bg-white/20 mx-1" />
+        <span className="flex items-center gap-1" role="group" aria-label={m.guides}>
+          {GUIDE_KINDS.map((kind) => {
+            const Icon = GUIDE_ICON[kind];
+            const name = { grid: m.guideGrid, midline: m.guideMidline, planes: m.guidePlanes }[kind];
+            const on = strokes.some((stroke) => stroke.type === "guide" && stroke.text === kind);
+            return (
+              <Button key={kind} type="button" size="icon" variant={on ? "default" : "secondary"} className="rounded-full h-9 w-9" aria-label={name} title={name} aria-pressed={on} onClick={() => toggleGuide(kind)}>
+                <Icon className="w-4 h-4" />
+              </Button>
+            );
+          })}
+        </span>
         <span className="w-px h-6 bg-white/20 mx-1" />
         <Button type="button" size="icon" variant="secondary" className="rounded-full h-9 w-9" aria-label={a.zoomOut} disabled={view.zoom <= MIN_ZOOM} onClick={() => zoomBy(1 / ZOOM_STEP)}><Minus className="w-4 h-4" /></Button>
         <span className="text-white text-xs tabular-nums w-10 text-center" aria-live="polite" data-testid="zoom-level">{Math.round(view.zoom * 100)}%</span>
@@ -343,6 +423,21 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerUp}
             />
+            {scaleAt && (
+              <div className="absolute z-10 flex items-center gap-1 rounded-lg bg-white/95 p-1.5 shadow" style={{ left: `${Math.min(((scaleAt.points[0][0] + scaleAt.points[1][0]) / 2) * 100, 55)}%`, top: `${((scaleAt.points[0][1] + scaleAt.points[1][1]) / 2) * 100}%` }}>
+                <input
+                  autoFocus
+                  inputMode="decimal"
+                  aria-label={m.scalePrompt}
+                  placeholder={m.scalePrompt}
+                  value={scaleAt.value}
+                  onChange={(event) => setScaleAt({ ...scaleAt, value: event.target.value })}
+                  onKeyDown={(event) => { if (event.key === "Enter") confirmScale(); if (event.key === "Escape") setScaleAt(null); }}
+                  className="w-32 rounded border border-slate-300 px-2 py-1 text-sm text-black"
+                />
+                <Button type="button" size="sm" className="h-8 rounded-md" onClick={confirmScale}>{m.scaleOk}</Button>
+              </div>
+            )}
             {textAt && (
               <input
                 autoFocus
@@ -360,6 +455,46 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
                 placeholder={a.textPlaceholder}
               />
             )}
+          </div>
+        )}
+      </div>
+
+      <div className="px-4 pt-1 pb-2 text-white/90 text-xs flex flex-col gap-1.5 max-h-40 overflow-y-auto" data-testid="measure-panel">
+        {(tool === "scale" || tool === "ruler" || tool === "angle" || tool === "area" || tool === "marker") && (
+          <p data-testid="tool-hint" className="font-semibold text-white">
+            {{ scale: m.hintScale, ruler: m.hintRuler, angle: m.hintAngle, area: m.hintArea, marker: m.hintMarker }[tool]}
+            {tool === "area" && pending.length >= 3 && (
+              <Button type="button" size="sm" className="ms-2 h-7 rounded-full" onClick={finishArea}>{m.finishArea}</Button>
+            )}
+          </p>
+        )}
+        {legend.measures.length > 0 && (
+          <div data-testid="measure-legend">
+            <p className="font-bold text-white">{m.legend}{legend.scaleMm !== null && <span className="ms-2 font-normal text-white/80">{m.legendScale.replace("{mm}", scaleLabel)}</span>}</p>
+            <ul className="mt-1 flex flex-col gap-1">
+              {legend.measures.map((item) => (
+                <li key={`${item.kind}-${item.index}-${item.kind === "marker" ? item.note : ""}`} className="flex items-center gap-2">
+                  {item.kind === "ruler" && <span><b>R{item.index}</b> · {item.mm === null ? "—" : formatLength(item.mm)}</span>}
+                  {item.kind === "angle" && <span><b>A{item.index}</b> · {formatAngle(item.degrees)}</span>}
+                  {item.kind === "area" && <span><b>Z{item.index}</b> · {item.mm2 === null ? "—" : formatArea(item.mm2)}{item.perimeterMm !== null && <span className="text-white/70"> · {m.perimeter} {formatLength(item.perimeterMm)}</span>}</span>}
+                  {item.kind === "marker" && (
+                    <>
+                      <b className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[11px] text-black">{item.index}</b>
+                      <input
+                        defaultValue={item.note}
+                        aria-label={`${m.marker} ${item.index}: ${m.noteHolder}`}
+                        placeholder={m.noteHolder}
+                        maxLength={200}
+                        onBlur={(event) => setMarkerNote(item.strokeIndex, event.target.value.trim())}
+                        className="min-w-0 flex-1 rounded bg-white/10 px-2 py-1 text-white placeholder:text-white/50"
+                      />
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {legend.scaleMm === null && legend.measures.some((item) => item.kind === "ruler" || item.kind === "area") && <p className="mt-1 text-amber-300">{m.needScale}</p>}
+            {legend.scaleMm !== null && <p className="mt-1 text-white/70">{m.disclaimer}</p>}
           </div>
         )}
       </div>
