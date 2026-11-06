@@ -181,14 +181,14 @@ describe("manuales por especialidad", () => {
       const bulletsOf = (section: HelpSection) => section.blocks.filter((b) => b.t === "ul").map((b) => (b.t === "ul" ? b.items.length : 0));
       // Cámara del personal (fases), editor (diagnóstico: medición + capilar), comparación (evolución).
       expect(bulletsOf(sec(cap, "phases")), code).toContain(3);
-      expect(bulletsOf(sec(cap, "diagnosis")), code).toEqual(expect.arrayContaining([4, 5]));
+      expect(bulletsOf(sec(cap, "diagnosis")), code).toContain(4);
       expect(bulletsOf(sec(cap, "evolution")), code).toContain(4);
       const plain = await loadManual(code, "plastica");
       expect(sec(cap, "ficha").blocks.length - sec(plain, "ficha").blocks.length, code).toBe(2); // vista giratoria: solo capilar
       for (const sp of ["plastica", "dermatologia"] as const) {
         const other = await loadManual(code, sp);
         expect(bulletsOf(sec(other, "diagnosis")), `${code}/${sp}`).toContain(4);
-        expect(bulletsOf(sec(other, "diagnosis")), `${code}/${sp}`).not.toContain(5); // sin herramientas capilares
+        expect(bulletsOf(sec(other, "diagnosis")).length, `${code}/${sp}`).toBeLessThan(bulletsOf(sec(cap, "diagnosis")).length); // sin herramientas capilares
       }
     }
     const es = JSON.stringify((await loadManual("es", "capilar")).staff);

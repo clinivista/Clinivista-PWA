@@ -1340,7 +1340,6 @@
       "Zona donante y Zona receptora: contornea la zona y pulsa «Terminar área»; la leyenda muestra su nombre y los cm².",
       "Línea frontal, Sien derecha y Sien izquierda: arrastra entre dos puntos para medir esa distancia; la leyenda la muestra con su nombre.",
       "Densidad (1 cm²): toca para colocar un cuadro de 1 cm² y toca cada folículo dentro de él; la leyenda indica el conteo y los folículos por cm². Toca un punto para quitarlo.",
-      "Clasificación: elige el grado Norwood (I a VII, con IIIv) o Ludwig (I a III); queda escrito en la foto. Hay una sola por foto: vuelve a tocarla para quitarla.",
       "Realzar cuero cabelludo (pestaña «Vista»): aumenta el contraste solo para ver mejor. Es únicamente visualización y no se guarda en la imagen."
      ],
      "only": [

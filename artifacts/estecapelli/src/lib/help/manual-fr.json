@@ -1340,7 +1340,6 @@
       "Zone donneuse et Zone receveuse : détourez la zone puis « Terminer la surface » ; la légende affiche son nom et les cm².",
       "Ligne frontale, Tempe droite et Tempe gauche : faites glisser entre deux points pour mesurer cette distance ; la légende l'affiche avec son nom.",
       "Densité (1 cm²) : touchez pour placer un carré de 1 cm² puis touchez chaque follicule à l'intérieur ; la légende indique le comptage et les follicules par cm². Touchez un point pour le retirer.",
-      "Classification : choisissez le stade Norwood (I à VII, avec IIIv) ou Ludwig (I à III) ; il est inscrit sur la photo. Il n'y en a qu'une par photo : touchez-la à nouveau pour la retirer.",
       "Révéler le cuir chevelu (onglet « Vue ») : augmente le contraste uniquement pour mieux voir. C'est un affichage seulement, non enregistré dans l'image."
      ],
      "only": [
