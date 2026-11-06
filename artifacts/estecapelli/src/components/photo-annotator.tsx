@@ -10,7 +10,7 @@ import { GRAFT_DEFAULTS, GRAFT_KEYS, GRAFT_RANGES, fitHairline, graftPrefill, gr
 import { hasEstimatedScale, proposeDesign, syncRecipientArea } from "@/lib/hair-design";
 import { createFaceTurn, faceGuideFromLandmarks } from "@/lib/face-turn";
 import {
-  CLASSIFICATIONS, CLASS_NAMES, classificationLabel as classLabel, GUIDE_KINDS, PALETTE, WIDTHS, clamp01, mmPerPixel, setClassification, tapDensity, describeMeasures, drawStrokes, formatArea, formatAngle, formatLength, hitsStroke, polygonStats, simplify, strokeToJson,
+  GUIDE_KINDS, PALETTE, WIDTHS, clamp01, mmPerPixel, tapDensity, describeMeasures, drawStrokes, formatArea, formatAngle, formatLength, hitsStroke, polygonStats, simplify, strokeToJson,
   type GuideKind, type Pt, type Stroke, type StrokeType,
 } from "@/lib/annotation";
 import { FIT, MAX_ZOOM, MIN_ZOOM, ZOOM_STEP, clampView, zoomAt, type View } from "@/lib/zoom-view";
@@ -431,7 +431,6 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     if (first) pickTool(first);
     else if (next === "hair") pickTool("adjust");
   };
-  const classCode = strokes.find((stroke) => stroke.type === "class")?.text ?? "";
   const hasScale = mmPerPixel(strokes, { width: image?.naturalWidth ?? 1, height: image?.naturalHeight ?? 1 }) !== null;
 
   const toggleGuide = (kind: GuideKind) => {
@@ -617,17 +616,6 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
             </div>
           )}
           {tab === "hair" && (
-            <div className="flex flex-col gap-1.5" role="group" aria-label={u.classification}>
-              {(["norwood", "ludwig"] as const).map((scaleKey) => (
-                <div key={scaleKey} className="flex flex-wrap items-center gap-1">
-                  <span className="w-16 text-xs font-bold text-white/70">{CLASS_NAMES[scaleKey]}</span>
-                  {CLASSIFICATIONS[scaleKey].map((grade) => chip(`${scaleKey}:${grade}`, grade, classCode === `${scaleKey}:${grade}`, () => change(setClassification(strokes, `${scaleKey}:${grade}`, { color, width })), `${CLASS_NAMES[scaleKey]} ${grade}`))}
-                </div>
-              ))}
-              <p className="text-[11px] text-white/60">{u.classHint}</p>
-            </div>
-          )}
-          {tab === "hair" && (
             <div className="flex min-w-[15rem] flex-col gap-1.5" role="group" aria-label={h.graftTitle} data-testid="graft-form">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-white/70">{h.graftTitle}</span>
@@ -745,7 +733,6 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
             {plan.graft && <p className="mt-1 text-white/70">{h.graftNote}</p>}
           </div>
         )}
-        {classCode && <p className="font-bold text-white" data-testid="class-legend">{u.classification}: {classLabel(classCode)}</p>}
         {legend.measures.length > 0 && (
           <div data-testid="measure-legend">
             <p className="font-bold text-white">{m.legend}{legend.scaleMm !== null && <span className="ms-2 font-normal text-white/80">{m.legendScale.replace("{mm}", scaleLabel)}</span>}</p>

@@ -1340,7 +1340,6 @@
       "Donor zone and Recipient zone: outline the zone and press “Finish area”; the legend shows its name and the cm².",
       "Frontal line, Right temple and Left temple: drag between two points to measure that distance; the legend shows it with its name.",
       "Density (1 cm²): tap to place a 1 cm² box and tap each follicle inside it; the legend shows the count and the follicles per cm². Tap a dot to remove it.",
-      "Classification: choose the Norwood grade (I to VII, with IIIv) or Ludwig (I to III); it is written on the photo. There is only one per photo: tap it again to remove it.",
       "Enhance scalp (“View” tab): raises the contrast only to see better. It is view-only and is not saved in the image."
      ],
      "only": [

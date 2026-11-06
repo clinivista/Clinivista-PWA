@@ -189,14 +189,13 @@ describe("herramientas de medición del editor de fotos", () => {
     tap(canvas, [303, 203]); // segundo folículo
     expect(screen.getByTestId("measure-legend")).toHaveTextContent(/D1 · 2 conteo · 2\/cm²/);
 
-    await user.click(screen.getByRole("button", { name: "Norwood IIIv" }));
-    expect(screen.getByTestId("class-legend")).toHaveTextContent("Norwood IIIv");
-    await user.click(screen.getByRole("button", { name: "Ludwig II" }));
+    // Las escalas Norwood y Ludwig ya no están en el editor (el Norwood se elige en el formulario del diagnóstico).
+    expect(screen.queryByRole("button", { name: "Norwood IIIv" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Ludwig II" })).toBeNull();
     HTMLCanvasElement.prototype.toDataURL = () => "data:image/jpeg;base64,AAAA";
     await user.click(screen.getByRole("button", { name: "Guardar dibujo" }));
     const saved = onSave.mock.calls[0][0] as Array<{ type: string; text?: string }>;
-    expect(saved.filter((stroke) => stroke.type === "class")).toHaveLength(1);
-    expect(saved.find((stroke) => stroke.type === "area")?.text).toBe("Zona donante");
+        expect(saved.find((stroke) => stroke.type === "area")?.text).toBe("Zona donante");
   });
 
   it("el realce del cuero cabelludo es solo de vista: avisa y no cambia los trazos", async () => {

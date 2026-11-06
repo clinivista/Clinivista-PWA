@@ -96,7 +96,8 @@ export function hitsStroke(stroke: Stroke, p: Pt, aspect: number, tolerance = 0.
     if (pts.length === 1) return Math.hypot(q[0] - pts[0][0], q[1] - pts[0][1]) <= slack;
     return pts.slice(1).some((pt, i) => distanceToSegment(q, pts[i], pt) <= slack);
   }
-  if (stroke.type === "guide" || stroke.type === "class" || stroke.type === "face" || stroke.type === "graft") return false;
+  if (stroke.type === "class") return Math.hypot(q[0] - pts[0][0], q[1] - pts[0][1]) <= slack + 0.05; // clasificaciones antiguas: ya no se crean, pero se pueden borrar
+  if (stroke.type === "guide" || stroke.type === "face" || stroke.type === "graft") return false;
   if (stroke.type === "hairline") return pts.slice(1).some((pt, i) => distanceToSegment(q, pts[i], pt) <= slack);
   if (stroke.type === "density") return pts.slice(1).some((pt) => Math.hypot(q[0] - pt[0], q[1] - pt[1]) <= slack) && false; // los puntos se corrigen tocándolos con la herramienta de conteo // las guías se activan y desactivan con su botón
   if (stroke.type === "line" || stroke.type === "arrow" || stroke.type === "scale" || stroke.type === "ruler") return distanceToSegment(q, pts[0], pts[1]) <= slack;
