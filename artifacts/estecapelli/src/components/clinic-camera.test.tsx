@@ -31,6 +31,7 @@ describe("cámara de la clínica", () => {
     const user = userEvent.setup();
     renderCamera("frontal");
     expect(await screen.findByTestId("guide-intro")).toBeInTheDocument();
+    expect(screen.queryByTestId("guide-image")).toBeNull(); // la clínica no ve la ilustración del paciente
     expect(getUserMedia.mock.calls[0][0]).toMatchObject({ video: { facingMode: { ideal: "environment" } } });
     expect(await screen.findByAltText("")).toBeInTheDocument(); // isotipo (decorativo)
     const toggle = screen.getByTestId("camera-guide-toggle");
