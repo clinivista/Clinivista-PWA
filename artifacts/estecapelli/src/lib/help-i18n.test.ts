@@ -208,4 +208,21 @@ describe("manuales por especialidad", () => {
     const es = JSON.stringify((await loadManual("es", "capilar")).staff.find((item) => item.key === "clinicdata"));
     expect(es).toContain("Solo soporte puede cambiarlos");
   });
+
+  it("el manual registra los aspectos técnicos de la planificación capilar (malla en el dispositivo, tercios, fórmula de injertos) en los nueve idiomas", async () => {
+    for (const code of LANGS) {
+      const diagnosis = (await loadManual(code, "capilar")).staff.find((s) => s.key === "diagnosis")!;
+      const text = JSON.stringify(diagnosis);
+      expect(text, code).toContain("MediaPipe Face Mesh");
+      expect(text, code).toContain("180");
+      const hairBullets = diagnosis.blocks.filter((b) => b.t === "ul").map((b) => (b.t === "ul" ? b.items.length : 0));
+      expect(hairBullets, code).toContain(4);
+      // Las clínicas no capilares solo ven la línea de guías faciales (plástica), no la calculadora de injertos.
+      const plain = JSON.stringify((await loadManual(code, "plastica")).staff.find((s) => s.key === "diagnosis"));
+      expect(plain, code).not.toContain("180");
+      const derm = JSON.stringify((await loadManual(code, "dermatologia")).staff.find((s) => s.key === "diagnosis"));
+      expect(derm, code).not.toContain("MediaPipe");
+    }
+    expect(JSON.stringify((await loadManual("es", "plastica")).staff.find((s) => s.key === "diagnosis"))).toContain("Guías faciales");
+  });
 });

@@ -1349,6 +1349,46 @@
     },
     {
      "t": "h3",
+     "text": "Planification capillaire : ligne frontale, greffons et repères du visage",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Dans l'onglet « Capillaire » (et les repères du visage, dans « Vue ») l'éditeur aide à planifier sur la photo de face. Tout est indicatif : c'est le médecin qui décide.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Repères du visage (onglet « Vue ») : détecte le visage et dessine l'axe du visage, les trois tiers (numérotés 1, 2 et 3 ; avec une échelle ils affichent leur longueur en mm) et la hauteur suggérée de la ligne frontale. Sans visage, ou de profil, l'éditeur le signale : utilisez la photo de face avec une bonne lumière.",
+      "Dessiner la ligne frontale : tracez du doigt la ligne proposée, de tempe à tempe en croisant la ligne médiane. Il n'y en a qu'une par photo : un nouveau tracé remplace le précédent. Avec les repères actifs, la légende indique sa hauteur au-dessus de la glabelle et combien de fois le tiers moyen elle représente ; la ligne pointillée est le reflet du dessin pour vérifier la symétrie.",
+      "Estimation des greffons : « Calculer les greffons » ouvre un calculateur avec les zones receveuse et donneuse (cm²), la densité d'implantation (UF/cm²), la densité donneuse (cheveux/cm²), les cheveux par UF et le pourcentage de prélèvement sûr. Les surfaces se remplissent seules à partir de vos zones mesurées « Zone receveuse » et « Zone donneuse » (échelle requise) ; vérifiez toutes les valeurs et modifiez-les si besoin. Le résultat et le pourcentage de couverture sont inscrits sur la photo.",
+      "Une valeur hors limites n'est pas enregistrée et le champ revient à la précédente ; « Retirer l'estimation » supprime le calcul."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Fonctionnement interne : le visage est détecté avec un maillage facial (MediaPipe Face Mesh) que l'application charge et exécute elle-même sur votre appareil ; la photo n'est envoyée à aucun tiers pour cela. Cinq points sont utilisés (yeux, glabelle, base du nez et menton) ; l'axe va de la glabelle au menton, il suit donc l'inclinaison de la tête, et seuls les visages de face sont acceptés (rotation jusqu'à environ 10°). Le tiers moyen va de la glabelle à la base du nez, le tiers inférieur de la base du nez au menton, et la hauteur suggérée est un tiers moyen au-dessus de la glabelle (règle classique : tiers supérieur égal au moyen). Greffons : nécessaires = zone receveuse × densité d'implantation ; disponibles = zone donneuse × (densité donneuse ÷ cheveux par UF) × prélèvement sûr ; couverture = disponibles ÷ nécessaires, arrondi à la dizaine. Valeurs initiales modifiables : 40 UF/cm², 180 cheveux/cm², 2,2 cheveux par UF et 25 %. Les mesures en mm ne valent que si la référence d'échelle est dans le même plan et à la même distance que ce qui est mesuré (la photo est plane).",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Dans l'onglet « Vue », « Repères du visage » détecte le visage sur l'appareil (la photo n'est envoyée à aucun tiers) et dessine l'axe du visage et les trois tiers sur la photo de face ; avec une échelle ils affichent leur longueur en mm. Appuyez à nouveau pour les retirer.",
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "h3",
      "text": "Étape 2 · Norwood, notes et réponse",
      "only": [
       "capilar"

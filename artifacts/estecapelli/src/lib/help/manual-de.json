@@ -1349,6 +1349,46 @@
     },
     {
      "t": "h3",
+     "text": "Haarplanung: Haarlinie, Grafts und Gesichtshilfen",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Im Tab „Haar“ (und die Gesichtshilfen unter „Ansicht“) hilft der Editor bei der Planung auf dem Frontfoto. Alles ist nur eine Orientierung: Der Arzt entscheidet.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Gesichtshilfen (Tab „Ansicht“): erkennt das Gesicht und zeichnet die Gesichtsachse, die drei Drittel (nummeriert 1, 2 und 3; mit Maßstab mit ihrer Länge in mm) und die vorgeschlagene Höhe der Haarlinie. Ist kein Gesicht zu sehen oder es ist nicht frontal, weist der Editor darauf hin: Verwenden Sie das Frontfoto bei gutem Licht.",
+      "Haarlinie entwerfen: Zeichnen Sie die vorgeschlagene Linie mit dem Finger, von Schläfe zu Schläfe und über die Mittellinie. Es gibt eine pro Foto: Ein neuer Strich ersetzt den vorherigen. Bei aktiven Gesichtshilfen zeigt die Legende ihre Höhe über der Glabella und das Vielfache des mittleren Drittels; die gepunktete Linie ist die Spiegelung des Entwurfs zur Symmetrieprüfung.",
+      "Graft-Schätzung: „Grafts berechnen“ öffnet einen Rechner mit Empfänger- und Spenderfläche (cm²), Implantationsdichte (FE/cm²), Spenderdichte (Haare/cm²), Haaren pro FE und sicherem Entnahmeanteil. Die Flächen werden aus Ihren gemessenen Zonen „Empfängerbereich“ und „Spenderbereich“ übernommen (Maßstab nötig); prüfen Sie alle Werte und ändern Sie sie bei Bedarf. Ergebnis und Deckung stehen auf dem Foto.",
+      "Ein Wert außerhalb des Bereichs wird nicht gespeichert und das Feld springt zurück; „Schätzung entfernen“ löscht die Berechnung."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "note",
+     "text": "So funktioniert es: Das Gesicht wird mit einem Gesichtsnetz (MediaPipe Face Mesh) erkannt, das die App selbst lädt und auf Ihrem Gerät ausführt; das Foto wird dafür an keinen Dritten gesendet. Es werden fünf Punkte verwendet (Augen, Glabella, Nasenbasis und Kinn); die Achse verläuft von der Glabella zum Kinn und folgt so der Kopfneigung; akzeptiert werden nur frontale Gesichter (Drehung bis etwa 10°). Das mittlere Drittel ist Glabella–Nasenbasis, das untere Nasenbasis–Kinn, und die vorgeschlagene Höhe ist ein mittleres Drittel über der Glabella (klassische Regel: oberes Drittel gleich dem mittleren). Grafts: benötigt = Empfängerfläche × Implantationsdichte; verfügbar = Spenderfläche × (Spenderdichte ÷ Haare pro FE) × sichere Entnahme; Deckung = verfügbar ÷ benötigt, auf Zehner gerundet. Änderbare Startwerte: 40 FE/cm², 180 Haare/cm², 2,2 Haare pro FE und 25 %. Maße in mm gelten nur, wenn die Maßstabsreferenz in derselben Ebene und im gleichen Abstand liegt wie das Gemessene (das Foto ist flach).",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Im Tab „Ansicht“ erkennt „Gesichtshilfen“ das Gesicht auf dem Gerät (das Foto wird an keinen Dritten gesendet) und zeichnet die Gesichtsachse und die drei Drittel auf das Frontfoto; mit Maßstab mit ihrer Länge in mm. Erneut drücken, um sie zu entfernen.",
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "h3",
      "text": "Schritt 2 · Norwood, Notizen und Antwort",
      "only": [
       "capilar"

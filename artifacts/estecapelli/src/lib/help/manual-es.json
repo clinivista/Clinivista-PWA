@@ -1349,6 +1349,46 @@
     },
     {
      "t": "h3",
+     "text": "Planificación capilar: línea frontal, injertos y guías faciales",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "En la pestaña «Capilar» (y las guías faciales, en «Vista») el editor ayuda a planificar sobre la foto frontal. Todo es orientativo: la decisión es del médico.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Guías faciales (pestaña «Vista»): detecta el rostro y dibuja el eje de la cara, los tres tercios (numerados 1, 2 y 3; con escala muestran su largo en mm) y la altura sugerida de la línea frontal. Si no hay rostro o no está de frente, avisa: usa la foto frontal con buena luz.",
+      "Diseñar línea frontal: dibuja con el dedo la línea propuesta, de sien a sien y cruzando la línea media. Hay una sola por foto: un trazo nuevo reemplaza al anterior. Con las guías faciales activas, la leyenda muestra su altura sobre el entrecejo y cuántas veces el tercio medio es; la línea punteada es el reflejo del diseño para comprobar la simetría.",
+      "Estimación de injertos: «Calcular injertos» abre una calculadora con la zona receptora y donante (cm²), la densidad de implante (UF/cm²), la densidad donante (pelos/cm²), los pelos por UF y el porcentaje de extracción segura. Las superficies se rellenan solas desde tus zonas «Zona receptora» y «Zona donante» medidas (necesitan escala); revisa todos los valores y edítalos si hace falta. El resultado y el porcentaje de cobertura quedan escritos en la foto.",
+      "Fuera de rango, un valor no se guarda y el campo vuelve al anterior; «Quitar estimación» borra el cálculo."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Cómo funciona por dentro: el rostro se detecta con una malla facial (MediaPipe Face Mesh) que la propia app carga y ejecuta en tu dispositivo; la foto no se envía a ningún tercero para esto. Se usan cinco puntos (ojos, entrecejo, base de la nariz y mentón); el eje va del entrecejo al mentón, así que sigue la inclinación de la cabeza, y solo se aceptan rostros de frente (giro de hasta unos 10°). El tercio medio es entrecejo–base de la nariz, el inferior es base de la nariz–mentón, y la altura sugerida es un tercio medio sobre el entrecejo (regla clásica: tercio superior igual al medio). Injertos: necesarios = zona receptora × densidad de implante; disponibles = zona donante × (densidad donante ÷ pelos por UF) × extracción segura; cobertura = disponibles ÷ necesarios, redondeado a decenas. Valores iniciales editables: 40 UF/cm², 180 pelos/cm², 2,2 pelos por UF y 25 %. Las medidas en mm valen solo si la referencia de escala está en el mismo plano y a la misma distancia que lo medido (la foto es plana).",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "En la pestaña «Vista», «Guías faciales» detecta el rostro en el dispositivo (la foto no sale a ningún tercero) y dibuja el eje de la cara y los tres tercios sobre la foto frontal; con escala muestran su largo en mm. Vuelve a pulsarlo para quitarlas.",
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "h3",
      "text": "Paso 2 · Norwood, notas y respuesta",
      "only": [
       "capilar"

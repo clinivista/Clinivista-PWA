@@ -1349,6 +1349,46 @@
     },
     {
      "t": "h3",
+     "text": "Hair planning: hairline, grafts and face guides",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "In the “Hair” tab (and the face guides, under “View”) the editor helps you plan on the front photo. Everything is approximate: the doctor decides.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Face guides (“View” tab): detects the face and draws the face axis, the three thirds (numbered 1, 2 and 3; with a scale they show their length in mm) and the suggested hairline height. If there is no face, or it is not facing forward, it tells you: use the front photo in good light.",
+      "Design hairline: draw the proposed line with your finger, from temple to temple and across the midline. There is one per photo: a new stroke replaces the previous one. With the face guides on, the legend shows its height above the glabella and how many times the middle third it is; the dotted line is the mirror of the design to check symmetry.",
+      "Graft estimate: “Calculate grafts” opens a calculator with the recipient and donor areas (cm²), implant density (FU/cm²), donor density (hairs/cm²), hairs per FU and the safe extraction percentage. The areas fill in by themselves from your measured “Recipient zone” and “Donor zone” (a scale is needed); review all values and edit them if needed. The result and the coverage percentage are written on the photo.",
+      "A value out of range is not saved and the field goes back to the previous one; “Remove estimate” deletes the calculation."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "note",
+     "text": "How it works inside: the face is detected with a facial mesh (MediaPipe Face Mesh) that the app itself loads and runs on your device; the photo is not sent to any third party for this. Five points are used (eyes, glabella, base of the nose and chin); the axis runs from the glabella to the chin, so it follows the head tilt, and only frontal faces are accepted (up to about 10° of turn). The middle third is glabella–base of the nose, the lower third is base of the nose–chin, and the suggested height is one middle third above the glabella (classic rule: upper third equal to the middle). Grafts: needed = recipient area × implant density; available = donor area × (donor density ÷ hairs per FU) × safe extraction; coverage = available ÷ needed, rounded to tens. Editable starting values: 40 FU/cm², 180 hairs/cm², 2.2 hairs per FU and 25%. Measurements in mm are valid only if the scale reference is on the same plane and at the same distance as what is measured (the photo is flat).",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Under the “View” tab, “Face guides” detects the face on the device (the photo is not sent to any third party) and draws the face axis and the three thirds on the front photo; with a scale they show their length in mm. Press it again to remove them.",
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "h3",
      "text": "Step 2 · Norwood, notes and response",
      "only": [
       "capilar"
