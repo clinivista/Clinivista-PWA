@@ -21,8 +21,6 @@ export function ClinicCamera({ viewKey, title, onCapture, onClose, onError }: {
       aspectRatio={guide?.aspectRatio ?? clinicAspectFor(viewKey)}
       guided={guided}
       guideKind={guide?.guideKind}
-      guideImage={guide?.guideImage}
-      guideAnimation={guide?.guideAnimation}
       facing="environment"
       guideToggle={guide ? { on: guided, onChange: () => { writeGuidePref(!wanted); setWanted(!wanted); } } : undefined}
       onCapture={onCapture}

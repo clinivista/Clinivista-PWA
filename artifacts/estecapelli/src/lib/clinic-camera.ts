@@ -1,17 +1,15 @@
 // Cámara de la clínica: las mismas vistas guiadas del paciente (óvalo + voz), con interruptor para el personal.
 import type { GuideKind } from "./camera-guide-i18n";
 
-type ClinicGuide = { guideKind: GuideKind; image: string; animation: string; aspectRatio: string };
-
-const guideUrl = (name: string) => `${import.meta.env.BASE_URL ?? "/"}guides/${name}`;
+type ClinicGuide = { guideKind: GuideKind; aspectRatio: string };
 
 // Todas las fotos de la clínica se toman con la cámara de Clinivista (isotipo y marco). Las vistas capilares llevan además óvalo y voz. La zona donante usa el método del espejo, pensado para que el paciente se la tome solo:
 // la clínica la fotografía de frente a la nuca, así que va sin óvalo (solo marco 4:3 e isotipo).
 const GUIDES: Record<string, ClinicGuide> = {
-  frontal: { guideKind: "front", image: "guia-1-frontal.png", animation: "anim-1-frontal.webp", aspectRatio: "3:4" },
-  vertex: { guideKind: "top", image: "guia-2-superior.png", animation: "anim-2-superior.webp", aspectRatio: "4:3" },
-  temporalRight: { guideKind: "right", image: "guia-3-lado-derecho.png", animation: "anim-3-lado-derecho.webp", aspectRatio: "4:3" },
-  temporalLeft: { guideKind: "left", image: "guia-4-lado-izquierdo.png", animation: "anim-4-lado-izquierdo.webp", aspectRatio: "4:3" },
+  frontal: { guideKind: "front", aspectRatio: "3:4" },
+  vertex: { guideKind: "top", aspectRatio: "4:3" },
+  temporalRight: { guideKind: "right", aspectRatio: "4:3" },
+  temporalLeft: { guideKind: "left", aspectRatio: "4:3" },
 };
 const PLAIN_ASPECT: Record<string, string> = { donor: "4:3" };
 
@@ -24,7 +22,7 @@ const baseKey = (viewKey: string) => [...Object.keys(GUIDES), ...Object.keys(PLA
 export function clinicGuideFor(viewKey: string) {
   const guide = GUIDES[baseKey(viewKey) ?? ""];
   return guide
-    ? { guideKind: guide.guideKind, guideImage: guideUrl(guide.image), guideAnimation: guideUrl(guide.animation), aspectRatio: guide.aspectRatio }
+    ? { guideKind: guide.guideKind, aspectRatio: guide.aspectRatio }
     : null;
 }
 /** Marco de la foto: el de la vista capilar reconocida y 4:3 para cualquier otra (lesiones, cirugía plástica, vistas propias). */
