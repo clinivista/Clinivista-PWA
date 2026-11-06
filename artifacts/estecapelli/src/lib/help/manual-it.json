@@ -1349,6 +1349,46 @@
     },
     {
      "t": "h3",
+     "text": "Pianificazione capillare: linea frontale, innesti e guide del viso",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Nella scheda «Capelli» (e le guide del viso, in «Vista») l'editor aiuta a pianificare sulla foto frontale. Tutto è indicativo: decide il medico.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Guide del viso (scheda «Vista»): rileva il viso e disegna l'asse del viso, i tre terzi (numerati 1, 2 e 3; con la scala mostrano la lunghezza in mm) e l'altezza suggerita della linea frontale. Se non c'è un viso o non è di fronte, lo segnala: usa la foto frontale con buona luce.",
+      "Disegna linea frontale: disegna col dito la linea proposta, da tempia a tempia e attraversando la linea mediana. Ce n'è una per foto: un nuovo tratto sostituisce il precedente. Con le guide del viso attive, la legenda mostra l'altezza sopra la glabella e quante volte il terzo medio è; la linea punteggiata è il riflesso del disegno per controllare la simmetria.",
+      "Stima degli innesti: «Calcola innesti» apre un calcolatore con area ricevente e donatrice (cm²), densità di impianto (UF/cm²), densità donatrice (capelli/cm²), capelli per UF e percentuale di prelievo sicuro. Le aree si compilano da sole dalle zone misurate «Zona ricevente» e «Zona donatrice» (serve la scala); controlla tutti i valori e modificali se serve. Risultato e percentuale di copertura restano scritti sulla foto.",
+      "Un valore fuori intervallo non viene salvato e il campo torna al precedente; «Rimuovi stima» cancella il calcolo."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Come funziona dentro: il viso viene rilevato con una maglia facciale (MediaPipe Face Mesh) che l'app stessa carica ed esegue sul tuo dispositivo; la foto non viene inviata a terzi per questo. Si usano cinque punti (occhi, glabella, base del naso e mento); l'asse va dalla glabella al mento, quindi segue l'inclinazione della testa, e si accettano solo visi di fronte (rotazione fino a circa 10°). Il terzo medio è glabella–base del naso, quello inferiore base del naso–mento, e l'altezza suggerita è un terzo medio sopra la glabella (regola classica: terzo superiore uguale al medio). Innesti: necessari = area ricevente × densità di impianto; disponibili = area donatrice × (densità donatrice ÷ capelli per UF) × prelievo sicuro; copertura = disponibili ÷ necessari, arrotondato alle decine. Valori iniziali modificabili: 40 UF/cm², 180 capelli/cm², 2,2 capelli per UF e 25 %. Le misure in mm valgono solo se il riferimento di scala è sullo stesso piano e alla stessa distanza di ciò che si misura (la foto è piatta).",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Nella scheda «Vista», «Guide del viso» rileva il viso sul dispositivo (la foto non viene inviata a terzi) e disegna l'asse del viso e i tre terzi sulla foto frontale; con la scala mostrano la lunghezza in mm. Premi di nuovo per rimuoverle.",
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "h3",
      "text": "Passo 2 · Norwood, note e risposta",
      "only": [
       "capilar"

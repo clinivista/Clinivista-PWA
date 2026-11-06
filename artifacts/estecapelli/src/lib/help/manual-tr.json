@@ -1349,6 +1349,46 @@
     },
     {
      "t": "h3",
+     "text": "Saç planlaması: saç çizgisi, greftler ve yüz kılavuzları",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "«Saç» sekmesinde (ve «Görünüm» altındaki yüz kılavuzlarında) düzenleyici, ön fotoğraf üzerinde planlama yapmanıza yardımcı olur. Hepsi yaklaşıktır: karar doktora aittir.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Yüz kılavuzları («Görünüm» sekmesi): yüzü algılar ve yüz eksenini, üç üçte birliği (1, 2 ve 3 diye numaralı; ölçekle mm cinsinden uzunlukları) ve önerilen saç çizgisi yüksekliğini çizer. Yüz yoksa veya karşıdan değilse uyarır: iyi ışıkta çekilmiş ön fotoğrafı kullanın.",
+      "Saç çizgisi tasarla: önerilen çizgiyi parmağınızla şakaktan şakağa, orta çizgiyi keserek çizin. Fotoğraf başına bir tane vardır: yeni çizgi öncekinin yerine geçer. Yüz kılavuzları açıkken gösterge, çizginin kaşlar arası noktanın üstündeki yüksekliğini ve orta üçte birin kaç katı olduğunu gösterir; noktalı çizgi, simetriyi kontrol etmek için tasarımın yansımasıdır.",
+      "Greft tahmini: «Greft hesapla», alıcı ve donör alanı (cm²), ekim yoğunluğu (FÜ/cm²), donör yoğunluğu (kıl/cm²), FÜ başına kıl ve güvenli alım yüzdesi içeren bir hesaplayıcı açar. Alanlar, ölçtüğünüz «Alıcı bölge» ve «Donör bölge»den kendiliğinden dolar (ölçek gerekir); tüm değerleri gözden geçirin, gerekirse düzenleyin. Sonuç ve karşılama yüzdesi fotoğrafa yazılır.",
+      "Aralık dışındaki değer kaydedilmez ve alan önceki değere döner; «Tahmini kaldır» hesabı siler."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "note",
+     "text": "İçeride nasıl çalışır: yüz, uygulamanın kendisinin yüklediği ve cihazınızda çalıştırdığı bir yüz ağıyla (MediaPipe Face Mesh) algılanır; bunun için fotoğraf hiçbir üçüncü tarafa gönderilmez. Beş nokta kullanılır (gözler, kaşlar arası, burun tabanı ve çene); eksen kaşlar arasından çeneye gider, böylece baş eğimini izler ve yalnızca karşıdan yüzler kabul edilir (yaklaşık 10°'ye kadar dönüş). Orta üçte bir kaşlar arası–burun tabanı, alt üçte bir burun tabanı–çenedir; önerilen yükseklik kaşlar arasının bir orta üçte bir üstüdür (klasik kural: üst üçte bir orta üçte bire eşit). Greftler: gereken = alıcı alan × ekim yoğunluğu; mevcut = donör alan × (donör yoğunluğu ÷ FÜ başına kıl) × güvenli alım; karşılama = mevcut ÷ gereken, onluklara yuvarlanır. Düzenlenebilir başlangıç değerleri: 40 FÜ/cm², 180 kıl/cm², FÜ başına 2,2 kıl ve %25. mm cinsinden ölçüler yalnızca ölçek referansı ölçülenle aynı düzlemde ve aynı mesafedeyse geçerlidir (fotoğraf düzdür).",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "«Görünüm» sekmesinde «Yüz kılavuzları» yüzü cihazda algılar (fotoğraf hiçbir üçüncü tarafa gönderilmez) ve ön fotoğrafa yüz eksenini ve üç üçte birliği çizer; ölçekle mm cinsinden uzunluklarını gösterir. Kaldırmak için tekrar basın.",
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "h3",
      "text": "Adım 2 · Norwood, notlar ve yanıt",
      "only": [
       "capilar"

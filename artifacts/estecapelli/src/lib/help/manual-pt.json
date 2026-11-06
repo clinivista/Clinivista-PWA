@@ -1349,6 +1349,46 @@
     },
     {
      "t": "h3",
+     "text": "Planejamento capilar: linha frontal, enxertos e guias faciais",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Na aba «Capilar» (e as guias faciais, em «Vista») o editor ajuda a planejar sobre a foto frontal. Tudo é orientativo: quem decide é o médico.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Guias faciais (aba «Vista»): detecta o rosto e desenha o eixo do rosto, os três terços (numerados 1, 2 e 3; com escala mostram o comprimento em mm) e a altura sugerida da linha frontal. Se não houver rosto ou ele não estiver de frente, avisa: use a foto frontal com boa luz.",
+      "Desenhar linha frontal: desenhe com o dedo a linha proposta, de têmpora a têmpora e cruzando a linha média. Há uma só por foto: um novo traço substitui o anterior. Com as guias faciais ativas, a legenda mostra a altura sobre a glabela e quantas vezes o terço médio ela é; a linha pontilhada é o reflexo do desenho para conferir a simetria.",
+      "Estimativa de enxertos: «Calcular enxertos» abre uma calculadora com a área receptora e doadora (cm²), a densidade de implante (UF/cm²), a densidade doadora (fios/cm²), os fios por UF e a porcentagem de extração segura. As áreas são preenchidas sozinhas a partir das suas «Zona receptora» e «Zona doadora» medidas (exigem escala); revise todos os valores e edite se for preciso. O resultado e a porcentagem de cobertura ficam escritos na foto.",
+      "Um valor fora do intervalo não é salvo e o campo volta ao anterior; «Remover estimativa» apaga o cálculo."
+     ],
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "note",
+     "text": "Como funciona por dentro: o rosto é detectado com uma malha facial (MediaPipe Face Mesh) que o próprio app carrega e executa no seu dispositivo; a foto não é enviada a nenhum terceiro para isso. Usam-se cinco pontos (olhos, glabela, base do nariz e queixo); o eixo vai da glabela ao queixo, então acompanha a inclinação da cabeça, e só se aceitam rostos de frente (giro de até uns 10°). O terço médio é glabela–base do nariz, o inferior é base do nariz–queixo, e a altura sugerida é um terço médio acima da glabela (regra clássica: terço superior igual ao médio). Enxertos: necessários = área receptora × densidade de implante; disponíveis = área doadora × (densidade doadora ÷ fios por UF) × extração segura; cobertura = disponíveis ÷ necessários, arredondado para dezenas. Valores iniciais editáveis: 40 UF/cm², 180 fios/cm², 2,2 fios por UF e 25 %. As medidas em mm só valem se a referência de escala estiver no mesmo plano e à mesma distância do que foi medido (a foto é plana).",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Na aba «Vista», «Guias faciais» detecta o rosto no dispositivo (a foto não sai para nenhum terceiro) e desenha o eixo do rosto e os três terços sobre a foto frontal; com escala mostram o comprimento em mm. Pressione de novo para removê-los.",
+     "only": [
+      "plastica"
+     ]
+    },
+    {
+     "t": "h3",
      "text": "Passo 2 · Norwood, notas e resposta",
      "only": [
       "capilar"

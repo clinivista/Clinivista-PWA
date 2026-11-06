@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUpRight, Circle, Eraser, Grid3x3, Hand, Hexagon, Loader2, Maximize, MapPin, Minus, Pencil, Plus, Redo2, Ruler, Scaling, SeparatorVertical, TriangleRight, Type, Undo2, X, AlignJustify, ScanLine, Sparkles, Spline, Square, Waypoints, ScanFace, Calculator } from "lucide-react";
+import { ArrowUpRight, Circle, Eraser, Grid3x3, Hand, Hexagon, Loader2, Maximize, MapPin, Minus, Pencil, Plus, Redo2, Ruler, Scaling, SeparatorVertical, TriangleRight, Type, Undo2, X, AlignJustify, ScanLine, Sparkles, Spline, Square, Waypoints, ScanFace, Calculator, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/language";
 import { ANNOTATOR_TEXT } from "@/lib/annotator-i18n";
@@ -90,6 +90,8 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   const [hover, setHover] = useState<Pt | null>(null);
   const [scaleAt, setScaleAt] = useState<{ points: [Pt, Pt]; value: string } | null>(null);
   // Guías faciales automáticas: detección en curso y último aviso.
+  // Consola de herramientas recogida: deja casi toda la pantalla a la foto (útil en el teléfono).
+  const [collapsed, setCollapsed] = useState(false);
   const [faceBusy, setFaceBusy] = useState(false);
   const [faceMsg, setFaceMsg] = useState("");
   const [graftFilled, setGraftFilled] = useState(false);
@@ -118,13 +120,16 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     const fit = () => {
       const wrap = wrapRef.current!;
       const maxWidth = wrap.clientWidth;
-      const maxHeight = Math.max(240, window.innerHeight - 260);
+      // El alto disponible es el del visor (cambia al plegar o desplegar la consola); sin medida, se estima por la ventana.
+      const maxHeight = Math.max(200, wrap.clientHeight > 0 ? wrap.clientHeight - 8 : window.innerHeight - 260);
       const scale = Math.min(maxWidth / image.naturalWidth, maxHeight / image.naturalHeight);
       setBox({ width: Math.floor(image.naturalWidth * scale), height: Math.floor(image.naturalHeight * scale) });
     };
     fit();
     window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(fit);
+    observer?.observe(wrapRef.current);
+    return () => { window.removeEventListener("resize", fit); observer?.disconnect(); };
   }, [image]);
 
   useEffect(() => {
@@ -491,11 +496,15 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
       <div className="mx-3 mb-2 rounded-2xl border border-white/10 bg-white/5 p-2" role="toolbar" aria-label={a.toolbar}>
         <div className="flex gap-1 overflow-x-auto" role="tablist" aria-label={u.toolsOf}>
           {tabs.map(({ id, text }) => (
-            <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => pickTab(id)}
+            <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => { setCollapsed(false); pickTab(id); }}
               className={`h-8 shrink-0 rounded-full px-4 text-xs font-bold transition-colors ${tab === id ? "bg-white text-neutral-900" : "text-white/70 hover:bg-white/10 hover:text-white"}`}>{text}</button>
           ))}
+          <button type="button" aria-expanded={!collapsed} aria-label={collapsed ? h.showTools : h.hideTools} title={collapsed ? h.showTools : h.hideTools} onClick={() => setCollapsed((prev) => !prev)}
+            className="ms-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/80 hover:bg-white/10">
+            {collapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+          </button>
         </div>
-        <div className="mt-2 flex flex-wrap items-start gap-x-4 gap-y-2" role="tabpanel">
+        <div className={`mt-2 flex max-h-[28vh] flex-wrap items-start gap-x-4 gap-y-2 overflow-y-auto ${collapsed ? "hidden" : ""}`} role="tabpanel">
           <div className="flex gap-1 overflow-x-auto">
             {tab === "draw" && DRAW_TOOLS.map(({ tool: value, icon }) => toolButton(value, icon, toolText(value), tool === value, () => pickTool(value)))}
             {tab === "measure" && MEASURE_TOOLS.map(({ tool: value, icon }) => toolButton(value, icon, toolText(value), tool === value, () => pickTool(value)))}
@@ -517,7 +526,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
             )}
           </div>
           {tab !== "view" && (
-            <div className="flex flex-col gap-2" role="group" aria-label={u.style}>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5" role="group" aria-label={u.style}>
               <div className="flex flex-wrap items-center gap-1.5">
                 {PALETTE.map((value) => (
                   <button key={value} type="button" aria-label={a.color(value)} aria-pressed={color === value}
@@ -625,7 +634,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
         )}
       </div>
 
-      <div className="px-4 pt-1 pb-2 text-white/90 text-xs flex flex-col gap-1.5 max-h-40 overflow-y-auto" data-testid="measure-panel">
+      <div className="px-4 pt-1 pb-1 text-white/90 text-xs flex flex-col gap-1.5 max-h-28 overflow-y-auto" data-testid="measure-panel">
         {enhance && <p className="font-semibold text-amber-300" data-testid="enhance-note">{u.viewOnly}</p>}
         {tool === "hairline" && <p data-testid="tool-hint" className="font-semibold text-white">{h.hintDesign}</p>}
         {(tool === "scale" || tool === "ruler" || tool === "angle" || tool === "area" || tool === "marker" || tool === "density") && (
@@ -690,7 +699,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
         )}
       </div>
 
-      <div className="px-4 py-3 flex justify-end gap-2">
+      <div className="px-4 py-2 flex justify-end gap-2">
         <Button type="button" variant="secondary" className="rounded-full" onClick={onClose} disabled={saving}>{a.cancel}</Button>
         <Button type="button" className="rounded-full font-bold" onClick={handleSave} disabled={!image || !strokes.length || saving}>
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : a.save}
