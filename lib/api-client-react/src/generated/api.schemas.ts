@@ -756,6 +756,8 @@ export const DiagnosisStrokeType = {
   area: 'area',
   marker: 'marker',
   guide: 'guide',
+  density: 'density',
+  class: 'class',
 } as const;
 
 export interface DiagnosisStroke {

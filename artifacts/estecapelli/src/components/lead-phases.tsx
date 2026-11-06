@@ -294,7 +294,7 @@ export type LeadPhasesProcess = {
   dischargeNote?: string | null;
 };
 
-export function LeadPhases({ leadId, onExpand, diagnosisLead, process, canRecordVideo = false }: { leadId: string; onExpand: (url: string) => void; diagnosisLead?: DiagnosisLeadData; process?: LeadPhasesProcess; canRecordVideo?: boolean }) {
+export function LeadPhases({ leadId, onExpand, diagnosisLead, process, canRecordVideo = false, specialty }: { specialty?: string; leadId: string; onExpand: (url: string) => void; diagnosisLead?: DiagnosisLeadData; process?: LeadPhasesProcess; canRecordVideo?: boolean }) {
   const { lang, t } = useLanguage();
   const p = PHASES_TEXT[lang];
   const s = STAFF_FLOW_TEXT[lang];
@@ -346,7 +346,7 @@ export function LeadPhases({ leadId, onExpand, diagnosisLead, process, canRecord
               ) : phase.kind === "diagnosis" ? (
                 <>
                   {phase.attentionRequired && <PhaseAttention leadId={leadId} phase={phase} readOnly={!processOpen && !!process} />}
-                  <DiagnosisPanel leadId={leadId} onExpand={onExpand} lead={diagnosisLead} />
+                  <DiagnosisPanel leadId={leadId} onExpand={onExpand} lead={diagnosisLead} specialty={specialty} />
                 </>
               ) : (
                 <>

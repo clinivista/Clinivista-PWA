@@ -833,6 +833,7 @@ export default function Admin() {
                     <LeadPhases
                       leadId={fullLead.id}
                       canRecordVideo={authStatus.user?.features?.includes("video") === true}
+                      specialty={myClinic?.specialty}
                       onExpand={setExpandedPhoto}
                       diagnosisLead={{
                         norwood: fullLead.norwood,

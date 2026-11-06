@@ -63,9 +63,9 @@ describe("herramientas de medición del editor de fotos", () => {
   });
   afterEach(() => { vi.stubGlobal("Image", original); vi.unstubAllGlobals(); });
 
-  const open = async () => {
+  const open = async (specialty?: string) => {
     const onSave = vi.fn();
-    render(<LanguageProvider><PhotoAnnotator photoUrl="x.jpg" label="Frente" initialStrokes={[]} saving={false} onSave={onSave} onClose={() => {}} /></LanguageProvider>);
+    render(<LanguageProvider><PhotoAnnotator photoUrl="x.jpg" label="Frente" initialStrokes={[]} saving={false} onSave={onSave} onClose={() => {}} specialty={specialty} /></LanguageProvider>);
     const canvas = await screen.findByTestId("annotation-canvas");
     return { canvas, onSave };
   };
@@ -82,6 +82,7 @@ describe("herramientas de medición del editor de fotos", () => {
   it("calibra con una referencia, mide una distancia y muestra la leyenda con la advertencia", async () => {
     const user = userEvent.setup();
     const { canvas } = await open();
+    await user.click(screen.getByRole("tab", { name: "Medición" }));
     await user.click(screen.getByRole("button", { name: "Regla" }));
     drag(canvas, [0, 200], [400, 200]); // sin escala todavía
     expect(within(screen.getByTestId("measure-legend")).getByText(/R1/)).toBeInTheDocument();
@@ -100,6 +101,7 @@ describe("herramientas de medición del editor de fotos", () => {
   it("mide un ángulo con tres toques y un área con «Terminar área»", async () => {
     const user = userEvent.setup();
     const { canvas } = await open();
+    await user.click(screen.getByRole("tab", { name: "Medición" }));
     await user.click(screen.getByRole("button", { name: "Ángulo" }));
     tap(canvas, [200, 100]); tap(canvas, [200, 200]); tap(canvas, [300, 200]);
     expect(screen.getByTestId("measure-legend")).toHaveTextContent(/A1 · 90/);
@@ -115,6 +117,7 @@ describe("herramientas de medición del editor de fotos", () => {
   it("los marcadores se numeran y guardan su nota; las guías se activan y desactivan", async () => {
     const user = userEvent.setup();
     const { canvas, onSave } = await open();
+    await user.click(screen.getByRole("tab", { name: "Medición" }));
     await user.click(screen.getByRole("button", { name: "Marcador" }));
     tap(canvas, [100, 100]); tap(canvas, [300, 300]);
     const notes = screen.getAllByPlaceholderText("Nota (opcional)");
@@ -122,6 +125,7 @@ describe("herramientas de medición del editor de fotos", () => {
     await user.type(notes[0], "línea frontal");
     await user.tab();
 
+    await user.click(screen.getByRole("tab", { name: "Vista" }));
     const grid = screen.getByRole("button", { name: "Cuadrícula" });
     expect(grid).toHaveAttribute("aria-pressed", "false");
     await user.click(grid);
@@ -136,5 +140,55 @@ describe("herramientas de medición del editor de fotos", () => {
     expect(saved.map((stroke) => stroke.type)).toEqual(["marker", "marker", "guide"]);
     expect(saved[0].text).toBe("línea frontal");
     expect(saved[2].text).toBe("midline");
+  });
+
+  it("las herramientas capilares solo aparecen en la especialidad capilar", async () => {
+    const user = userEvent.setup();
+    await open();
+    expect(screen.queryByRole("tab", { name: "Capilar" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Realzar cuero cabelludo" })).toBeNull();
+    await user.click(screen.getByRole("tab", { name: "Vista" }));
+    expect(screen.queryByRole("button", { name: "Realzar cuero cabelludo" })).toBeNull();
+  });
+
+  it("capilar: la zona donante lleva nombre y cm², la densidad cuenta por cm² y la clasificación queda en la foto", async () => {
+    const user = userEvent.setup();
+    const { canvas, onSave } = await open("capilar");
+    // Escala: la mitad del ancho de la foto (600 px) = 26 mm.
+    await user.click(screen.getByRole("tab", { name: "Medición" }));
+    await user.click(screen.getByRole("button", { name: "Escala" }));
+    drag(canvas, [0, 100], [200, 100]);
+    await user.type(await screen.findByLabelText("Medida real (mm)"), "26{Enter}");
+
+    await user.click(screen.getByRole("tab", { name: "Capilar" }));
+    await user.click(screen.getByRole("button", { name: "Zona donante" }));
+    tap(canvas, [50, 50]); tap(canvas, [150, 50]); tap(canvas, [150, 150]);
+    await user.click(screen.getByRole("button", { name: "Terminar área" }));
+    expect(screen.getByTestId("measure-legend")).toHaveTextContent(/Zona donante · .* cm²/);
+
+    await user.click(screen.getByRole("button", { name: "Densidad (1 cm²)" }));
+    tap(canvas, [300, 200]); // coloca el cuadro
+    tap(canvas, [300, 200]); // primer folículo
+    tap(canvas, [303, 203]); // segundo folículo
+    expect(screen.getByTestId("measure-legend")).toHaveTextContent(/D1 · 2 conteo · 2\/cm²/);
+
+    await user.click(screen.getByRole("button", { name: "Norwood IIIv" }));
+    expect(screen.getByTestId("class-legend")).toHaveTextContent("Norwood IIIv");
+    await user.click(screen.getByRole("button", { name: "Ludwig II" }));
+    HTMLCanvasElement.prototype.toDataURL = () => "data:image/jpeg;base64,AAAA";
+    await user.click(screen.getByRole("button", { name: "Guardar dibujo" }));
+    const saved = onSave.mock.calls[0][0] as Array<{ type: string; text?: string }>;
+    expect(saved.filter((stroke) => stroke.type === "class")).toHaveLength(1);
+    expect(saved.find((stroke) => stroke.type === "area")?.text).toBe("Zona donante");
+  });
+
+  it("el realce del cuero cabelludo es solo de vista: avisa y no cambia los trazos", async () => {
+    const user = userEvent.setup();
+    await open("capilar");
+    await user.click(screen.getByRole("tab", { name: "Vista" }));
+    const enhance = screen.getByRole("button", { name: "Realzar cuero cabelludo" });
+    await user.click(enhance);
+    expect(enhance).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId("enhance-note")).toHaveTextContent("Solo visualización");
   });
 });
