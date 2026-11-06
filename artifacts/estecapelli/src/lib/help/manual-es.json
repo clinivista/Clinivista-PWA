@@ -1382,6 +1382,13 @@
     },
     {
      "t": "p",
+     "text": "Proponer diseño (diseño asistido): con un toque, la app detecta el rostro y propone sobre la foto frontal la línea frontal (simétrica, a la altura sugerida y más baja hacia las sienes), la zona receptora (entre esa línea y unos 0,9 tercios medios más arriba), las guías faciales y la escala, estimada con la distancia entre las pupilas (63 mm; si marcas una referencia real, esa manda). Con ello calcula la superficie receptora y la estimación de injertos. Después, «Ajustar puntos» permite arrastrar los puntos blancos de la línea y de las zonas, y todo se recalcula al soltar. La zona donante no se ve en la foto frontal: márcala aparte o indica su superficie. Es una propuesta de partida que el médico corrige; la escala por pupilas tiene un error del orden de 5–8 % y la foto es plana.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
      "text": "En la pestaña «Vista», «Guías faciales» detecta el rostro en el dispositivo (la foto no sale a ningún tercero) y dibuja el eje de la cara y los tres tercios sobre la foto frontal; con escala muestran su largo en mm. Vuelve a pulsarlo para quitarlas.",
      "only": [
       "plastica"

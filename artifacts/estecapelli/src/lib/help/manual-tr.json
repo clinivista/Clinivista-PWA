@@ -1382,6 +1382,13 @@
     },
     {
      "t": "p",
+     "text": "Tasarım öner (yardımlı tasarım): tek dokunuşla uygulama yüzü algılar ve ön fotoğraf üzerinde saç çizgisini (simetrik, önerilen yükseklikte ve şakaklara doğru daha alçak), alıcı bölgeyi (bu çizgi ile yaklaşık 0,9 orta üçte bir yukarısı arasında), yüz kılavuzlarını ve göz bebekleri arasındaki mesafeden tahmin edilen ölçeği (63 mm; gerçek bir referans işaretlerseniz o geçerli olur) önerir. Bunlarla alıcı alanı ve greft tahminini hesaplar. Ardından «Noktaları ayarla» ile çizginin ve bölgelerin beyaz noktalarını sürükleyebilirsiniz; bıraktığınızda her şey yeniden hesaplanır. Donör bölge ön fotoğrafta görünmez: ayrıca işaretleyin veya alanını girin. Doktorun düzelteceği bir başlangıç önerisidir; göz bebeği ölçeğinin hatası yaklaşık %5–8'dir ve fotoğraf düzdür.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
      "text": "«Görünüm» sekmesinde «Yüz kılavuzları» yüzü cihazda algılar (fotoğraf hiçbir üçüncü tarafa gönderilmez) ve ön fotoğrafa yüz eksenini ve üç üçte birliği çizer; ölçekle mm cinsinden uzunluklarını gösterir. Kaldırmak için tekrar basın.",
      "only": [
       "plastica"

@@ -1382,6 +1382,13 @@
     },
     {
      "t": "p",
+     "text": "Proponi disegno (disegno assistito): con un tocco, l'app rileva il viso e propone sulla foto frontale la linea frontale (simmetrica, all'altezza suggerita e più bassa verso le tempie), la zona ricevente (tra quella linea e circa 0,9 terzi medi più in alto), le guide del viso e la scala, stimata dalla distanza tra le pupille (63 mm; se segni un riferimento reale, prevale quello). Ne ricava la superficie ricevente e la stima degli innesti. Poi «Regola i punti» permette di trascinare i punti bianchi della linea e delle zone, e tutto viene ricalcolato al rilascio. La zona donatrice non si vede nella foto frontale: segnala a parte o indica la sua superficie. È una proposta di partenza che il medico corregge; la scala dalle pupille ha un errore dell'ordine del 5–8 % e la foto è piatta.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
      "text": "Nella scheda «Vista», «Guide del viso» rileva il viso sul dispositivo (la foto non viene inviata a terzi) e disegna l'asse del viso e i tre terzi sulla foto frontale; con la scala mostrano la lunghezza in mm. Premi di nuovo per rimuoverle.",
      "only": [
       "plastica"

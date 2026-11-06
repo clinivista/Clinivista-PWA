@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUpRight, Circle, Eraser, Grid3x3, Hand, Hexagon, Loader2, Maximize, MapPin, Minus, Pencil, Plus, Redo2, Ruler, Scaling, SeparatorVertical, TriangleRight, Type, Undo2, X, AlignJustify, ScanLine, Sparkles, Spline, Square, Waypoints, ScanFace, Calculator, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowUpRight, Circle, Eraser, Grid3x3, Hand, Hexagon, Loader2, Maximize, MapPin, Minus, Pencil, Plus, Redo2, Ruler, Scaling, SeparatorVertical, TriangleRight, Type, Undo2, X, AlignJustify, ScanLine, Sparkles, Spline, Square, Waypoints, ScanFace, Calculator, ChevronDown, ChevronUp, WandSparkles, MousePointer2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/language";
 import { ANNOTATOR_TEXT } from "@/lib/annotator-i18n";
@@ -7,6 +7,7 @@ import { MEASURE_TOOLS_TEXT } from "@/lib/measure-tools-i18n";
 import { EDITOR_UI_TEXT, type EditorUiText } from "@/lib/editor-ui-i18n";
 import { HAIR_PLAN_TEXT } from "@/lib/hair-plan-i18n";
 import { GRAFT_DEFAULTS, GRAFT_KEYS, GRAFT_RANGES, fitHairline, graftPrefill, graftText, parseGraft, planSummary, type GraftKey } from "@/lib/hair-plan";
+import { hasEstimatedScale, proposeDesign, syncRecipientArea } from "@/lib/hair-design";
 import { createFaceTurn, faceGuideFromLandmarks } from "@/lib/face-turn";
 import {
   CLASSIFICATIONS, CLASS_NAMES, classificationLabel as classLabel, GUIDE_KINDS, PALETTE, WIDTHS, clamp01, mmPerPixel, setClassification, tapDensity, describeMeasures, drawStrokes, formatArea, formatAngle, formatLength, hitsStroke, polygonStats, simplify, strokeToJson,
@@ -14,7 +15,7 @@ import {
 } from "@/lib/annotation";
 import { FIT, MAX_ZOOM, MIN_ZOOM, ZOOM_STEP, clampView, zoomAt, type View } from "@/lib/zoom-view";
 
-type Tool = Exclude<StrokeType, "guide" | "class" | "face" | "graft"> | "eraser" | "pan";
+type Tool = Exclude<StrokeType, "guide" | "class" | "face" | "graft"> | "eraser" | "pan" | "adjust";
 type TabId = "draw" | "measure" | "hair" | "view";
 
 const DRAW_TOOLS: Array<{ tool: Tool; icon: typeof Pencil }> = [
@@ -43,6 +44,7 @@ const HAIR_TOOLS: Array<{ name: keyof EditorUiText; tool: Tool; icon: typeof Pen
   { name: "density", tool: "density", icon: ScanLine },
 ];
 
+const isEditable = (stroke: Stroke) => stroke.type === "hairline" || stroke.type === "area";
 const MAX_EXPORT_SIDE = 2400;
 const ENHANCE_FILTER = "contrast(1.3) brightness(1.08) saturate(1.2)";
 const GUIDE_ICON: Record<GuideKind, typeof Grid3x3> = { grid: Grid3x3, midline: SeparatorVertical, planes: AlignJustify };
@@ -66,6 +68,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   const u = EDITOR_UI_TEXT[lang];
   const h = HAIR_PLAN_TEXT[lang];
   const isHair = specialty === "capilar";
+  const isHairInitial = isHair;
   const hasFaceGuides = isHair || specialty === "plastica";
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -75,8 +78,9 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   const [strokes, setStrokes] = useState<Stroke[]>(initialStrokes);
   const [past, setPast] = useState<Stroke[][]>([]);
   const [future, setFuture] = useState<Stroke[][]>([]);
-  const [tool, setTool] = useState<Tool>("pen");
-  const [tab, setTab] = useState<TabId>("draw");
+  // Las clínicas capilares abren en su pestaña, con el ajuste de puntos listo (no dibuja nada por sí solo).
+  const [tool, setTool] = useState<Tool>(isHairInitial ? "adjust" : "pen");
+  const [tab, setTab] = useState<TabId>(isHairInitial ? "hair" : "draw");
   // Nombre de la zona o línea capilar en curso (vacío = medición común).
   const [preset, setPreset] = useState("");
   // Realce de cuero cabelludo: solo se aplica a la vista, nunca a la imagen guardada.
@@ -105,6 +109,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const gesture = useRef<{ kind: "pinch"; dist: number; view: View; mid: { x: number; y: number } } | { kind: "pan"; start: { x: number; y: number }; view: View } | null>(null);
   const dragging = useRef(false);
+  const handle = useRef<{ i: number; j: number } | null>(null);
   const erasedInDrag = useRef(false);
 
   useEffect(() => {
@@ -148,6 +153,22 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     if (draft) inProgress.push(draft);
     if (pending.length > 0 && (tool === "angle" || tool === "area")) inProgress.push({ type: tool, color, width, points: hover ? [...pending, hover] : pending, ...(preset ? { text: preset } : {}) });
     drawStrokes(ctx, [...strokes, ...inProgress], canvas.width, canvas.height);
+    // Con «Ajustar puntos» se ven las asas de la línea frontal y de las zonas (solo en pantalla, no en la imagen guardada).
+    if (tool === "adjust") {
+      const radius = (7 * canvas.width) / box.width;
+      for (const stroke of strokes) {
+        if (!isEditable(stroke)) continue;
+        for (const p of stroke.points) {
+          ctx.beginPath();
+          ctx.arc(p[0] * canvas.width, p[1] * canvas.height, radius, 0, Math.PI * 2);
+          ctx.fillStyle = "#ffffff";
+          ctx.fill();
+          ctx.lineWidth = radius * 0.35;
+          ctx.strokeStyle = "#111827";
+          ctx.stroke();
+        }
+      }
+    }
   }, [image, box, strokes, draft, view.zoom, pending, hover, tool, color, width, enhance]);
 
   // Al cambiar de herramienta se descarta lo que estaba a medias.
@@ -237,6 +258,27 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
       return;
     }
     const pt = pointOf(event);
+    if (tool === "adjust") {
+      // Toma el punto más cercano (a menos de unos 22 px de pantalla) y lo arrastra; todo el arrastre es un solo paso del historial.
+      const reach = 22 / viewRef.current.zoom;
+      let best: { i: number; j: number; d: number } | null = null;
+      strokes.forEach((item, i) => {
+        if (!isEditable(item)) return;
+        item.points.forEach((p, j) => {
+          const d = Math.hypot((p[0] - pt[0]) * box.width, (p[1] - pt[1]) * box.height);
+          if (d <= reach && (!best || d < best.d)) best = { i, j, d };
+        });
+      });
+      const hit = best as { i: number; j: number; d: number } | null;
+      if (hit) {
+        (event.target as Element).setPointerCapture?.(event.pointerId);
+        handle.current = { i: hit.i, j: hit.j };
+        dragging.current = true;
+        setPast((prev) => [...prev, strokes]);
+        setFuture([]);
+      }
+      return;
+    }
     if (tool === "text") {
       setTextAt({ pt, value: "" });
       return;
@@ -304,6 +346,11 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
       return;
     }
     const pt = pointOf(event);
+    if (handle.current) {
+      const { i, j } = handle.current;
+      setStrokes((prev) => prev.map((item, index) => (index === i ? { ...item, points: item.points.map((p, k) => (k === j ? pt : p)) } : item)));
+      return;
+    }
     if (tool === "eraser") {
       eraseAt(pt);
       return;
@@ -324,6 +371,13 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
       return;
     }
     gesture.current = null;
+    if (handle.current) {
+      // Al soltar, la superficie receptora de la estimación de injertos sigue a la zona corregida.
+      handle.current = null;
+      dragging.current = false;
+      setStrokes((prev) => syncRecipientArea(prev, { width: image?.naturalWidth ?? 1, height: image?.naturalHeight ?? 1 }, Object.values(EDITOR_UI_TEXT).map((text) => text.recipient)));
+      return;
+    }
     if (!dragging.current) return;
     dragging.current = false;
     if (!draft) return;
@@ -375,7 +429,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     setTab(next);
     const first = TAB_DEFAULT_TOOL[next];
     if (first) pickTool(first);
-    else if (next === "hair") pickTool("area", u.donor);
+    else if (next === "hair") pickTool("adjust");
   };
   const classCode = strokes.find((stroke) => stroke.type === "class")?.text ?? "";
   const hasScale = mmPerPixel(strokes, { width: image?.naturalWidth ?? 1, height: image?.naturalHeight ?? 1 }) !== null;
@@ -385,28 +439,48 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
     change(exists ? strokes.filter((stroke) => !(stroke.type === "guide" && stroke.text === kind)) : [...strokes, { type: "guide", color, width: WIDTHS[0].value, points: [[0.5, 0.5]], text: kind }]);
   };
 
+  // Detecta el rostro en el dispositivo y devuelve los cinco puntos de las guías (o null, con el aviso en pantalla).
+  const detectFace = async (): Promise<Pt[] | null> => {
+    if (!image || faceBusy) return null;
+    setFaceBusy(true);
+    setFaceMsg("");
+    try {
+      const engine = await createFaceTurn();
+      const guide = faceGuideFromLandmarks(engine?.landmarks ? await engine.landmarks(image) : null);
+      if (!guide.ok) { setFaceMsg(guide.reason === "turned" ? h.faceTurned : h.faceNone); return null; }
+      return guide.points;
+    } finally {
+      setFaceBusy(false);
+    }
+  };
+  // La detección tarda: se parte de los trazos de ahora, no de los de cuando se pulsó.
+  const replaceStrokes = (next: Stroke[]) => {
+    const base = strokesRef.current;
+    setPast((prev) => [...prev, base]);
+    setFuture([]);
+    setStrokes(next);
+  };
   const toggleFace = async () => {
     if (strokes.some((stroke) => stroke.type === "face")) {
       change(strokes.filter((stroke) => stroke.type !== "face"));
       setFaceMsg("");
       return;
     }
-    if (!image || faceBusy) return;
-    setFaceBusy(true);
-    setFaceMsg("");
-    try {
-      const engine = await createFaceTurn();
-      const guide = faceGuideFromLandmarks(engine?.landmarks ? await engine.landmarks(image) : null);
-      if (!guide.ok) { setFaceMsg(guide.reason === "turned" ? h.faceTurned : h.faceNone); return; }
-      // La detección tarda: se parte de los trazos de ahora, no de los de cuando se pulsó.
-      const base = strokesRef.current;
-      setPast((prev) => [...prev, base]);
-      setFuture([]);
-      setStrokes([...base.filter((stroke) => stroke.type !== "face"), { type: "face", color, width: WIDTHS[0].value, points: guide.points }]);
-      setFaceMsg(h.faceHint);
-    } finally {
-      setFaceBusy(false);
-    }
+    const points = await detectFace();
+    if (!points) return;
+    replaceStrokes([...strokesRef.current.filter((stroke) => stroke.type !== "face"), { type: "face", color, width: WIDTHS[0].value, points }]);
+    setFaceMsg(h.faceHint);
+  };
+  const proposeNow = async () => {
+    const points = await detectFace();
+    if (!points) return;
+    const next = proposeDesign(strokesRef.current, points, { width: image?.naturalWidth ?? 1, height: image?.naturalHeight ?? 1 }, {
+      recipientNames: Object.values(EDITOR_UI_TEXT).map((text) => text.recipient), recipientName: u.recipient, style: { color, width },
+    });
+    if (!next) { setFaceMsg(h.faceNone); return; }
+    replaceStrokes(next);
+    pickTool("adjust");
+    setFaceMsg(h.proposeNote);
   };
 
   const graftStroke = strokes.find((stroke) => stroke.type === "graft");
@@ -508,6 +582,8 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
           <div className="flex gap-1 overflow-x-auto">
             {tab === "draw" && DRAW_TOOLS.map(({ tool: value, icon }) => toolButton(value, icon, toolText(value), tool === value, () => pickTool(value)))}
             {tab === "measure" && MEASURE_TOOLS.map(({ tool: value, icon }) => toolButton(value, icon, toolText(value), tool === value, () => pickTool(value)))}
+            {tab === "hair" && toolButton("propose", WandSparkles, faceBusy ? h.proposeBusy : h.propose, false, () => void proposeNow())}
+            {tab === "hair" && toolButton("adjust", MousePointer2, h.adjust, tool === "adjust", () => pickTool("adjust"))}
             {tab === "hair" && HAIR_TOOLS.map(({ name, tool: value, icon }) => {
               const text = u[name];
               return toolButton(name, icon, text, tool === value && (value === "density" || preset === text), () => pickTool(value, value === "density" ? "" : text));
@@ -636,6 +712,7 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
 
       <div className="px-4 pt-1 pb-1 text-white/90 text-xs flex flex-col gap-1.5 max-h-28 overflow-y-auto" data-testid="measure-panel">
         {enhance && <p className="font-semibold text-amber-300" data-testid="enhance-note">{u.viewOnly}</p>}
+        {tool === "adjust" && <p data-testid="tool-hint" className="font-semibold text-white">{h.hintAdjust}</p>}
         {tool === "hairline" && <p data-testid="tool-hint" className="font-semibold text-white">{h.hintDesign}</p>}
         {(tool === "scale" || tool === "ruler" || tool === "angle" || tool === "area" || tool === "marker" || tool === "density") && (
           <p data-testid="tool-hint" className="font-semibold text-white">
@@ -654,6 +731,8 @@ export function PhotoAnnotator({ photoUrl, label, initialStrokes, saving, onSave
               {plan.face && plan.face.middleMm !== null && plan.face.lowerMm !== null && plan.face.suggestedMm !== null && (
                 <li>{h.middleThird}: <b>{formatLength(plan.face.middleMm)}</b> · {h.lowerThird}: <b>{formatLength(plan.face.lowerMm)}</b> · {h.suggested}: <b>{formatLength(plan.face.suggestedMm)}</b></li>
               )}
+              {hasEstimatedScale(strokes) && <li className="text-white/70" data-testid="auto-scale">{h.autoScale}</li>}
+              {plan.graft && plan.graft.params.da <= 0 && <li className="text-amber-300">{h.donorNeeded}</li>}
               {strokes.some((stroke) => stroke.type === "hairline") && !plan.face && <li className="text-amber-300">{h.needFace}</li>}
               {plan.hairline && (
                 <li>{h.lineHeight}: <b>{plan.hairline.heightMm === null ? "—" : formatLength(plan.hairline.heightMm)}</b>{plan.hairline.ratio !== null && <span className="text-white/70"> · {h.ratio.replace("{x}", String(plan.hairline.ratio))}</span>}</li>

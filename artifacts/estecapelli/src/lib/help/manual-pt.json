@@ -1382,6 +1382,13 @@
     },
     {
      "t": "p",
+     "text": "Propor desenho (desenho assistido): com um toque, o app detecta o rosto e propõe sobre a foto frontal a linha frontal (simétrica, na altura sugerida e mais baixa em direção às têmporas), a área receptora (entre essa linha e cerca de 0,9 terço médio mais acima), as guias faciais e a escala, estimada pela distância entre as pupilas (63 mm; se você marcar uma referência real, ela prevalece). Com isso calcula a superfície receptora e a estimativa de enxertos. Depois, «Ajustar pontos» permite arrastar os pontos brancos da linha e das áreas, e tudo é recalculado ao soltar. A área doadora não aparece na foto frontal: marque-a à parte ou informe a superfície. É uma proposta inicial que o médico corrige; a escala por pupilas tem erro da ordem de 5–8 % e a foto é plana.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
      "text": "Na aba «Vista», «Guias faciais» detecta o rosto no dispositivo (a foto não sai para nenhum terceiro) e desenha o eixo do rosto e os três terços sobre a foto frontal; com escala mostram o comprimento em mm. Pressione de novo para removê-los.",
      "only": [
       "plastica"

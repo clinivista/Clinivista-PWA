@@ -1382,6 +1382,13 @@
     },
     {
      "t": "p",
+     "text": "Entwurf vorschlagen (assistierter Entwurf): Mit einem Tipp erkennt die App das Gesicht und schlägt auf dem Frontfoto die Haarlinie (symmetrisch, in der vorgeschlagenen Höhe und zu den Schläfen hin tiefer), den Empfängerbereich (zwischen dieser Linie und etwa 0,9 mittleren Dritteln höher), die Gesichtshilfen und den Maßstab vor, geschätzt aus dem Pupillenabstand (63 mm; markieren Sie eine echte Referenz, hat diese Vorrang). Daraus berechnet sie die Empfängerfläche und die Graft-Schätzung. Danach lassen sich mit „Punkte anpassen“ die weißen Punkte von Linie und Bereichen ziehen; beim Loslassen wird alles neu berechnet. Der Spenderbereich ist auf dem Frontfoto nicht sichtbar: Markieren Sie ihn getrennt oder geben Sie seine Fläche an. Es ist ein Ausgangsvorschlag, den der Arzt korrigiert; der Maßstab aus dem Pupillenabstand hat eine Abweichung von etwa 5–8 %, und das Foto ist flach.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
      "text": "Im Tab „Ansicht“ erkennt „Gesichtshilfen“ das Gesicht auf dem Gerät (das Foto wird an keinen Dritten gesendet) und zeichnet die Gesichtsachse und die drei Drittel auf das Frontfoto; mit Maßstab mit ihrer Länge in mm. Erneut drücken, um sie zu entfernen.",
      "only": [
       "plastica"

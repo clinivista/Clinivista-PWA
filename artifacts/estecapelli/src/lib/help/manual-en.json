@@ -1382,6 +1382,13 @@
     },
     {
      "t": "p",
+     "text": "Suggest design (assisted design): with one tap, the app detects the face and suggests on the front photo the hairline (symmetrical, at the suggested height and lower towards the temples), the recipient zone (between that line and about 0.9 middle thirds higher), the face guides and the scale, estimated from the distance between the pupils (63 mm; if you mark a real reference, that one prevails). From these it calculates the recipient area and the graft estimate. Then “Adjust points” lets you drag the white points of the line and the zones, and everything is recalculated when you release. The donor zone is not visible in the front photo: mark it separately or enter its area. It is a starting proposal for the doctor to correct; the pupil-based scale has an error of the order of 5–8% and the photo is flat.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
      "text": "Under the “View” tab, “Face guides” detects the face on the device (the photo is not sent to any third party) and draws the face axis and the three thirds on the front photo; with a scale they show their length in mm. Press it again to remove them.",
      "only": [
       "plastica"

@@ -166,7 +166,7 @@ export type GraftEstimate = { needed: number; available: number; coveragePct: nu
 export function graftEstimate(p: GraftParams): GraftEstimate {
   const needed = p.ra * p.id;
   const available = p.da * (p.dd / p.hpf) * (p.sf / 100);
-  return { needed: tens(needed), available: tens(available), coveragePct: needed > 0 ? Math.round((available / needed) * 100) : null };
+  return { needed: tens(needed), available: tens(available), coveragePct: needed > 0 && available > 0 ? Math.round((available / needed) * 100) : null };
 }
 
 /** Nombres con que el editor etiqueta las zonas receptora y donante (en cada idioma), para rellenar el cálculo desde lo medido. */
