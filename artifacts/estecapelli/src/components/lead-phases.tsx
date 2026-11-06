@@ -24,6 +24,8 @@ import { VideoPlayer } from "@/components/video-player";
 import { VideoRecorder } from "@/components/video-recorder";
 import { VIDEO_TEXT } from "@/lib/video-i18n";
 import { uploadVideo, type RecordedVideo } from "@/lib/video-capture";
+import { ClinicCamera } from "@/components/clinic-camera";
+import { dataUrlToFile, usesAppCamera } from "@/lib/clinic-camera";
 
 const videoUrl = (leadId: string, photoId: string) => `/api/leads/${encodeURIComponent(leadId)}/videos/${encodeURIComponent(photoId)}`;
 
@@ -181,11 +183,14 @@ function PhotoViewSlot({ leadId, phase, view, disabled, onExpand }: {
   const inputRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  // Si el navegador no da la cámara, los siguientes toques usan la cámara nativa del celular.
+  const [appCameraFailed, setAppCameraFailed] = useState(false);
   const remove = useDeleteLeadPhasePhoto();
   const photoUrl = view.photo ? `/api/leads/${encodeURIComponent(leadId)}/photos/${encodeURIComponent(view.photo.id)}` : null;
   const refresh = () => refreshLeadViews(queryClient);
 
-  const upload = async (file: File | undefined, source: "camera" | "upload", input: HTMLInputElement) => {
+  const upload = async (file: File | undefined, source: "camera" | "upload", input?: HTMLInputElement) => {
     if (!file) return;
     setBusy(true);
     try {
@@ -205,7 +210,7 @@ function PhotoViewSlot({ leadId, phase, view, disabled, onExpand }: {
       toast({ variant: "destructive", title: p.photoNotSaved, description: error instanceof Error ? error.message : p.tryAgain });
     } finally {
       setBusy(false);
-      input.value = "";
+      if (input) input.value = "";
     }
   };
 
@@ -219,6 +224,15 @@ function PhotoViewSlot({ leadId, phase, view, disabled, onExpand }: {
         <div className="w-full h-32 flex items-center justify-center text-muted-foreground/50">
           {busy ? <Loader2 className="w-6 h-6 animate-spin" /> : <Camera className="w-8 h-8" />}
         </div>
+      )}
+      {cameraOpen && (
+        <ClinicCamera
+          viewKey={view.key}
+          title={label}
+          onClose={() => setCameraOpen(false)}
+          onCapture={async (url) => { setCameraOpen(false); await upload(await dataUrlToFile(url, `camera-${view.key}.jpg`), "camera"); }}
+          onError={() => setAppCameraFailed(true)}
+        />
       )}
       <div className="p-2.5 flex flex-col gap-2">
         <span className="text-xs font-bold text-center text-muted-foreground break-words">
@@ -244,7 +258,7 @@ function PhotoViewSlot({ leadId, phase, view, disabled, onExpand }: {
               onChange={(event) => upload(event.target.files?.[0], "upload", event.target)}
             />
             <Button type="button" size="sm" variant="outline" className="rounded-full h-8 px-3 text-xs" disabled={busy}
-              onClick={() => cameraRef.current?.click()}>
+              onClick={() => (usesAppCamera(view.key) && !appCameraFailed ? setCameraOpen(true) : cameraRef.current?.click())}>
               <Camera className="w-3.5 h-3.5 me-1.5" />{view.photo ? p.repeat : p.takePhoto}
             </Button>
             <Button type="button" size="sm" variant="outline" className="rounded-full h-8 px-3 text-xs" disabled={busy}
