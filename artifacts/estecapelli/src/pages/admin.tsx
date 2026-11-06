@@ -37,6 +37,7 @@ import { ReportPanel } from "./report-panel";
 import { HelpPanel } from "./help-panel";
 import { HELP_TEXT } from "@/lib/help-i18n";
 import { LeadPhases } from "@/components/lead-phases";
+import { PhotoTurntable } from "@/components/photo-turntable";
 import { AddPatientDialog } from "@/components/add-patient-dialog";
 import { PatientUpdatesCard, UpdatesBadge, useUnseenUpdates } from "@/components/patient-updates-card";
 import { PhotoConsentCard } from "@/components/photo-consent-card";
@@ -790,6 +791,8 @@ export default function Admin() {
                         <span className="ms-1 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground tabular-nums">{fullLead.photos?.length || 0}/{photoTotal}</span>
                       </h3>
                       {fullLead.photos && fullLead.photos.length > 0 ? (
+                        <>
+                        <PhotoTurntable leadId={fullLead.id} photos={fullLead.photos} onExpand={setExpandedPhoto} />
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                           {fullLead.photos.map(p => {
                             const photoUrl = `/api/leads/${encodeURIComponent(fullLead.id)}/photos/${encodeURIComponent(p.id)}`;
@@ -822,6 +825,7 @@ export default function Admin() {
                             </div>
                           ); })}
                         </div>
+                        </>
                       ) : (
                         <div className="bg-muted/70 border border-dashed border-border rounded-xl p-10 text-center text-muted-foreground flex flex-col items-center">
                           <Camera className="w-9 h-9 mb-3 text-muted-foreground/60" />
