@@ -363,6 +363,10 @@
     {
      "t": "tip",
      "text": "Wenn Sie die Kamera im Moment lieber nicht verwenden möchten, können Sie mit «Anderes Foto hochladen» ein Bild aus Ihrer Galerie auswählen. Die Originaldatei bleibt unverkleinert erhalten."
+    },
+    {
+     "t": "p",
+     "text": "In einer Ecke der Kamera sehen Sie das Isotyp von Clinivista: Es zeigt, dass das Foto in der App aufgenommen wird. Es ist nur auf dem Bildschirm sichtbar und nicht ins Foto gezeichnet."
     }
    ],
    "key": "photos",
@@ -1059,6 +1063,20 @@
     {
      "t": "p",
      "text": "Jede Ansicht zeigt nur ein Foto: Hat der Patient eine Aufnahme wiederholt, bleibt die neueste und die früheren werden ersetzt. Die Kopfzeile mit Name und Telefon bleibt oben fixiert; die Patientenübersicht (Konsultationen, Neuigkeiten und Einwilligung) scrollt mit der Akte, damit sie die Fotos nicht verdeckt."
+    },
+    {
+     "t": "h3",
+     "text": "Drehansicht",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Die „Drehansicht“ erscheint über den Fotos, wenn mindestens zwei der Ansichten linke Schläfe, frontal, rechte Schläfe und Spenderbereich vorhanden sind. Ziehen Sie das Foto, nutzen Sie die Pfeile oder „Automatisch drehen“, um sie der Reihe nach um den Kopf zu durchlaufen; die Ansicht von oben öffnet sich mit eigener Taste. Es ist ein Rundgang durch die Fotos, kein vermessenes 3D-Modell, und nicht zum Messen geeignet.",
+     "only": [
+      "capilar"
+     ]
     }
    ],
    "key": "ficha"
@@ -1188,6 +1206,22 @@
     {
      "t": "p",
      "text": "Über den Phasen sammelt das Feld «Verlauf der Messungen» die Messungen desselben Fotos (nach Namen) über die Phasen hinweg und vergleicht jede mit der vorherigen. Eine Veränderung wird nur dann als Zu- oder Abnahme angezeigt, wenn sie die kombinierte Fehlertoleranz beider Messungen übersteigt; sonst steht dort «keine klare Veränderung»."
+    },
+    {
+     "t": "h3",
+     "text": "Clinivista-Kamera für das Team"
+    },
+    {
+     "t": "p",
+     "text": "Wenn Sie „Foto aufnehmen“ drücken, sowohl in der Patientenakte als auch im Link „Am Handy fortsetzen“, öffnet sich die Clinivista-Kamera. In einer Ecke der Vorschau sehen Sie das Isotyp von Clinivista: Es zeigt, dass das Foto in der App aufgenommen wird (es wird nicht in das Bild eingebrannt). Sie startet mit der Rückkamera, und die Wechseltaste schaltet auf die Frontkamera um."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Haaransichten (frontal, von oben und die beiden Seiten): Referenzoval, eine Stimme, die sagt, wie Sie sich bewegen sollen, und ein automatisches Foto, sobald es passt. Die Taste „Hilfe: an / aus“ oben schaltet sie aus oder ein; die Einstellung wird auf diesem Gerät gemerkt.",
+      "Spenderbereich und jedes andere Foto (Läsionen, plastische Chirurgie, von der Klinik hinzugefügte Ansichten): Rahmen im Seitenverhältnis des Fotos und Isotyp, ohne Oval und Stimme. Nehmen Sie das Foto mit der weißen Taste auf.",
+      "Stellt der Browser die Kamera nicht bereit, verwendet „Foto aufnehmen“ die normale Kamera des Telefons; diese Fotos zeigen in der Vorschau kein Isotyp."
+     ]
     }
    ],
    "key": "phases"
@@ -1267,6 +1301,50 @@
       "Verkleinern.",
       "Vergrößern.",
       "An Bildschirm anpassen: kehrt zur vollständigen Ansicht zurück."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Der Editor mit Tabs: Zeichnen, Messen und Hilfslinien"
+    },
+    {
+     "t": "p",
+     "text": "Die Werkzeuge des Editors sind in Tabs gruppiert: „Zeichnen“ (Stift, Linie, Pfeil, Kreis, Text, Radierer), „Messen“, „Haar“ (nur Haarkliniken) und „Ansicht“ (Hilfslinien, Hervorhebung und Verschieben). Rückgängig, Wiederholen und Zoom bleiben immer oben. Messungen sind Schätzungen auf dem Foto: Sie gelten nur, wenn die Referenz in derselben Ebene und im gleichen Abstand liegt wie das Gemessene."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Maßstab: Markieren Sie auf dem Foto etwas von bekannter Länge (ein Lineal oder eine Münze) und geben Sie die echte Größe in Millimetern ein. Ohne Maßstab gibt es keine Werte in mm oder cm².",
+      "Lineal und Winkel: Das Lineal misst eine Strecke durch Ziehen zwischen zwei Punkten; der Winkel wird durch Antippen von drei Punkten gemessen (der zweite ist der Scheitel).",
+      "Fläche: Tippen Sie die Punkte der Kontur an und drücken Sie „Fläche abschließen“ (oder tippen Sie den ersten Punkt an), um die cm² und den Umfang zu sehen.",
+      "Markierung setzt nummerierte Markierungen mit optionaler Notiz, und unter „Ansicht“ lassen sich Raster, Mittellinie und horizontale Ebenen als Hilfslinien einschalten. Alles erscheint in der Legende unter dem Foto und wird als Zeichnung gespeichert, ohne das Originalfoto zu verändern."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Haar-Werkzeuge",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "In Haarkliniken fügt der Tab „Haar“ Werkzeuge für die Beratung hinzu. Die messenden brauchen einen im Tab „Messen“ gesetzten Maßstab.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Spenderbereich und Empfängerbereich: Umranden Sie den Bereich und drücken Sie „Fläche abschließen“; die Legende zeigt Namen und cm².",
+      "Stirnlinie, Rechte Schläfe und Linke Schläfe: Ziehen Sie zwischen zwei Punkten, um diesen Abstand zu messen; die Legende zeigt ihn mit Namen.",
+      "Dichte (1 cm²): Tippen Sie, um ein 1-cm²-Feld zu setzen, und tippen Sie jeden Follikel darin an; die Legende zeigt die Zählung und die Follikel pro cm². Ein Punkt wird durch Antippen entfernt.",
+      "Klassifikation: Wählen Sie den Norwood-Grad (I bis VII, mit IIIv) oder Ludwig (I bis III); er wird auf das Foto geschrieben. Es gibt nur eine pro Foto: Erneutes Antippen entfernt sie.",
+      "Kopfhaut hervorheben (Tab „Ansicht“): erhöht den Kontrast nur zum besseren Erkennen. Es ist nur eine Ansicht und wird nicht im Bild gespeichert."
+     ],
+     "only": [
+      "capilar"
      ]
     },
     {
@@ -1404,6 +1482,23 @@
      "t": "legend",
      "items": [],
      "caption": "Vergrößertes Foto."
+    },
+    {
+     "t": "h3",
+     "text": "Zwei Fotos mit Zoom und Transparenz vergleichen"
+    },
+    {
+     "t": "p",
+     "text": "Hat ein Bereich in mindestens zwei Phasen ein Foto, öffnet die Taste „Mit Zoom und Transparenz vergleichen“ eine Vollbildansicht zum Vergleich von zwei davon. Standardmäßig beginnt sie mit der ersten und der letzten; unter „Vorher“ und „Nachher“ können Sie andere Phasen wählen. Es ist nur eine Ansicht: Die Originalfotos werden nicht verändert."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Überlagert: das „Nachher“-Foto über dem „Vorher“-Foto, mit einem Transparenzregler.",
+      "Nebeneinander: beide Fotos mit gemeinsamem Zoom und Ausschnitt; zoomen oder verschieben Sie eines, folgt das andere (Mausrad, Pinch-Geste am Telefon oder die Tasten + und −).",
+      "Schieber: Eine verschiebbare Linie trennt „Vorher“ und „Nachher“. „Einpassen“ kehrt zur Gesamtansicht zurück.",
+      "Es ist ein visueller Vergleich: Er gilt nur, wenn die Fotos im gleichen Winkel, Abstand und Licht aufgenommen wurden. Keine Messung."
+     ]
     },
     {
      "t": "h3",

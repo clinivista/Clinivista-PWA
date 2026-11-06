@@ -363,6 +363,10 @@
     {
      "t": "tip",
      "text": "Si vous préférez ne pas utiliser l'appareil photo à ce moment-là, «Importer une autre photo» vous permet de choisir une image de votre galerie. Le fichier d'origine est conservé sans être réduit."
+    },
+    {
+     "t": "p",
+     "text": "Dans un coin de la caméra, vous verrez l'isotype de Clinivista : il indique que la photo est prise dans l'application. Il n'apparaît qu'à l'écran ; il n'est pas dessiné sur la photo."
     }
    ],
    "key": "photos",
@@ -1059,6 +1063,20 @@
     {
      "t": "p",
      "text": "Chaque vue affiche une seule photo : si le patient a refait une prise, la plus récente reste et les précédentes sont remplacées. L'en-tête avec le nom et le téléphone reste fixe en haut ; le résumé du patient (consultations, nouveautés et autorisation) défile avec la fiche pour ne pas cacher les photos."
+    },
+    {
+     "t": "h3",
+     "text": "Vue rotative",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "La « Vue rotative » apparaît au-dessus des photos lorsqu'il y a au moins deux des vues tempe gauche, de face, tempe droite et zone donneuse. Faites glisser la photo, utilisez les flèches ou « Rotation auto » pour les parcourir dans l'ordre autour de la tête ; la vue de dessus s'ouvre avec son propre bouton. C'est un parcours des photos, pas un modèle 3D mesuré, et il ne sert pas à mesurer.",
+     "only": [
+      "capilar"
+     ]
     }
    ],
    "key": "ficha"
@@ -1188,6 +1206,22 @@
     {
      "t": "p",
      "text": "Au-dessus des phases, l'encadré «Évolution des mesures» rassemble les mesures d'une même photo (par son nom) au fil des phases et compare chacune à la précédente. Un changement n'est signalé comme augmentation ou diminution que s'il dépasse la marge d'erreur combinée des deux mesures ; sinon, il indique «pas de changement net»."
+    },
+    {
+     "t": "h3",
+     "text": "Caméra Clinivista pour l'équipe"
+    },
+    {
+     "t": "p",
+     "text": "Lorsque vous touchez « Prendre une photo », dans la fiche comme dans le lien « Continuer sur le téléphone », la caméra de Clinivista s'ouvre. Dans un coin de l'aperçu, vous verrez l'isotype de Clinivista : il indique que la photo est prise dans l'application (il n'est pas gravé sur l'image). Elle démarre avec la caméra arrière et le bouton d'inversion passe à la caméra frontale."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Vues capillaires (de face, de dessus et les deux côtés) : ovale de référence, voix qui indique comment bouger et photo automatique lorsque le cadrage est bon. Le bouton « Guide : activé / désactivé » en haut les désactive ou les réactive ; le réglage est mémorisé sur cet appareil.",
+      "Zone donneuse et toute autre photo (lésions, chirurgie plastique, vues ajoutées par la clinique) : cadre aux proportions de la photo et isotype, sans ovale ni voix. Prenez la photo avec le bouton blanc.",
+      "Si le navigateur ne donne pas accès à la caméra, « Prendre une photo » utilise l'appareil photo normal du téléphone ; ces photos n'affichent pas l'isotype dans l'aperçu."
+     ]
     }
    ],
    "key": "phases"
@@ -1267,6 +1301,50 @@
       "Zoom arrière.",
       "Zoom avant.",
       "Ajuster à l'écran : revient à la vue complète."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "L'éditeur par onglets : dessin, mesure et repères"
+    },
+    {
+     "t": "p",
+     "text": "Les outils de l'éditeur sont regroupés en onglets : « Dessin » (crayon, ligne, flèche, cercle, texte, gomme), « Mesure », « Capillaire » (cliniques capillaires uniquement) et « Vue » (repères, mise en valeur et déplacer). Annuler, rétablir et le zoom restent toujours en haut. Les mesures sont des estimations sur la photo : elles ne valent que si la référence est dans le même plan et à la même distance que ce qui est mesuré."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Échelle : marquez sur la photo un objet de longueur connue (une règle ou une pièce) et saisissez sa taille réelle en millimètres. Sans échelle, pas de mesures en mm ni en cm².",
+      "Règle et Angle : la règle mesure une distance en faisant glisser entre deux points ; l'angle se mesure en touchant trois points (le deuxième est le sommet).",
+      "Surface : touchez les points du contour puis « Terminer la surface » (ou touchez le premier point) pour voir les cm² et le périmètre.",
+      "Repère place des repères numérotés avec une note facultative, et dans « Vue » on active les repères de grille, de ligne médiane et de plans horizontaux. Tout apparaît dans la légende sous la photo et est enregistré comme dessin, sans modifier la photo d'origine."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Outils capillaires",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Dans les cliniques capillaires, l'onglet « Capillaire » ajoute des outils pour la consultation. Ceux qui mesurent ont besoin d'une échelle définie dans l'onglet « Mesure ».",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Zone donneuse et Zone receveuse : détourez la zone puis « Terminer la surface » ; la légende affiche son nom et les cm².",
+      "Ligne frontale, Tempe droite et Tempe gauche : faites glisser entre deux points pour mesurer cette distance ; la légende l'affiche avec son nom.",
+      "Densité (1 cm²) : touchez pour placer un carré de 1 cm² puis touchez chaque follicule à l'intérieur ; la légende indique le comptage et les follicules par cm². Touchez un point pour le retirer.",
+      "Classification : choisissez le stade Norwood (I à VII, avec IIIv) ou Ludwig (I à III) ; il est inscrit sur la photo. Il n'y en a qu'une par photo : touchez-la à nouveau pour la retirer.",
+      "Révéler le cuir chevelu (onglet « Vue ») : augmente le contraste uniquement pour mieux voir. C'est un affichage seulement, non enregistré dans l'image."
+     ],
+     "only": [
+      "capilar"
      ]
     },
     {
@@ -1404,6 +1482,23 @@
      "t": "legend",
      "items": [],
      "caption": "Photo agrandie."
+    },
+    {
+     "t": "h3",
+     "text": "Comparer deux photos avec zoom et transparence"
+    },
+    {
+     "t": "p",
+     "text": "Lorsqu'une zone a une photo dans au moins deux phases, le bouton « Comparer avec zoom et transparence » ouvre un plein écran pour en comparer deux. Par défaut, il commence avec la première et la dernière ; vous pouvez choisir d'autres phases dans « Avant » et « Après ». Ce n'est qu'une vue : les photos d'origine ne sont pas modifiées."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Superposée : la photo « Après » sur celle d'« Avant », avec un réglage de transparence.",
+      "Côte à côte : les deux photos avec un seul zoom et déplacement ; si vous zoomez ou déplacez l'une, l'autre suit (molette de la souris, pincement sur le téléphone ou boutons + et −).",
+      "Rideau : une ligne glissante sépare « Avant » et « Après ». « Ajuster » revient à la vue complète.",
+      "C'est une comparaison visuelle : elle ne vaut que si les photos ont le même angle, la même distance et la même lumière. Ce n'est pas une mesure."
+     ]
     },
     {
      "t": "h3",

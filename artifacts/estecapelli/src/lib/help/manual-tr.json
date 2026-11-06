@@ -363,6 +363,10 @@
     {
      "t": "tip",
      "text": "O anda kamerayı kullanmak istemezsen «Subir otra foto» ile galerinden bir görüntü seçebilirsin. Orijinal dosya küçültülmeden saklanır."
+    },
+    {
+     "t": "p",
+     "text": "Kameranın bir köşesinde Clinivista izotipini görürsünüz: fotoğrafın uygulama içinde çekildiğini gösterir. Yalnızca ekranda görünür; fotoğrafa çizilmez."
     }
    ],
    "key": "photos",
@@ -1059,6 +1063,20 @@
     {
      "t": "p",
      "text": "Her görünümde tek bir fotoğraf gösterilir: hasta bir çekimi tekrarladıysa en yenisi kalır, öncekiler değiştirilir. Ad ve telefonun olduğu başlık üstte sabit kalır; hasta özeti (muayeneler, yenilikler ve izin) fotoğrafları kapatmasın diye dosyayla birlikte kayar."
+    },
+    {
+     "t": "h3",
+     "text": "Döner görünüm",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Sol şakak, önden, sağ şakak ve donör bölge görünümlerinden en az ikisi olduğunda fotoğrafların üstünde «Döner görünüm» belirir. Fotoğrafı sürükleyin, okları veya «Otomatik döndür»ü kullanarak başın etrafında sırayla gezin; üstten görünüm kendi düğmesiyle açılır. Fotoğraflar arasında bir gezintidir, ölçülmüş 3B model değildir ve ölçüm için uygun değildir.",
+     "only": [
+      "capilar"
+     ]
     }
    ],
    "key": "ficha"
@@ -1188,6 +1206,22 @@
     {
      "t": "p",
      "text": "Aşamaların üstünde, «Ölçümlerin seyri» kutusu aynı fotoğrafın (adına göre) ölçümlerini aşamalar boyunca toplar ve her birini bir öncekiyle karşılaştırır. Bir değişiklik, yalnızca iki ölçümün birleşik hata payını aşarsa artış veya azalış olarak gösterilir; aksi halde «belirgin değişiklik yok» yazar."
+    },
+    {
+     "t": "h3",
+     "text": "Ekip için Clinivista kamerası"
+    },
+    {
+     "t": "p",
+     "text": "Hasta kaydında da «Telefonda devam et» bağlantısında da «Fotoğraf çek»e bastığınızda Clinivista kamerası açılır. Önizlemenin bir köşesinde Clinivista izotipini görürsünüz: fotoğrafın uygulama içinde çekildiğini gösterir (görüntüye işlenmez). Arka kamerayla başlar, çevirme düğmesi ön kameraya geçirir."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Saç görünümleri (önden, üstten ve iki yan): referans oval, nasıl hareket edeceğinizi söyleyen ses ve uyduğunda otomatik fotoğraf. Üstteki «Rehber: açık / kapalı» düğmesi bunları kapatır veya açar; ayar o cihazda hatırlanır.",
+      "Donör bölge ve diğer tüm fotoğraflar (lezyonlar, plastik cerrahi, kliniğin eklediği görünümler): fotoğrafın oranında çerçeve ve izotip, oval ve ses olmadan. Fotoğrafı beyaz düğmeyle çekin.",
+      "Tarayıcı kamerayı vermezse «Fotoğraf çek» telefonun normal kamerasını kullanır; bu fotoğraflar önizlemede izotipi göstermez."
+     ]
     }
    ],
    "key": "phases"
@@ -1267,6 +1301,50 @@
       "Uzaklaştır.",
       "Yakınlaştır.",
       "Ekrana sığdır: tam görünüme döner."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Sekmeli düzenleyici: çizim, ölçüm ve kılavuzlar"
+    },
+    {
+     "t": "p",
+     "text": "Düzenleyicinin araçları sekmelerde toplanmıştır: «Çizim» (kalem, çizgi, ok, daire, metin, silgi), «Ölçüm», «Saç» (yalnızca saç klinikleri) ve «Görünüm» (kılavuzlar, belirginleştirme ve taşıma). Geri al, yinele ve yakınlaştırma her zaman üstte kalır. Ölçümler fotoğraf üzerinde tahmindir: yalnızca referans, ölçülenle aynı düzlemde ve aynı mesafedeyse geçerlidir."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Ölçek: fotoğrafta uzunluğu bilinen bir şeyi (cetvel veya madeni para) işaretleyin ve gerçek ölçüsünü milimetre olarak yazın. Ölçek yoksa mm ve cm² cinsinden ölçüm olmaz.",
+      "Cetvel ve Açı: cetvel iki nokta arasında sürükleyerek mesafe ölçer; açı üç noktaya dokunarak ölçülür (ikincisi tepe noktasıdır).",
+      "Alan: kenar noktalarına dokunun ve cm² ile çevreyi görmek için «Alanı bitir»e basın (veya ilk noktaya dokunun).",
+      "İşaret, isteğe bağlı notlu numaralı işaretler bırakır; «Görünüm»de ızgara, orta çizgi ve yatay düzlem kılavuzları açılır. Her şey fotoğrafın altındaki açıklamada görünür ve çizim olarak kaydedilir; orijinal fotoğraf değişmez."
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Saç araçları",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Saç kliniklerinde «Saç» sekmesi muayene için araçlar ekler. Ölçenler için «Ölçüm» sekmesinde belirlenmiş bir ölçek gerekir.",
+     "only": [
+      "capilar"
+     ]
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Donör bölge ve Alıcı bölge: bölgenin çevresini çizin ve «Alanı bitir»e basın; açıklama adını ve cm² değerini gösterir.",
+      "Ön saç çizgisi, Sağ şakak ve Sol şakak: o mesafeyi ölçmek için iki nokta arasında sürükleyin; açıklama onu adıyla gösterir.",
+      "Yoğunluk (1 cm²): 1 cm²'lik bir kutu yerleştirmek için dokunun ve içindeki her folikülü işaretleyin; açıklama sayımı ve cm² başına folikülleri gösterir. Bir noktayı kaldırmak için ona dokunun.",
+      "Sınıflandırma: Norwood derecesini (I–VII, IIIv dahil) veya Ludwig'i (I–III) seçin; fotoğrafa yazılır. Fotoğraf başına yalnızca bir tane vardır: kaldırmak için tekrar dokunun.",
+      "Saçlı derisini belirginleştir («Görünüm» sekmesi): kontrastı yalnızca daha iyi görmek için artırır. Yalnızca görüntülemedir ve görüntüye kaydedilmez."
+     ],
+     "only": [
+      "capilar"
      ]
     },
     {
@@ -1404,6 +1482,23 @@
      "t": "legend",
      "items": [],
      "caption": "Büyütülmüş fotoğraf."
+    },
+    {
+     "t": "h3",
+     "text": "İki fotoğrafı yakınlaştırma ve saydamlıkla karşılaştırma"
+    },
+    {
+     "t": "p",
+     "text": "Bir bölgenin en az iki fazda fotoğrafı olduğunda «Yakınlaştırma ve saydamlıkla karşılaştır» düğmesi ikisini karşılaştırmak için tam ekran açar. Varsayılan olarak ilk ve son fazla başlar; «Önce» ve «Sonra»da başka fazlar seçebilirsiniz. Yalnızca bir görünümdür: orijinal fotoğraflar değiştirilmez."
+    },
+    {
+     "t": "ul",
+     "items": [
+      "Üst üste: «Sonra» fotoğrafı «Önce» fotoğrafının üstünde, saydamlık ayarıyla.",
+      "Yan yana: iki fotoğraf tek yakınlaştırma ve kaydırmayla; birini yakınlaştırır veya kaydırırsanız diğeri onu izler (fare tekerleği, telefonda iki parmakla sıkıştırma veya + ve − düğmeleri).",
+      "Perde: kaydırılabilir bir çizgi «Önce» ile «Sonra»yı ayırır. «Sığdır» tam görünüme döner.",
+      "Bu görsel bir karşılaştırmadır: yalnızca fotoğraflar aynı açı, mesafe ve ışıkta çekildiyse geçerlidir. Ölçüm değildir."
+     ]
     },
     {
      "t": "h3",

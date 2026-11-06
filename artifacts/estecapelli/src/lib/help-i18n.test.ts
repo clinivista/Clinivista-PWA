@@ -173,4 +173,27 @@ describe("manuales por especialidad", () => {
     expect(es).toContain("espejo");
     expect(es).toContain("Para agendar su hora puede hacerlo a través de:");
   });
+
+  it("los manuales explican la cámara del personal, el editor por pestañas, la comparación y el visor giratorio; lo capilar solo lo ven las clínicas capilares", async () => {
+    for (const code of LANGS) {
+      const cap = await loadManual(code, "capilar");
+      const sec = (m: typeof cap, key: string) => m.staff.find((s) => s.key === key)!;
+      const bulletsOf = (section: HelpSection) => section.blocks.filter((b) => b.t === "ul").map((b) => (b.t === "ul" ? b.items.length : 0));
+      // Cámara del personal (fases), editor (diagnóstico: medición + capilar), comparación (evolución).
+      expect(bulletsOf(sec(cap, "phases")), code).toContain(3);
+      expect(bulletsOf(sec(cap, "diagnosis")), code).toEqual(expect.arrayContaining([4, 5]));
+      expect(bulletsOf(sec(cap, "evolution")), code).toContain(4);
+      const plain = await loadManual(code, "plastica");
+      expect(sec(cap, "ficha").blocks.length - sec(plain, "ficha").blocks.length, code).toBe(2); // vista giratoria: solo capilar
+      for (const sp of ["plastica", "dermatologia"] as const) {
+        const other = await loadManual(code, sp);
+        expect(bulletsOf(sec(other, "diagnosis")), `${code}/${sp}`).toContain(4);
+        expect(bulletsOf(sec(other, "diagnosis")), `${code}/${sp}`).not.toContain(5); // sin herramientas capilares
+      }
+    }
+    const es = JSON.stringify((await loadManual("es", "capilar")).staff);
+    expect(es).toContain("Densidad (1 cm²)");
+    expect(es).toContain("Vista giratoria");
+    expect(JSON.stringify((await loadManual("es", "dermatologia")).staff)).not.toContain("Vista giratoria");
+  });
 });
