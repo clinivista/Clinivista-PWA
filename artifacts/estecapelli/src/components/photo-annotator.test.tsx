@@ -283,4 +283,17 @@ describe("herramientas de medición del editor de fotos", () => {
     const saved = onSave.mock.calls[0][0] as Array<{ type: string; text?: string }>;
     expect(saved.find((stroke) => stroke.type === "graft")?.text).toMatch(/^ra=[\d.]+;id=40;da=60;dd=180;hpf=2.2;sf=25$/);
   });
+
+  it("la consola de herramientas se puede ocultar para dejar la foto libre y vuelve al tocar una pestaña", async () => {
+    const user = userEvent.setup();
+    await open("capilar");
+    const toggle = screen.getByRole("button", { name: "Ocultar herramientas" });
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await user.click(toggle);
+    expect(screen.getByRole("button", { name: "Mostrar herramientas" })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("tabpanel", { hidden: true })).toHaveClass("hidden");
+    await user.click(screen.getByRole("tab", { name: "Medición" }));
+    expect(screen.getByRole("button", { name: "Ocultar herramientas" })).toBeInTheDocument();
+    expect(screen.getByRole("tabpanel")).not.toHaveClass("hidden");
+  });
 });
