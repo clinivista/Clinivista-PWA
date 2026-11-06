@@ -2,10 +2,12 @@
 // coordenadas propias de la foto (0–1), de modo que se pueden seguir editando
 // y se redibujan nítidos a cualquier tamaño.
 
+import { faceGeometry, faceHalfWidth, crossSegment, mirrorPoint, smoothLine, parseGraft, graftEstimate } from "./hair-plan";
+
 export type Pt = [number, number];
-export type StrokeType = "pen" | "line" | "arrow" | "ellipse" | "text" | "scale" | "ruler" | "angle" | "area" | "marker" | "guide" | "density" | "class";
+export type StrokeType = "pen" | "line" | "arrow" | "ellipse" | "text" | "scale" | "ruler" | "angle" | "area" | "marker" | "guide" | "density" | "class" | "face" | "hairline" | "graft";
 /** Herramientas de medición: se dibujan como vectores y su valor se calcula al dibujar, con la escala vigente. */
-export const MEASURE_TYPES: ReadonlyArray<StrokeType> = ["scale", "ruler", "angle", "area", "marker", "guide", "density", "class"];
+export const MEASURE_TYPES: ReadonlyArray<StrokeType> = ["scale", "ruler", "angle", "area", "marker", "guide", "density", "class", "face", "hairline", "graft"];
 
 /**
  * Capilar. «density»: cuadro de 1 cm² (necesita escala) con puntos de conteo; `points[0]` es el centro del cuadro y el resto, los puntos contados.
@@ -54,7 +56,7 @@ export function strokeToJson(strokes: Stroke[]) {
     color: stroke.color,
     width: stroke.width,
     points: stroke.points.map(([x, y]) => [round(x), round(y)]),
-    ...(stroke.text !== undefined && ["text", "scale", "marker", "guide", "class", "ruler", "area"].includes(stroke.type) ? { text: stroke.text } : {}),
+    ...(stroke.text !== undefined && ["text", "scale", "marker", "guide", "class", "ruler", "area", "graft"].includes(stroke.type) ? { text: stroke.text } : {}),
   }));
 }
 
@@ -94,7 +96,8 @@ export function hitsStroke(stroke: Stroke, p: Pt, aspect: number, tolerance = 0.
     if (pts.length === 1) return Math.hypot(q[0] - pts[0][0], q[1] - pts[0][1]) <= slack;
     return pts.slice(1).some((pt, i) => distanceToSegment(q, pts[i], pt) <= slack);
   }
-  if (stroke.type === "guide" || stroke.type === "class") return false;
+  if (stroke.type === "guide" || stroke.type === "class" || stroke.type === "face" || stroke.type === "graft") return false;
+  if (stroke.type === "hairline") return pts.slice(1).some((pt, i) => distanceToSegment(q, pts[i], pt) <= slack);
   if (stroke.type === "density") return pts.slice(1).some((pt) => Math.hypot(q[0] - pt[0], q[1] - pt[1]) <= slack) && false; // los puntos se corrigen tocándolos con la herramienta de conteo // las guías se activan y desactivan con su botón
   if (stroke.type === "line" || stroke.type === "arrow" || stroke.type === "scale" || stroke.type === "ruler") return distanceToSegment(q, pts[0], pts[1]) <= slack;
   if (stroke.type === "angle") return pts.slice(1).some((pt, i) => distanceToSegment(q, pts[i], pt) <= slack);
@@ -135,7 +138,7 @@ function label(ctx: Ctx, text: string, x: number, y: number, size: number, color
 
 const LABEL_SIZE = 0.022;
 
-function drawMeasure(ctx: Ctx, stroke: Stroke, pts: Pt[], side: number, k: number | null, numbers: Record<"ruler" | "angle" | "area" | "marker" | "density", number>, size: Size) {
+function drawMeasure(ctx: Ctx, stroke: Stroke, pts: Pt[], side: number, k: number | null, numbers: Record<"ruler" | "angle" | "area" | "marker" | "density", number>, size: Size, all: Stroke[] = []) {
   const fontSize = Math.max(12, LABEL_SIZE * side);
   const tick = Math.max(6, stroke.width * side * 3);
   const tickAt = (a: Pt, b: Pt) => {
@@ -145,6 +148,58 @@ function drawMeasure(ctx: Ctx, stroke: Stroke, pts: Pt[], side: number, k: numbe
     ctx.lineTo(a[0] + tick * Math.cos(angle), a[1] + tick * Math.sin(angle));
     ctx.stroke();
   };
+  if (stroke.type === "face") {
+    const g = faceGeometry(stroke.points, size);
+    if (!g) return;
+    const line = (a: Pt, b: Pt) => { ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); };
+    const half = faceHalfWidth(g);
+    ctx.globalAlpha = 0.85;
+    ctx.lineWidth = Math.max(1, side * 0.002);
+    // Eje de la cara, desde algo más abajo del mentón hasta algo más arriba de la altura sugerida.
+    const reach = g.suggestedPx * 0.35;
+    line([g.menton[0] - g.up[0] * reach * 0.3, g.menton[1] - g.up[1] * reach * 0.3], [g.suggested[0] + g.up[0] * reach, g.suggested[1] + g.up[1] * reach]);
+    ctx.setLineDash([side * 0.012, side * 0.008]);
+    for (const at of [g.suggested, g.glabella, g.subnasale, g.menton]) line(...crossSegment(g, at, half));
+    ctx.setLineDash([side * 0.003, side * 0.006]);
+    line(g.eyeA, g.eyeB);
+    ctx.setLineDash([]);
+    // Tercios numerados desde arriba (1 = el que sugiere la regla); con escala, su largo.
+    const thirds: Array<[string, Pt, number]> = [["1", g.suggested, g.suggestedPx], ["2", g.glabella, g.middlePx], ["3", g.subnasale, g.lowerPx]];
+    for (const [name, from, lengthPx] of thirds) {
+      const mid: Pt = [from[0] - g.up[0] * lengthPx / 2 + g.across[0] * half, from[1] - g.up[1] * lengthPx / 2 + g.across[1] * half];
+      label(ctx, `${name}${k === null ? "" : ` · ${formatLength(lengthPx * k)}`}`, mid[0], mid[1], fontSize * 0.9, stroke.color);
+    }
+    return;
+  }
+  if (stroke.type === "hairline") {
+    if (pts.length < 2) return;
+    const curve = smoothLine(stroke.points, 2).map((p): Pt => [p[0] * size.width, p[1] * size.height]);
+    ctx.lineWidth = Math.max(2, stroke.width * side * 1.4);
+    ctx.beginPath();
+    ctx.moveTo(curve[0][0], curve[0][1]);
+    for (const pt of curve.slice(1)) ctx.lineTo(pt[0], pt[1]);
+    ctx.stroke();
+    // Con guías faciales, el reflejo punteado del diseño respecto al eje permite comprobar la simetría.
+    const faceStroke = all.find((item) => item.type === "face");
+    const g = faceStroke ? faceGeometry(faceStroke.points, size) : null;
+    if (g) {
+      const mirrored = smoothLine(stroke.points.map((p) => mirrorPoint(p, g, size)), 2).map((p): Pt => [p[0] * size.width, p[1] * size.height]);
+      ctx.globalAlpha = 0.6;
+      ctx.lineWidth = Math.max(1, stroke.width * side * 0.8);
+      ctx.setLineDash([side * 0.008, side * 0.008]);
+      ctx.beginPath();
+      ctx.moveTo(mirrored[0][0], mirrored[0][1]);
+      for (const pt of mirrored.slice(1)) ctx.lineTo(pt[0], pt[1]);
+      ctx.stroke();
+    }
+    return;
+  }
+  if (stroke.type === "graft") {
+    const params = parseGraft(stroke.text);
+    const { needed, coveragePct } = graftEstimate(params);
+    if (needed > 0) label(ctx, `≈ ${needed} FU${coveragePct === null ? "" : ` · ${coveragePct}%`}`, pts[0][0], pts[0][1], fontSize * 1.1, stroke.color);
+    return;
+  }
   if (stroke.type === "guide") {
     ctx.globalAlpha = 0.75;
     ctx.lineWidth = Math.max(1, side * 0.0018);
@@ -290,7 +345,7 @@ export function drawStrokes(ctx: Ctx, strokes: Stroke[], width: number, height: 
         Math.max(1, Math.abs(pts[1][0] - pts[0][0]) / 2), Math.max(1, Math.abs(pts[1][1] - pts[0][1]) / 2), 0, 0, Math.PI * 2);
       ctx.stroke();
     } else if (MEASURE_TYPES.includes(stroke.type)) {
-      drawMeasure(ctx, stroke, pts, side, k, numbers, size);
+      drawMeasure(ctx, stroke, pts, side, k, numbers, size, strokes);
     } else if (stroke.type === "text" && stroke.text) {
       const size = textSize(stroke.width) * side;
       ctx.font = `700 ${size}px system-ui, sans-serif`;

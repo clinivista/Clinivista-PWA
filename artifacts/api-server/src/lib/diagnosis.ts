@@ -37,12 +37,32 @@ export type Stroke =
   | { type: "guide"; color: string; width: number; points: [[number, number]]; text: string }
   // Capilar: «density» (1 centro del cuadro de 1 cm² + hasta MAX_DENSITY_DOTS puntos contados) y «class» (1 punto; text = norwood:IIIv | ludwig:II).
   | { type: "density"; color: string; width: number; points: Array<[number, number]> }
-  | { type: "class"; color: string; width: number; points: [[number, number]]; text: string };
+  | { type: "class"; color: string; width: number; points: [[number, number]]; text: string }
+  // Planificación: «face» (5 puntos de la malla facial), «hairline» (línea frontal diseñada) y «graft» (parámetros de la estimación de injertos).
+  | { type: "face"; color: string; width: number; points: Array<[number, number]> }
+  | { type: "hairline"; color: string; width: number; points: Array<[number, number]> }
+  | { type: "graft"; color: string; width: number; points: [[number, number]]; text: string };
 
 const MAX_AREA_POINTS = 60;
 const GUIDE_KINDS = ["grid", "midline", "planes"];
 const MAX_DENSITY_POINTS = 301;
 const MAX_LABEL = 40;
+const MAX_HAIRLINE_POINTS = 40;
+const GRAFT_RANGES: Record<string, [number, number]> = { ra: [0, 1000], id: [1, 120], da: [0, 1000], dd: [1, 600], hpf: [1, 5], sf: [1, 100] };
+/** «ra=41.2;id=40;da=55;dd=180;hpf=2.2;sf=25»: cada clave una vez, con su rango. */
+function graftText(text: unknown): text is string {
+  if (typeof text !== "string" || text.length === 0 || text.length > 120) return false;
+  const seen = new Set<string>();
+  for (const part of text.split(";")) {
+    const [key, raw, ...extra] = part.split("=");
+    const range = GRAFT_RANGES[key];
+    if (extra.length || !range || seen.has(key) || !raw) return false;
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < range[0] || value > range[1]) return false;
+    seen.add(key);
+  }
+  return true;
+}
 const CLASS_CODES = ["norwood:I", "norwood:II", "norwood:III", "norwood:IIIv", "norwood:IV", "norwood:V", "norwood:VI", "norwood:VII", "ludwig:I", "ludwig:II", "ludwig:III"];
 const label = (text: unknown): text is string | undefined => text === undefined || (typeof text === "string" && text.length <= MAX_LABEL);
 
@@ -78,6 +98,12 @@ export function parseStrokes(raw: unknown): Stroke[] | null {
     } else if (type === "density" && points.length >= 1 && points.length <= MAX_DENSITY_POINTS) {
       strokes.push({ type, color, width, points: points as Array<[number, number]> });
     } else if (type === "class" && points.length === 1 && typeof text === "string" && CLASS_CODES.includes(text)) {
+      strokes.push({ type, color, width, points: points as [[number, number]], text });
+    } else if (type === "face" && points.length === 5) {
+      strokes.push({ type, color, width, points: points as Array<[number, number]> });
+    } else if (type === "hairline" && points.length >= 2 && points.length <= MAX_HAIRLINE_POINTS) {
+      strokes.push({ type, color, width, points: points as Array<[number, number]> });
+    } else if (type === "graft" && points.length === 1 && graftText(text)) {
       strokes.push({ type, color, width, points: points as [[number, number]], text });
     } else if (type === "marker" && points.length === 1 && (text === undefined || (typeof text === "string" && text.length <= 200))) {
       strokes.push({ type, color, width, points: points as [[number, number]], text: typeof text === "string" ? text : "" });

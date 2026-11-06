@@ -4,6 +4,20 @@ import userEvent from "@testing-library/user-event";
 import { LanguageProvider } from "@/lib/language";
 import { PhotoAnnotator } from "./photo-annotator";
 
+// La malla facial no corre en jsdom: se simula con los puntos de una cara de frente (o de lado, o ninguna).
+const mesh = vi.hoisted(() => ({ landmarks: null as Array<{ x: number; y: number; z: number }> | null }));
+vi.mock("@/lib/face-turn", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/face-turn")>()),
+  createFaceTurn: async () => ({ run: async () => 0, landmarks: async () => mesh.landmarks }),
+}));
+const faceMesh = (noseX = 0.5) => {
+  const points = Array.from({ length: 468 }, () => ({ x: 0.5, y: 0.5, z: 0 }));
+  const set = (i: number, x: number, y: number) => { points[i] = { x, y, z: 0 }; };
+  set(33, 0.38, 0.4); set(133, 0.46, 0.4); set(362, 0.54, 0.4); set(263, 0.62, 0.4);
+  set(9, 0.5, 0.42); set(2, 0.5, 0.55); set(152, 0.5, 0.75); set(1, noseX, 0.52); set(234, 0.3, 0.5); set(454, 0.7, 0.5);
+  return points;
+};
+
 // jsdom no carga imágenes ni dibuja en canvas: se simulan lo justo para abrir el editor.
 class FakeImage {
   naturalWidth = 1200; naturalHeight = 1600;
@@ -190,5 +204,83 @@ describe("herramientas de medición del editor de fotos", () => {
     await user.click(enhance);
     expect(enhance).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByTestId("enhance-note")).toHaveTextContent("Solo visualización");
+  });
+
+  it("guías faciales: calcula el eje y los tercios en el dispositivo, avisa si el rostro no está de frente y se quitan con el mismo botón", async () => {
+    const user = userEvent.setup();
+    const { canvas, onSave } = await open("capilar");
+    await user.click(screen.getByRole("tab", { name: "Medición" }));
+    await user.click(screen.getByRole("button", { name: "Escala" }));
+    drag(canvas, [0, 100], [200, 100]);
+    await user.type(await screen.findByLabelText("Medida real (mm)"), "26{Enter}");
+    await user.click(screen.getByRole("tab", { name: "Vista" }));
+
+    mesh.landmarks = null;
+    await user.click(screen.getByRole("button", { name: "Guías faciales" }));
+    expect(await screen.findByTestId("face-msg")).toHaveTextContent("No se detectó un rostro");
+
+    mesh.landmarks = faceMesh(0.62);
+    await user.click(screen.getByRole("button", { name: "Guías faciales" }));
+    expect(await screen.findByTestId("face-msg")).toHaveTextContent("no está de frente");
+
+    mesh.landmarks = faceMesh();
+    await user.click(screen.getByRole("button", { name: "Guías faciales" }));
+    expect(await screen.findByTestId("plan-legend")).toHaveTextContent(/Tercio medio: .* mm · Tercio inferior: .* · Altura sugerida/);
+    expect(screen.getByRole("button", { name: "Guías faciales" })).toHaveAttribute("aria-pressed", "true");
+
+    HTMLCanvasElement.prototype.toDataURL = () => "data:image/jpeg;base64,AAAA";
+    await user.click(screen.getByRole("button", { name: "Guardar dibujo" }));
+    const saved = onSave.mock.calls[0][0] as Array<{ type: string; points: number[][] }>;
+    expect(saved.find((stroke) => stroke.type === "face")?.points).toHaveLength(5);
+
+    await user.click(screen.getByRole("button", { name: "Guías faciales" }));
+    expect(screen.queryByTestId("plan-legend")).toBeNull();
+  });
+
+  it("línea frontal: se dibuja a mano alzada, una sola por foto; con guías faciales mide su altura", async () => {
+    const user = userEvent.setup();
+    mesh.landmarks = faceMesh();
+    const { canvas, onSave } = await open("capilar");
+    await user.click(screen.getByRole("tab", { name: "Capilar" }));
+    await user.click(screen.getByRole("button", { name: "Diseñar línea frontal" }));
+    expect(screen.getByTestId("tool-hint")).toHaveTextContent("línea frontal propuesta");
+    drag(canvas, [100, 150], [400, 150]);
+    expect(screen.getByTestId("plan-legend")).toHaveTextContent("Activa las guías faciales");
+    drag(canvas, [100, 120], [400, 120]);
+    await user.click(screen.getByRole("tab", { name: "Vista" }));
+    await user.click(screen.getByRole("button", { name: "Guías faciales" }));
+    expect(await screen.findByText(/Línea frontal diseñada:/)).toBeInTheDocument();
+    HTMLCanvasElement.prototype.toDataURL = () => "data:image/jpeg;base64,AAAA";
+    await user.click(screen.getByRole("button", { name: "Guardar dibujo" }));
+    const saved = onSave.mock.calls[0][0] as Array<{ type: string }>;
+    expect(saved.filter((stroke) => stroke.type === "hairline")).toHaveLength(1);
+  });
+
+  it("injertos: rellena las superficies desde las zonas medidas y recalcula al editar los valores", async () => {
+    const user = userEvent.setup();
+    const { canvas, onSave } = await open("capilar");
+    await user.click(screen.getByRole("tab", { name: "Medición" }));
+    await user.click(screen.getByRole("button", { name: "Escala" }));
+    drag(canvas, [0, 100], [200, 100]);
+    await user.type(await screen.findByLabelText("Medida real (mm)"), "26{Enter}");
+    await user.click(screen.getByRole("tab", { name: "Capilar" }));
+    await user.click(screen.getByRole("button", { name: "Zona receptora" }));
+    tap(canvas, [50, 50]); tap(canvas, [250, 50]); tap(canvas, [250, 250]);
+    await user.click(screen.getByRole("button", { name: "Terminar área" }));
+    await user.click(screen.getByRole("button", { name: "Calcular injertos" }));
+    const area = screen.getByLabelText("Zona receptora (cm²)") as HTMLInputElement;
+    expect(Number(area.value)).toBeGreaterThan(0);
+    expect(screen.getByText(/Las superficies salen de tus zonas medidas/)).toBeInTheDocument();
+    const donor = screen.getByLabelText("Zona donante (cm²)");
+    await user.clear(donor);
+    await user.type(donor, "60{Enter}");
+    expect(screen.getByTestId("graft-result")).toHaveTextContent(/Necesarias: \d+ UF · Disponibles: \d+ UF · Cobertura: \d+%/);
+    await user.clear(screen.getByLabelText("Densidad de implante (UF/cm²)"));
+    await user.type(screen.getByLabelText("Densidad de implante (UF/cm²)"), "9999{Enter}");
+    expect(screen.getByLabelText("Densidad de implante (UF/cm²)")).toHaveValue("40");
+    HTMLCanvasElement.prototype.toDataURL = () => "data:image/jpeg;base64,AAAA";
+    await user.click(screen.getByRole("button", { name: "Guardar dibujo" }));
+    const saved = onSave.mock.calls[0][0] as Array<{ type: string; text?: string }>;
+    expect(saved.find((stroke) => stroke.type === "graft")?.text).toMatch(/^ra=[\d.]+;id=40;da=60;dd=180;hpf=2.2;sf=25$/);
   });
 });

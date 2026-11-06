@@ -58,4 +58,22 @@ describe("parseStrokes: mediciones y guías", () => {
     expect(parseStrokes([{ type: "class", ...base, points: [[0.1, 0.1]], text: "norwood:IX" }])).toBeNull();
     expect(parseStrokes([{ type: "class", ...base, points: [[0.1, 0.1]] }])).toBeNull();
   });
+
+  it("acepta la planificación: guías faciales, línea frontal y estimación de injertos", () => {
+    const parsed = parseStrokes([
+      { type: "face", ...base, points: [[0.4, 0.4], [0.6, 0.4], [0.5, 0.42], [0.5, 0.6], [0.5, 0.8]] },
+      { type: "hairline", ...base, points: [[0.3, 0.25], [0.5, 0.2], [0.7, 0.25]] },
+      { type: "graft", ...base, points: [[0.5, 0.94]], text: "ra=41.2;id=40;da=55;dd=180;hpf=2.2;sf=25" },
+    ]);
+    expect(parsed).toHaveLength(3);
+  });
+
+  it("rechaza la planificación mal formada", () => {
+    expect(parseStrokes([{ type: "face", ...base, points: [[0.4, 0.4], [0.6, 0.4]] }])).toBeNull();
+    expect(parseStrokes([{ type: "hairline", ...base, points: [[0.3, 0.25]] }])).toBeNull();
+    expect(parseStrokes([{ type: "hairline", ...base, points: Array.from({ length: 41 }, () => [0.5, 0.5]) }])).toBeNull();
+    for (const text of [undefined, "", "ra=abc", "ra=2000", "xx=1", "ra=1;ra=2", "sf=0", "id=40;" + "a=1;".repeat(40)]) {
+      expect(parseStrokes([{ type: "graft", ...base, points: [[0.5, 0.9]], ...(text === undefined ? {} : { text }) }])).toBeNull();
+    }
+  });
 });
